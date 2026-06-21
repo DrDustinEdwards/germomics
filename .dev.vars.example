@@ -1,0 +1,12 @@
+# Copy to .dev.vars for local `wrangler dev` / `opennextjs-cloudflare preview`.
+# Never commit .dev.vars (it is gitignored). Set production values as Worker secrets
+# (wrangler secret put / dashboard) and, for build-needed vars, in Workers Builds.
+
+NEXTJS_ENV=development
+
+# Auth.js v5 (Google provider, single allowlisted admin, JWT sessions)
+AUTH_SECRET=
+AUTH_GOOGLE_ID=
+AUTH_GOOGLE_SECRET=
+# The one email allowed to sign in to /admin
+ADMIN_EMAIL=

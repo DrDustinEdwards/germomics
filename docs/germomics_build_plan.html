@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en" data-theme-default>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Germomics — Build Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FBFAFD; --surface:#F4F1FA; --card:#FFFFFF; --border:#E2DCEC;
+    --ink:#14101F; --muted:#6B6577;
+    --brand:#4F2D7F; --brand-strong:#402567; --accent:#0E7490;
+    --anchor:#4F2D7F;
+    --display:'Space Grotesk',ui-sans-serif,system-ui,sans-serif;
+    --serif:'Fraunces',Georgia,'Times New Roman',serif;
+    --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#120B1F; --surface:#1E1630; --card:#181125; --border:#2C2440;
+      --ink:#EDEAF5; --muted:#9A8FB0;
+      --brand:#C4AEF0; --brand-strong:#B29AD9; --accent:#22D3EE;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#120B1F; --surface:#1E1630; --card:#181125; --border:#2C2440;
+    --ink:#EDEAF5; --muted:#9A8FB0;
+    --brand:#C4AEF0; --brand-strong:#B29AD9; --accent:#22D3EE;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--serif); font-size:18px; line-height:1.7;
+    -webkit-font-smoothing:antialiased; transition:background .35s ease,color .35s ease;
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  .wrap{max-width:760px; margin:0 auto; padding:0 24px}
+  a{color:var(--accent); text-underline-offset:3px}
+  html{scroll-padding-top:76px}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px}
+
+  header.bar{
+    position:sticky; top:0; z-index:10; background:color-mix(in srgb,var(--bg) 86%,transparent);
+    backdrop-filter:blur(8px); border-bottom:1px solid var(--border);
+  }
+  .bar .wrap{display:flex; align-items:center; justify-content:space-between; height:60px}
+  .mark{font-family:var(--display); font-weight:600; letter-spacing:-.02em; font-size:20px; color:var(--ink)}
+  .mark b{color:var(--brand)}
+  .toggle{
+    font-family:var(--mono); font-size:12px; letter-spacing:.04em; cursor:pointer;
+    background:var(--surface); color:var(--ink); border:1px solid var(--border);
+    border-radius:999px; padding:7px 14px;
+  }
+  .toggle:hover{border-color:var(--brand)}
+  .toggle:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+  .hero{padding:72px 0 36px}
+  .eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); margin:0 0 18px}
+  h1{font-family:var(--display); font-weight:600; letter-spacing:-.03em; line-height:1.02; font-size:clamp(48px,11vw,92px); margin:0; color:var(--ink)}
+  h1 .stain{color:var(--brand)}
+  .lede{font-size:21px; color:var(--muted); margin:22px 0 0; max-width:38ch}
+  .strip{display:flex; height:14px; margin:34px 0 0; border-radius:6px; overflow:hidden; border:1px solid var(--border)}
+  .strip span{flex:1}
+
+  .facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:34px 0 8px}
+  .fact{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px}
+  .fact .k{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
+  .fact .v{font-family:var(--display); font-weight:500; font-size:16px; margin-top:4px; color:var(--ink)}
+
+  section.s{padding:30px 0; border-top:1px solid var(--border)}
+  .num{font-family:var(--mono); font-size:13px; color:var(--accent); letter-spacing:.05em}
+  h2{font-family:var(--display); font-weight:600; letter-spacing:-.02em; font-size:30px; line-height:1.15; margin:8px 0 14px; color:var(--ink)}
+  h3{font-family:var(--display); font-weight:500; font-size:18px; margin:24px 0 6px; color:var(--brand)}
+  p{margin:0 0 14px}
+  ul{margin:0 0 14px; padding-left:22px}
+  li{margin:0 0 7px}
+  code,.hex{font-family:var(--mono); font-size:.86em; background:var(--surface); border:1px solid var(--border); border-radius:5px; padding:1px 6px; color:var(--ink)}
+  strong{font-weight:600}
+
+  table{width:100%; border-collapse:collapse; margin:14px 0 18px; font-size:15px}
+  th,td{text-align:left; padding:10px 10px; border-bottom:1px solid var(--border); vertical-align:top}
+  th{font-family:var(--display); font-weight:500; font-size:13px; letter-spacing:.02em; color:var(--muted)}
+  td:first-child{font-family:var(--display); font-weight:500; color:var(--ink)}
+  td .hex{font-size:13px}
+
+  .swatches{display:flex; flex-wrap:wrap; gap:10px; margin:8px 0 18px}
+  .sw{width:64px}
+  .sw .chip{height:48px; border-radius:8px; border:1px solid var(--border)}
+  .sw .lab{font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:6px; line-height:1.3}
+  .sw.anchor .chip{outline:2px solid var(--accent); outline-offset:2px}
+
+  footer{border-top:1px solid var(--border); margin-top:8px; padding:28px 0 56px}
+  footer p{font-family:var(--mono); font-size:12px; color:var(--muted); margin:0}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <span class="mark">germ<b>omics</b></span>
+    <button class="toggle" id="themeToggle" aria-label="Switch color theme">theme: auto</button>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <p class="eyebrow">Build plan · independent project</p>
+    <h1>The <span class="stain">purple</span> stain, rebuilt.</h1>
+    <p class="lede">A best-in-class home for a podcast about microbiology and history — audio, transcripts, and writing in one modern system.</p>
+    <div class="strip" aria-hidden="true">
+      <span style="background:#E7E0F4"></span>
+      <span style="background:#B29AD9"></span>
+      <span style="background:#6B43A3"></span>
+      <span style="background:#4F2D7F"></span>
+      <span style="background:#2E1A4D"></span>
+      <span style="background:var(--accent)"></span>
+    </div>
+
+    <div class="facts">
+      <div class="fact"><div class="k">Framework</div><div class="v">Next.js · App Router</div></div>
+      <div class="fact"><div class="k">Hosting</div><div class="v">Cloudflare · OpenNext</div></div>
+      <div class="fact"><div class="k">Audio &amp; images</div><div class="v">Cloudflare R2</div></div>
+      <div class="fact"><div class="k">Data</div><div class="v">D1 · Drizzle</div></div>
+    </div>
+  </div>
+
+  <section class="s">
+    <span class="num">§ 01</span>
+    <h2>Architecture &amp; stack</h2>
+    <p>Built from scratch as an independent, best-in-class project — benchmarked against the strongest modern podcast sites, not derived from any existing repo.</p>
+    <ul>
+      <li><strong>Framework:</strong> Next.js 16 (App Router, TypeScript) + React 19 on Cloudflare Workers via OpenNext (<span class="hex">@opennextjs/cloudflare</span>) — D1 and R2 reached through native bindings, no cross-cloud HTTP.</li>
+      <li><strong>Audio:</strong> Cloudflare R2 <span class="hex">germomics-audio</span> → <span class="hex">media.germomics.com</span> (public, CDN-cached, free egress). Filenames never change once published.</li>
+      <li><strong>Images:</strong> R2 <span class="hex">germomics-blog-images</span> → <span class="hex">images.germomics.com</span>.</li>
+      <li><strong>Data:</strong> Cloudflare D1 (SQLite) with <strong>Drizzle ORM</strong> — type-safe schema, migrations, clean queries; free, built fresh.</li>
+      <li><strong>Search:</strong> SQLite FTS5, across both content types.</li>
+    </ul>
+  </section>
+
+  <section class="s">
+    <span class="num">§ 02</span>
+    <h2>Content model</h2>
+    <p>One <code>posts</code> table with a single discriminator. An episode is a post with audio; a text entry is the same post without it.</p>
+    <h3>Base fields</h3>
+    <p>title, slug, body, excerpt, cover image, tags, status (draft/published), featured, SEO fields, version history, published date.</p>
+    <h3>Discriminator</h3>
+    <p><code>kind</code> = <code>episode</code> | <code>article</code> — the one field that drives every listing, filter, and feed.</p>
+    <h3>Episode-only fields</h3>
+    <p>audio URL, duration, byte size, mime type, episode &amp; season number, episode type (full/trailer/bonus), explicit flag, a permanent immutable <code>guid</code>, transcript, chapters (JSON), guests, and optional per-episode artwork.</p>
+    <h3>Show config</h3>
+    <p>title, description, author, owner email, artwork, Apple category, language, episodic/serial, subscribe links, funding URL.</p>
+  </section>
+
+  <section class="s">
+    <span class="num">§ 03</span>
+    <h2>Sorting &amp; information architecture</h2>
+    <ul>
+      <li><strong>Home:</strong> one combined reverse-chronological feed; the player seeds with all episodes, newest first.</li>
+      <li><strong>Sections:</strong> <span class="hex">/episodes</span> and <span class="hex">/writing</span>, a filterable <span class="hex">/archive</span> with tabs (all · episodes · writing), tag pages, and guest pages.</li>
+      <li><strong>Two feeds:</strong> a podcast feed (episodes only — every item carries audio) and a site feed for the writing. One discriminator, two queries.</li>
+    </ul>
+  </section>
+
+  <section class="s">
+    <span class="num">§ 04</span>
+    <h2>Persistent queue player</h2>
+    <p>A single audio element in the root layout with shared state, so it plays uninterrupted as the page changes around it.</p>
+    <ul>
+      <li>Episode page → plays that one episode. Home → plays the whole catalog, back to back.</li>
+      <li>Navigating never interrupts playback; pressing play swaps the queue; on end, advance to the next.</li>
+      <li>Skip ±15/30s, speed 0.8–2×, chapter jump-to, a clickable transcript synced to playback, share-at-timestamp, resume position, and Media Session API (lock screen, car, media keys).</li>
+    </ul>
+  </section>
+
+  <section class="s">
+    <span class="num">§ 05</span>
+    <h2>RSS &amp; Podcasting 2.0</h2>
+    <p>The podcast feed is served at <span class="hex">/feed/podcast/</span> — the same path the old site uses — so Apple, Spotify and the rest keep pulling from a URL that never changed.</p>
+    <ul>
+      <li>iTunes channel + item tags (enclosure, permanent guid, duration, season/episode, episode type).</li>
+      <li>Podcast namespace: transcript, chapters (a JSON file, editable after publishing), person (hosts &amp; guests), soundbite, funding, locked.</li>
+      <li>A separate site feed carries the writing for regular feed readers.</li>
+    </ul>
+  </section>
+
+  <section class="s">
+    <span class="num">§ 06</span>
+    <h2>Page features</h2>
+    <ul>
+      <li><strong>Episode:</strong> header (number/season/duration/date), full show notes, chapter list, clickable synced transcript, guest bios, resource links, related episodes, subscribe-everywhere, share-at-timestamp.</li>
+      <li><strong>Article:</strong> the same, without audio.</li>
+      <li>Subscribe page, newsletter capture, shareable soundbite clips, and a support/funding link.</li>
+    </ul>
+  </section>
+
+  <section class="s">
+    <span class="num">§ 07</span>
+    <h2>Admin &amp; publishing</h2>
+    <p>A purpose-built, single-author editor — no multi-role machinery to maintain.</p>
+    <ul>
+      <li>Audio upload straight to R2, with duration and byte size detected automatically.</li>
+      <li>Transcript field (paste or auto-generate), chapters editor, guest picker, episode/season numbers, explicit toggle, an auto-generated locked GUID.</li>
+      <li>Drafts, preview, publish, and version history.</li>
+    </ul>
+  </section>
+
+  <section class="s">
+    <span class="num">§ 08</span>
+    <h2>Migration — zero disruption</h2>
+    <p>The current feed lives on your own domain (<span class="hex">germomics.com/feed/podcast/</span>), so the directories already point at a URL you control.</p>
+    <ul>
+      <li>The new site serves the feed at that same path — <strong>no need to touch Apple, Spotify, Amazon, Pandora, or TuneIn.</strong></li>
+      <li>At build time, parse the existing feed and import each episode, preserving its original <code>guid</code> exactly — no duplicates, no reset.</li>
+      <li>Re-upload the MP3s to R2; keep the old media URLs alive through cutover; validate and diff the feeds before flipping hosting.</li>
+    </ul>
+  </section>
+
+  <section class="s">
+    <span class="num">§ 09</span>
+    <h2>Data layer &amp; auth</h2>
+    <ul>
+      <li><strong>D1 + Drizzle, built fresh</strong> — a clean schema designed for this content model, no porting from another project.</li>
+      <li><strong>Auth:</strong> single-admin only — Sign in with Google (or an email magic link), locked to one allowlisted address. JWT sessions mean no auth tables in D1 at all — the data layer stays purely content.</li>
+      <li>Free to run; native D1 binding on Cloudflare Workers via <span class="hex">getCloudflareContext().env</span> — no HTTP API. Time Travel gives always-on point-in-time backups to any minute in the last 30 days.</li>
+    </ul>
+  </section>
+
+  <section class="s">
+    <span class="num">§ 10</span>
+    <h2>Design system</h2>
+    <p><strong>Anchor:</strong> <span class="hex">#4F2D7F</span> — crystal violet, the dye of a Gram stain. Light and dark are both first-class; the page you're reading is the system in use.</p>
+    <p><strong>Mode:</strong> matches the visitor's system by default, with a toggle that's remembered. Dark is the canonical look for social/share images.</p>
+
+    <h3>Palette</h3>
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:#E7E0F4"></div><div class="lab">100<br>#E7E0F4</div></div>
+      <div class="sw"><div class="chip" style="background:#B29AD9"></div><div class="lab">300<br>#B29AD9</div></div>
+      <div class="sw"><div class="chip" style="background:#6B43A3"></div><div class="lab">500<br>#6B43A3</div></div>
+      <div class="sw anchor"><div class="chip" style="background:#4F2D7F"></div><div class="lab">anchor<br>#4F2D7F</div></div>
+      <div class="sw"><div class="chip" style="background:#2E1A4D"></div><div class="lab">800<br>#2E1A4D</div></div>
+      <div class="sw"><div class="chip" style="background:#120B1F"></div><div class="lab">ink<br>#120B1F</div></div>
+      <div class="sw"><div class="chip" style="background:#0E7490"></div><div class="lab">cyan L<br>#0E7490</div></div>
+      <div class="sw"><div class="chip" style="background:#22D3EE"></div><div class="lab">cyan D<br>#22D3EE</div></div>
+    </div>
+
+    <h3>Role mapping</h3>
+    <table>
+      <thead><tr><th>Role</th><th>Light</th><th>Dark</th></tr></thead>
+      <tbody>
+        <tr><td>Background</td><td><span class="hex">#FBFAFD</span></td><td><span class="hex">#120B1F</span></td></tr>
+        <tr><td>Surface</td><td><span class="hex">#F4F1FA</span></td><td><span class="hex">#1E1630</span></td></tr>
+        <tr><td>Text</td><td><span class="hex">#14101F</span></td><td><span class="hex">#EDEAF5</span></td></tr>
+        <tr><td>Brand</td><td><span class="hex">#4F2D7F</span></td><td><span class="hex">#C4AEF0</span></td></tr>
+        <tr><td>Accent</td><td><span class="hex">#0E7490</span></td><td><span class="hex">#22D3EE</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Typography</h3>
+    <ul>
+      <li><strong>Display / UI:</strong> a modern grotesk (Space Grotesk here; Geist or General Sans in build).</li>
+      <li><strong>Body:</strong> an editorial serif — Fraunces — so reading feels like a publication.</li>
+      <li><strong>Mono:</strong> JetBrains Mono for timestamps, episode numbers, and values.</li>
+    </ul>
+
+    <h3>Aesthetic</h3>
+    <ul>
+      <li>Persistent docked player; a hero featuring the latest episode; generous space, big type, high contrast.</li>
+      <li>Cover art as the visual anchor; cyan reserved for interactive and "now playing" moments only.</li>
+    </ul>
+  </section>
+
+  <section class="s">
+    <span class="num">§ 11</span>
+    <h2>Accessibility — WCAG 2.2 AA</h2>
+    <p>Conformance target is WCAG 2.2 Level AA across the whole site. The commitments that actually shape the build:</p>
+    <ul>
+      <li><strong>Transcripts are required, not optional.</strong> Prerecorded audio needs a text alternative (SC 1.2.1), so every episode ships a transcript — which doubles as the SEO and reading win.</li>
+      <li><strong>The player is the highest-risk surface.</strong> Full keyboard operation, a seek control that works without dragging (SC 2.5.7), names/roles/state on every control (SC 4.1.2), 24×24px minimum targets (SC 2.5.8), and a docked player that never hides the focused element (SC 2.4.11).</li>
+      <li><strong>Contrast holds in both modes.</strong> Body, brand, and accent all clear 4.5:1 (UI/large 3:1). Light-mode cyan is <span class="hex">#0E7490</span> for text — the brighter <span class="hex">#0891B2</span> fell just short.</li>
+      <li><strong>Sign-in is handled for free.</strong> The admin is private and single-user, so accessibility effort targets the public site; Google OAuth / email login already satisfy SC 3.3.8 on their own.</li>
+      <li><strong>Baseline floor:</strong> visible focus, reflow to 400% zoom, reduced motion respected, semantic landmarks, alt text on artwork.</li>
+    </ul>
+  </section>
+
+  <section class="s">
+    <span class="num">benchmarks</span>
+    <h2>Best-in-class references</h2>
+    <ul>
+      <li><strong>The Changelog</strong> — depth of Podcasting 2.0: transcripts, cloud chapters, person tags.</li>
+      <li><strong>Transmit (Tailwind)</strong> — the persistent Next.js player pattern.</li>
+      <li><strong>Editorial podcast sites</strong> — the episode-as-rich-post model that wins on SEO and reading.</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap"><p>germomics build plan · independent project · v1</p></div>
+</footer>
+
+<script>
+  (function(){
+    var root=document.documentElement, btn=document.getElementById('themeToggle');
+    try{var s=localStorage.getItem('germomics-theme'); if(s){root.setAttribute('data-theme',s);}}catch(e){}
+    function effective(){var a=root.getAttribute('data-theme'); if(a) return a; return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
+    function label(){var a=root.getAttribute('data-theme'); btn.textContent='theme: '+(a?a:'auto');}
+    label();
+    btn.addEventListener('click',function(){
+      var next=effective()==='dark'?'light':'dark';
+      root.setAttribute('data-theme',next);
+      try{localStorage.setItem('germomics-theme',next);}catch(e){}
+      label();
+    });
+  })();
+</script>
+</body>
+</html>
