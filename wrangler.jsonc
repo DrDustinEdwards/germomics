@@ -20,10 +20,9 @@
 		"directory": ".open-next/assets"
 	},
 	// Existing resources, do NOT recreate. Access via getCloudflareContext().env.
-	// NOTE: `IMAGES` here is the R2 bucket (germomics-blog-images), per the germomics
-	// binding invariant. This intentionally replaces OpenNext's native CF Images
-	// optimization binding (which also defaults to `IMAGES`); next/image degrades to the
-	// original image since assets are pre-sized in R2 and served via images.germomics.com.
+	// The blog-images bucket binds as BLOG_IMAGES, not IMAGES, to stay clear of OpenNext's
+	// reserved native-Images binding name. next/image stays unoptimized (next.config.ts);
+	// images are pre-sized in R2 and served via images.germomics.com.
 	"d1_databases": [
 		{
 			"binding": "DB",
@@ -33,7 +32,7 @@
 	],
 	"r2_buckets": [
 		{ "binding": "MEDIA", "bucket_name": "germomics-audio" },
-		{ "binding": "IMAGES", "bucket_name": "germomics-blog-images" }
+		{ "binding": "BLOG_IMAGES", "bucket_name": "germomics-blog-images" }
 	],
 	// Keep dashboard-set vars/secrets from being wiped on deploy.
 	"keep_vars": true,

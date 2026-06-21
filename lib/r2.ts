@@ -10,9 +10,7 @@ export function mediaBucket(): R2Bucket {
 }
 
 export function imagesBucket(): R2Bucket {
-  // `IMAGES` is the R2 bucket per the germomics binding invariant. OpenNext's ambient types
-  // also declare an optional native-Images binding of the same name, so cast to R2Bucket.
-  return getCloudflareContext().env.IMAGES as unknown as R2Bucket;
+  return getCloudflareContext().env.BLOG_IMAGES;
 }
 
 /** Public URL for an audio object. Used for RSS enclosures and the player. */
