@@ -42,6 +42,30 @@ export async function getBySlug(slug: string): Promise<Post | undefined> {
   return rows[0];
 }
 
+/** Published posts carrying a given tag (small dataset; filtered in app code). */
+export async function getByTag(tag: string): Promise<Post[]> {
+  const all = await getPublished(500);
+  const want = tag.toLowerCase();
+  return all.filter((p) => (p.tags ?? []).some((t) => t.toLowerCase() === want));
+}
+
+/** Published episodes featuring a guest, matched by slugified name. */
+export async function getByGuest(guestSlug: string): Promise<{ name: string; posts: Post[] }> {
+  const { slugify } = await import('@/lib/format');
+  const episodes = await getByKind('episode', 500);
+  let name = guestSlug;
+  const matched = episodes.filter((p) =>
+    (p.guests ?? []).some((g) => {
+      if (slugify(g.name) === guestSlug) {
+        name = g.name;
+        return true;
+      }
+      return false;
+    }),
+  );
+  return { name, posts: matched };
+}
+
 /** Full-text search across published posts via the live FTS5 virtual table. */
 export function search(query: string, limit = 30): Promise<Post[]> {
   return db.all<Post>(sql`

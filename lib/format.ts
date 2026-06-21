@@ -23,6 +23,15 @@ export function longDate(value?: string | null): string {
   });
 }
 
+/** URL-safe slug from arbitrary text (guest names, tags). */
+export function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 /** Human file size, e.g. 12.4 MB. */
 export function bytes(n?: number | null): string {
   if (!n || n <= 0) return '';

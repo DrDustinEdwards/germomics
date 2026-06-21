@@ -5,6 +5,8 @@ import { baseMetadata } from '@/lib/metadata';
 import { THEME_INIT_SCRIPT } from '@/lib/theme';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
+import PlayerProvider from '@/components/player/PlayerProvider';
+import PlayerBar from '@/components/player/PlayerBar';
 
 const display = Space_Grotesk({
   subsets: ['latin'],
@@ -32,10 +34,13 @@ export default function RootLayout({
       <body className="min-h-dvh">
         {/* No-flash theme: set data-theme before paint. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-        <Nav />
-        <main className="mx-auto max-w-5xl px-6">{children}</main>
-        <Footer />
-        {/* The persistent queue player mounts here in the player build step. */}
+        <PlayerProvider>
+          <Nav />
+          {/* Extra bottom padding so the docked player never obscures content/focus. */}
+          <main className="mx-auto max-w-5xl px-6 pb-36">{children}</main>
+          <Footer />
+          <PlayerBar />
+        </PlayerProvider>
       </body>
     </html>
   );
