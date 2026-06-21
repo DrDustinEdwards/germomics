@@ -2,52 +2,21 @@
  * For more details on how to configure Wrangler, refer to:
  * https://developers.cloudflare.com/workers/wrangler/configuration/
  */
-/**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
- */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "germomics",
-	"main": ".open-next/worker.js",
-	"compatibility_date": "2026-06-20",
-	"compatibility_flags": [
-		"nodejs_compat",
-		"global_fetch_strictly_public"
-	],
-	"assets": {
-		"binding": "ASSETS",
-		"directory": ".open-next/assets"
+	"name": "germ-scaffold",
+	"compatibility_date": "2026-06-21",
+	"main": "./workers/app.ts",
+	"vars": {
+		"VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare"
 	},
-	// Existing resources, do NOT recreate. Access via getCloudflareContext().env.
-	// The blog-images bucket binds as BLOG_IMAGES, not IMAGES, to stay clear of OpenNext's
-	// reserved native-Images binding name. next/image stays unoptimized (next.config.ts);
-	// images are pre-sized in R2 and served via images.germomics.com.
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_name": "germomics",
-			"database_id": "fbdeae30-5986-4816-9b7c-21136d8e372c"
-		}
-	],
-	"r2_buckets": [
-		{ "binding": "MEDIA", "bucket_name": "germomics-audio" },
-		{ "binding": "BLOG_IMAGES", "bucket_name": "germomics-blog-images" }
-	],
-	// Keep dashboard-set vars/secrets from being wiped on deploy.
-	"keep_vars": true,
-	"services": [
-		{
-			// Self-reference service binding, the service name must match the worker name
-			// see https://opennext.js.org/cloudflare/caching
-			"binding": "WORKER_SELF_REFERENCE",
-			"service": "germomics"
-		}
-	],
 	"observability": {
 		"enabled": true
 	},
-	"upload_source_maps": true
+	"upload_source_maps": true,
+	"compatibility_flags": [
+		"nodejs_compat"
+	]
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
@@ -60,10 +29,13 @@
 	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
 	 */
 	/**
-	 * Environment Variables
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
-	 * Note: Use secrets to store sensitive data.
-	 * https://developers.cloudflare.com/workers/configuration/secrets/
+	 * Static Assets
+	 * https://developers.cloudflare.com/workers/static-assets/binding/
 	 */
-	// "vars": {  "MY_VARIABLE": "production_value" }
+	// "assets": {  "directory": "./public/",  "binding": "ASSETS" }
+	/**
+	 * Service Bindings (communicate between multiple Workers)
+	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
+	 */
+	// "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
 }

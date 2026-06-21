@@ -109,7 +109,7 @@
   <div class="hero">
     <p class="eyebrow">Build plan · independent project</p>
     <h1>The <span class="stain">purple</span> stain, rebuilt.</h1>
-    <p class="lede">A best-in-class home for a podcast about microbiology and history — audio, transcripts, and writing in one modern system.</p>
+    <p class="lede">A best-in-class home for a podcast about microbiology and history — audio, transcripts, writing, data, and games in one modern system, native to Cloudflare.</p>
     <div class="strip" aria-hidden="true">
       <span style="background:#E7E0F4"></span>
       <span style="background:#B29AD9"></span>
@@ -120,23 +120,26 @@
     </div>
 
     <div class="facts">
-      <div class="fact"><div class="k">Framework</div><div class="v">Next.js · App Router</div></div>
-      <div class="fact"><div class="k">Hosting</div><div class="v">Cloudflare · OpenNext</div></div>
+      <div class="fact"><div class="k">Framework</div><div class="v">React Router v7</div></div>
+      <div class="fact"><div class="k">Hosting</div><div class="v">Cloudflare Workers · Vite plugin</div></div>
       <div class="fact"><div class="k">Audio &amp; images</div><div class="v">Cloudflare R2</div></div>
-      <div class="fact"><div class="k">Data</div><div class="v">D1 · Drizzle</div></div>
+      <div class="fact"><div class="k">Data &amp; auth</div><div class="v">D1 · Drizzle · Better Auth</div></div>
     </div>
   </div>
 
   <section class="s">
     <span class="num">§ 01</span>
     <h2>Architecture &amp; stack</h2>
-    <p>Built from scratch as an independent, best-in-class project — benchmarked against the strongest modern podcast sites, not derived from any existing repo.</p>
+    <p>Built from scratch as an independent, best-in-class project, benchmarked against the strongest modern podcast sites and chosen for one priority: a site that is <strong>native to Cloudflare</strong>, with no translation layer between the framework and the runtime.</p>
     <ul>
-      <li><strong>Framework:</strong> Next.js 16 (App Router, TypeScript) + React 19 on Cloudflare Workers via OpenNext (<span class="hex">@opennextjs/cloudflare</span>) — D1 and R2 reached through native bindings, no cross-cloud HTTP.</li>
+      <li><strong>Framework:</strong> React Router v7 (framework mode, TypeScript) + React 19, running on Cloudflare Workers through the official <strong>Cloudflare Vite plugin</strong> — first-class and native. D1, R2, KV and (later) Durable Objects are reached through bindings injected straight into every <code>loader</code> and <code>action</code> via <span class="hex">context.cloudflare.env</span>. No adapter, no Node shims, no cross-cloud HTTP.</li>
+      <li><strong>Why not Next.js:</strong> Next runs on Cloudflare only via the OpenNext adapter — a translation layer that transforms a Vercel-shaped build to fit the Workers isolate. React Router v7 compiles directly to Web-standard <code>Request</code>/<code>Response</code> and executes in <span class="hex">workerd</span> as-is. For an all-Cloudflare build, native beats adapter.</li>
+      <li><strong>Server / client separation:</strong> a route file co-locates its server <code>loader</code>/<code>action</code> and its client component. Server-only code (DB, secrets, auth) lives in <span class="hex">*.server.ts</span> modules so it can never leak into a client bundle.</li>
       <li><strong>Audio:</strong> Cloudflare R2 <span class="hex">germomics-audio</span> → <span class="hex">media.germomics.com</span> (public, CDN-cached, free egress). Filenames never change once published.</li>
       <li><strong>Images:</strong> R2 <span class="hex">germomics-blog-images</span> → <span class="hex">images.germomics.com</span>.</li>
-      <li><strong>Data:</strong> Cloudflare D1 (SQLite) with <strong>Drizzle ORM</strong> — type-safe schema, migrations, clean queries; free, built fresh.</li>
+      <li><strong>Data:</strong> Cloudflare D1 (SQLite) with <strong>Drizzle ORM</strong> — type-safe schema, migrations, clean queries; the live schema already exists.</li>
       <li><strong>Search:</strong> SQLite FTS5, across both content types.</li>
+      <li><strong>Build &amp; deploy:</strong> <span class="hex">vite build</span> then <span class="hex">wrangler deploy</span>; Workers Builds auto-detects React Router and wires CI/CD and preview deploys.</li>
     </ul>
   </section>
 
@@ -159,7 +162,7 @@
     <h2>Sorting &amp; information architecture</h2>
     <ul>
       <li><strong>Home:</strong> one combined reverse-chronological feed; the player seeds with all episodes, newest first.</li>
-      <li><strong>Sections:</strong> <span class="hex">/episodes</span> and <span class="hex">/writing</span>, a filterable <span class="hex">/archive</span> with tabs (all · episodes · writing), tag pages, and guest pages.</li>
+      <li><strong>Sections:</strong> <span class="hex">/episodes</span>, <span class="hex">/writing</span>, a filterable <span class="hex">/archive</span> with tabs (all · episodes · writing), tag pages, guest pages, plus <span class="hex">/data</span> and <span class="hex">/games</span>.</li>
       <li><strong>Two feeds:</strong> a podcast feed (episodes only — every item carries audio) and a site feed for the writing. One discriminator, two queries.</li>
     </ul>
   </section>
@@ -167,7 +170,7 @@
   <section class="s">
     <span class="num">§ 04</span>
     <h2>Persistent queue player</h2>
-    <p>A single audio element in the root layout with shared state, so it plays uninterrupted as the page changes around it.</p>
+    <p>A single audio element in the root layout (<span class="hex">app/root.tsx</span>) with shared state, so it plays uninterrupted as the page changes around it. React Router does client-side navigation after hydration — only loader data moves over the wire — so the player tree is never unmounted between routes.</p>
     <ul>
       <li>Episode page → plays that one episode. Home → plays the whole catalog, back to back.</li>
       <li>Navigating never interrupts playback; pressing play swaps the queue; on end, advance to the next.</li>
@@ -178,7 +181,7 @@
   <section class="s">
     <span class="num">§ 05</span>
     <h2>RSS &amp; Podcasting 2.0</h2>
-    <p>The podcast feed is served at <span class="hex">/feed/podcast/</span> — the same path the old site uses — so Apple, Spotify and the rest keep pulling from a URL that never changed.</p>
+    <p>The podcast feed is served at <span class="hex">/feed/podcast/</span> — the same path the old site uses — by a <strong>resource route</strong>: a route module with only a <code>loader</code> that returns a raw <code>Response</code> with <span class="hex">Content-Type: application/xml</span>. Byte-level control over every tag, no static-generation heuristics to fight.</p>
     <ul>
       <li>iTunes channel + item tags (enclosure, permanent guid, duration, season/episode, episode type).</li>
       <li>Podcast namespace: transcript, chapters (a JSON file, editable after publishing), person (hosts &amp; guests), soundbite, funding, locked.</li>
@@ -193,22 +196,50 @@
       <li><strong>Episode:</strong> header (number/season/duration/date), full show notes, chapter list, clickable synced transcript, guest bios, resource links, related episodes, subscribe-everywhere, share-at-timestamp.</li>
       <li><strong>Article:</strong> the same, without audio.</li>
       <li>Subscribe page, newsletter capture, shareable soundbite clips, and a support/funding link.</li>
+      <li>Per-route <code>meta()</code> built from loader data drives titles, descriptions, and Open Graph tags — full SEO control, server-rendered.</li>
     </ul>
   </section>
 
   <section class="s">
     <span class="num">§ 07</span>
+    <h2>Data pages — maps &amp; charts</h2>
+    <p>Interactive pages about viruses and bacteria: outbreak maps, prevalence and timeline charts, genome and morphology visuals. These are client-side React, isolated cleanly from the edge runtime.</p>
+    <ul>
+      <li><strong>Maps:</strong> MapLibre GL (or Leaflet) rendered in a client-only boundary — map libraries need <code>window</code>, so they mount after hydration via <code>clientLoader</code> or a client-only wrapper.</li>
+      <li><strong>Charts:</strong> a React charting library (Recharts / visx / D3) for graphs, distributions, and timelines.</li>
+      <li><strong>Isolation:</strong> heavy viz libraries are <code>lazy()</code>-imported and code-split per route by Vite, so they never touch the blog or podcast bundles and never inflate the worker.</li>
+      <li><strong>SEO shell:</strong> each data page still server-renders a real, crawlable landing (title, summary, meta) around the interactive canvas.</li>
+      <li><strong>Source data:</strong> curated datasets in D1 (queried in the loader) or static JSON in R2; charts hydrate from loader data.</li>
+    </ul>
+  </section>
+
+  <section class="s">
+    <span class="num">§ 08</span>
+    <h2>Arcade games</h2>
+    <p>Arcade-style browser games at <span class="hex">/games</span> — for example an outbreak-defense or phage-versus-bacteria game that ties into the microbiology content.</p>
+    <ul>
+      <li><strong>Engine:</strong> HTML canvas / WebGL via a lightweight engine (Phaser, PixiJS, or Kaplay) or a hand-rolled <code>requestAnimationFrame</code> loop, mounted in a client-only route component.</li>
+      <li><strong>Code-split:</strong> each game ships only on its own route; the engine never loads on a content page.</li>
+      <li><strong>Assets:</strong> sprites, sound effects, and any WASM blobs served from R2 over the CDN.</li>
+      <li><strong>Leaderboards:</strong> high scores written to D1 through a route <code>action</code>.</li>
+      <li><strong>Realtime (optional, later):</strong> Cloudflare Durable Objects + WebSockets for multiplayer rooms — native to the platform when wanted.</li>
+    </ul>
+  </section>
+
+  <section class="s">
+    <span class="num">§ 09</span>
     <h2>Admin &amp; publishing</h2>
     <p>A purpose-built, single-author editor — no multi-role machinery to maintain.</p>
     <ul>
       <li>Audio upload straight to R2, with duration and byte size detected automatically.</li>
       <li>Transcript field (paste or auto-generate), chapters editor, guest picker, episode/season numbers, explicit toggle, an auto-generated locked GUID.</li>
       <li>Drafts, preview, publish, and version history.</li>
+      <li>Every admin route is gated behind a single allowlisted identity (see §11).</li>
     </ul>
   </section>
 
   <section class="s">
-    <span class="num">§ 08</span>
+    <span class="num">§ 10</span>
     <h2>Migration — zero disruption</h2>
     <p>The current feed lives on your own domain (<span class="hex">germomics.com/feed/podcast/</span>), so the directories already point at a URL you control.</p>
     <ul>
@@ -219,20 +250,20 @@
   </section>
 
   <section class="s">
-    <span class="num">§ 09</span>
+    <span class="num">§ 11</span>
     <h2>Data layer &amp; auth</h2>
     <ul>
-      <li><strong>D1 + Drizzle, built fresh</strong> — a clean schema designed for this content model, no porting from another project.</li>
-      <li><strong>Auth:</strong> single-admin only — Sign in with Google (or an email magic link), locked to one allowlisted address. JWT sessions mean no auth tables in D1 at all — the data layer stays purely content.</li>
-      <li>Free to run; native D1 binding on Cloudflare Workers via <span class="hex">getCloudflareContext().env</span> — no HTTP API. Time Travel gives always-on point-in-time backups to any minute in the last 30 days.</li>
+      <li><strong>D1 + Drizzle, native binding</strong> — a clean schema for this content model, queried in loaders and actions via <span class="hex">drizzle(context.cloudflare.env.DB)</span>. No HTTP API. Time Travel gives always-on point-in-time backups to any minute in the recent window.</li>
+      <li><strong>Auth: Better Auth</strong> — purpose-built for D1 + Drizzle on Workers. Sign in with Google, locked to one allowlisted admin address. A single catch-all route (<span class="hex">app/routes/api.auth.$.ts</span>) hands its <code>loader</code> and <code>action</code> to <span class="hex">auth.handler(request)</span>.</li>
+      <li><strong>Sessions:</strong> stored in a Cloudflare KV namespace (<span class="hex">APP_KV</span>); Better Auth adds a small set of tables to D1 (user, session, account, verification) via its Drizzle adapter. Trivial footprint for a single admin, and the idiomatic React-Router-on-Cloudflare pattern.</li>
     </ul>
   </section>
 
   <section class="s">
-    <span class="num">§ 10</span>
+    <span class="num">§ 12</span>
     <h2>Design system</h2>
     <p><strong>Anchor:</strong> <span class="hex">#4F2D7F</span> — crystal violet, the dye of a Gram stain. Light and dark are both first-class; the page you're reading is the system in use.</p>
-    <p><strong>Mode:</strong> matches the visitor's system by default, with a toggle that's remembered. Dark is the canonical look for social/share images.</p>
+    <p><strong>Mode:</strong> matches the visitor's system by default, with a toggle that's remembered via <code>data-theme</code>. Dark is the canonical look for social/share images.</p>
 
     <h3>Palette</h3>
     <div class="swatches">
@@ -269,18 +300,20 @@
     <ul>
       <li>Persistent docked player; a hero featuring the latest episode; generous space, big type, high contrast.</li>
       <li>Cover art as the visual anchor; cyan reserved for interactive and "now playing" moments only.</li>
+      <li>Styling via Tailwind v4 with the palette wired as design tokens; <code>data-theme</code> drives light/dark.</li>
     </ul>
   </section>
 
   <section class="s">
-    <span class="num">§ 11</span>
+    <span class="num">§ 13</span>
     <h2>Accessibility — WCAG 2.2 AA</h2>
     <p>Conformance target is WCAG 2.2 Level AA across the whole site. The commitments that actually shape the build:</p>
     <ul>
       <li><strong>Transcripts are required, not optional.</strong> Prerecorded audio needs a text alternative (SC 1.2.1), so every episode ships a transcript — which doubles as the SEO and reading win.</li>
       <li><strong>The player is the highest-risk surface.</strong> Full keyboard operation, a seek control that works without dragging (SC 2.5.7), names/roles/state on every control (SC 4.1.2), 24×24px minimum targets (SC 2.5.8), and a docked player that never hides the focused element (SC 2.4.11).</li>
+      <li><strong>Interactive data &amp; games need text equivalents.</strong> Maps and charts ship an accessible summary or data table; games carry clear instructions and keyboard controls where feasible, and are never the only path to information.</li>
       <li><strong>Contrast holds in both modes.</strong> Body, brand, and accent all clear 4.5:1 (UI/large 3:1). Light-mode cyan is <span class="hex">#0E7490</span> for text — the brighter <span class="hex">#0891B2</span> fell just short.</li>
-      <li><strong>Sign-in is handled for free.</strong> The admin is private and single-user, so accessibility effort targets the public site; Google OAuth / email login already satisfy SC 3.3.8 on their own.</li>
+      <li><strong>Sign-in is handled for free.</strong> The admin is private and single-user, so accessibility effort targets the public site; Google sign-in via Better Auth already satisfies SC 3.3.8.</li>
       <li><strong>Baseline floor:</strong> visible focus, reflow to 400% zoom, reduced motion respected, semantic landmarks, alt text on artwork.</li>
     </ul>
   </section>
@@ -290,7 +323,8 @@
     <h2>Best-in-class references</h2>
     <ul>
       <li><strong>The Changelog</strong> — depth of Podcasting 2.0: transcripts, cloud chapters, person tags.</li>
-      <li><strong>Transmit (Tailwind)</strong> — the persistent Next.js player pattern.</li>
+      <li><strong>Transmit (Tailwind)</strong> — the persistent player pattern, ported to React Router's root layout.</li>
+      <li><strong>React Router v7 + Cloudflare templates</strong> — RR7 + Better Auth + Drizzle + D1 on Workers as the proven structural baseline.</li>
       <li><strong>Editorial podcast sites</strong> — the episode-as-rich-post model that wins on SEO and reading.</li>
     </ul>
   </section>
@@ -298,7 +332,7 @@
 </main>
 
 <footer>
-  <div class="wrap"><p>germomics build plan · independent project · v1</p></div>
+  <div class="wrap"><p>germomics build plan · independent project · v2 · react router v7 on cloudflare</p></div>
 </footer>
 
 <script>

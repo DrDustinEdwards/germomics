@@ -1,47 +1,79 @@
-# OpenNext Starter
+# Welcome to React Router!
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+A modern, production-ready template for building full-stack React applications using React Router.
+
+## Features
+
+- 🚀 Server-side rendering
+- ⚡️ Hot Module Replacement (HMR)
+- 📦 Asset bundling and optimization
+- 🔄 Data loading and mutations
+- 🔒 TypeScript by default
+- 🎉 TailwindCSS for styling
+- 📖 [React Router docs](https://reactrouter.com/)
 
 ## Getting Started
 
-Read the documentation at https://opennext.js.org/cloudflare.
+### Installation
 
-## Develop
+Install the dependencies:
 
-Run the Next.js development server:
+```bash
+npm install
+```
+
+### Development
+
+Start the development server with HMR:
 
 ```bash
 npm run dev
-# or similar package manager command
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Your application will be available at `http://localhost:5173`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Previewing the Production Build
 
-## Preview
-
-Preview the application locally on the Cloudflare runtime:
+Preview the production build locally:
 
 ```bash
 npm run preview
-# or similar package manager command
 ```
 
-## Deploy
+## Building for Production
 
-Deploy the application to Cloudflare:
+Create a production build:
 
 ```bash
-npm run deploy
-# or similar package manager command
+npm run build
 ```
 
-## Learn More
+## Deployment
 
-To learn more about Next.js, take a look at the following resources:
+Deployment is done using the Wrangler CLI.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+To build and deploy directly to production:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```sh
+npm run deploy
+```
+
+To deploy a preview URL:
+
+```sh
+npx wrangler versions upload
+```
+
+You can then promote a version to production after verification or roll it out progressively.
+
+```sh
+npx wrangler versions deploy
+```
+
+## Styling
+
+This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+
+---
+
+Built with ❤️ using React Router.
