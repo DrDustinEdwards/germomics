@@ -27,7 +27,7 @@ Rebuild in the existing repo `DrDustinEdwards/germomics` (local: `C:\Users\email
 npm create cloudflare@latest germomics -- --framework=react-router
 ```
 
-This gives React Router v7 + the Cloudflare Vite plugin + wrangler + a `workers/app.ts` entry that injects `context.cloudflare.env`. Then add: `drizzle-orm drizzle-kit`, `better-auth`, `tailwindcss@4 @tailwindcss/vite`, `lucide-react`. Add charts (`recharts`) and a map lib (`maplibre-gl`) and a game engine (`phaser` or `kaplay`) as needed, behind lazy imports.
+This gives React Router v7 + the Cloudflare Vite plugin + wrangler + a `workers/app.ts` entry that injects `context.cloudflare.env`. Then add: `drizzle-orm drizzle-kit`, `better-auth`, `tailwindcss@4 @tailwindcss/vite`, `lucide-react`. Add charts (`recharts`) and a map lib (`maplibre-gl`) and the game engine **Phaser (Phaser 4, `phaser`)** as needed, behind lazy imports. Phaser is fixed (not Kaplay): games are AI-written, and Phaser's far larger corpus yields more reliable, non-hallucinated game code, with better performance and Safari/mobile behavior. Its ~500KB is a non-issue — each game is lazy-loaded and code-split on its own `/games/:slug` route and never touches the content pages.
 
 ## 2. Bindings
 

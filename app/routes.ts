@@ -1,3 +1,43 @@
-import { type RouteConfig, index } from "@react-router/dev/routes";
+import { type RouteConfig, index, route } from "@react-router/dev/routes";
 
-export default [index("routes/home.tsx")] satisfies RouteConfig;
+export default [
+  index("routes/_index.tsx"),
+
+  // sections
+  route("episodes", "routes/episodes._index.tsx"),
+  route("writing", "routes/writing._index.tsx"),
+  route("archive", "routes/archive.tsx"),
+  route("data", "routes/data._index.tsx"),
+  route("data/:slug", "routes/data.$slug.tsx"),
+  route("games", "routes/games._index.tsx"),
+  route("games/assets/*", "routes/games.assets.$.ts"),
+  route("games/:slug", "routes/games.$slug.tsx"),
+  route("tag/:tag", "routes/tag.$tag.tsx"),
+  route("guests/:guest", "routes/guests.$guest.tsx"),
+  route("subscribe", "routes/subscribe.tsx"),
+
+  // feeds — resource routes. The podcast feed is matched at /feed/podcast/ (trailing slash,
+  // the immutable URL directories poll) with no redirect to/from a non-slash variant.
+  route("feed/podcast", "routes/feed.podcast.ts"),
+  route("feed/site.xml", "routes/feed.site.ts"),
+
+  // per-episode resource endpoints referenced by the podcast feed
+  route(":slug/transcript.txt", "routes/transcript.ts"),
+  route(":slug/chapters.json", "routes/chapters.ts"),
+
+  // Better Auth catch-all
+  route("api/auth/*", "routes/api.auth.$.ts"),
+
+  // admin — login is OUTSIDE the gated layout; everything under admin.tsx is gated by its
+  // middleware (one check for the whole subtree).
+  route("admin/login", "routes/admin.login.tsx"),
+  route("admin", "routes/admin.tsx", [
+    index("routes/admin._index.tsx"),
+    route("logout", "routes/admin.logout.tsx"),
+    route("posts", "routes/admin.posts._index.tsx"),
+    route("posts/:id", "routes/admin.posts.$id.tsx"),
+  ]),
+
+  // episode/article detail — single dynamic segment, ranked below every static route above.
+  route(":slug", "routes/$slug.tsx"),
+] satisfies RouteConfig;

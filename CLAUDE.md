@@ -30,7 +30,7 @@ There is no Next.js and no OpenNext here. If a doc, snippet, or habit assumes Ne
 
 6. Accessibility target is WCAG 2.2 AA on all public surfaces. The audio player is the highest-risk component: full keyboard support, a seek control that works without dragging, correct name/role/state on every control, 24px minimum targets. Maps and charts ship a text equivalent (summary or data table). Transcripts are required on every episode.
 
-7. Keep the worker lean. Heavy client libraries (MapLibre, Leaflet, chart libs, game engines) are `lazy()`-imported and code-split per route. They must never end up in the server bundle or the shared client chunk.
+7. Keep the worker lean. Heavy client libraries (MapLibre for maps, Recharts for charts, **Phaser (Phaser 4)** for games) are `lazy()`-imported and code-split per route. They must never end up in the server bundle or the shared client chunk. The game engine is Phaser (Phaser 4): games are AI-written and Phaser's large training corpus generates more reliable, non-hallucinated code, with better performance and Safari/mobile behavior; its ~500KB only ever loads on an individual `/games/:slug` route.
 
 ## Commands
 

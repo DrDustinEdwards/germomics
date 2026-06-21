@@ -1,0 +1,13 @@
+# Copy to .dev.vars for local `npm run dev` (vite + workerd). Never commit .dev.vars.
+# Production values are Cloudflare secrets (wrangler secret put / dashboard), not these.
+
+# Better Auth
+BETTER_AUTH_SECRET=dev-only-secret-change-me
+BETTER_AUTH_URL=http://localhost:5173
+
+# Google OAuth client (Google Cloud Console)
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+# The single email allowed to sign in to /admin
+ADMIN_EMAIL=emaildustinedwards@gmail.com

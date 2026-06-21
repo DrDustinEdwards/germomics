@@ -1,0 +1,40 @@
+// R2 helpers. Audio → MEDIA (germomics-audio, public via media.germomics.com); images →
+// BLOG_IMAGES (images.germomics.com); game assets read from GAME_ASSETS. Reads/writes go
+// through the native bindings only — never over HTTP (CLAUDE.md rule #1). Enclosure/media
+// URLs ALWAYS point at media.germomics.com, never the worker origin (germomics invariant).
+export const MEDIA_BASE = "https://media.germomics.com";
+export const IMAGE_BASE = "https://images.germomics.com";
+
+export function mediaUrl(key: string): string {
+  return `${MEDIA_BASE}/${key.replace(/^\/+/, "")}`;
+}
+export function imageUrl(key: string): string {
+  return `${IMAGE_BASE}/${key.replace(/^\/+/, "")}`;
+}
+
+export async function uploadAudio(
+  env: Env,
+  key: string,
+  body: ArrayBuffer | ReadableStream,
+  contentType = "audio/mpeg",
+): Promise<{ url: string; size: number }> {
+  const obj = await env.MEDIA.put(key, body, {
+    httpMetadata: { contentType },
+  });
+  return { url: mediaUrl(key), size: obj?.size ?? 0 };
+}
+
+export async function uploadImage(
+  env: Env,
+  key: string,
+  body: ArrayBuffer | ReadableStream,
+  contentType: string,
+): Promise<string> {
+  await env.BLOG_IMAGES.put(key, body, { httpMetadata: { contentType } });
+  return imageUrl(key);
+}
+
+/** Stream a game asset (sprite/sfx/wasm) from R2 over the CDN-cached binding. */
+export async function getGameAsset(env: Env, key: string): Promise<R2ObjectBody | null> {
+  return env.GAME_ASSETS.get(key);
+}
