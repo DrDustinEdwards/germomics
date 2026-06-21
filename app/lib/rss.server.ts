@@ -62,7 +62,7 @@ function itemXml(e: Post, show: ShowConfig, origin: string): string {
     )
     .join("");
   const transcript = e.transcript
-    ? `<podcast:transcript url="${url}/transcript.txt" type="text/plain"/>`
+    ? `<podcast:transcript url="${url}/transcript.vtt" type="text/vtt"/>`
     : "";
   const chapters =
     e.chapters && e.chapters.length

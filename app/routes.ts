@@ -22,7 +22,7 @@ export default [
   route("feed/site.xml", "routes/feed.site.ts"),
 
   // per-episode resource endpoints referenced by the podcast feed
-  route(":slug/transcript.txt", "routes/transcript.ts"),
+  route(":slug/transcript.vtt", "routes/transcript.ts"),
   route(":slug/chapters.json", "routes/chapters.ts"),
 
   // Better Auth catch-all
