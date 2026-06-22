@@ -21,6 +21,10 @@ export default [
   route("feed/podcast", "routes/feed.podcast.ts"),
   route("feed/site.xml", "routes/feed.site.ts"),
 
+  // discovery
+  route("sitemap.xml", "routes/sitemap.ts"),
+  route("robots.txt", "routes/robots.ts"),
+
   // per-episode resource endpoints referenced by the podcast feed
   route(":slug/transcript.vtt", "routes/transcript.ts"),
   route(":slug/chapters.json", "routes/chapters.ts"),
@@ -37,6 +41,7 @@ export default [
     route("posts", "routes/admin.posts._index.tsx"),
     route("posts/:id", "routes/admin.posts.$id.tsx"),
     route("people", "routes/admin.people._index.tsx"),
+    route("settings", "routes/admin.settings._index.tsx"),
     route("upload", "routes/admin.upload.ts"),
     route("version/:vid", "routes/admin.version.$vid.ts"),
   ]),

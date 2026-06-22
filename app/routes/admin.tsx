@@ -3,7 +3,7 @@
 // (per the v8_middleware instruction). /admin/login is a sibling route, not a child here, so
 // it stays reachable when signed out (no redirect loop).
 import { Outlet, redirect, Link, Form } from "react-router";
-import { LayoutDashboard, FileAudio, LogOut, ExternalLink, Users } from "lucide-react";
+import { LayoutDashboard, FileAudio, LogOut, ExternalLink, Users, Settings } from "lucide-react";
 import type { Route } from "./+types/admin";
 import { getEnv } from "~/lib/context.server";
 import { getAdminSession } from "~/lib/auth.server";
@@ -35,6 +35,9 @@ export default function AdminLayout({ loaderData }: Route.ComponentProps) {
             </Link>
             <Link to="/admin/people" className="flex items-center gap-1.5 text-muted hover:text-ink">
               <Users size={16} aria-hidden /> People
+            </Link>
+            <Link to="/admin/settings" className="flex items-center gap-1.5 text-muted hover:text-ink">
+              <Settings size={16} aria-hidden /> Settings
             </Link>
           </nav>
           <div className="flex items-center gap-3 font-mono text-xs text-muted">

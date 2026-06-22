@@ -7,6 +7,9 @@ export type Guest = { name: string; role?: string; bio?: string; link?: string; 
 /** A labelled external link on a Person (website, social, etc.). */
 export type PersonLink = { label: string; url: string };
 
+/** An Apple Podcasts category with an optional subcategory (nested in the feed). */
+export type PodcastCategory = { category: string; subcategory?: string };
+
 /** A guest as rendered on an episode page — resolved from the people entities (or legacy JSON). */
 export type GuestView = {
   name: string;

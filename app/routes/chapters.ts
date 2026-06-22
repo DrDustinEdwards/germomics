@@ -12,6 +12,8 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     headers: {
       "Content-Type": "application/json+chapters; charset=utf-8",
       "Cache-Control": "public, max-age=300",
+      // Podcast apps fetch chapters cross-origin — must be CORS-enabled.
+      "Access-Control-Allow-Origin": "*",
     },
   });
 }

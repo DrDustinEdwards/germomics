@@ -3,8 +3,8 @@
 // writing. Enclosure URLs always point at media.germomics.com (the stored audioUrl), never the
 // worker origin. guid is permanent + isPermaLink=false. Served from resource routes.
 import type { Post, ShowConfig } from "~/db/schema";
+import type { GuestView } from "~/lib/types";
 import { formatHMS, rfc822, xmlEscape } from "~/lib/format";
-import { slugifyGuest } from "~/lib/posts.server";
 
 const PODCAST_NS =
   'xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" ' +
@@ -16,16 +16,37 @@ function cdata(value: string | null | undefined): string {
   return `<![CDATA[${value ?? ""}]]>`;
 }
 
-/** The podcast feed — episodes only. Served at the immutable path /feed/podcast/. */
-export function buildPodcastFeed(show: ShowConfig, episodes: Post[], origin: string): string {
+/** Nested <itunes:category> elements (up to 3), falling back to the single legacy column. */
+function categoriesXml(show: ShowConfig): string {
+  const cats = show.categories?.length
+    ? show.categories
+    : [{ category: show.appleCategory }];
+  return cats
+    .map((c) =>
+      c.subcategory
+        ? `<itunes:category text="${xmlEscape(c.category)}"><itunes:category text="${xmlEscape(c.subcategory)}"/></itunes:category>`
+        : `<itunes:category text="${xmlEscape(c.category)}"/>`,
+    )
+    .join("\n  ");
+}
+
+/**
+ * The podcast feed — episodes only. Served at the immutable path /feed/podcast/.
+ * `guestsByEpisode` carries resolved people per episode for item-level <podcast:person>.
+ */
+export function buildPodcastFeed(
+  show: ShowConfig,
+  episodes: Post[],
+  origin: string,
+  guestsByEpisode: Map<number, GuestView[]> = new Map(),
+): string {
   const items = episodes
     .filter((e) => e.audioUrl && e.guid)
-    .map((e) => itemXml(e, show, origin))
+    .map((e) => itemXml(e, origin, guestsByEpisode.get(e.id) ?? []))
     .join("\n");
 
-  const categories = `<itunes:category text="${xmlEscape(show.appleCategory)}"/>`;
   const funding = show.fundingUrl
-    ? `<podcast:funding url="${xmlEscape(show.fundingUrl)}">Support germomics</podcast:funding>`
+    ? `<podcast:funding url="${xmlEscape(show.fundingUrl)}">${xmlEscape(show.fundingLabel || "Support the show")}</podcast:funding>`
     : "";
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -41,11 +62,12 @@ export function buildPodcastFeed(show: ShowConfig, episodes: Post[], origin: str
   <itunes:type>${show.itunesType}</itunes:type>
   <itunes:explicit>${show.explicit ? "true" : "false"}</itunes:explicit>
   <itunes:image href="${xmlEscape(show.artwork)}"/>
-  ${categories}
+  ${categoriesXml(show)}
   <itunes:owner>
     <itunes:name>${xmlEscape(show.author)}</itunes:name>
     <itunes:email>${xmlEscape(show.ownerEmail)}</itunes:email>
   </itunes:owner>
+  <podcast:person role="host" href="${origin}/">${xmlEscape(show.author)}</podcast:person>
   <podcast:locked owner="${xmlEscape(show.ownerEmail)}">yes</podcast:locked>
   ${funding}
 ${items}
@@ -53,14 +75,16 @@ ${items}
 </rss>`;
 }
 
-function itemXml(e: Post, show: ShowConfig, origin: string): string {
+/** A <podcast:person> per guest. role defaults to "guest"; img only when a photo URL exists. */
+function personXml(g: GuestView, origin: string): string {
+  const href = g.links?.[0]?.url ?? g.link ?? `${origin}/guests/${g.slug}`;
+  const img = g.photo ? ` img="${xmlEscape(g.photo)}"` : "";
+  return `<podcast:person role="${xmlEscape(g.role || "guest")}" href="${xmlEscape(href)}"${img}>${xmlEscape(g.name)}</podcast:person>`;
+}
+
+function itemXml(e: Post, origin: string, guests: GuestView[]): string {
   const url = `${origin}/${e.slug}`;
-  const people = (e.guests ?? [])
-    .map(
-      (g) =>
-        `<podcast:person role="guest" href="${xmlEscape(g.link ?? `${origin}/guests/${slugifyGuest(g.name)}`)}">${xmlEscape(g.name)}</podcast:person>`,
-    )
-    .join("");
+  const people = guests.map((g) => personXml(g, origin)).join("");
   const transcript = e.transcript
     ? `<podcast:transcript url="${url}/transcript.vtt" type="text/vtt"/>`
     : "";

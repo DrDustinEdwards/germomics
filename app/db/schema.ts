@@ -21,8 +21,8 @@ import {
 import { sql, relations } from "drizzle-orm";
 // JSON shapes (stored as TEXT, typed at the edge). Defined client-safe in lib/types and
 // re-exported here so loaders and components share one source of truth.
-import type { Chapter, Guest, PersonLink } from "~/lib/types";
-export type { Chapter, Guest, PersonLink };
+import type { Chapter, Guest, PersonLink, PodcastCategory } from "~/lib/types";
+export type { Chapter, Guest, PersonLink, PodcastCategory };
 
 // ============================================================
 // 1. Content (live)
@@ -115,6 +115,11 @@ export const showConfig = sqliteTable("show_config", {
     Record<string, string>
   >(),
   fundingUrl: text("funding_url"),
+  // Tier 2 (0003): up to 3 nested iTunes categories + an optional funding label.
+  categories: text("categories", { mode: "json" })
+    .$type<PodcastCategory[]>()
+    .default(sql`'[]'`),
+  fundingLabel: text("funding_label"),
 });
 
 export type Post = typeof posts.$inferSelect;
