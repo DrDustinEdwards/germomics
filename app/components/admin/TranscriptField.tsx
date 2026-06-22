@@ -97,7 +97,7 @@ export function TranscriptField({
           </div>
         ) : (
           <p role="alert" className="text-xs text-brand">
-            Couldn’t parse any VTT cues — check the format (needs a WEBVTT header and timing lines).
+            Couldn’t parse any VTT cues. Check the format (needs a WEBVTT header and timing lines).
           </p>
         )
       ) : null}

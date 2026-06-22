@@ -7,7 +7,7 @@ import { ReviewBanner, LegalDate } from "~/components/content/Legal";
 
 export function meta() {
   return [
-    { title: "Terms of use — germomics" },
+    { title: "Terms of use · germomics" },
     { name: "description", content: "The terms for using germomics." },
   ];
 }
@@ -44,7 +44,7 @@ export default function Terms({ loaderData }: Route.ComponentProps) {
       <p>
         If you join the newsletter, you confirm the email address is yours and you consent to receive
         it; you can unsubscribe at any time. If you submit a game score or similar, don’t include
-        personal information or offensive content in any name field — we may remove submissions that
+        personal information or offensive content in any name field, and we may remove submissions that
         do.
       </p>
 
@@ -79,7 +79,7 @@ export default function Terms({ loaderData }: Route.ComponentProps) {
       <h2>Governing law</h2>
       <p>
         These terms are governed by the laws of the site owner’s jurisdiction.{" "}
-        <em>[Placeholder — Dustin to specify jurisdiction.]</em>
+        <em>[Placeholder: Dustin to specify jurisdiction.]</em>
       </p>
 
       <h2>Contact</h2>

@@ -5,7 +5,7 @@ import { listDatasets } from "~/lib/datasets.server";
 
 export function meta() {
   return [
-    { title: "Data — germomics" },
+    { title: "Data · germomics" },
     { name: "description", content: "Interactive maps and charts on viruses and bacteria." },
   ];
 }

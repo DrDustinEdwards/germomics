@@ -8,9 +8,9 @@ const DataMap = lazy(() => import("~/components/data/DataMap.client"));
 const DataChart = lazy(() => import("~/components/data/DataChart.client"));
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  if (!loaderData?.dataset) return [{ title: "Data — germomics" }];
+  if (!loaderData?.dataset) return [{ title: "Data · germomics" }];
   return [
-    { title: `${loaderData.dataset.title} — germomics` },
+    { title: `${loaderData.dataset.title} · germomics` },
     { name: "description", content: loaderData.dataset.summary },
   ];
 }

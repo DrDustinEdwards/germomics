@@ -7,7 +7,7 @@ import { subscribers } from "~/db/schema";
 import { getShowConfig } from "~/lib/show.server";
 
 export function meta() {
-  return [{ title: "Subscribe — germomics" }];
+  return [{ title: "Subscribe · germomics" }];
 }
 
 export async function loader({ context }: Route.LoaderArgs) {

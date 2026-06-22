@@ -38,7 +38,7 @@ export function AiAssist<T>({
   const hint = !available
     ? "Set the ANTHROPIC_API_KEY worker secret to enable AI assists."
     : !hasTranscript
-      ? "Add a transcript first — generations are grounded in it."
+      ? "Add a transcript first. Generations are grounded in it."
       : "Generate a draft from the transcript (you review before it’s applied).";
 
   async function generate() {

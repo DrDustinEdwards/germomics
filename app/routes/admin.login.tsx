@@ -8,7 +8,7 @@ import { getAdminSession } from "~/lib/auth.server";
 import { signIn } from "~/lib/auth-client";
 
 export function meta() {
-  return [{ title: "Sign in — germomics admin" }, { name: "robots", content: "noindex" }];
+  return [{ title: "Sign in · germomics admin" }, { name: "robots", content: "noindex" }];
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {

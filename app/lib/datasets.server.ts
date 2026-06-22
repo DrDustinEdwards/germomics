@@ -21,7 +21,7 @@ const DATASETS: Record<string, Dataset> = {
     title: "Cholera, Soho 1854",
     kind: "bacteria",
     summary:
-      "John Snow's map of the Broad Street outbreak — deaths clustered around a single pump, the founding case of epidemiology and a Vibrio cholerae story.",
+      "John Snow's map of the Broad Street outbreak: deaths clustered around a single pump, the founding case of epidemiology and a Vibrio cholerae story.",
     unit: "deaths",
     map: {
       center: [-0.1367, 51.5132],
@@ -56,7 +56,7 @@ const DATASETS: Record<string, Dataset> = {
     title: "Influenza, 1918–1919",
     kind: "virus",
     summary:
-      "The three waves of the 1918 H1N1 pandemic — mortality peaked sharply in the deadly autumn wave, a defining example of viral pandemic dynamics.",
+      "The three waves of the 1918 H1N1 pandemic: mortality peaked sharply in the deadly autumn wave, a defining example of viral pandemic dynamics.",
     unit: "excess mortality (per 1,000)",
     map: null,
     timeline: [

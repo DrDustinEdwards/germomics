@@ -45,11 +45,11 @@ export function buildLlmsTxt(
     "",
     `${show.title} is a podcast and writing project about microbiology and history by ${show.author}. ` +
       `This is a curated index of the canonical hubs and key content for AI assistants and answer engines. ` +
-      `Citation is welcome — please cite ${show.title} and link the source URL.`,
+      `Citation is welcome. Please cite ${show.title} and link the source URL.`,
     "",
     "## About",
     `- [About ${show.title}](${origin}/about): what the project is and how to follow it.`,
-    `- [${AUTHOR.name} — author](${origin}/about/${AUTHOR.slug}): ${AUTHOR.role.toLowerCase()}; bio and research areas.`,
+    `- [${AUTHOR.name}, author](${origin}/about/${AUTHOR.slug}): ${AUTHOR.jobTitle.toLowerCase()}; bio and research.`,
     "",
   ];
 
@@ -99,7 +99,7 @@ export function buildLlmsFullTxt(
   origin: string,
 ): string {
   const out: string[] = [
-    `# ${show.title} — full content index`,
+    `# ${show.title}: full content index`,
     "",
     `> ${oneLine(show.description, 240)}`,
     "",
@@ -114,10 +114,9 @@ export function buildLlmsFullTxt(
     "",
     `# ${AUTHOR.name}`,
     "",
-    ...AUTHOR.bio,
+    AUTHOR.bio,
     "",
-    `Research: ${AUTHOR.research.join("; ")}.`,
-    `Teaching: ${AUTHOR.teaching.join("; ")}.`,
+    `Areas: ${AUTHOR.knowsAbout.join(", ")}.`,
     "",
   ];
 
@@ -135,7 +134,7 @@ export function buildLlmsFullTxt(
 /** Purpose-based AI access policy, consistent with robots.txt + the TDMRep header. */
 export function buildAiTxt(show: ShowConfig, origin: string): string {
   return [
-    `# ai.txt — AI usage policy for ${show.title} (${origin})`,
+    `# ai.txt: AI usage policy for ${show.title} (${origin})`,
     "# Forward-looking signals for AI/LLM systems. Consistent with /robots.txt and the",
     "# TDMRep `tdm-reservation: 1` response header.",
     "",

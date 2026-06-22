@@ -10,7 +10,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const env = getEnv(context);
   if (!aiConfigured(env)) {
     return Response.json(
-      { ok: false, error: "AI is not configured — set the ANTHROPIC_API_KEY worker secret." },
+      { ok: false, error: "AI is not configured. Set the ANTHROPIC_API_KEY worker secret." },
       { status: 503 },
     );
   }
@@ -19,7 +19,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   // AI spend can't run away. The successful generation below is then recorded against the cap.
   if (await aiCostCapExceeded(env)) {
     return Response.json(
-      { ok: false, error: "Daily AI limit reached — try again tomorrow." },
+      { ok: false, error: "Daily AI limit reached. Try again tomorrow." },
       { status: 429 },
     );
   }

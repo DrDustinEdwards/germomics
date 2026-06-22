@@ -341,7 +341,7 @@ export function PostEditor({ data }: { data: EditorData }) {
                     <input type="checkbox" checked={form.explicit} onChange={(e) => set("explicit", e.target.checked)} /> Explicit
                   </label>
                   <span className="font-mono text-[11px] text-muted">
-                    GUID (locked): {post.guid ?? "— set on first publish"}
+                    GUID (locked): {post.guid ?? "set on first publish"}
                   </span>
                 </div>
 

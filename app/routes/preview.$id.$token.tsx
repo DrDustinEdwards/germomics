@@ -11,7 +11,7 @@ import { verifyPreviewToken } from "~/lib/preview.server";
 import { PostDetail, type DetailData } from "~/components/content/PostDetail";
 
 export function meta() {
-  return [{ title: "Preview — germomics" }, { name: "robots", content: "noindex, nofollow" }];
+  return [{ title: "Preview · germomics" }, { name: "robots", content: "noindex, nofollow" }];
 }
 
 export async function loader({ params, context }: Route.LoaderArgs) {

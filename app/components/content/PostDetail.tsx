@@ -17,6 +17,7 @@ import { TranscriptPanel } from "./TranscriptPanel";
 import { ShareTimestamp } from "./ShareTimestamp";
 import { CopyLink } from "./CopyLink";
 import { usePlayer } from "~/components/player/player-context";
+import { AUTHOR } from "~/lib/about";
 
 export type DetailData = {
   post: Post;
@@ -33,7 +34,7 @@ export type DetailData = {
 };
 
 export function PostDetail({ data }: { data: DetailData }) {
-  const { post, track, guests, related, prev, next, subscribeLinks, author, readingMinutes, toc } = data;
+  const { post, track, guests, related, prev, next, subscribeLinks, readingMinutes, toc } = data;
   const player = usePlayer();
   const [params] = useSearchParams();
   const isEpisode = post.kind === "episode";
@@ -190,7 +191,7 @@ export function PostDetail({ data }: { data: DetailData }) {
       </p>
       <h1 className="mt-2 font-display text-4xl font-semibold leading-tight">{post.title}</h1>
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-muted">
-        <span>{author}</span>
+        <span>{AUTHOR.byline}</span>
         {post.publishedAt ? <span className="flex items-center gap-1"><Calendar size={12} aria-hidden /> {formatDate(post.publishedAt)}</span> : null}
         {wasUpdatedAfterPublish(post) ? <span className="text-accent">Updated {formatDate(post.updatedAt)}</span> : null}
         <span className="flex items-center gap-1"><Clock size={12} aria-hidden /> {readingMinutes} min read</span>
@@ -233,7 +234,7 @@ function PreviewBanner({ post }: { post: Post }) {
   return (
     <div className="mb-6 flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-sm text-amber-700 dark:text-amber-300">
       <span className="font-display font-semibold">Preview</span>
-      <span className="text-muted">— this is the unpublished “{post.status}” version, visible only via this link.</span>
+      <span className="text-muted">: this is the unpublished “{post.status}” version, visible only via this link.</span>
     </div>
   );
 }

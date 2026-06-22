@@ -25,9 +25,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const block = (agent: string) => [`User-agent: ${agent}`, "Allow: /", ...DISALLOW, ""];
 
   const body = [
-    "# germomics — public content is open to crawlers; admin + preview are not.",
+    "# germomics: public content is open to crawlers; admin and preview are not.",
     ...block("*"),
-    "# AI citation & search crawlers — explicitly allowed (we want to be cited).",
+    "# AI citation and search crawlers, explicitly allowed (we want to be cited).",
     ...AI_CRAWLERS.flatMap(block),
     `Sitemap: ${origin}/sitemap.xml`,
     `# AI usage policy: ${origin}/ai.txt`,

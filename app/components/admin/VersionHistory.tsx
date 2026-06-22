@@ -27,7 +27,7 @@ export function VersionHistory({ versions, current }: { versions: VersionRow[]; 
   const fieldChanges = changes.filter((c) => c.label !== "Body");
 
   if (versions.length === 0) {
-    return <EmptyState>No saved versions yet — they’re snapshotted on each save.</EmptyState>;
+    return <EmptyState>No saved versions yet. They’re snapshotted on each save.</EmptyState>;
   }
 
   return (
@@ -77,8 +77,8 @@ export function VersionHistory({ versions, current }: { versions: VersionRow[]; 
                             <li key={c.label}>
                               <span className="font-display font-medium text-ink">{c.label}</span>
                               <div className="mt-0.5 grid gap-0.5">
-                                <span className="truncate rounded bg-brand/10 px-1 text-brand line-through">{c.before || "—"}</span>
-                                <span className="truncate rounded bg-accent/10 px-1 text-accent">{c.after || "—"}</span>
+                                <span className="truncate rounded bg-brand/10 px-1 text-brand line-through">{c.before || "(none)"}</span>
+                                <span className="truncate rounded bg-accent/10 px-1 text-accent">{c.after || "(none)"}</span>
                               </div>
                             </li>
                           ))}

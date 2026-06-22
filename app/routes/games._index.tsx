@@ -5,7 +5,7 @@ import { listGames } from "~/lib/games.server";
 
 export function meta() {
   return [
-    { title: "Games — germomics" },
+    { title: "Games · germomics" },
     { name: "description", content: "Arcade browser games tied to the microbiology content." },
   ];
 }

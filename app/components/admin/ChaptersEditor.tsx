@@ -174,7 +174,7 @@ export function ChaptersEditor({
 
           {!monotonic ? (
             <p role="alert" className="text-xs font-medium text-brand">
-              Chapter times must increase in order — reorder or fix the timestamps.
+              Chapter times must increase in order. Reorder or fix the timestamps.
             </p>
           ) : null}
 

@@ -165,7 +165,7 @@ export function GuestsField({
             ) : null}
           </div>
           <p className="text-[11px] text-muted">
-            New people are reusable across episodes — edit full bios &amp; photos under{" "}
+            New people are reusable across episodes. Edit full bios &amp; photos under{" "}
             <a href="/admin/people" className="text-accent underline">People</a>.
           </p>
         </>

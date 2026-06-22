@@ -34,7 +34,7 @@ export function CategoriesEditor({
               onChange={(e) => update(i, { category: e.target.value, subcategory: undefined })}
               className={inputCx}
             >
-              <option value="">— none —</option>
+              <option value="">none</option>
               {APPLE_TOP_CATEGORIES.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
@@ -46,7 +46,7 @@ export function CategoriesEditor({
               onChange={(e) => update(i, { subcategory: e.target.value || undefined })}
               className={`${inputCx} disabled:opacity-50`}
             >
-              <option value="">{subs.length ? "— no subcategory —" : "— n/a —"}</option>
+              <option value="">{subs.length ? "no subcategory" : "n/a"}</option>
               {subs.map((s) => (
                 <option key={s} value={s}>{s}</option>
               ))}

@@ -5,7 +5,7 @@ import { ArticleCard } from "~/components/content/ArticleCard";
 
 export function meta() {
   return [
-    { title: "Writing — germomics" },
+    { title: "Writing · germomics" },
     { name: "description", content: "Essays and notes on microbiology and history." },
   ];
 }

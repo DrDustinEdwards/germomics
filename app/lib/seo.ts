@@ -166,28 +166,34 @@ export function buildPodcastSeriesLd(show: ShowLike, origin: string) {
   };
 }
 
-type PersonLike = {
+type PersonLd = {
   name: string;
-  honorific?: string;
-  role?: string;
-  bio: readonly string[];
-  knowsAbout?: readonly string[];
-  sameAs?: readonly string[];
+  honorific: string;
+  slug: string;
+  jobTitle: string;
+  bio: string;
+  affiliation: string;
+  memberOf: string;
+  alumniOf: readonly string[];
+  knowsAbout: readonly string[];
+  sameAs: readonly string[];
 };
 
-/** Person node for the credentialed author (author bio page). */
-export function buildPersonLd(person: PersonLike, origin: string, slug: string, seriesTitle: string) {
+/** Person node for the credentialed author (author bio page). Fields per Vault site-config.md. */
+export function buildPersonLd(author: PersonLd, origin: string) {
   return {
     "@context": "https://schema.org",
     "@type": "Person",
-    name: person.name,
-    ...(person.honorific ? { honorificPrefix: person.honorific } : {}),
-    url: `${origin}/about/${slug}`,
-    ...(person.role ? { jobTitle: person.role } : {}),
-    description: person.bio.join(" "),
-    ...(person.knowsAbout?.length ? { knowsAbout: [...person.knowsAbout] } : {}),
-    worksFor: { "@type": "Organization", name: seriesTitle, url: `${origin}/` },
-    ...(person.sameAs?.length ? { sameAs: [...person.sameAs] } : {}),
+    name: author.name,
+    honorificPrefix: author.honorific,
+    url: `${origin}/about/${author.slug}`,
+    jobTitle: author.jobTitle,
+    description: author.bio,
+    affiliation: { "@type": "Organization", name: author.affiliation },
+    memberOf: { "@type": "Organization", name: author.memberOf },
+    alumniOf: author.alumniOf.map((name) => ({ "@type": "Organization", name })),
+    knowsAbout: [...author.knowsAbout],
+    sameAs: [...author.sameAs],
   };
 }
 

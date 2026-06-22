@@ -19,7 +19,7 @@ export function ReviewBanner() {
       className="my-6 rounded-xl border border-dashed border-amber-500/50 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-200"
     >
       <p className="flex items-center gap-2 font-display font-semibold">
-        <Info size={15} aria-hidden /> Draft — pending review
+        <Info size={15} aria-hidden /> Draft, pending review
       </p>
       <p className="mt-1 text-muted">
         This is a plain-language draft for completeness, not legal advice. It should be reviewed by

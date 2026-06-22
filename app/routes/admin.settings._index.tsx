@@ -54,7 +54,7 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
       <h1 className="flex items-center gap-2 font-display text-2xl font-semibold">
         <Settings size={22} aria-hidden /> Settings
       </h1>
-      <p className="mt-1 text-sm text-muted">Podcast channel metadata, categories, and funding — these drive the feed.</p>
+      <p className="mt-1 text-sm text-muted">Podcast channel metadata, categories, and funding. These drive the feed.</p>
 
       <fetcher.Form method="post" className="mt-6 space-y-5">
         <input type="hidden" name="categories" value={JSON.stringify(categories)} />

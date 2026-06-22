@@ -77,13 +77,13 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
       <h1 className="flex items-center gap-2 font-display text-2xl font-semibold">
         <Users size={22} aria-hidden /> People
       </h1>
-      <p className="mt-1 text-sm text-muted">Reusable guests — link them to episodes from the editor.</p>
+      <p className="mt-1 text-sm text-muted">Reusable guests. Link them to episodes from the editor.</p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_22rem]">
         {/* List */}
         <div>
           {loaderData.people.length === 0 ? (
-            <EmptyState>No people yet — create one on the right.</EmptyState>
+            <EmptyState>No people yet. Create one on the right.</EmptyState>
           ) : (
             <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
               {loaderData.people.map((p) => (

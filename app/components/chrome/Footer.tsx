@@ -10,7 +10,7 @@ export function Footer() {
             germ<span className="text-brand">omics</span>
           </div>
           <p className="mt-1 font-mono text-xs text-muted">
-            microbiology &amp; history — a podcast and writing project.
+            microbiology &amp; history, a podcast and writing project.
           </p>
         </div>
         <nav aria-label="Footer" className="flex flex-wrap items-center gap-4 font-display text-sm text-muted">

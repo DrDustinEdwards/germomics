@@ -12,11 +12,11 @@ import { QueueSeeder } from "~/components/content/QueueSeeder";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   const base = [
-    { title: "germomics — microbiology & history" },
+    { title: "germomics · microbiology & history" },
     {
       name: "description",
       content:
-        "A podcast and writing project about microbiology and history — audio, transcripts, writing, data, and games.",
+        "A podcast and writing project about microbiology and history, with audio, transcripts, writing, data, and games.",
     },
   ];
   if (!loaderData?.show) return base;

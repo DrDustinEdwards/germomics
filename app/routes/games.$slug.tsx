@@ -10,9 +10,9 @@ import { ClientOnly } from "~/components/util/ClientOnly";
 const PhaserGame = lazy(() => import("~/components/game/PhaserGame.client"));
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  if (!loaderData?.game) return [{ title: "Games — germomics" }];
+  if (!loaderData?.game) return [{ title: "Games · germomics" }];
   return [
-    { title: `${loaderData.game.title} — germomics` },
+    { title: `${loaderData.game.title} · germomics` },
     { name: "description", content: loaderData.game.tagline },
   ];
 }
@@ -59,7 +59,7 @@ export default function GamePage({ loaderData }: Route.ComponentProps) {
       {lastScore != null && !submitted ? (
         <fetcher.Form method="post" className="mt-4 flex flex-col gap-2 rounded-xl border border-border bg-surface p-4 sm:flex-row sm:items-center">
           <p className="font-display text-sm">
-            Run over — <span className="text-brand">{lastScore}</span> bacteria stopped. Save your score:
+            Run over. <span className="text-brand">{lastScore}</span> bacteria stopped. Save your score:
           </p>
           <input type="hidden" name="score" value={lastScore} />
           <input
@@ -100,7 +100,7 @@ export default function GamePage({ loaderData }: Route.ComponentProps) {
             ))}
           </ol>
         ) : (
-          <p className="text-muted">No scores yet — be the first.</p>
+          <p className="text-muted">No scores yet. Be the first.</p>
         )}
       </section>
     </div>

@@ -5,7 +5,7 @@ import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 
 export function meta({ params }: Route.MetaArgs) {
-  return [{ title: `#${params.tag} — germomics` }];
+  return [{ title: `#${params.tag} · germomics` }];
 }
 
 export async function loader({ params, context }: Route.LoaderArgs) {

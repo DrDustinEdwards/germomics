@@ -25,19 +25,29 @@ export function aiConfigured(env: Env): boolean {
   return !!apiKey(env);
 }
 
+// House writing rule (Vault site-config.md): applies to ALL generated text, so it lives in the
+// shared system prompt that every generator (show notes, chapters, SEO) runs through.
+export const STYLE_RULE =
+  "Writing style (strict): Do NOT use em dashes (the long dash character) anywhere; use commas, " +
+  "periods, parentheses, or colons instead. Avoid AI-writing tells such as: delve, tapestry, " +
+  "spans, landscape, realm, navigate, testament to, boasts, stands as, the phrasing 'not just X, " +
+  "it's Y', overwrought three-item lists, and grandiose closing sentences. Write plain, direct, " +
+  "varied, human sentences.";
+
 const SYSTEM =
   "You are an editorial assistant for the germomics podcast (microbiology and history). " +
   "You write ONLY from the transcript provided in the user message. Never invent or infer " +
   "facts, names, dates, numbers, citations, quotes, or links that are not explicitly present " +
   "in the transcript. If something is not in the transcript, leave it out. Produce exactly what " +
-  "is asked, with no preamble, apologies, or meta-commentary.";
+  "is asked, with no preamble, apologies, or meta-commentary. " +
+  STYLE_RULE;
 
 type CallOpts = { system?: string; user: string; maxTokens: number; model?: string };
 
 /** One non-streaming Messages API call. Returns the concatenated text. Throws a friendly Error. */
 async function callClaude(env: Env, opts: CallOpts): Promise<string> {
   const key = apiKey(env);
-  if (!key) throw new Error("AI is not configured — set the ANTHROPIC_API_KEY worker secret.");
+  if (!key) throw new Error("AI is not configured. Set the ANTHROPIC_API_KEY worker secret.");
 
   let res: Response;
   try {
@@ -68,8 +78,8 @@ async function callClaude(env: Env, opts: CallOpts): Promise<string> {
       /* ignore non-JSON error bodies */
     }
     if (res.status === 401) throw new Error("ANTHROPIC_API_KEY is invalid or revoked.");
-    if (res.status === 429) throw new Error("AI rate limit hit — wait a moment and try again.");
-    if (res.status === 529) throw new Error("AI service is overloaded — try again shortly.");
+    if (res.status === 429) throw new Error("AI rate limit hit. Wait a moment and try again.");
+    if (res.status === 529) throw new Error("AI service is overloaded. Try again shortly.");
     throw new Error(`AI request failed (${res.status})${detail ? `: ${detail}` : ""}.`);
   }
 
@@ -83,7 +93,7 @@ async function callClaude(env: Env, opts: CallOpts): Promise<string> {
 
 function requireTranscript(transcript: string): string {
   const t = (transcript ?? "").trim();
-  if (!t) throw new Error("This episode has no transcript yet — add one first.");
+  if (!t) throw new Error("This episode has no transcript yet. Add one first.");
   return t;
 }
 
@@ -109,7 +119,7 @@ export async function generateShowNotes(env: Env, transcript: string, model?: st
     "Write show notes for this episode as clean HTML, optimized to be quoted by search engines " +
     "and AI answer engines (answer-first). Structure:\n" +
     "1) ANSWER-FIRST opening <p>: a direct, self-contained 40–60 word answer to “what is this " +
-    "episode about and what will I learn?”. State it plainly in the first sentence — no preamble, " +
+    "episode about and what will I learn?”. State it plainly in the first sentence, with no preamble, " +
     "no “In this episode…” throat-clearing. This must stand alone as a quotable summary.\n" +
     "2) An <h2>Key topics</h2> followed by a <ul> of the main segments/topics actually discussed.\n" +
     "3) Only if specific works, people, or sources are explicitly named in the transcript, add " +
@@ -119,7 +129,9 @@ export async function generateShowNotes(env: Env, transcript: string, model?: st
     "answer (≤50 words each), every answer grounded in the transcript. Omit the FAQ entirely if it " +
     "would be thin or speculative.\n" +
     "Use only these tags: <p>, <h2>, <h3>, <ul>, <li>, <strong>, <em>. Do not include <html>, " +
-    "<body>, headings above <h2>, code fences, or any commentary. Invent nothing.\n\n" +
+    "<body>, headings above <h2>, code fences, or any commentary. Invent nothing. " +
+    STYLE_RULE +
+    "\n\n" +
     `Transcript:\n${t}`;
   return callClaude(env, { user, maxTokens: 1800, model });
 }
@@ -132,7 +144,9 @@ export async function generateChapters(env: Env, transcript: string, model?: str
     "cue start times. Return ONLY a JSON array (no prose, no code fences) of 4–12 objects: " +
     '[{"startTime": <whole seconds, number>, "title": "<short title, <=60 chars>"}]. ' +
     "The first startTime must be 0 and times must strictly increase. Title each chapter from what " +
-    "is actually discussed; invent nothing.\n\n" +
+    "is actually discussed; invent nothing. " +
+    STYLE_RULE +
+    "\n\n" +
     `Transcript:\n${t}`;
   const raw = await callClaude(env, { user, maxTokens: 1200, model });
   const parsed = extractJson(raw);
@@ -164,7 +178,9 @@ export async function generateSeo(
     `Episode working title: "${title || "(untitled)"}".\n` +
     "From the transcript below, write SEO metadata. Return ONLY JSON (no prose, no code fences): " +
     '{"seoTitle": "<=60 chars", "seoDescription": "<=155 chars", "socialBlurb": "<=200 chars, ' +
-    'engaging, first-person plural voice"}. Ground every claim in the transcript; invent nothing.\n\n' +
+    'engaging, first-person plural voice"}. Ground every claim in the transcript; invent nothing. ' +
+    STYLE_RULE +
+    "\n\n" +
     `Transcript:\n${t}`;
   const raw = await callClaude(env, { user, maxTokens: 600, model });
   const o = extractJson(raw) as Partial<SeoDraft>;

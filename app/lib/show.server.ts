@@ -7,7 +7,7 @@ import { showConfig, type ShowConfig } from "~/db/schema";
 export const DEFAULT_SHOW: ShowConfig = {
   id: 0,
   title: "germomics",
-  description: "A podcast about microbiology and history — the purple stain, retold.",
+  description: "A podcast about microbiology and history.",
   author: "Dustin Edwards",
   ownerEmail: "emaildustinedwards@gmail.com",
   artwork: "https://images.germomics.com/cover.jpg",

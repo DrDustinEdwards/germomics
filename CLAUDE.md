@@ -32,6 +32,16 @@ There is no Next.js and no OpenNext here. If a doc, snippet, or habit assumes Ne
 
 7. Keep the worker lean. Heavy client libraries (MapLibre for maps, Recharts for charts, **Phaser (Phaser 4)** for games) are `lazy()`-imported and code-split per route. They must never end up in the server bundle or the shared client chunk. The game engine is Phaser (Phaser 4): games are AI-written and Phaser's large training corpus generates more reliable, non-hallucinated code, with better performance and Safari/mobile behavior; its ~500KB only ever loads on an individual `/games/:slug` route.
 
+## Writing style (hard rule)
+
+Applies to ALL site copy AND to any text the site generates (AI show notes, SEO, chapters). This is a house rule, not a preference.
+
+- **No em dashes (the `—` character) anywhere.** Use commas, periods, parentheses, or colons instead.
+- **No AI-writing tells.** Avoid: delve, tapestry, spans, landscape, realm, navigate, testament to, boasts, stands as, the "it's not just X, it's Y" construction, overwrought rule-of-three lists, and grandiose closing sentences.
+- Write plain, direct, varied, human sentences. Prefer concrete nouns and short clauses over inflated phrasing.
+- This rule is also baked into every generator prompt in `app/lib/ai.server.ts` (`STYLE_RULE`, appended to the shared system prompt). Keep the two in sync if either changes.
+- Scope of "site copy": rendered page text, microcopy, titles/meta, and the generated `robots.txt` / `llms.txt` / `ai.txt`. It does not include source-code comments. Never edit migrated post/episode content in D1 to satisfy this rule.
+
 ## Commands
 
 - `npm run dev` - Vite dev server in workerd, bindings available locally.

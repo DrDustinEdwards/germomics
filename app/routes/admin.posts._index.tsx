@@ -140,7 +140,7 @@ export default function AdminPosts({ loaderData }: Route.ComponentProps) {
                     <Badge tone={st === "published" ? "accent" : st === "scheduled" ? "amber" : "muted"}>{st}</Badge>
                   </td>
                   <td className="hidden px-4 py-2.5 font-mono text-[11px] text-muted sm:table-cell">
-                    {p.publishedAt ? formatDate(p.publishedAt) : "—"}
+                    {p.publishedAt ? formatDate(p.publishedAt) : "Not set"}
                   </td>
                   <td className="px-4 py-2.5">
                     <div className="flex items-center justify-end gap-1">

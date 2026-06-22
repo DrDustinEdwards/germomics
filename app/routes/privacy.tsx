@@ -9,7 +9,7 @@ import { SITE_ADDRESS_LINE } from "~/lib/site";
 
 export function meta() {
   return [
-    { title: "Privacy policy — germomics" },
+    { title: "Privacy policy · germomics" },
     { name: "description", content: "How germomics handles your data." },
   ];
 }

@@ -12,7 +12,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
   const origin = loaderData?.origin ?? "";
   const show = loaderData?.show;
   return [
-    { title: `${ABOUT.title} — germomics` },
+    { title: `${ABOUT.title} · germomics` },
     { name: "description", content: ABOUT.lede },
     { property: "og:title", content: ABOUT.title },
     { property: "og:description", content: ABOUT.lede },
@@ -56,14 +56,12 @@ export default function About() {
         <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
           <User size={18} aria-hidden /> The author
         </h2>
-        <p className="mt-2 text-muted">
-          {AUTHOR.honorific} {AUTHOR.name} is a {AUTHOR.role.toLowerCase()} and the host of germomics.
-        </p>
+        <p className="mt-3 leading-relaxed">{AUTHOR.bio}</p>
         <Link
           to={`/about/${AUTHOR.slug}`}
           className="mt-3 inline-flex items-center gap-1 font-mono text-sm text-accent hover:underline"
         >
-          Read {AUTHOR.name}’s bio →
+          More about the author →
         </Link>
       </section>
 
