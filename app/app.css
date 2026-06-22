@@ -119,3 +119,27 @@
   min-width: 1.5rem;
   min-height: 1.5rem;
 }
+
+/* Readable long-form legal pages (privacy / terms) without pulling in a typography plugin. */
+@layer components {
+  .prose-legal h2 {
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  .prose-legal p,
+  .prose-legal ul {
+    margin-top: 0.75rem;
+  }
+  .prose-legal ul {
+    list-style: disc;
+    padding-left: 1.5rem;
+  }
+  .prose-legal li {
+    margin-top: 0.35rem;
+  }
+  .prose-legal a {
+    text-decoration: underline;
+  }
+}

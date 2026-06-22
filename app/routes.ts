@@ -15,8 +15,14 @@ export default [
   route("tag/:tag", "routes/tag.$tag.tsx"),
   route("guests/:guest", "routes/guests.$guest.tsx"),
   route("subscribe", "routes/subscribe.tsx"),
+  route("unsubscribe", "routes/unsubscribe.tsx"),
   route("about", "routes/about.tsx"),
   route("about/dustin-edwards", "routes/about.dustin-edwards.tsx"),
+  route("privacy", "routes/privacy.tsx"),
+  route("terms", "routes/terms.tsx"),
+
+  // ops
+  route("health", "routes/health.ts"),
 
   // feeds — resource routes. The podcast feed is matched at /feed/podcast/ (trailing slash,
   // the immutable URL directories poll) with no redirect to/from a non-slash variant.

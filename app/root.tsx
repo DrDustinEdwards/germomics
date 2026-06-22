@@ -9,6 +9,7 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { getEnv } from "~/lib/context.server";
 import { themeInitScript } from "~/lib/theme";
 import { PlayerProvider } from "~/components/player/player-context";
 import { PlayerDock } from "~/components/player/PlayerDock";
@@ -29,6 +30,13 @@ export const links: Route.LinksFunction = () => [
     href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap",
   },
 ];
+
+// Cloudflare Web Analytics is cookieless (no consent banner needed). The site token comes from
+// the dashboard via the CF_BEACON_TOKEN var; the beacon only renders when it's set.
+export async function loader({ context }: Route.LoaderArgs) {
+  const env = getEnv(context) as unknown as { CF_BEACON_TOKEN?: string };
+  return { beaconToken: env.CF_BEACON_TOKEN ?? null };
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -53,11 +61,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App() {
+export default function App({ loaderData }: Route.ComponentProps) {
   // PlayerProvider lives at the root, above the Outlet, so the single <audio> element and the
   // queue survive every client-side navigation (CLAUDE.md §04 — uninterrupted playback).
   return (
     <PlayerProvider>
+      {loaderData?.beaconToken ? (
+        <script
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={JSON.stringify({ token: loaderData.beaconToken })}
+        />
+      ) : null}
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-brand focus:px-3 focus:py-2 focus:text-white"

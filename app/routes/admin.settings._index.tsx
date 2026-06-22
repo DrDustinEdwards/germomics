@@ -115,7 +115,7 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
         <div className="flex items-center gap-3">
           <Button type="submit" variant="primary" disabled={fetcher.state !== "idle"}>Save settings</Button>
           {fetcher.data?.ok ? (
-            <span className="flex items-center gap-1 font-mono text-xs text-accent"><Check size={13} aria-hidden /> {fetcher.data.message}</span>
+            <span role="status" className="flex items-center gap-1 font-mono text-xs text-accent"><Check size={13} aria-hidden /> {fetcher.data.message}</span>
           ) : null}
         </div>
       </fetcher.Form>

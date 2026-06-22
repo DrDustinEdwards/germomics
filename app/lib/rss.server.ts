@@ -16,6 +16,16 @@ function cdata(value: string | null | undefined): string {
   return `<![CDATA[${value ?? ""}]]>`;
 }
 
+// OP3 (op3.dev) open, privacy-respecting download analytics. Podcast apps fetch the enclosure
+// through this prefix, which counts the download then redirects to the real file. ONLY the
+// enclosure URL is wrapped — guid, length, duration, and type are rendered verbatim and never
+// change (guid is the immutable dedup key directories rely on). Idempotent: never double-wraps.
+const OP3_PREFIX = "https://op3.dev/e/";
+export function op3Enclosure(url: string): string {
+  if (!url || url.includes("op3.dev/e/")) return url;
+  return OP3_PREFIX + url.replace(/^https?:\/\//i, "");
+}
+
 /** Nested <itunes:category> elements (up to 3), falling back to the single legacy column. */
 function categoriesXml(show: ShowConfig): string {
   const cats = show.categories?.length
@@ -100,7 +110,7 @@ function itemXml(e: Post, origin: string, guests: GuestView[]): string {
     <pubDate>${rfc822(e.publishedAt)}</pubDate>
     <description>${cdata(e.excerpt ?? e.body)}</description>
     <content:encoded>${cdata(e.body)}</content:encoded>
-    <enclosure url="${xmlEscape(e.audioUrl!)}" length="${e.audioByteSize ?? 0}" type="${e.audioMimeType ?? "audio/mpeg"}"/>
+    <enclosure url="${xmlEscape(op3Enclosure(e.audioUrl!))}" length="${e.audioByteSize ?? 0}" type="${e.audioMimeType ?? "audio/mpeg"}"/>
     <itunes:duration>${formatHMS(e.audioDuration)}</itunes:duration>
     <itunes:explicit>${e.explicit ? "true" : "false"}</itunes:explicit>
     <itunes:episodeType>${e.episodeType ?? "full"}</itunes:episodeType>${

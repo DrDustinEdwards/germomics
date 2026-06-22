@@ -56,7 +56,7 @@ export function PostDetail({ data }: { data: DetailData }) {
         {guests.map((g) => (
           <div key={g.slug} className="flex gap-3 rounded-xl border border-border bg-card p-4">
             {g.photo ? (
-              <img src={g.photo} alt={g.photoAlt ?? g.name} className="h-12 w-12 shrink-0 rounded-full border border-border object-cover" />
+              <img src={g.photo} alt={g.photoAlt ?? g.name} loading="lazy" decoding="async" width={48} height={48} className="h-12 w-12 shrink-0 rounded-full border border-border object-cover" />
             ) : null}
             <div className="min-w-0">
               <Link to={`/guests/${g.slug}`} className="font-display font-medium text-ink hover:text-brand">{g.name}</Link>
@@ -181,7 +181,9 @@ export function PostDetail({ data }: { data: DetailData }) {
     <article className="mx-auto max-w-3xl">
       {data.preview ? <PreviewBanner post={post} /> : null}
       {post.coverImage ? (
-        <img src={post.coverImage} alt={post.coverAlt ?? ""} className="mb-6 aspect-[2/1] w-full rounded-2xl border border-border object-cover" />
+        // Cover is the article LCP element — load it eagerly with high priority; the fixed aspect
+        // ratio reserves space so it doesn't shift layout (CLS).
+        <img src={post.coverImage} alt={post.coverAlt ?? ""} loading="eager" fetchPriority="high" decoding="async" className="mb-6 aspect-[2/1] w-full rounded-2xl border border-border object-cover" />
       ) : null}
       <p className="flex items-center gap-1 font-mono text-xs uppercase tracking-wide text-accent">
         <FileText size={12} aria-hidden /> Article

@@ -238,15 +238,26 @@ export const scores = sqliteTable(
   (t) => ({ boardIdx: index("scores_board_idx").on(t.gameSlug, t.score) }),
 );
 
-// Newsletter capture: email + timestamp only, unique on email. No other PII.
+// Newsletter capture: email + timestamp, unique on email. No other PII. (0004) adds explicit
+// consent + tokenized one-click unsubscribe — still no PII beyond the email itself.
 export const subscribers = sqliteTable(
   "subscribers",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     email: text("email").notNull(),
+    // GDPR: timestamp the subscriber ticked the explicit consent box. NULL = legacy/implied.
+    consentedAt: text("consented_at"),
+    // One-click unsubscribe (RFC 8058 / tokenized link). Unguessable, unique, backfilled in 0004.
+    unsubscribeToken: text("unsubscribe_token"),
+    // Suppression timestamp — set when the subscriber unsubscribes (kept, not deleted, so a
+    // re-signup with the same email doesn't silently resurrect a prior unsubscribe).
+    unsubscribedAt: text("unsubscribed_at"),
     createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   },
-  (t) => ({ emailIdx: uniqueIndex("subscribers_email_idx").on(t.email) }),
+  (t) => ({
+    emailIdx: uniqueIndex("subscribers_email_idx").on(t.email),
+    tokenIdx: uniqueIndex("subscribers_token_idx").on(t.unsubscribeToken),
+  }),
 );
 
 export type Score = typeof scores.$inferSelect;
