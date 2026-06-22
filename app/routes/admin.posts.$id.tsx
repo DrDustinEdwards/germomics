@@ -18,6 +18,7 @@ import {
 import { listPeople, getEpisodePeople, setEpisodePeople } from "~/lib/people.server";
 import { sanitizeHtml } from "~/lib/sanitize.server";
 import { previewToken } from "~/lib/preview.server";
+import { aiConfigured } from "~/lib/ai.server";
 import { PostEditor, type EditorData } from "~/components/admin/PostEditor";
 import type { Post, Chapter, Guest } from "~/db/schema";
 
@@ -52,6 +53,7 @@ export async function loader({ params, context, request }: Route.LoaderArgs) {
     takenSlugs: all.filter((p) => p.id !== post.id).map((p) => p.slug),
     origin,
     previewUrl: `${origin}/preview/${post.id}/${token}`,
+    aiAvailable: aiConfigured(env),
   };
   return data;
 }

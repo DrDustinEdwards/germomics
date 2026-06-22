@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { Rss, Mail } from "lucide-react";
+import { Rss, Mail, Lock } from "lucide-react";
 
 export function Footer() {
   return (
@@ -22,6 +22,14 @@ export function Footer() {
           <a href="/feed/site.xml" className="flex items-center gap-1 hover:text-ink">
             <Mail size={14} aria-hidden /> Writing feed
           </a>
+          {/* Subtle, muted admin entry — admin stays gated, so exposing the link is safe. */}
+          <Link
+            to="/admin"
+            aria-label="Admin"
+            className="flex items-center gap-1 text-muted/70 hover:text-ink"
+          >
+            <Lock size={13} aria-hidden /> Admin
+          </Link>
         </nav>
       </div>
     </footer>

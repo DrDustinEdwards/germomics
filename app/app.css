@@ -27,6 +27,9 @@
 }
 
 :root {
+  /* Height reserved at the bottom of the page for the fixed audio player (PlayerSpacer toggles
+     between this and 0 so the footer clears the dock only while something is playing). */
+  --player-h: 4.5rem;
   --bg: #fbfafd;
   --surface: #f4f1fa;
   --card: #ffffff;

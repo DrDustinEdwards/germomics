@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { Plus, Trash2, ArrowUp, ArrowDown, ListOrdered } from "lucide-react";
 import { Tabs, Button, inputCx, EmptyState } from "./ui";
 import { Waveform } from "./Waveform";
+import { AiAssist } from "./AiAssist";
 import { formatDuration, stampToSeconds } from "~/lib/format";
 import type { Chapter } from "~/lib/types";
 
@@ -14,11 +15,15 @@ export function ChaptersEditor({
   onChange,
   peaks,
   duration,
+  transcript = "",
+  aiAvailable = false,
 }: {
   chapters: Chapter[];
   onChange: (next: Chapter[]) => void;
   peaks: number[];
   duration: number | null;
+  transcript?: string;
+  aiAvailable?: boolean;
 }) {
   const [tab, setTab] = useState<"visual" | "json">("visual");
   const [selected, setSelected] = useState(0);
@@ -69,6 +74,27 @@ export function ChaptersEditor({
 
       {tab === "visual" ? (
         <>
+          <AiAssist<Chapter[]>
+            kind="chapters"
+            label="Suggest chapters"
+            transcript={transcript}
+            available={aiAvailable}
+            hasTranscript={!!transcript.trim()}
+            hasExisting={chapters.length > 0}
+            confirmReplaceLabel="chapters"
+            onAccept={(c) => onChange(c)}
+            renderPreview={(c) => (
+              <ol className="space-y-1 text-sm">
+                {c.map((ch, i) => (
+                  <li key={i} className="flex gap-2">
+                    <span className="font-mono text-xs tabular-nums text-accent">{formatDuration(ch.start)}</span>
+                    <span>{ch.title}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          />
+
           {peaks.length ? (
             <div>
               <Waveform

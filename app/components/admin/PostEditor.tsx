@@ -20,6 +20,8 @@ import { ChaptersEditor } from "./ChaptersEditor";
 import { GuestsField, type PersonLite, type SelectedPerson } from "./GuestsField";
 import { SeoPanel } from "./SeoPanel";
 import { VersionHistory } from "./VersionHistory";
+import { AiAssist } from "./AiAssist";
+import { BodyRenderer } from "~/components/content/BodyRenderer";
 
 export type EditorData = {
   post: Post;
@@ -29,6 +31,7 @@ export type EditorData = {
   takenSlugs: string[];
   origin: string;
   previewUrl: string;
+  aiAvailable: boolean;
 };
 
 type FormState = {
@@ -281,6 +284,20 @@ export function PostEditor({ data }: { data: EditorData }) {
             )}
           </Field>
 
+          {isEpisode ? (
+            <AiAssist<string>
+              kind="shownotes"
+              label="Generate show notes"
+              transcript={form.transcript}
+              available={data.aiAvailable}
+              hasTranscript={!!form.transcript.trim()}
+              hasExisting={!!form.body.trim()}
+              confirmReplaceLabel="body"
+              onAccept={(html) => set("body", html)}
+              renderPreview={(html) => <BodyRenderer html={html} />}
+            />
+          ) : null}
+
           <RichTextEditor value={form.body} onChange={(html) => set("body", html)} postId={post.id} />
 
           <Field
@@ -337,6 +354,8 @@ export function PostEditor({ data }: { data: EditorData }) {
                   onChange={(c) => set("chapters", c)}
                   peaks={form.audio.audioPeaks ?? []}
                   duration={form.audio.audioDuration}
+                  transcript={form.transcript}
+                  aiAvailable={data.aiAvailable}
                 />
                 <hr className="border-border" />
                 <GuestsField
@@ -431,6 +450,9 @@ export function PostEditor({ data }: { data: EditorData }) {
               image={form.ogImage || form.episodeArtwork || form.coverImage || null}
               imageAlt={form.ogImageAlt || form.coverAlt || null}
               onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+              transcript={form.transcript}
+              episodeTitle={form.title}
+              aiAvailable={isEpisode && data.aiAvailable}
             />
           </Card>
 

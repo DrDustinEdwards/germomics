@@ -12,6 +12,7 @@ import "./app.css";
 import { themeInitScript } from "~/lib/theme";
 import { PlayerProvider } from "~/components/player/player-context";
 import { PlayerDock } from "~/components/player/PlayerDock";
+import { PlayerSpacer } from "~/components/player/PlayerSpacer";
 import { Header } from "~/components/chrome/Header";
 import { Footer } from "~/components/chrome/Footer";
 
@@ -64,10 +65,12 @@ export default function App() {
         Skip to content
       </a>
       <Header />
-      <main id="main" className="mx-auto min-h-[60vh] max-w-5xl px-4 pb-28 pt-6">
+      <main id="main" className="mx-auto min-h-[60vh] max-w-5xl px-4 pb-12 pt-6">
         <Outlet />
       </main>
       <Footer />
+      {/* Reserves the player's height so the footer clears the fixed dock while playing. */}
+      <PlayerSpacer />
       <PlayerDock />
     </PlayerProvider>
   );

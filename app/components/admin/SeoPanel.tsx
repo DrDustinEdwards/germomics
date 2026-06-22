@@ -1,6 +1,10 @@
 // SEO panel (§G): SEO title + description with char counters, a Google-snippet preview, and an
 // Open Graph / Twitter card preview using the post's effective social image. Canonical URL shown.
+// Optional AI assist (Tier 3) drafts title/description/social blurb from the transcript.
 import { Field, inputCx } from "./ui";
+import { AiAssist } from "./AiAssist";
+
+type SeoDraft = { seoTitle: string; seoDescription: string; socialBlurb: string };
 
 export function SeoPanel({
   slug,
@@ -12,6 +16,9 @@ export function SeoPanel({
   image,
   imageAlt,
   onChange,
+  transcript = "",
+  episodeTitle = "",
+  aiAvailable = false,
 }: {
   slug: string;
   origin: string;
@@ -22,6 +29,9 @@ export function SeoPanel({
   image: string | null;
   imageAlt: string | null;
   onChange: (patch: { seoTitle?: string; seoDescription?: string }) => void;
+  transcript?: string;
+  episodeTitle?: string;
+  aiAvailable?: boolean;
 }) {
   const title = (seoTitle || fallbackTitle || "Untitled").trim();
   const desc = (seoDescription || fallbackDescription || "").trim();
@@ -30,6 +40,27 @@ export function SeoPanel({
 
   return (
     <div className="space-y-4">
+      <AiAssist<SeoDraft>
+        kind="seo"
+        label="Suggest SEO"
+        transcript={transcript}
+        title={episodeTitle}
+        available={aiAvailable}
+        hasTranscript={!!transcript.trim()}
+        hasExisting={!!seoTitle.trim() || !!seoDescription.trim()}
+        confirmReplaceLabel="SEO title & description"
+        onAccept={(d) => onChange({ seoTitle: d.seoTitle, seoDescription: d.seoDescription })}
+        renderPreview={(d) => (
+          <div className="space-y-2 text-sm">
+            <p><span className="font-mono text-[11px] uppercase text-muted">Title</span><br />{d.seoTitle}</p>
+            <p><span className="font-mono text-[11px] uppercase text-muted">Description</span><br />{d.seoDescription}</p>
+            {d.socialBlurb ? (
+              <p><span className="font-mono text-[11px] uppercase text-muted">Social blurb (copy manually)</span><br />{d.socialBlurb}</p>
+            ) : null}
+          </div>
+        )}
+      />
+
       <Field label="SEO title" hint="Recommended ≤ 60 characters." count={{ value: seoTitle.length, max: 60 }}>
         {({ id, describedBy }) => (
           <input
