@@ -21,8 +21,8 @@ import {
 import { sql, relations } from "drizzle-orm";
 // JSON shapes (stored as TEXT, typed at the edge). Defined client-safe in lib/types and
 // re-exported here so loaders and components share one source of truth.
-import type { Chapter, Guest } from "~/lib/types";
-export type { Chapter, Guest };
+import type { Chapter, Guest, PersonLink } from "~/lib/types";
+export type { Chapter, Guest, PersonLink };
 
 // ============================================================
 // 1. Content (live)
@@ -49,6 +49,13 @@ export const posts = sqliteTable(
     seoTitle: text("seo_title"),
     seoDescription: text("seo_description"),
     publishedAt: text("published_at"),
+    // Scheduling gate (0002): a "scheduled" post is status=published with a future publishAt;
+    // public reads hide published posts whose publishAt is still in the future.
+    publishAt: text("publish_at"),
+    // Per-post social image + alt text for accessible images (0002).
+    coverAlt: text("cover_alt"),
+    ogImage: text("og_image"),
+    ogImageAlt: text("og_image_alt"),
     createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
     updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 
@@ -66,8 +73,10 @@ export const posts = sqliteTable(
     guid: text("guid"),
     transcript: text("transcript"),
     chapters: text("chapters", { mode: "json" }).$type<Chapter[]>(),
-    guests: text("guests", { mode: "json" }).$type<Guest[]>(),
+    guests: text("guests", { mode: "json" }).$type<Guest[]>(), // legacy/raw-JSON fallback; people[] preferred
     episodeArtwork: text("episode_artwork"),
+    episodeArtworkAlt: text("episode_artwork_alt"),
+    audioPeaks: text("audio_peaks", { mode: "json" }).$type<number[]>(), // waveform (0..1)
   },
   (t) => ({
     slugIdx: uniqueIndex("posts_slug_idx").on(t.slug),
@@ -236,3 +245,71 @@ export const subscribers = sqliteTable(
 );
 
 export type Score = typeof scores.$inferSelect;
+
+// ============================================================
+// 4. People (reusable guest entities) + episode links + soundbites (0002)
+// ============================================================
+export const people = sqliteTable(
+  "people",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    name: text("name").notNull(),
+    slug: text("slug").notNull(),
+    role: text("role"),
+    bio: text("bio"),
+    photo: text("photo"),
+    photoAlt: text("photo_alt"),
+    links: text("links", { mode: "json" }).$type<PersonLink[]>().default(sql`'[]'`),
+    createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+    updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+  },
+  (t) => ({ slugIdx: uniqueIndex("people_slug_idx").on(t.slug) }),
+);
+
+export const episodePeople = sqliteTable(
+  "episode_people",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    postId: integer("post_id")
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    personId: integer("person_id")
+      .notNull()
+      .references(() => people.id, { onDelete: "cascade" }),
+    role: text("role"),
+    sort: integer("sort").notNull().default(0),
+  },
+  (t) => ({
+    uniq: uniqueIndex("episode_people_uniq").on(t.postId, t.personId),
+    postIdx: index("episode_people_post_idx").on(t.postId),
+  }),
+);
+
+// Schema only this pass — the soundbite editor is deferred (Tier 2/3).
+export const soundbites = sqliteTable(
+  "soundbites",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    postId: integer("post_id")
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    startSeconds: integer("start_seconds").notNull(),
+    durationSeconds: integer("duration_seconds").notNull(),
+    title: text("title"),
+    createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  },
+  (t) => ({ postIdx: index("soundbites_post_idx").on(t.postId) }),
+);
+
+export const peopleRelations = relations(people, ({ many }) => ({
+  episodes: many(episodePeople),
+}));
+export const episodePeopleRelations = relations(episodePeople, ({ one }) => ({
+  post: one(posts, { fields: [episodePeople.postId], references: [posts.id] }),
+  person: one(people, { fields: [episodePeople.personId], references: [people.id] }),
+}));
+
+export type Person = typeof people.$inferSelect;
+export type NewPerson = typeof people.$inferInsert;
+export type EpisodePerson = typeof episodePeople.$inferSelect;
+export type Soundbite = typeof soundbites.$inferSelect;

@@ -1,6 +1,7 @@
 import type { Route } from "./+types/guests.$guest";
 import { getEnv } from "~/lib/context.server";
 import { postsByGuest, slugifyGuest, toPlayerTrack } from "~/lib/posts.server";
+import { getPersonBySlug, postsByPerson } from "~/lib/people.server";
 import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 
@@ -9,27 +10,58 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export async function loader({ params, context }: Route.LoaderArgs) {
-  const episodes = await postsByGuest(getEnv(context), params.guest);
-  // Recover a display name + bio from the first matching episode's guest entry.
-  const guest = episodes
-    .flatMap((e) => e.guests ?? [])
-    .find((g) => slugifyGuest(g.name) === params.guest);
+  const env = getEnv(context);
+
+  // Prefer the People entity; fall back to the legacy guests-JSON resolver.
+  const person = await getPersonBySlug(env, params.guest);
+  const [byPerson, byLegacy] = await Promise.all([
+    person ? postsByPerson(env, params.guest) : Promise.resolve([]),
+    postsByGuest(env, params.guest),
+  ]);
+
+  // Merge + dedupe, newest first.
+  const seen = new Set<number>();
+  const episodes = [...byPerson, ...byLegacy]
+    .filter((e) => (seen.has(e.id) ? false : (seen.add(e.id), true)))
+    .sort((a, b) => String(b.publishedAt ?? "").localeCompare(String(a.publishedAt ?? "")));
+
+  const legacy = episodes.flatMap((e) => e.guests ?? []).find((g) => slugifyGuest(g.name) === params.guest);
+
   return {
-    name: guest?.name ?? params.guest,
-    bio: guest?.bio ?? null,
+    name: person?.name ?? legacy?.name ?? params.guest,
+    role: person?.role ?? legacy?.role ?? null,
+    bio: person?.bio ?? legacy?.bio ?? null,
+    photo: person?.photo ?? null,
+    photoAlt: person?.photoAlt ?? null,
+    links: person?.links ?? (legacy?.link ? [{ label: "Website", url: legacy.link }] : []),
     episodes,
     tracks: episodes.map(toPlayerTrack),
   };
 }
 
 export default function GuestPage({ loaderData }: Route.ComponentProps) {
-  const { name, bio, episodes, tracks } = loaderData;
+  const { name, role, bio, photo, photoAlt, links, episodes, tracks } = loaderData;
   return (
     <div>
       <QueueSeeder tracks={tracks} />
       <p className="font-mono text-xs uppercase tracking-wide text-accent">Guest</p>
-      <h1 className="mb-2 font-display text-3xl font-semibold">{name}</h1>
-      {bio ? <p className="mb-6 max-w-2xl text-muted">{bio}</p> : null}
+      <div className="mb-6 mt-2 flex items-start gap-4">
+        {photo ? (
+          <img src={photo} alt={photoAlt ?? name} className="h-16 w-16 rounded-full border border-border object-cover" />
+        ) : null}
+        <div>
+          <h1 className="font-display text-3xl font-semibold">{name}</h1>
+          {role ? <p className="font-mono text-xs text-muted">{role}</p> : null}
+          {bio ? <p className="mt-2 max-w-2xl text-muted">{bio}</p> : null}
+          {links.length ? (
+            <div className="mt-2 flex flex-wrap gap-3 font-mono text-xs">
+              {links.map((l) => (
+                <a key={l.url} href={l.url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">{l.label || "link"}</a>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      </div>
       <div className="grid gap-3">
         {episodes.map((post) => (
           <PostCard key={post.id} post={post} track={tracks.find((t) => t.id === post.id)} queue={tracks} />

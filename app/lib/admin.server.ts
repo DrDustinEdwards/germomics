@@ -1,7 +1,7 @@
 // Admin-only post mutations. Kept apart from posts.server (reads) and only ever reached from
 // gated admin routes. Drizzle query builder throughout; guid is generated once and never
 // rewritten (germomics invariant: immutable guid).
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { posts, postVersions, type Post } from "~/db/schema";
 
@@ -37,7 +37,17 @@ export async function listVersions(env: Env, postId: number) {
     .from(postVersions)
     .where(eq(postVersions.postId, postId))
     .orderBy(desc(postVersions.createdAt))
-    .limit(25);
+    .limit(50);
+}
+
+/** Full snapshot for a single version (used by the diff viewer). */
+export async function getVersion(env: Env, versionId: number): Promise<Post | null> {
+  const rows = await getDb(env)
+    .select()
+    .from(postVersions)
+    .where(eq(postVersions.id, versionId))
+    .limit(1);
+  return (rows[0]?.snapshot as Post | undefined) ?? null;
 }
 
 /** Restore a snapshot's content, preserving the immutable id/guid/createdAt. */
@@ -58,6 +68,47 @@ export async function restoreVersion(env: Env, postId: number, versionId: number
 
 export async function listAllPosts(env: Env): Promise<Post[]> {
   return getDb(env).select().from(posts).orderBy(desc(posts.updatedAt));
+}
+
+/** Duplicate a post as a fresh draft "template" — copies content, resets identity/publish state. */
+export async function duplicatePost(env: Env, id: number): Promise<number> {
+  const db = getDb(env);
+  const rows = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
+  const src = rows[0];
+  if (!src) throw new Response("Not found", { status: 404 });
+  const {
+    id: _id,
+    guid: _guid,
+    createdAt: _c,
+    updatedAt: _u,
+    publishedAt: _p,
+    publishAt: _pa,
+    ...rest
+  } = src;
+  void _id; void _guid; void _c; void _u; void _p; void _pa;
+  const created = await db
+    .insert(posts)
+    .values({
+      ...rest,
+      title: `${src.title} (copy)`,
+      slug: `${src.slug}-copy-${Date.now()}`,
+      status: "draft",
+      guid: null,
+      publishedAt: null,
+      publishAt: null,
+    })
+    .returning({ id: posts.id });
+  return created[0].id;
+}
+
+/** Slug uniqueness check for inline validation (excludes the post being edited). */
+export async function isSlugAvailable(env: Env, slug: string, excludeId: number): Promise<boolean> {
+  const rows = await getDb(env)
+    .select({ id: posts.id })
+    .from(posts)
+    .where(and(eq(posts.slug, slug), ne(posts.id, excludeId)))
+    .limit(1);
+  return rows.length === 0;
 }
 
 /** Permanent immutable feed guid, generated once at first publish. */

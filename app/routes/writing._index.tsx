@@ -1,7 +1,7 @@
 import type { Route } from "./+types/writing._index";
 import { getEnv } from "~/lib/context.server";
 import { listArticles } from "~/lib/posts.server";
-import { PostCard } from "~/components/content/PostCard";
+import { ArticleCard } from "~/components/content/ArticleCard";
 
 export function meta() {
   return [
@@ -17,15 +17,19 @@ export async function loader({ context }: Route.LoaderArgs) {
 export default function Writing({ loaderData }: Route.ComponentProps) {
   return (
     <div>
-      <h1 className="mb-6 font-display text-3xl font-semibold">Writing</h1>
-      <div className="grid gap-3">
-        {loaderData.articles.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
-        {loaderData.articles.length === 0 ? (
-          <p className="text-muted">No articles yet.</p>
-        ) : null}
-      </div>
+      <header className="mb-8">
+        <h1 className="font-display text-3xl font-semibold">Writing</h1>
+        <p className="mt-1 text-muted">Essays and notes on microbiology and history.</p>
+      </header>
+      {loaderData.articles.length === 0 ? (
+        <p className="text-muted">No articles yet.</p>
+      ) : (
+        <div className="grid gap-5 sm:grid-cols-2">
+          {loaderData.articles.map((post) => (
+            <ArticleCard key={post.id} post={post} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

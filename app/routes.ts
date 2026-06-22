@@ -36,7 +36,13 @@ export default [
     route("logout", "routes/admin.logout.tsx"),
     route("posts", "routes/admin.posts._index.tsx"),
     route("posts/:id", "routes/admin.posts.$id.tsx"),
+    route("people", "routes/admin.people._index.tsx"),
+    route("upload", "routes/admin.upload.ts"),
+    route("version/:vid", "routes/admin.version.$vid.ts"),
   ]),
+
+  // tokenized "preview as published" — public but unguessable, noindex.
+  route("preview/:id/:token", "routes/preview.$id.$token.tsx"),
 
   // episode/article detail — single dynamic segment, ranked below every static route above.
   route(":slug", "routes/$slug.tsx"),
