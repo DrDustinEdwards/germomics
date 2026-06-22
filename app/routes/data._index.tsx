@@ -2,6 +2,8 @@ import { Link } from "react-router";
 import { Activity, Dna } from "lucide-react";
 import type { Route } from "./+types/data._index";
 import { listDatasets } from "~/lib/datasets.server";
+import { getSnippets } from "~/lib/context.server";
+import { snippet } from "~/lib/content.server";
 
 export function meta() {
   return [
@@ -10,8 +12,13 @@ export function meta() {
   ];
 }
 
-export function loader(_: Route.LoaderArgs) {
-  return { datasets: listDatasets() };
+export function loader({ context }: Route.LoaderArgs) {
+  const snippets = getSnippets(context);
+  const datasets = listDatasets().map((d) => ({
+    ...d,
+    summary: snippet(snippets, `snippet:dataset.${d.slug}`, d.summary),
+  }));
+  return { datasets };
 }
 
 export default function DataHub({ loaderData }: Route.ComponentProps) {

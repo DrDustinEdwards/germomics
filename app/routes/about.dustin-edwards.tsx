@@ -1,12 +1,13 @@
-// /about/dustin-edwards - author bio with credentials. Carries Person + BreadcrumbList JSON-LD
-// (author authority / entity clarity). Bio is the approved copy from app/lib/about.ts, used
-// verbatim. germomics stays independent: credentials in the prose only, no institutional branding.
+// /about/dustin-edwards - author bio. Prose comes from the page:dustin-edwards content block (D1).
+// Person + BreadcrumbList JSON-LD carry author authority. Independent framing: credentials in the
+// prose only, no institutional branding. ?preview shows the draft to a signed-in admin.
 import { Link } from "react-router";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import type { Route } from "./+types/about.dustin-edwards";
 import { getEnv } from "~/lib/context.server";
-import { getShowConfig } from "~/lib/show.server";
-import { buildPersonLd, buildBreadcrumbLd } from "~/lib/seo";
+import { loadPage, isPreviewing } from "~/lib/content.server";
+import { buildPersonLd, buildBreadcrumbLd, stripHtml } from "~/lib/seo";
+import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { AUTHOR } from "~/lib/about";
 
 const LINKS = [
@@ -16,16 +17,16 @@ const LINKS = [
 
 export function meta({ loaderData }: Route.MetaArgs) {
   const origin = loaderData?.origin ?? "";
-  const desc =
-    "Dr. Dustin Edwards is a microbiologist, Professor and Department Head of Biological Sciences, and the host of germomics.";
+  const bioText = loaderData?.bioText ?? AUTHOR.bio;
+  const desc = bioText.slice(0, 200);
   return [
-    { title: `${AUTHOR.honorific} ${AUTHOR.name} · germomics` },
+    { title: `${AUTHOR.honorific} ${AUTHOR.name}` },
     { name: "description", content: desc },
     { property: "og:title", content: `${AUTHOR.honorific} ${AUTHOR.name}` },
     { property: "og:description", content: desc },
     { property: "og:type", content: "profile" },
     { property: "og:url", content: `${origin}/about/${AUTHOR.slug}` },
-    { "script:ld+json": buildPersonLd(AUTHOR, origin) },
+    { "script:ld+json": buildPersonLd({ ...AUTHOR, bio: bioText }, origin) },
     {
       "script:ld+json": buildBreadcrumbLd([
         { name: "Home", url: `${origin}/` },
@@ -37,17 +38,16 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const show = await getShowConfig(getEnv(context));
-  return { origin: new URL(request.url).origin, seriesTitle: show.title };
+  const env = getEnv(context);
+  const preview = await isPreviewing(env, request);
+  const bio = await loadPage(env, "page:dustin-edwards", { includeDrafts: preview });
+  return { origin: new URL(request.url).origin, bioHtml: bio.value, bioText: stripHtml(bio.value) };
 }
 
-export default function AuthorBio() {
+export default function AuthorBio({ loaderData }: Route.ComponentProps) {
   return (
     <div className="mx-auto max-w-2xl">
-      <Link
-        to="/about"
-        className="inline-flex items-center gap-1 font-mono text-xs text-muted hover:text-ink"
-      >
+      <Link to="/about" className="inline-flex items-center gap-1 font-mono text-xs text-muted hover:text-ink">
         <ArrowLeft size={12} aria-hidden /> About
       </Link>
 
@@ -57,7 +57,9 @@ export default function AuthorBio() {
       </h1>
       <p className="mt-2 font-mono text-sm text-muted">{AUTHOR.jobTitle}</p>
 
-      <p className="mt-6 leading-relaxed">{AUTHOR.bio}</p>
+      <div className="prose-legal mt-6">
+        <BodyRenderer html={loaderData.bioHtml} />
+      </div>
 
       <section className="mt-8">
         <h2 className="mb-2 font-display text-sm font-semibold">Find Dr. Edwards online</h2>

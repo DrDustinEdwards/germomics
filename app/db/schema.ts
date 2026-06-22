@@ -263,6 +263,42 @@ export const subscribers = sqliteTable(
 export type Score = typeof scores.$inferSelect;
 
 // ============================================================
+// 3b. Content-in-D1 (0005) — settings (config) + content_blocks (prose). AI-editable.
+// ============================================================
+// Non-secret config + operational values. show_config stays the feed's source of truth; settings
+// never duplicates a show_config fact.
+export const settings = sqliteTable("settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull().default(""),
+  type: text("type", { enum: ["string", "number", "json", "markdown"] })
+    .notNull()
+    .default("string"),
+  group: text("group"),
+  label: text("label"),
+  description: text("description"),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// Prose: pages get a draft/published gate (only published renders publicly); snippets are instant.
+// FTS (content_blocks_fts + triggers) lives in the raw migration drizzle/0005_content_settings.sql.
+export const contentBlocks = sqliteTable(
+  "content_blocks",
+  {
+    key: text("key").primaryKey(),
+    kind: text("kind", { enum: ["page", "snippet"] }).notNull().default("snippet"),
+    title: text("title"),
+    value: text("value").notNull().default(""),
+    description: text("description"),
+    status: text("status", { enum: ["draft", "published"] }).notNull().default("draft"),
+    updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+  },
+  (t) => ({ kindIdx: index("content_blocks_kind_idx").on(t.kind, t.status) }),
+);
+
+export type Setting = typeof settings.$inferSelect;
+export type ContentBlock = typeof contentBlocks.$inferSelect;
+
+// ============================================================
 // 4. People (reusable guest entities) + episode links + soundbites (0002)
 // ============================================================
 export const people = sqliteTable(

@@ -4,17 +4,19 @@ import type { Route } from "./+types/llms";
 import { getEnv } from "~/lib/context.server";
 import { listEpisodes, listArticles } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
+import { loadPage } from "~/lib/content.server";
 import { buildLlmsTxt } from "~/lib/discovery.server";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const origin = new URL(request.url).origin;
-  const [show, episodes, articles] = await Promise.all([
+  const [show, episodes, articles, intro] = await Promise.all([
     getShowConfig(env),
     listEpisodes(env),
     listArticles(env),
+    loadPage(env, "page:llms"),
   ]);
-  return new Response(buildLlmsTxt(show, episodes, articles, origin), {
+  return new Response(buildLlmsTxt(show, episodes, articles, origin, intro.value), {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
       "X-Robots-Tag": "noindex",

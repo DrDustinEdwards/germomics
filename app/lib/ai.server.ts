@@ -4,6 +4,7 @@
 // episode transcript only: prompts forbid inventing facts/names/dates/citations. Output is a
 // DRAFT — the route returns it, the author accepts/edits/discards (no auto-save, no overwrite).
 import type { Chapter } from "~/lib/types";
+import { loadSettings, setting } from "~/lib/content.server";
 
 // Default model is configurable; sonnet-4-6 balances quality/cost for summarization. Haiku is the
 // cheaper/faster option. (Per the Tier 3 spec — these exact model strings.)
@@ -97,6 +98,20 @@ function requireTranscript(transcript: string): string {
   return t;
 }
 
+// Model + prompts are tunable live from the settings table (ai.model, ai.prompt.*). Each read
+// falls back to the generated default (content-defaults.ts) via setting(), so editing a prompt in
+// D1 changes generation with no deploy, and a missing row never breaks it.
+async function aiCfg(env: Env) {
+  const s = await loadSettings(env);
+  return {
+    model: setting(s, "ai.model", DEFAULT_MODEL),
+    system: `${setting(s, "ai.prompt.system")} ${setting(s, "ai.prompt.style")}`.trim(),
+    shownotes: setting(s, "ai.prompt.shownotes"),
+    chapters: setting(s, "ai.prompt.chapters"),
+    seo: setting(s, "ai.prompt.seo"),
+  };
+}
+
 // Pull the first JSON value out of a model response (tolerates code fences / stray prose).
 function extractJson(text: string): unknown {
   let s = text.trim().replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
@@ -115,40 +130,17 @@ function extractJson(text: string): unknown {
 /** Show-notes draft as sanitized-friendly HTML, grounded in the transcript. */
 export async function generateShowNotes(env: Env, transcript: string, model?: string): Promise<string> {
   const t = requireTranscript(transcript);
-  const user =
-    "Write show notes for this episode as clean HTML, optimized to be quoted by search engines " +
-    "and AI answer engines (answer-first). Structure:\n" +
-    "1) ANSWER-FIRST opening <p>: a direct, self-contained 40–60 word answer to “what is this " +
-    "episode about and what will I learn?”. State it plainly in the first sentence, with no preamble, " +
-    "no “In this episode…” throat-clearing. This must stand alone as a quotable summary.\n" +
-    "2) An <h2>Key topics</h2> followed by a <ul> of the main segments/topics actually discussed.\n" +
-    "3) Only if specific works, people, or sources are explicitly named in the transcript, add " +
-    "<h2>Mentioned</h2> and a <ul> listing them.\n" +
-    "4) OPTIONAL <h2>FAQ</h2>: include ONLY if the transcript clearly answers common questions a " +
-    "listener would ask. If so, add 2–5 pairs of <h3>question?</h3> immediately followed by a <p> " +
-    "answer (≤50 words each), every answer grounded in the transcript. Omit the FAQ entirely if it " +
-    "would be thin or speculative.\n" +
-    "Use only these tags: <p>, <h2>, <h3>, <ul>, <li>, <strong>, <em>. Do not include <html>, " +
-    "<body>, headings above <h2>, code fences, or any commentary. Invent nothing. " +
-    STYLE_RULE +
-    "\n\n" +
-    `Transcript:\n${t}`;
-  return callClaude(env, { user, maxTokens: 1800, model });
+  const cfg = await aiCfg(env);
+  const user = `${cfg.shownotes}\n\nTranscript:\n${t}`;
+  return callClaude(env, { system: cfg.system, user, maxTokens: 1800, model: model || cfg.model });
 }
 
 /** Chapter suggestions as Chapter[] (start seconds + title), using real VTT cue timings. */
 export async function generateChapters(env: Env, transcript: string, model?: string): Promise<Chapter[]> {
   const t = requireTranscript(transcript);
-  const user =
-    "From this WebVTT transcript, propose chapter markers at major topic shifts, using the actual " +
-    "cue start times. Return ONLY a JSON array (no prose, no code fences) of 4–12 objects: " +
-    '[{"startTime": <whole seconds, number>, "title": "<short title, <=60 chars>"}]. ' +
-    "The first startTime must be 0 and times must strictly increase. Title each chapter from what " +
-    "is actually discussed; invent nothing. " +
-    STYLE_RULE +
-    "\n\n" +
-    `Transcript:\n${t}`;
-  const raw = await callClaude(env, { user, maxTokens: 1200, model });
+  const cfg = await aiCfg(env);
+  const user = `${cfg.chapters}\n\nTranscript:\n${t}`;
+  const raw = await callClaude(env, { system: cfg.system, user, maxTokens: 1200, model: model || cfg.model });
   const parsed = extractJson(raw);
   if (!Array.isArray(parsed)) throw new Error("The AI returned an unexpected chapters format.");
   const chapters: Chapter[] = parsed
@@ -174,15 +166,9 @@ export async function generateSeo(
   model?: string,
 ): Promise<SeoDraft> {
   const t = requireTranscript(transcript);
-  const user =
-    `Episode working title: "${title || "(untitled)"}".\n` +
-    "From the transcript below, write SEO metadata. Return ONLY JSON (no prose, no code fences): " +
-    '{"seoTitle": "<=60 chars", "seoDescription": "<=155 chars", "socialBlurb": "<=200 chars, ' +
-    'engaging, first-person plural voice"}. Ground every claim in the transcript; invent nothing. ' +
-    STYLE_RULE +
-    "\n\n" +
-    `Transcript:\n${t}`;
-  const raw = await callClaude(env, { user, maxTokens: 600, model });
+  const cfg = await aiCfg(env);
+  const user = `Episode working title: "${title || "(untitled)"}".\n${cfg.seo}\n\nTranscript:\n${t}`;
+  const raw = await callClaude(env, { system: cfg.system, user, maxTokens: 600, model: model || cfg.model });
   const o = extractJson(raw) as Partial<SeoDraft>;
   return {
     seoTitle: String(o.seoTitle ?? "").trim().slice(0, 120),

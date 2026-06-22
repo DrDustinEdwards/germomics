@@ -4,7 +4,7 @@
 // (+ MediaObject + partOfSeries) for episodes.
 import type { Post } from "~/db/schema";
 import type { GuestView } from "~/lib/types";
-import { postalAddressLd } from "~/lib/site";
+import { postalAddressLd, type Address } from "~/lib/site";
 
 export function stripHtml(html: string): string {
   return html
@@ -134,8 +134,8 @@ type ShowLike = {
   subscribeLinks?: Record<string, string> | null;
 };
 
-/** Organization node for the publisher (home + About). */
-export function buildOrganizationLd(show: ShowLike, origin: string) {
+/** Organization node for the publisher (home + About). Address from the contact.address setting. */
+export function buildOrganizationLd(show: ShowLike, origin: string, address?: Partial<Address>) {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -144,12 +144,12 @@ export function buildOrganizationLd(show: ShowLike, origin: string) {
     description: show.description,
     logo: show.artwork,
     founder: { "@type": "Person", name: show.author },
-    address: postalAddressLd(),
+    address: postalAddressLd(address),
   };
 }
 
 /** PodcastSeries node tying the show to its immutable feed (home). */
-export function buildPodcastSeriesLd(show: ShowLike, origin: string) {
+export function buildPodcastSeriesLd(show: ShowLike, origin: string, address?: Partial<Address>) {
   return {
     "@context": "https://schema.org",
     "@type": "PodcastSeries",
@@ -159,7 +159,7 @@ export function buildPodcastSeriesLd(show: ShowLike, origin: string) {
     image: show.artwork,
     webFeed: `${origin}/feed/podcast/`,
     author: { "@type": "Person", name: show.author },
-    address: postalAddressLd(),
+    address: postalAddressLd(address),
     ...(show.subscribeLinks && Object.keys(show.subscribeLinks).length
       ? { sameAs: Object.values(show.subscribeLinks) }
       : {}),

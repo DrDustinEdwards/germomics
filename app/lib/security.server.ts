@@ -80,15 +80,19 @@ export function withSecurityHeaders(response: Response, origin: string): Respons
 
 // ── Rate limiting (KV sliding window, best-effort) ───────────────────────────
 
+import { loadSettings, settingNum } from "~/lib/content.server";
+
 type Limit = { limit: number; windowSec: number };
 
 // Per-IP windows. Admin page navigation is generous; auth + AI are tight. (The KV read-modify-
 // write isn't atomic, so counts can slightly undercount under burst — fine for abuse mitigation;
 // the WAF rate-limit ruleset is the hard control.)
-const RULES: Array<{ test: (p: string) => boolean; bucket: string; rule: Limit; json: boolean }> = [
-  { test: (p) => p.startsWith("/admin/ai"), bucket: "ai", rule: { limit: 15, windowSec: 60 }, json: true },
-  { test: (p) => p.startsWith("/api/auth"), bucket: "auth", rule: { limit: 30, windowSec: 60 }, json: true },
-  { test: (p) => p.startsWith("/admin"), bucket: "admin", rule: { limit: 150, windowSec: 60 }, json: false },
+// Per-minute limits are tunable live via the settings table (ratelimit.*), falling back to these
+// defaults. Window is fixed at 60s.
+const RULES: Array<{ test: (p: string) => boolean; bucket: string; settingKey: string; def: number; json: boolean }> = [
+  { test: (p) => p.startsWith("/admin/ai"), bucket: "ai", settingKey: "ratelimit.ai", def: 15, json: true },
+  { test: (p) => p.startsWith("/api/auth"), bucket: "auth", settingKey: "ratelimit.auth", def: 30, json: true },
+  { test: (p) => p.startsWith("/admin"), bucket: "admin", settingKey: "ratelimit.admin", def: 150, json: false },
 ];
 
 async function overLimit(env: Env, key: string, { limit, windowSec }: Limit): Promise<boolean> {
@@ -102,7 +106,7 @@ async function overLimit(env: Env, key: string, { limit, windowSec }: Limit): Pr
 
 function tooMany(retrySec: number, json: boolean): Response {
   const body = json
-    ? JSON.stringify({ ok: false, error: "Too many requests — slow down and try again shortly." })
+    ? JSON.stringify({ ok: false, error: "Too many requests. Slow down and try again shortly." })
     : "Too many requests.";
   return new Response(body, {
     status: 429,
@@ -118,9 +122,10 @@ export async function enforceRateLimit(env: Env, request: Request): Promise<Resp
   const pathname = new URL(request.url).pathname;
   const match = RULES.find((r) => r.test(pathname));
   if (!match) return null;
+  const limit = settingNum(await loadSettings(env), match.settingKey, match.def);
   const ip = request.headers.get("cf-connecting-ip") || "anon";
-  if (await overLimit(env, `${match.bucket}:${ip}`, match.rule)) {
-    return tooMany(match.rule.windowSec, match.json);
+  if (await overLimit(env, `${match.bucket}:${ip}`, { limit, windowSec: 60 })) {
+    return tooMany(60, match.json);
   }
   return null;
 }
@@ -128,12 +133,11 @@ export async function enforceRateLimit(env: Env, request: Request): Promise<Resp
 // ── AI per-day cost cap ──────────────────────────────────────────────────────
 
 // Max AI generations/day across the single admin. Approximates a spend cap (generations, not
-// dollars). Override with the AI_DAILY_CAP var if ever needed.
+// dollars). Tunable live via the ai.daily_cap setting.
 const AI_DAILY_CAP_DEFAULT = 100;
 
-function aiCap(env: Env): number {
-  const v = Number((env as unknown as { AI_DAILY_CAP?: string }).AI_DAILY_CAP);
-  return Number.isFinite(v) && v > 0 ? v : AI_DAILY_CAP_DEFAULT;
+async function aiCap(env: Env): Promise<number> {
+  return settingNum(await loadSettings(env), "ai.daily_cap", AI_DAILY_CAP_DEFAULT);
 }
 
 function capKey(): string {
@@ -142,7 +146,7 @@ function capKey(): string {
 
 /** True if today's AI generations are at/over the cap (check before generating). */
 export async function aiCostCapExceeded(env: Env): Promise<boolean> {
-  return (Number(await env.APP_KV.get(capKey())) || 0) >= aiCap(env);
+  return (Number(await env.APP_KV.get(capKey())) || 0) >= (await aiCap(env));
 }
 
 /** Record one successful AI generation against today's cap. */

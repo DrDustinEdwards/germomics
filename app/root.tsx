@@ -9,7 +9,8 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { getEnv } from "~/lib/context.server";
+import { getEnv, getSnippets, siteContentContext } from "~/lib/context.server";
+import { loadSettings, loadSnippets } from "~/lib/content.server";
 import { themeInitScript } from "~/lib/theme";
 import { PlayerProvider } from "~/components/player/player-context";
 import { PlayerDock } from "~/components/player/PlayerDock";
@@ -31,11 +32,23 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+// Load site content (settings + snippets) once per request and put it on context, so any loader
+// reads it without re-hitting KV. Values are KV-cached in content.server with in-code fallbacks.
+export const middleware: Route.MiddlewareFunction[] = [
+  async ({ context }, next) => {
+    const env = getEnv(context);
+    const [settings, snippets] = await Promise.all([loadSettings(env), loadSnippets(env)]);
+    context.set(siteContentContext, { settings, snippets });
+    return next();
+  },
+];
+
 // Cloudflare Web Analytics is cookieless (no consent banner needed). The site token comes from
-// the dashboard via the CF_BEACON_TOKEN var; the beacon only renders when it's set.
+// the dashboard via the CF_BEACON_TOKEN var; the beacon only renders when it's set. Snippets are
+// passed to the client so components can read them via useSnippet().
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context) as unknown as { CF_BEACON_TOKEN?: string };
-  return { beaconToken: env.CF_BEACON_TOKEN ?? null };
+  return { beaconToken: env.CF_BEACON_TOKEN ?? null, snippets: getSnippets(context) };
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {

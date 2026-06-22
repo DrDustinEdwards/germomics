@@ -54,6 +54,7 @@ export default [
     route("posts/:id", "routes/admin.posts.$id.tsx"),
     route("people", "routes/admin.people._index.tsx"),
     route("settings", "routes/admin.settings._index.tsx"),
+    route("content/:key", "routes/admin.content.$key.tsx"),
     route("ai", "routes/admin.ai.ts"),
     route("upload", "routes/admin.upload.ts"),
     route("version/:vid", "routes/admin.version.$vid.ts"),

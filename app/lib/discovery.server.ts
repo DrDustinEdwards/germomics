@@ -37,15 +37,17 @@ export function buildLlmsTxt(
   episodes: Post[],
   articles: Post[],
   origin: string,
+  intro?: string,
 ): string {
   const out: string[] = [
     `# ${show.title}`,
     "",
     `> ${oneLine(show.description, 240)}`,
     "",
-    `${show.title} is a podcast and writing project about microbiology and history by ${show.author}. ` +
-      `This is a curated index of the canonical hubs and key content for AI assistants and answer engines. ` +
-      `Citation is welcome. Please cite ${show.title} and link the source URL.`,
+    intro ||
+      `${show.title} is a podcast and writing project about microbiology and history by ${show.author}. ` +
+        `This is a curated index of the canonical hubs and key content for AI assistants and answer engines. ` +
+        `Citation is welcome. Please cite ${show.title} and link the source URL.`,
     "",
     "## About",
     `- [About ${show.title}](${origin}/about): what the project is and how to follow it.`,
@@ -132,14 +134,21 @@ export function buildLlmsFullTxt(
 }
 
 /** Purpose-based AI access policy, consistent with robots.txt + the TDMRep header. */
-export function buildAiTxt(show: ShowConfig, origin: string): string {
+export function buildAiTxt(show: ShowConfig, origin: string, policy?: string): string {
+  const policyBlock = policy
+    ? policy.split("\n")
+    : [
+        "# Citation and search (RAG, answer engines): ALLOWED.",
+        "# Please cite the source and link the canonical URL.",
+        "# Training data: rights reserved (opt-out). Contact for licensing in the address below.",
+      ];
   return [
     `# ai.txt: AI usage policy for ${show.title} (${origin})`,
     "# Forward-looking signals for AI/LLM systems. Consistent with /robots.txt and the",
     "# TDMRep `tdm-reservation: 1` response header.",
     "",
-    "# Citation & search (RAG, answer engines): ALLOWED.",
-    "# Please cite the source and link the canonical URL. Curated index: " + `${origin}/llms.txt`,
+    ...policyBlock,
+    `# Curated index: ${origin}/llms.txt`,
     "User-agent: *",
     "Allow: /",
     "Disallow: /admin",

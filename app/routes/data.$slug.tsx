@@ -1,6 +1,8 @@
 import { lazy } from "react";
 import type { Route } from "./+types/data.$slug";
 import { getDataset } from "~/lib/datasets.server";
+import { getSnippets } from "~/lib/context.server";
+import { snippet } from "~/lib/content.server";
 import { ClientOnly } from "~/components/util/ClientOnly";
 
 // Heavy viz libs are lazy() — Vite code-splits them onto this route only.
@@ -15,10 +17,11 @@ export function meta({ loaderData }: Route.MetaArgs) {
   ];
 }
 
-export function loader({ params }: Route.LoaderArgs) {
+export function loader({ params, context }: Route.LoaderArgs) {
   const dataset = getDataset(params.slug);
   if (!dataset) throw new Response("Not found", { status: 404 });
-  return { dataset };
+  const summary = snippet(getSnippets(context), `snippet:dataset.${dataset.slug}`, dataset.summary);
+  return { dataset: { ...dataset, summary } };
 }
 
 function DataTable({ columns, rows }: { columns: string[]; rows: (string | number)[][] }) {

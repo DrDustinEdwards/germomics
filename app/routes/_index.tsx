@@ -1,30 +1,28 @@
 import { Link } from "react-router";
 import { Headphones } from "lucide-react";
 import type { Route } from "./+types/_index";
-import { getEnv } from "~/lib/context.server";
+import { getEnv, getSettings, getSnippets } from "~/lib/context.server";
 import { listEpisodes, listPosts, toPlayerTrack } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
+import { snippet, settingAddress } from "~/lib/content.server";
 import { formatDate, formatDuration } from "~/lib/format";
 import { buildOrganizationLd, buildPodcastSeriesLd } from "~/lib/seo";
+import { SNIPPET_DEFAULTS } from "~/lib/content-defaults";
 import { PostCard } from "~/components/content/PostCard";
 import { PlayButton } from "~/components/content/PlayButton";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   const base = [
-    { title: "germomics · microbiology & history" },
-    {
-      name: "description",
-      content:
-        "A podcast and writing project about microbiology and history, with audio, transcripts, writing, data, and games.",
-    },
+    { title: loaderData?.homeTitle ?? SNIPPET_DEFAULTS["snippet:meta.home_title"] },
+    { name: "description", content: loaderData?.homeDescription ?? SNIPPET_DEFAULTS["snippet:meta.home_description"] },
   ];
   if (!loaderData?.show) return base;
-  const { show, origin } = loaderData;
+  const { show, origin, address } = loaderData;
   return [
     ...base,
-    { "script:ld+json": buildOrganizationLd(show, origin) },
-    { "script:ld+json": buildPodcastSeriesLd(show, origin) },
+    { "script:ld+json": buildOrganizationLd(show, origin, address) },
+    { "script:ld+json": buildPodcastSeriesLd(show, origin, address) },
   ];
 }
 
@@ -35,6 +33,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     listPosts(env, { limit: 24 }),
     getShowConfig(env),
   ]);
+  const snippets = getSnippets(context);
   const tracks = episodes.map(toPlayerTrack);
   return {
     featured: episodes[0] ?? null,
@@ -42,6 +41,9 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     tracks,
     show,
     origin: new URL(request.url).origin,
+    address: settingAddress(getSettings(context)),
+    homeTitle: snippet(snippets, "snippet:meta.home_title"),
+    homeDescription: snippet(snippets, "snippet:meta.home_description"),
   };
 }
 

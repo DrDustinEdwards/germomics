@@ -3,8 +3,19 @@ import { Search } from "lucide-react";
 import type { Route } from "./+types/archive";
 import { getEnv } from "~/lib/context.server";
 import { listPosts, searchPosts, toPlayerTrack } from "~/lib/posts.server";
+import { searchPages } from "~/lib/content.server";
 import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
+
+// Maps a content page key to its public URL (for site-search page hits).
+const PAGE_HREF: Record<string, string> = {
+  "page:about": "/about",
+  "page:dustin-edwards": "/about/dustin-edwards",
+  "page:privacy": "/privacy",
+  "page:terms": "/terms",
+  "page:llms": "/llms.txt",
+  "page:ai-txt": "/ai.txt",
+};
 
 const TABS = [
   ["all", "All"],
@@ -33,12 +44,15 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     });
   }
 
+  // Site search also reaches the content pages (about/privacy/terms/...) via content_blocks FTS.
+  const pages = q && tab === "all" ? await searchPages(env, q) : [];
+
   const tracks = items.filter((p) => p.kind === "episode").map(toPlayerTrack);
-  return { items, tracks, tab, q };
+  return { items, tracks, tab, q, pages };
 }
 
 export default function Archive({ loaderData }: Route.ComponentProps) {
-  const { items, tracks, tab, q } = loaderData;
+  const { items, tracks, tab, q, pages } = loaderData;
   return (
     <div>
       <QueueSeeder tracks={tracks} />
@@ -78,6 +92,21 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
         <p className="mb-4 font-mono text-xs text-muted">
           {items.length} result{items.length === 1 ? "" : "s"} for “{q}”
         </p>
+      ) : null}
+
+      {pages.length ? (
+        <div className="mb-4 rounded-xl border border-border bg-surface p-4">
+          <p className="mb-2 font-mono text-[11px] uppercase tracking-wide text-muted">Pages</p>
+          <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            {pages.map((p) => (
+              <li key={p.key}>
+                <Link to={PAGE_HREF[p.key] ?? "/"} className="text-accent hover:underline">
+                  {p.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
 
       <div className="grid gap-3">

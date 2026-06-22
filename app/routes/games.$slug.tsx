@@ -6,6 +6,7 @@ import { getEnv } from "~/lib/context.server";
 import { getGame } from "~/lib/games.server";
 import { getLeaderboard, submitScore } from "~/lib/scores.server";
 import { ClientOnly } from "~/components/util/ClientOnly";
+import { useSnippet } from "~/lib/content";
 
 const PhaserGame = lazy(() => import("~/components/game/PhaserGame.client"));
 
@@ -41,6 +42,7 @@ export default function GamePage({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher<typeof action>();
   const [lastScore, setLastScore] = useState<number | null>(null);
   const submitted = fetcher.data?.ok === true;
+  const emptyScores = useSnippet("snippet:empty.scores", "No scores yet. Be the first.");
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -100,7 +102,7 @@ export default function GamePage({ loaderData }: Route.ComponentProps) {
             ))}
           </ol>
         ) : (
-          <p className="text-muted">No scores yet. Be the first.</p>
+          <p className="text-muted">{emptyScores}</p>
         )}
       </section>
     </div>

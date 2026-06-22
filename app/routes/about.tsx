@@ -1,23 +1,26 @@
-// /about — what germomics is, who makes it, how to follow it. Carries Organization +
-// BreadcrumbList JSON-LD (entity clarity for search + AI). Public, WCAG AA.
+// /about - what germomics is, who makes it, how to follow it. Prose comes from the page:about and
+// page:dustin-edwards content blocks (D1, editable); Organization + BreadcrumbList JSON-LD carry
+// entity clarity. Public, WCAG AA. ?preview shows drafts to a signed-in admin.
 import { Link } from "react-router";
 import { Rss, Mic, FileText, Database, Gamepad2, User } from "lucide-react";
 import type { Route } from "./+types/about";
-import { getEnv } from "~/lib/context.server";
+import { getEnv, getSettings } from "~/lib/context.server";
 import { getShowConfig } from "~/lib/show.server";
-import { buildOrganizationLd, buildBreadcrumbLd } from "~/lib/seo";
-import { ABOUT, AUTHOR } from "~/lib/about";
+import { loadPage, isPreviewing, settingAddress } from "~/lib/content.server";
+import { buildOrganizationLd, buildBreadcrumbLd, stripHtml } from "~/lib/seo";
+import { BodyRenderer } from "~/components/content/BodyRenderer";
+import { AUTHOR } from "~/lib/about";
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  const origin = loaderData?.origin ?? "";
-  const show = loaderData?.show;
+  if (!loaderData) return [{ title: "About germomics" }];
+  const { origin, show, address, title, description } = loaderData;
   return [
-    { title: `${ABOUT.title} · germomics` },
-    { name: "description", content: ABOUT.lede },
-    { property: "og:title", content: ABOUT.title },
-    { property: "og:description", content: ABOUT.lede },
+    { title },
+    { name: "description", content: description },
+    { property: "og:title", content: title },
+    { property: "og:description", content: description },
     { property: "og:url", content: `${origin}/about` },
-    ...(show ? [{ "script:ld+json": buildOrganizationLd(show, origin) }] : []),
+    { "script:ld+json": buildOrganizationLd(show, origin, address) },
     {
       "script:ld+json": buildBreadcrumbLd([
         { name: "Home", url: `${origin}/` },
@@ -28,40 +31,53 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const show = await getShowConfig(getEnv(context));
-  return { origin: new URL(request.url).origin, show };
+  const env = getEnv(context);
+  const preview = await isPreviewing(env, request);
+  const [about, bio, show] = await Promise.all([
+    loadPage(env, "page:about", { includeDrafts: preview }),
+    loadPage(env, "page:dustin-edwards", { includeDrafts: preview }),
+    getShowConfig(env),
+  ]);
+  return {
+    origin: new URL(request.url).origin,
+    show,
+    address: settingAddress(getSettings(context)),
+    title: about.title || "About germomics",
+    description: stripHtml(about.value).slice(0, 160),
+    aboutHtml: about.value,
+    bioHtml: bio.value,
+  };
 }
 
 const EXPLORE = [
   { to: "/episodes", icon: Mic, label: "Episodes", note: "Listen, with transcripts and chapters." },
   { to: "/writing", icon: FileText, label: "Writing", note: "Essays and notes." },
-  { to: "/data", icon: Database, label: "Data", note: "Interactive virus & bacteria pages." },
+  { to: "/data", icon: Database, label: "Data", note: "Interactive virus and bacteria pages." },
   { to: "/games", icon: Gamepad2, label: "Games", note: "Short browser games." },
 ];
 
-export default function About() {
+export default function About({ loaderData }: Route.ComponentProps) {
+  const { title, aboutHtml, bioHtml } = loaderData;
   return (
     <div className="mx-auto max-w-2xl">
       <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent">About</p>
-      <h1 className="mt-3 font-display text-4xl font-semibold leading-tight">{ABOUT.title}</h1>
-      <p className="mt-4 text-lg text-muted">{ABOUT.lede}</p>
-
-      <div className="mt-6 space-y-4 leading-relaxed">
-        {ABOUT.paragraphs.map((p) => (
-          <p key={p.slice(0, 24)}>{p}</p>
-        ))}
+      <h1 className="mt-3 font-display text-4xl font-semibold leading-tight">{title}</h1>
+      <div className="prose-legal mt-4">
+        <BodyRenderer html={aboutHtml} />
       </div>
 
       <section className="mt-10 rounded-2xl border border-border bg-surface p-6">
         <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
           <User size={18} aria-hidden /> The author
         </h2>
-        <p className="mt-3 leading-relaxed">{AUTHOR.bio}</p>
+        <div className="prose-legal mt-2">
+          <BodyRenderer html={bioHtml} />
+        </div>
         <Link
           to={`/about/${AUTHOR.slug}`}
           className="mt-3 inline-flex items-center gap-1 font-mono text-sm text-accent hover:underline"
         >
-          More about the author →
+          More about {AUTHOR.name} →
         </Link>
       </section>
 
