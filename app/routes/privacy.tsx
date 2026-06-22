@@ -5,6 +5,7 @@ import type { Route } from "./+types/privacy";
 import { getEnv } from "~/lib/context.server";
 import { getShowConfig } from "~/lib/show.server";
 import { ReviewBanner, LegalDate } from "~/components/content/Legal";
+import { SITE_ADDRESS_LINE } from "~/lib/site";
 
 export function meta() {
   return [
@@ -111,6 +112,7 @@ export default function Privacy({ loaderData }: Route.ComponentProps) {
       <p>
         Questions or requests: <a href={`mailto:${email}`}>{email}</a>.
       </p>
+      <address className="not-italic">By post: {SITE_ADDRESS_LINE}.</address>
     </article>
   );
 }
