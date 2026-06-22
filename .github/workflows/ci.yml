@@ -1,0 +1,38 @@
+# CI gate — runs on every push and PR. Type-checks, builds, and audits production
+# dependencies. (Cloudflare Workers Builds still runs `npm run deploy` on push to main;
+# this is the correctness/security gate that should pass before that.)
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      # Fail only on high+ advisories in PRODUCTION deps. Dev-only advisories (the tracked
+      # drizzle-kit chain) don't ship to the Worker, so --omit=dev keeps the gate meaningful
+      # without blocking on them.
+      - name: Audit (production deps)
+        run: npm audit --omit=dev --audit-level=high

@@ -106,15 +106,22 @@ function extractJson(text: string): unknown {
 export async function generateShowNotes(env: Env, transcript: string, model?: string): Promise<string> {
   const t = requireTranscript(transcript);
   const user =
-    "Write show notes for this episode as clean HTML. Structure:\n" +
-    "1) A 1–2 sentence overview paragraph (<p>).\n" +
+    "Write show notes for this episode as clean HTML, optimized to be quoted by search engines " +
+    "and AI answer engines (answer-first). Structure:\n" +
+    "1) ANSWER-FIRST opening <p>: a direct, self-contained 40–60 word answer to “what is this " +
+    "episode about and what will I learn?”. State it plainly in the first sentence — no preamble, " +
+    "no “In this episode…” throat-clearing. This must stand alone as a quotable summary.\n" +
     "2) An <h2>Key topics</h2> followed by a <ul> of the main segments/topics actually discussed.\n" +
     "3) Only if specific works, people, or sources are explicitly named in the transcript, add " +
     "<h2>Mentioned</h2> and a <ul> listing them.\n" +
+    "4) OPTIONAL <h2>FAQ</h2>: include ONLY if the transcript clearly answers common questions a " +
+    "listener would ask. If so, add 2–5 pairs of <h3>question?</h3> immediately followed by a <p> " +
+    "answer (≤50 words each), every answer grounded in the transcript. Omit the FAQ entirely if it " +
+    "would be thin or speculative.\n" +
     "Use only these tags: <p>, <h2>, <h3>, <ul>, <li>, <strong>, <em>. Do not include <html>, " +
     "<body>, headings above <h2>, code fences, or any commentary. Invent nothing.\n\n" +
     `Transcript:\n${t}`;
-  return callClaude(env, { user, maxTokens: 1600, model });
+  return callClaude(env, { user, maxTokens: 1800, model });
 }
 
 /** Chapter suggestions as Chapter[] (start seconds + title), using real VTT cue timings. */

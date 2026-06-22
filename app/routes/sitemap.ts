@@ -5,7 +5,17 @@ import { getEnv } from "~/lib/context.server";
 import { listPosts } from "~/lib/posts.server";
 import { xmlEscape } from "~/lib/format";
 
-const STATIC_PATHS = ["", "episodes", "writing", "archive", "data", "games", "subscribe"];
+const STATIC_PATHS = [
+  "",
+  "episodes",
+  "writing",
+  "archive",
+  "data",
+  "games",
+  "subscribe",
+  "about",
+  "about/dustin-edwards",
+];
 
 function isoDay(value?: string | null): string | null {
   if (!value) return null;

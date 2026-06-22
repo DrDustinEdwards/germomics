@@ -3,13 +3,15 @@ import { Headphones } from "lucide-react";
 import type { Route } from "./+types/_index";
 import { getEnv } from "~/lib/context.server";
 import { listEpisodes, listPosts, toPlayerTrack } from "~/lib/posts.server";
+import { getShowConfig } from "~/lib/show.server";
 import { formatDate, formatDuration } from "~/lib/format";
+import { buildOrganizationLd, buildPodcastSeriesLd } from "~/lib/seo";
 import { PostCard } from "~/components/content/PostCard";
 import { PlayButton } from "~/components/content/PlayButton";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 
-export function meta() {
-  return [
+export function meta({ loaderData }: Route.MetaArgs) {
+  const base = [
     { title: "germomics — microbiology & history" },
     {
       name: "description",
@@ -17,16 +19,30 @@ export function meta() {
         "A podcast and writing project about microbiology and history — audio, transcripts, writing, data, and games.",
     },
   ];
+  if (!loaderData?.show) return base;
+  const { show, origin } = loaderData;
+  return [
+    ...base,
+    { "script:ld+json": buildOrganizationLd(show, origin) },
+    { "script:ld+json": buildPodcastSeriesLd(show, origin) },
+  ];
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ context, request }: Route.LoaderArgs) {
   const env = getEnv(context);
-  const [episodes, combined] = await Promise.all([
+  const [episodes, combined, show] = await Promise.all([
     listEpisodes(env),
     listPosts(env, { limit: 24 }),
+    getShowConfig(env),
   ]);
   const tracks = episodes.map(toPlayerTrack);
-  return { featured: episodes[0] ?? null, items: combined, tracks };
+  return {
+    featured: episodes[0] ?? null,
+    items: combined,
+    tracks,
+    show,
+    origin: new URL(request.url).origin,
+  };
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {

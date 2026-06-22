@@ -1,5 +1,9 @@
 import { createRequestHandler, RouterContextProvider } from "react-router";
 import { cloudflareContext } from "../app/lib/context.server";
+import {
+  enforceRateLimit,
+  withSecurityHeaders,
+} from "../app/lib/security.server";
 
 // Seed React Router v8's request context with the native Cloudflare bindings, so every
 // loader/action/middleware reaches D1/R2/KV through `context` and never over HTTP or a
@@ -11,8 +15,27 @@ const requestHandler = createRequestHandler(
 
 export default {
   async fetch(request, env, ctx) {
-    const context = new RouterContextProvider();
-    context.set(cloudflareContext, { env, ctx });
-    return requestHandler(request, context);
+    const origin = new URL(request.url).origin;
+    try {
+      // Abuse mitigation before any work: rate-limit auth/admin/AI paths (KV sliding window).
+      const limited = await enforceRateLimit(env, request);
+      if (limited) return withSecurityHeaders(limited, origin);
+
+      const context = new RouterContextProvider();
+      context.set(cloudflareContext, { env, ctx });
+      const response = await requestHandler(request, context);
+      // Security-header layer over every response (pages, feeds, resource routes, redirects).
+      return withSecurityHeaders(response, origin);
+    } catch (err) {
+      // Prod error hygiene: never leak a stack trace or internal detail to the client.
+      console.error("Unhandled worker error:", err);
+      return withSecurityHeaders(
+        new Response("Internal Server Error", {
+          status: 500,
+          headers: { "Content-Type": "text/plain; charset=utf-8" },
+        }),
+        origin,
+      );
+    }
   },
 } satisfies ExportedHandler<Env>;

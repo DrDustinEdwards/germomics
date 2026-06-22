@@ -88,6 +88,7 @@ export function buildJsonLd({ post, origin, author, seriesTitle, guests = [] }: 
       ...(image ? { image } : {}),
       ...(post.episodeNumber ? { episodeNumber: post.episodeNumber } : {}),
       timeRequired: isoDuration(post.audioDuration),
+      dateModified: post.updatedAt ?? datePublished,
       ...(post.audioUrl
         ? {
             associatedMedia: {
@@ -120,4 +121,124 @@ export function buildJsonLd({ post, origin, author, seriesTitle, guests = [] }: 
     publisher: { "@type": "Organization", name: seriesTitle },
     ...((post.tags ?? []).length ? { keywords: (post.tags ?? []).join(", ") } : {}),
   };
+}
+
+// ── Site-level + entity JSON-LD (Organization, PodcastSeries, Person, Breadcrumb, FAQ) ───────
+
+type ShowLike = {
+  title: string;
+  description: string;
+  author: string;
+  artwork: string;
+  subscribeLinks?: Record<string, string> | null;
+};
+
+/** Organization node for the publisher (home + About). */
+export function buildOrganizationLd(show: ShowLike, origin: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: show.title,
+    url: `${origin}/`,
+    description: show.description,
+    logo: show.artwork,
+    founder: { "@type": "Person", name: show.author },
+  };
+}
+
+/** PodcastSeries node tying the show to its immutable feed (home). */
+export function buildPodcastSeriesLd(show: ShowLike, origin: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "PodcastSeries",
+    name: show.title,
+    url: `${origin}/`,
+    description: show.description,
+    image: show.artwork,
+    webFeed: `${origin}/feed/podcast/`,
+    author: { "@type": "Person", name: show.author },
+    ...(show.subscribeLinks && Object.keys(show.subscribeLinks).length
+      ? { sameAs: Object.values(show.subscribeLinks) }
+      : {}),
+  };
+}
+
+type PersonLike = {
+  name: string;
+  honorific?: string;
+  role?: string;
+  bio: readonly string[];
+  knowsAbout?: readonly string[];
+  sameAs?: readonly string[];
+};
+
+/** Person node for the credentialed author (author bio page). */
+export function buildPersonLd(person: PersonLike, origin: string, slug: string, seriesTitle: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: person.name,
+    ...(person.honorific ? { honorificPrefix: person.honorific } : {}),
+    url: `${origin}/about/${slug}`,
+    ...(person.role ? { jobTitle: person.role } : {}),
+    description: person.bio.join(" "),
+    ...(person.knowsAbout?.length ? { knowsAbout: [...person.knowsAbout] } : {}),
+    worksFor: { "@type": "Organization", name: seriesTitle, url: `${origin}/` },
+    ...(person.sameAs?.length ? { sameAs: [...person.sameAs] } : {}),
+  };
+}
+
+/** BreadcrumbList from an ordered trail of {name, url}. */
+export function buildBreadcrumbLd(items: Array<{ name: string; url: string }>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((it, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: it.name,
+      item: it.url,
+    })),
+  };
+}
+
+/**
+ * FAQPage JSON-LD extracted from a post body that contains an FAQ section — an <h2> reading
+ * "FAQ" / "Frequently asked questions" followed by <h3>question</h3> + answer pairs (the shape
+ * the AI show-notes generator emits). Returns null when no usable Q&A is found.
+ */
+export function extractFaqLd(html: string) {
+  const heading = html.match(/<h2[^>]*>\s*(?:faq|frequently asked questions?)\s*<\/h2>/i);
+  if (!heading || heading.index == null) return null;
+  let scope = html.slice(heading.index + heading[0].length);
+  const nextH2 = scope.search(/<h2[\s>]/i);
+  if (nextH2 !== -1) scope = scope.slice(0, nextH2);
+
+  const qa: Array<{ q: string; a: string }> = [];
+  const re = /<h3[^>]*>([\s\S]*?)<\/h3>([\s\S]*?)(?=<h3[\s>]|$)/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(scope))) {
+    const q = stripHtml(m[1]);
+    const a = stripHtml(m[2]);
+    if (q && a) qa.push({ q, a });
+  }
+  if (!qa.length) return null;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: qa.map(({ q, a }) => ({
+      "@type": "Question",
+      name: q,
+      acceptedAnswer: { "@type": "Answer", text: a },
+    })),
+  };
+}
+
+/** True when a post was meaningfully updated after publication (different calendar day). */
+export function wasUpdatedAfterPublish(post: Post): boolean {
+  if (!post.updatedAt) return false;
+  const pub = post.publishedAt ?? post.publishAt;
+  if (!pub) return false;
+  return post.updatedAt.slice(0, 10) > pub.slice(0, 10);
 }

@@ -1,0 +1,153 @@
+// Worker hardening — server-only (never import into client code). Three concerns:
+//
+//   1. The security-header layer applied to EVERY response in the Worker path (pages, feeds,
+//      resource routes, redirects, errors). Lives here, not in root.tsx, so headers also cover
+//      non-React responses (CLAUDE.md: prefer the Worker entry). CSP ships REPORT-ONLY first —
+//      it reports violations without blocking, so TipTap (inline styles) and MapLibre (blob
+//      workers, tiles) keep working while Dustin reviews real violations, then flips to enforce.
+//   2. A best-effort KV sliding-window rate limiter on /api/auth/*, /admin/*, /admin/ai.
+//   3. A per-day cost cap on the AI endpoint so spend can't run away.
+//
+// Cloudflare's WAF managed ruleset + bot rules are the primary perimeter defense (dashboard,
+// see manual steps); this is the in-Worker layer the audit asked for.
+
+// ── Security headers ─────────────────────────────────────────────────────────
+
+// Content-Security-Policy. REPORT-ONLY for now. Allowlist mirrors the spec: self + cdnjs,
+// Google Fonts, MapLibre tiles, and the media/images subdomains. The MapLibre tile hosts below
+// are the common providers as a best guess — Dustin should confirm the real tile origin against
+// the report-only violations and tighten img-src/connect-src before enforcing. script-src/
+// style-src keep 'unsafe-inline' because React Router streams inline hydration scripts and the
+// pre-paint theme script is inline (nonces aren't wired through RR8 streaming); revisit at enforce.
+const CSP = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com",
+  "img-src 'self' data: blob: https://images.germomics.com https://media.germomics.com https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://api.maptiler.com",
+  "media-src 'self' blob: https://media.germomics.com",
+  "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com",
+  "connect-src 'self' https://images.germomics.com https://media.germomics.com https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://api.maptiler.com",
+  "worker-src 'self' blob:",
+  "child-src 'self' blob:",
+  "frame-src 'self'",
+  "manifest-src 'self'",
+  "upgrade-insecure-requests",
+].join("; ");
+
+// Static headers added to every response (only if a route hasn't already set them).
+const STATIC_HEADERS: Record<string, string> = {
+  // HSTS: 1 year + subdomains. No `preload` until after the custom-domain cutover (manual step).
+  "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "X-Frame-Options": "DENY",
+  "Permissions-Policy":
+    "camera=(), microphone=(), geolocation=(), browsing-topics=(), payment=(), usb=()",
+  // TDMRep (TDM Reservation Protocol): reserve text-and-data-mining / training rights and point
+  // at the machine-readable policy. robots.txt explicitly ALLOWS citation/search crawlers — the
+  // stronger, well-understood signal — so this only states the training-data preference.
+  "tdm-reservation": "1",
+};
+
+/**
+ * Return a copy of `response` with the security headers added. Never clobbers headers a route
+ * already set (Content-Type, Cache-Control, Set-Cookie, an enforced CSP, etc.). `origin` is used
+ * for the absolute tdm-policy URL.
+ */
+export function withSecurityHeaders(response: Response, origin: string): Response {
+  const headers = new Headers(response.headers);
+  for (const [k, v] of Object.entries(STATIC_HEADERS)) {
+    if (!headers.has(k)) headers.set(k, v);
+  }
+  if (!headers.has("tdm-policy")) headers.set("tdm-policy", `${origin}/ai.txt`);
+  // Only set report-only if no route already declared a (possibly enforced) policy.
+  if (
+    !headers.has("Content-Security-Policy") &&
+    !headers.has("Content-Security-Policy-Report-Only")
+  ) {
+    headers.set("Content-Security-Policy-Report-Only", CSP);
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+// ── Rate limiting (KV sliding window, best-effort) ───────────────────────────
+
+type Limit = { limit: number; windowSec: number };
+
+// Per-IP windows. Admin page navigation is generous; auth + AI are tight. (The KV read-modify-
+// write isn't atomic, so counts can slightly undercount under burst — fine for abuse mitigation;
+// the WAF rate-limit ruleset is the hard control.)
+const RULES: Array<{ test: (p: string) => boolean; bucket: string; rule: Limit; json: boolean }> = [
+  { test: (p) => p.startsWith("/admin/ai"), bucket: "ai", rule: { limit: 15, windowSec: 60 }, json: true },
+  { test: (p) => p.startsWith("/api/auth"), bucket: "auth", rule: { limit: 30, windowSec: 60 }, json: true },
+  { test: (p) => p.startsWith("/admin"), bucket: "admin", rule: { limit: 150, windowSec: 60 }, json: false },
+];
+
+async function overLimit(env: Env, key: string, { limit, windowSec }: Limit): Promise<boolean> {
+  const window = Math.floor(Date.now() / 1000 / windowSec);
+  const kvKey = `rl:${key}:${window}`;
+  const current = Number(await env.APP_KV.get(kvKey)) || 0;
+  if (current >= limit) return true;
+  await env.APP_KV.put(kvKey, String(current + 1), { expirationTtl: windowSec + 5 });
+  return false;
+}
+
+function tooMany(retrySec: number, json: boolean): Response {
+  const body = json
+    ? JSON.stringify({ ok: false, error: "Too many requests — slow down and try again shortly." })
+    : "Too many requests.";
+  return new Response(body, {
+    status: 429,
+    headers: {
+      "Content-Type": json ? "application/json; charset=utf-8" : "text/plain; charset=utf-8",
+      "Retry-After": String(retrySec),
+    },
+  });
+}
+
+/** Returns a 429 Response if this request is rate-limited, otherwise null. */
+export async function enforceRateLimit(env: Env, request: Request): Promise<Response | null> {
+  const pathname = new URL(request.url).pathname;
+  const match = RULES.find((r) => r.test(pathname));
+  if (!match) return null;
+  const ip = request.headers.get("cf-connecting-ip") || "anon";
+  if (await overLimit(env, `${match.bucket}:${ip}`, match.rule)) {
+    return tooMany(match.rule.windowSec, match.json);
+  }
+  return null;
+}
+
+// ── AI per-day cost cap ──────────────────────────────────────────────────────
+
+// Max AI generations/day across the single admin. Approximates a spend cap (generations, not
+// dollars). Override with the AI_DAILY_CAP var if ever needed.
+const AI_DAILY_CAP_DEFAULT = 100;
+
+function aiCap(env: Env): number {
+  const v = Number((env as unknown as { AI_DAILY_CAP?: string }).AI_DAILY_CAP);
+  return Number.isFinite(v) && v > 0 ? v : AI_DAILY_CAP_DEFAULT;
+}
+
+function capKey(): string {
+  return `ai:cap:${new Date().toISOString().slice(0, 10)}`; // per UTC day
+}
+
+/** True if today's AI generations are at/over the cap (check before generating). */
+export async function aiCostCapExceeded(env: Env): Promise<boolean> {
+  return (Number(await env.APP_KV.get(capKey())) || 0) >= aiCap(env);
+}
+
+/** Record one successful AI generation against today's cap. */
+export async function recordAiUse(env: Env): Promise<void> {
+  const key = capKey();
+  const used = Number(await env.APP_KV.get(key)) || 0;
+  await env.APP_KV.put(key, String(used + 1), { expirationTtl: 60 * 60 * 36 }); // ~1.5 days
+}

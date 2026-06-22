@@ -3,7 +3,14 @@ import { getEnv } from "~/lib/context.server";
 import { getPostBySlug, relatedPosts, adjacentPosts, toPlayerTrack } from "~/lib/posts.server";
 import { getEpisodeGuests } from "~/lib/people.server";
 import { getShowConfig } from "~/lib/show.server";
-import { readingTime, tableOfContents, buildJsonLd, ogImageFor } from "~/lib/seo";
+import {
+  readingTime,
+  tableOfContents,
+  buildJsonLd,
+  buildBreadcrumbLd,
+  extractFaqLd,
+  ogImageFor,
+} from "~/lib/seo";
 import { PostDetail, type DetailData } from "~/components/content/PostDetail";
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -13,12 +20,22 @@ export function meta({ loaderData }: Route.MetaArgs) {
   const desc = post.seoDescription ?? post.excerpt ?? "";
   const image = ogImageFor(post);
   const jsonLd = buildJsonLd({ post, origin, author, seriesTitle, guests });
+  const isEpisode = post.kind === "episode";
+  const breadcrumb = buildBreadcrumbLd([
+    { name: "Home", url: `${origin}/` },
+    {
+      name: isEpisode ? "Episodes" : "Writing",
+      url: `${origin}/${isEpisode ? "episodes" : "writing"}`,
+    },
+    { name: post.title, url: `${origin}/${post.slug}` },
+  ]);
+  const faq = extractFaqLd(post.body);
   return [
     { title },
     { name: "description", content: desc },
     { property: "og:title", content: post.title },
     { property: "og:description", content: desc },
-    { property: "og:type", content: post.kind === "episode" ? "music.song" : "article" },
+    { property: "og:type", content: isEpisode ? "music.song" : "article" },
     { property: "og:url", content: `${origin}/${post.slug}` },
     ...(image ? [{ property: "og:image", content: image }] : []),
     { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
@@ -26,6 +43,8 @@ export function meta({ loaderData }: Route.MetaArgs) {
     { name: "twitter:description", content: desc },
     ...(image ? [{ name: "twitter:image", content: image }] : []),
     { "script:ld+json": jsonLd },
+    { "script:ld+json": breadcrumb },
+    ...(faq ? [{ "script:ld+json": faq }] : []),
   ];
 }
 

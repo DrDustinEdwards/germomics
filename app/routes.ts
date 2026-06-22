@@ -15,6 +15,8 @@ export default [
   route("tag/:tag", "routes/tag.$tag.tsx"),
   route("guests/:guest", "routes/guests.$guest.tsx"),
   route("subscribe", "routes/subscribe.tsx"),
+  route("about", "routes/about.tsx"),
+  route("about/dustin-edwards", "routes/about.dustin-edwards.tsx"),
 
   // feeds — resource routes. The podcast feed is matched at /feed/podcast/ (trailing slash,
   // the immutable URL directories poll) with no redirect to/from a non-slash variant.
@@ -24,6 +26,10 @@ export default [
   // discovery
   route("sitemap.xml", "routes/sitemap.ts"),
   route("robots.txt", "routes/robots.ts"),
+  // GEO / agentic-web discovery files (dynamic from D1, served noindex)
+  route("llms.txt", "routes/llms.ts"),
+  route("llms-full.txt", "routes/llms-full.ts"),
+  route("ai.txt", "routes/ai-txt.ts"),
 
   // per-episode resource endpoints referenced by the podcast feed
   route(":slug/transcript.vtt", "routes/transcript.ts"),

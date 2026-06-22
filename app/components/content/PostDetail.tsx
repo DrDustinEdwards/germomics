@@ -8,6 +8,7 @@ import { Headphones, Calendar, Clock, ArrowLeft, ArrowRight, FileText } from "lu
 import type { Post } from "~/db/schema";
 import type { GuestView, PlayerTrack } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
+import { wasUpdatedAfterPublish } from "~/lib/seo";
 import { formatDate, formatDuration } from "~/lib/format";
 import { BodyRenderer } from "./BodyRenderer";
 import { PlayButton } from "./PlayButton";
@@ -114,6 +115,7 @@ export function PostDetail({ data }: { data: DetailData }) {
           {post.episodeNumber ? <span>#{post.episodeNumber}</span> : null}
           {post.seasonNumber ? <span>Season {post.seasonNumber}</span> : null}
           {post.publishedAt ? <span className="flex items-center gap-1"><Calendar size={12} aria-hidden /> {formatDate(post.publishedAt)}</span> : null}
+          {wasUpdatedAfterPublish(post) ? <span className="text-accent">Updated {formatDate(post.updatedAt)}</span> : null}
           {post.audioDuration ? <span className="flex items-center gap-1 tabular-nums"><Clock size={12} aria-hidden /> {formatDuration(post.audioDuration)}</span> : null}
         </div>
 
@@ -188,6 +190,7 @@ export function PostDetail({ data }: { data: DetailData }) {
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-muted">
         <span>{author}</span>
         {post.publishedAt ? <span className="flex items-center gap-1"><Calendar size={12} aria-hidden /> {formatDate(post.publishedAt)}</span> : null}
+        {wasUpdatedAfterPublish(post) ? <span className="text-accent">Updated {formatDate(post.updatedAt)}</span> : null}
         <span className="flex items-center gap-1"><Clock size={12} aria-hidden /> {readingMinutes} min read</span>
       </div>
       {(post.tags ?? []).length ? (

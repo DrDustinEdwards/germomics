@@ -4,6 +4,7 @@
 import type { Route } from "./+types/admin.ai";
 import { getEnv } from "~/lib/context.server";
 import { generateShowNotes, generateChapters, generateSeo, aiConfigured } from "~/lib/ai.server";
+import { aiCostCapExceeded, recordAiUse } from "~/lib/security.server";
 
 export async function action({ request, context }: Route.ActionArgs) {
   const env = getEnv(context);
@@ -14,6 +15,15 @@ export async function action({ request, context }: Route.ActionArgs) {
     );
   }
 
+  // Per-day cost cap (in addition to the Worker-layer rate limit): friendly 429 when exceeded so
+  // AI spend can't run away. The successful generation below is then recorded against the cap.
+  if (await aiCostCapExceeded(env)) {
+    return Response.json(
+      { ok: false, error: "Daily AI limit reached — try again tomorrow." },
+      { status: 429 },
+    );
+  }
+
   const form = await request.formData();
   const kind = String(form.get("kind") || "");
   const transcript = String(form.get("transcript") || "");
@@ -21,13 +31,19 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   try {
     if (kind === "shownotes") {
-      return Response.json({ ok: true, kind, draft: await generateShowNotes(env, transcript) });
+      const draft = await generateShowNotes(env, transcript);
+      await recordAiUse(env);
+      return Response.json({ ok: true, kind, draft });
     }
     if (kind === "chapters") {
-      return Response.json({ ok: true, kind, draft: await generateChapters(env, transcript) });
+      const draft = await generateChapters(env, transcript);
+      await recordAiUse(env);
+      return Response.json({ ok: true, kind, draft });
     }
     if (kind === "seo") {
-      return Response.json({ ok: true, kind, draft: await generateSeo(env, transcript, title) });
+      const draft = await generateSeo(env, transcript, title);
+      await recordAiUse(env);
+      return Response.json({ ok: true, kind, draft });
     }
     return Response.json({ ok: false, error: "Unknown generation kind." }, { status: 400 });
   } catch (err) {
