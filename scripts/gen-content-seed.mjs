@@ -79,6 +79,12 @@ const snippets = [
   ["snippet:nav.archive", "Nav: Archive", "Archive"],
   ["snippet:nav.data", "Nav: Data", "Data"],
   ["snippet:nav.games", "Nav: Games", "Games"],
+  // nav.search/subscribe/about/privacy/terms ship via migration 0006 (0005 is already applied).
+  ["snippet:nav.search", "Nav: Search", "Search"],
+  ["snippet:nav.subscribe", "Nav: Subscribe", "Subscribe"],
+  ["snippet:nav.about", "Nav: About", "About"],
+  ["snippet:nav.privacy", "Nav: Privacy", "Privacy"],
+  ["snippet:nav.terms", "Nav: Terms", "Terms"],
   ["snippet:empty.people", "Empty: people", "No people yet. Create one on the right."],
   ["snippet:empty.versions", "Empty: versions", "No saved versions yet. They are snapshotted on each save."],
   ["snippet:empty.scores", "Empty: scores", "No scores yet. Be the first."],

@@ -6,13 +6,14 @@ import { useEffect } from "react";
 import { Link, useSearchParams } from "react-router";
 import { Headphones, Calendar, Clock, ArrowLeft, ArrowRight, FileText } from "lucide-react";
 import type { Post } from "~/db/schema";
-import type { GuestView, PlayerTrack } from "~/lib/types";
+import type { GuestView, PlayerTrack, SoundbiteView } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
 import { wasUpdatedAfterPublish } from "~/lib/seo";
 import { formatDate, formatDuration } from "~/lib/format";
 import { BodyRenderer } from "./BodyRenderer";
 import { PlayButton } from "./PlayButton";
 import { PostCard } from "./PostCard";
+import { SoundbiteClips } from "./SoundbiteClips";
 import { TranscriptPanel } from "./TranscriptPanel";
 import { ShareTimestamp } from "./ShareTimestamp";
 import { CopyLink } from "./CopyLink";
@@ -30,11 +31,13 @@ export type DetailData = {
   author: string;
   readingMinutes: number;
   toc: TocItem[];
+  soundbites?: SoundbiteView[];
   preview?: boolean;
 };
 
 export function PostDetail({ data }: { data: DetailData }) {
   const { post, track, guests, related, prev, next, subscribeLinks, readingMinutes, toc } = data;
+  const soundbites = data.soundbites ?? [];
   const player = usePlayer();
   const [params] = useSearchParams();
   const isEpisode = post.kind === "episode";
@@ -151,6 +154,8 @@ export function PostDetail({ data }: { data: DetailData }) {
             </ol>
           </section>
         ) : null}
+
+        {track ? <SoundbiteClips track={track} clips={soundbites} /> : null}
 
         {post.transcript && track ? (
           <section className="mt-10">

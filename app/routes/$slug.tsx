@@ -2,6 +2,7 @@ import type { Route } from "./+types/$slug";
 import { getEnv } from "~/lib/context.server";
 import { getPostBySlug, relatedPosts, adjacentPosts, toPlayerTrack } from "~/lib/posts.server";
 import { getEpisodeGuests } from "~/lib/people.server";
+import { soundbitesForPost } from "~/lib/soundbites.server";
 import { getShowConfig } from "~/lib/show.server";
 import {
   readingTime,
@@ -53,17 +54,19 @@ export async function loader({ params, context, request }: Route.LoaderArgs) {
   const post = await getPostBySlug(env, params.slug);
   if (!post) throw new Response("Not found", { status: 404 });
 
-  const [related, show, guests, adj] = await Promise.all([
+  const [related, show, guests, adj, clips] = await Promise.all([
     relatedPosts(env, post),
     getShowConfig(env),
     getEpisodeGuests(env, post),
     adjacentPosts(env, post),
+    post.kind === "episode" ? soundbitesForPost(env, post.id) : Promise.resolve([]),
   ]);
   const origin = new URL(request.url).origin;
 
   const data: DetailData & { origin: string; seriesTitle: string } = {
     post,
     track: post.kind === "episode" ? toPlayerTrack(post) : null,
+    soundbites: clips.map((c) => ({ id: c.id, start: c.startSeconds, duration: c.durationSeconds, title: c.title })),
     guests,
     related,
     prev: adj.prev ? { slug: adj.prev.slug, title: adj.prev.title } : null,

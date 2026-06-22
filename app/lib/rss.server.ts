@@ -2,7 +2,7 @@
 // podcast feed carries episodes only (every item has an enclosure); the site feed carries the
 // writing. Enclosure URLs always point at media.germomics.com (the stored audioUrl), never the
 // worker origin. guid is permanent + isPermaLink=false. Served from resource routes.
-import type { Post, ShowConfig } from "~/db/schema";
+import type { Post, ShowConfig, Soundbite } from "~/db/schema";
 import type { GuestView } from "~/lib/types";
 import { formatHMS, rfc822, xmlEscape } from "~/lib/format";
 
@@ -49,10 +49,11 @@ export function buildPodcastFeed(
   episodes: Post[],
   origin: string,
   guestsByEpisode: Map<number, GuestView[]> = new Map(),
+  soundbitesByEpisode: Map<number, Soundbite[]> = new Map(),
 ): string {
   const items = episodes
     .filter((e) => e.audioUrl && e.guid)
-    .map((e) => itemXml(e, origin, guestsByEpisode.get(e.id) ?? []))
+    .map((e) => itemXml(e, origin, guestsByEpisode.get(e.id) ?? [], soundbitesByEpisode.get(e.id) ?? []))
     .join("\n");
 
   const funding = show.fundingUrl
@@ -92,7 +93,7 @@ function personXml(g: GuestView, origin: string): string {
   return `<podcast:person role="${xmlEscape(g.role || "guest")}" href="${xmlEscape(href)}"${img}>${xmlEscape(g.name)}</podcast:person>`;
 }
 
-function itemXml(e: Post, origin: string, guests: GuestView[]): string {
+function itemXml(e: Post, origin: string, guests: GuestView[], soundbites: Soundbite[] = []): string {
   const url = `${origin}/${e.slug}`;
   const people = guests.map((g) => personXml(g, origin)).join("");
   const transcript = e.transcript
@@ -102,6 +103,14 @@ function itemXml(e: Post, origin: string, guests: GuestView[]): string {
     e.chapters && e.chapters.length
       ? `<podcast:chapters url="${url}/chapters.json" type="application/json+chapters"/>`
       : "";
+  // Podcasting 2.0 <podcast:soundbite> (additive). No rows yet, so this stays empty and the feed
+  // bytes are unchanged; guid/enclosure/length/duration are never touched here.
+  const clips = soundbites
+    .map(
+      (s) =>
+        `\n    <podcast:soundbite startTime="${s.startSeconds}" duration="${s.durationSeconds}">${xmlEscape(s.title || e.title)}</podcast:soundbite>`,
+    )
+    .join("");
 
   return `  <item>
     <title>${xmlEscape(e.title)}</title>
@@ -118,7 +127,7 @@ function itemXml(e: Post, origin: string, guests: GuestView[]): string {
     }${e.seasonNumber ? `\n    <itunes:season>${e.seasonNumber}</itunes:season>` : ""}${
       e.episodeArtwork ? `\n    <itunes:image href="${xmlEscape(e.episodeArtwork)}"/>` : ""
     }
-    ${people}${transcript}${chapters}
+    ${people}${transcript}${chapters}${clips}
   </item>`;
 }
 

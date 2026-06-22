@@ -22,6 +22,9 @@ export type GuestView = {
   links?: PersonLink[];
 };
 
+/** A soundbite as rendered by the public clip player. */
+export type SoundbiteView = { id: number; start: number; duration: number; title: string | null };
+
 export type Theme = "light" | "dark";
 
 /** The minimal episode shape the persistent player needs. Built from loader data. */

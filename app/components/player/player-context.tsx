@@ -33,6 +33,7 @@ type PlayerApi = PlayerState & {
   /** Play a single episode starting at a timestamp (transcript click, ?t deep link). */
   playTrackAt: (track: PlayerTrack, seconds: number) => void;
   toggle: () => void;
+  pause: () => void;
   next: () => void;
   prev: () => void;
   seek: (seconds: number) => void;
@@ -150,6 +151,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     setIsPlaying((p) => !p);
   }, [current]);
 
+  const pause = useCallback(() => setIsPlaying(false), []);
+
   const setQueue = useCallback((tracks: PlayerTrack[]) => {
     setQueueState(tracks);
   }, []);
@@ -242,13 +245,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       playQueueAt,
       playTrackAt,
       toggle,
+      pause,
       next,
       prev,
       seek,
       skip,
       setRate,
     }),
-    [queue, index, current, isPlaying, currentTime, duration, rate, setQueue, playTrack, playQueueAt, playTrackAt, toggle, next, prev, seek, skip, setRate],
+    [queue, index, current, isPlaying, currentTime, duration, rate, setQueue, playTrack, playQueueAt, playTrackAt, toggle, pause, next, prev, seek, skip, setRate],
   );
 
   return (
