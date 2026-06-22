@@ -16,6 +16,11 @@ import { Header } from "~/components/chrome/Header";
 import { Footer } from "~/components/chrome/Footer";
 
 export const links: Route.LinksFunction = () => [
+  // Modern SVG favicon (scales, theme-agnostic) with raster fallbacks for older agents.
+  { rel: "icon", type: "image/svg+xml", href: "/brand/germomics-g.svg" },
+  { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
+  { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+  { rel: "manifest", href: "/site.webmanifest" },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
   {
@@ -30,6 +35,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* Brand chrome color: crystal violet in light, near-black violet in dark. */}
+        <meta name="theme-color" content="#4F2D7F" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#120B1F" media="(prefers-color-scheme: dark)" />
         <Meta />
         <Links />
         {/* Set data-theme before paint — no flash of the wrong theme. */}
