@@ -112,8 +112,9 @@ const snippets = [
 const BIO =
   "Dr. Dustin Edwards is Professor and Department Head of Biological Sciences in the College of Science " +
   "and Mathematics at Tarleton State University. He chairs the Institutional Biosafety Committee at the " +
-  "university, and he serves as an officer and the Archivist of the Texas Branch of the American Society " +
-  "for Microbiology. He earned his Ph.D. in Biomedical Sciences from the Department of Molecular Virology " +
+  "university, and he serves as an officer and the Archivist of the " +
+  '<a href="/txasm">Texas Branch of the American Society for Microbiology</a>' +
+  ". He earned his Ph.D. in Biomedical Sciences from the Department of Molecular Virology " +
   "and Microbiology at Baylor College of Medicine within the Texas Medical Center in Houston, where he " +
   "studied how the human T-cell leukemia virus type 1 (HTLV-1) protein Tax disrupts the control of cell " +
   "growth. He then spent five years as a postdoctoral fellow at the National Cancer Institute, part of " +
@@ -196,6 +197,12 @@ const AITXT_POLICY = [
   "# Training data: rights reserved (opt-out). Contact for licensing in the address below.",
 ].join("\n");
 
+const TXASM_HTML = [
+  "<p>The Texas Branch of the American Society for Microbiology promotes the science of microbiology across Texas through meetings, education, and discussion. Founded in 1941, the branch hosts annual meetings that bring together students and faculty from colleges, universities, and community colleges across the state to share research, mentor young scientists, and teach microbiology.</p>",
+  "<p>Germomics hosted the branch's website for several years. The branch now has its own home at txasm.org, with the current officers, meeting registration and programs, abstracts, newsletters, and awards.</p>",
+  "<p>Dr. Dustin Edwards, who makes Germomics, serves as an officer and the Archivist of the Texas Branch.</p>",
+].join("");
+
 // {{email}} and {{address_line}} are filled at render time from show_config + the contact setting.
 const CONTACT_HTML = [
   "<p>Reach germomics by email or by post.</p>",
@@ -214,6 +221,8 @@ const pages = [
   ["page:ai-txt", "ai.txt policy", AITXT_POLICY],
   // page:contact ships via migration 0007 (0005 is already applied).
   ["page:contact", "Contact", CONTACT_HTML],
+  // page:txasm + the bio cross-link ship via migration 0008 (0005 is already applied).
+  ["page:txasm", "Texas Branch of the American Society for Microbiology", TXASM_HTML],
 ];
 
 // ----- emit ------------------------------------------------------------------

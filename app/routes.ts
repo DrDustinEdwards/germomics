@@ -23,6 +23,7 @@ export default [
   route("privacy", "routes/privacy.tsx"),
   route("terms", "routes/terms.tsx"),
   route("contact", "routes/contact.tsx"),
+  route("txasm", "routes/txasm.tsx"),
 
   // ops
   route("health", "routes/health.ts"),

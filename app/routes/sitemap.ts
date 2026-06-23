@@ -18,6 +18,7 @@ const STATIC_PATHS = [
   "privacy",
   "terms",
   "contact",
+  "txasm",
 ];
 
 function isoDay(value?: string | null): string | null {
