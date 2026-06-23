@@ -60,3 +60,18 @@ export function srtToVtt(srt: string): string {
 export function isProbablyVtt(text: string): boolean {
   return /^﻿?WEBVTT/.test(text.trimStart());
 }
+
+/**
+ * Split a cue's text into an optional speaker label, the spoken text, and whether it is a
+ * non-verbal cue like "[MUSIC]" or "(laughs)". Speaker is taken from a "Name: ..." prefix
+ * (VTT <v Name> voice tags are already stripped to "Name: " by some exporters, or appear as a
+ * leading capitalized label).
+ */
+export function parseCueText(raw: string): { speaker: string | null; text: string; nonVerbal: boolean } {
+  const text = (raw ?? "").trim();
+  const nonVerbal = /^[[(][^\])]*[\])]$/.test(text);
+  if (nonVerbal) return { speaker: null, text, nonVerbal: true };
+  const m = text.match(/^([A-Z][A-Za-z0-9 .'-]{0,28}):\s+(.*)$/s);
+  if (m) return { speaker: m[1].trim(), text: m[2].trim(), nonVerbal: false };
+  return { speaker: null, text, nonVerbal: false };
+}

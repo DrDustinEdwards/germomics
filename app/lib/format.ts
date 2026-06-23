@@ -51,6 +51,19 @@ export function stampToSeconds(stamp: string): number {
   return parts.reduce((acc, n) => acc * 60 + n, 0);
 }
 
+/** Human-readable spoken duration for screen readers, e.g. "3 minutes 12 seconds". */
+export function spokenTime(totalSeconds?: number | null): string {
+  const t = Math.max(0, Math.floor(totalSeconds ?? 0));
+  const h = Math.floor(t / 3600);
+  const m = Math.floor((t % 3600) / 60);
+  const s = t % 60;
+  const parts: string[] = [];
+  if (h) parts.push(`${h} hour${h === 1 ? "" : "s"}`);
+  if (m) parts.push(`${m} minute${m === 1 ? "" : "s"}`);
+  if (s || !parts.length) parts.push(`${s} second${s === 1 ? "" : "s"}`);
+  return parts.join(" ");
+}
+
 /** XML-escape text destined for a feed. */
 export function xmlEscape(value: string): string {
   return value

@@ -1,7 +1,9 @@
 // Persistent queue player — one <audio> element, one shared state, mounted once in root.tsx.
 // React Router does client-side navigation after hydration, so this tree never unmounts and
 // playback survives route changes. Everything the player UI and transcript need flows through
-// usePlayer(). Resume position + Media Session (lock screen / car / media keys) included.
+// usePlayer(). Includes resume position, volume/mute, sleep timer, buffering/error state, and a
+// complete Media Session surface (lock screen / car / media keys): metadata + chapterInfo +
+// position state + all transport/seek handlers.
 import {
   createContext,
   useCallback,
@@ -13,6 +15,8 @@ import {
 } from "react";
 import type { PlayerTrack } from "~/lib/types";
 
+export type SleepMode = "end" | number; // "end" of episode, or minutes from now
+
 type PlayerState = {
   queue: PlayerTrack[];
   index: number;
@@ -21,9 +25,16 @@ type PlayerState = {
   currentTime: number;
   duration: number;
   rate: number;
+  volume: number;
+  muted: boolean;
+  buffering: boolean;
+  errored: boolean;
+  sleep: SleepMode | null;
 };
 
 type PlayerApi = PlayerState & {
+  /** The shared <audio> element, for the transcript's native TextTrack highlight. */
+  audioRef: React.RefObject<HTMLAudioElement | null>;
   /** Seed the queue without autoplay (home seeds all episodes, newest first). */
   setQueue: (tracks: PlayerTrack[]) => void;
   /** Play a single episode (episode detail page). */
@@ -39,12 +50,21 @@ type PlayerApi = PlayerState & {
   seek: (seconds: number) => void;
   skip: (delta: number) => void;
   setRate: (rate: number) => void;
+  setVolume: (v: number) => void;
+  toggleMute: () => void;
+  setSleep: (mode: SleepMode | null) => void;
 };
 
 const PlayerContext = createContext<PlayerApi | null>(null);
 
 const RESUME_PREFIX = "germomics-resume-";
 const RATE_KEY = "germomics-rate";
+const VOL_KEY = "germomics-volume";
+
+function ms(): MediaSession | null {
+  if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return null;
+  return navigator.mediaSession;
+}
 
 export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -54,17 +74,26 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [rate, setRateState] = useState(1);
+  const [volume, setVolumeState] = useState(1);
+  const [muted, setMuted] = useState(false);
+  const [buffering, setBuffering] = useState(false);
+  const [errored, setErrored] = useState(false);
+  const [sleep, setSleepState] = useState<SleepMode | null>(null);
 
   const current = index >= 0 && index < queue.length ? queue[index] : null;
   const isPlayingRef = useRef(isPlaying);
   isPlayingRef.current = isPlaying;
   const lastSaveRef = useRef(0);
   const pendingSeekRef = useRef<number | null>(null);
+  const sleepRef = useRef<SleepMode | null>(null);
+  sleepRef.current = sleep;
 
-  // Restore last-used playback rate.
+  // Restore last-used rate + volume.
   useEffect(() => {
-    const saved = Number(localStorage.getItem(RATE_KEY));
-    if (saved >= 0.5 && saved <= 3) setRateState(saved);
+    const r = Number(localStorage.getItem(RATE_KEY));
+    if (r >= 0.5 && r <= 3) setRateState(r);
+    const v = localStorage.getItem(VOL_KEY);
+    if (v !== null && Number(v) >= 0 && Number(v) <= 1) setVolumeState(Number(v));
   }, []);
 
   const saveResume = useCallback((id: number, time: number) => {
@@ -75,10 +104,39 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Push position to the lock screen. Guards NaN/Infinity; safe no-op without Media Session.
+  const updatePositionState = useCallback(() => {
+    const audio = audioRef.current;
+    const session = ms();
+    if (!audio || !session || typeof session.setPositionState !== "function") return;
+    const dur = audio.duration;
+    const pos = audio.currentTime;
+    const r = audio.playbackRate;
+    if (!Number.isFinite(dur) || dur <= 0 || !Number.isFinite(pos)) return;
+    try {
+      session.setPositionState({
+        duration: dur,
+        playbackRate: Number.isFinite(r) && r > 0 ? r : 1,
+        position: Math.min(Math.max(pos, 0), dur),
+      });
+    } catch {
+      /* some browsers throw on odd values */
+    }
+  }, []);
+
+  // Apply volume/mute to the element.
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume = volume;
+    audio.muted = muted;
+  }, [volume, muted]);
+
   // Load a new track when `current` changes; resume position on metadata; honor play intent.
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !current) return;
+    setErrored(false);
     if (audio.src !== current.audioUrl) {
       audio.src = current.audioUrl;
       audio.load();
@@ -93,6 +151,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         if (saved > 0 && saved < audio.duration - 5) audio.currentTime = saved;
       }
       if (isPlayingRef.current) void audio.play().catch(() => setIsPlaying(false));
+      updatePositionState();
     };
     audio.addEventListener("loadedmetadata", onMeta, { once: true });
     return () => audio.removeEventListener("loadedmetadata", onMeta);
@@ -123,28 +182,53 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     setIsPlaying(true);
   }, []);
 
-  const seek = useCallback((seconds: number) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.currentTime = Math.max(0, Math.min(seconds, audio.duration || seconds));
-    setCurrentTime(audio.currentTime);
-  }, []);
+  const seek = useCallback(
+    (seconds: number) => {
+      const audio = audioRef.current;
+      if (!audio) return;
+      audio.currentTime = Math.max(0, Math.min(seconds, audio.duration || seconds));
+      setCurrentTime(audio.currentTime);
+      updatePositionState();
+    },
+    [updatePositionState],
+  );
 
-  const skip = useCallback((delta: number) => {
-    const audio = audioRef.current;
-    if (audio) seek(audio.currentTime + delta);
-  }, [seek]);
+  const skip = useCallback(
+    (delta: number) => {
+      const audio = audioRef.current;
+      if (audio) seek(audio.currentTime + delta);
+    },
+    [seek],
+  );
 
-  const setRate = useCallback((r: number) => {
-    const audio = audioRef.current;
-    if (audio) audio.playbackRate = r;
-    setRateState(r);
+  const setRate = useCallback(
+    (r: number) => {
+      const clamped = Math.min(3, Math.max(0.5, r));
+      const audio = audioRef.current;
+      if (audio) audio.playbackRate = clamped;
+      setRateState(clamped);
+      try {
+        localStorage.setItem(RATE_KEY, String(clamped));
+      } catch {
+        /* ignore */
+      }
+      updatePositionState();
+    },
+    [updatePositionState],
+  );
+
+  const setVolume = useCallback((v: number) => {
+    const clamped = Math.min(1, Math.max(0, v));
+    setVolumeState(clamped);
+    if (clamped > 0) setMuted(false);
     try {
-      localStorage.setItem(RATE_KEY, String(r));
+      localStorage.setItem(VOL_KEY, String(clamped));
     } catch {
       /* ignore */
     }
   }, []);
+
+  const toggleMute = useCallback(() => setMuted((m) => !m), []);
 
   const toggle = useCallback(() => {
     if (!current) return;
@@ -176,12 +260,25 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     setIsPlaying(true);
   }, []);
 
+  const setSleep = useCallback((mode: SleepMode | null) => setSleepState(mode), []);
+
+  // Sleep timer: a minute count pauses after N minutes; "end" is handled on `ended`.
+  useEffect(() => {
+    if (typeof sleep !== "number") return;
+    const id = setTimeout(() => {
+      setIsPlaying(false);
+      setSleepState(null);
+    }, sleep * 60 * 1000);
+    return () => clearTimeout(id);
+  }, [sleep]);
+
   // Wire audio element events once.
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     const onTime = () => {
       setCurrentTime(audio.currentTime);
+      updatePositionState();
       if (current && audio.currentTime - lastSaveRef.current > 5) {
         lastSaveRef.current = audio.currentTime;
         saveResume(current.id, audio.currentTime);
@@ -190,75 +287,127 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const onDur = () => setDuration(audio.duration || 0);
     const onEnd = () => {
       if (current) saveResume(current.id, 0);
+      if (sleepRef.current === "end") {
+        setIsPlaying(false);
+        setSleepState(null);
+        return;
+      }
       next();
     };
-    const onPlay = () => setIsPlaying(true);
+    const onPlay = () => {
+      setIsPlaying(true);
+      setBuffering(false);
+      updatePositionState();
+    };
     const onPause = () => setIsPlaying(false);
+    const onWaiting = () => setBuffering(true);
+    const onPlaying = () => {
+      setBuffering(false);
+      setErrored(false);
+    };
+    const onStalled = () => setBuffering(true);
+    const onError = () => {
+      setErrored(true);
+      setBuffering(false);
+    };
     audio.addEventListener("timeupdate", onTime);
     audio.addEventListener("durationchange", onDur);
     audio.addEventListener("ended", onEnd);
     audio.addEventListener("play", onPlay);
     audio.addEventListener("pause", onPause);
+    audio.addEventListener("waiting", onWaiting);
+    audio.addEventListener("playing", onPlaying);
+    audio.addEventListener("stalled", onStalled);
+    audio.addEventListener("error", onError);
     return () => {
       audio.removeEventListener("timeupdate", onTime);
       audio.removeEventListener("durationchange", onDur);
       audio.removeEventListener("ended", onEnd);
       audio.removeEventListener("play", onPlay);
       audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("waiting", onWaiting);
+      audio.removeEventListener("playing", onPlaying);
+      audio.removeEventListener("stalled", onStalled);
+      audio.removeEventListener("error", onError);
     };
-  }, [current, next, saveResume]);
+  }, [current, next, saveResume, updatePositionState]);
 
-  // Media Session — lock screen, car, media keys (also satisfies a real player surface).
+  // Media Session: metadata (+ chapterInfo + artwork fallback) and every action handler.
   useEffect(() => {
-    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
-    const ms = navigator.mediaSession;
+    const session = ms();
+    if (!session) return;
+    // Reset position on track change; it repopulates once the new duration is known.
+    try {
+      (session.setPositionState as (s?: MediaPositionState) => void)(undefined);
+    } catch {
+      /* ignore */
+    }
     if (current) {
-      ms.metadata = new MediaMetadata({
+      const origin = typeof location !== "undefined" ? location.origin : "";
+      const artwork = current.artwork
+        ? [{ src: current.artwork, sizes: "1400x1400", type: "image/jpeg" }]
+        : [
+            { src: `${origin}/icon-512.png`, sizes: "512x512", type: "image/png" },
+            { src: `${origin}/icon-192.png`, sizes: "192x192", type: "image/png" },
+          ];
+      const chapters = current.chapters ?? [];
+      const init: MediaMetadataInit & { chapterInfo?: unknown } = {
         title: current.title,
         artist: "germomics",
-        album: "germomics",
-        artwork: current.artwork ? [{ src: current.artwork, sizes: "512x512" }] : [],
-      });
+        album: current.episodeNumber ? `Episode ${current.episodeNumber}` : "germomics",
+        artwork,
+      };
+      if (chapters.length) {
+        init.chapterInfo = chapters.map((c) => ({ title: c.title, startTime: c.start }));
+      }
+      session.metadata = new MediaMetadata(init as MediaMetadataInit);
     }
-    ms.setActionHandler("play", () => setIsPlaying(true));
-    ms.setActionHandler("pause", () => setIsPlaying(false));
-    ms.setActionHandler("previoustrack", prev);
-    ms.setActionHandler("nexttrack", next);
-    ms.setActionHandler("seekbackward", () => skip(-15));
-    ms.setActionHandler("seekforward", () => skip(30));
-    ms.setActionHandler("seekto", (d) => {
-      if (typeof d.seekTime === "number") seek(d.seekTime);
+    session.setActionHandler("play", () => setIsPlaying(true));
+    session.setActionHandler("pause", () => setIsPlaying(false));
+    session.setActionHandler("stop", () => setIsPlaying(false));
+    session.setActionHandler("previoustrack", prev);
+    session.setActionHandler("nexttrack", next);
+    session.setActionHandler("seekbackward", (d) => skip(-(d.seekOffset ?? 15)));
+    session.setActionHandler("seekforward", (d) => skip(d.seekOffset ?? 30));
+    session.setActionHandler("seekto", (d) => {
+      if (typeof d.seekTime !== "number") return;
+      const audio = audioRef.current;
+      if (audio && typeof audio.fastSeek === "function" && d.fastSeek) audio.fastSeek(d.seekTime);
+      else seek(d.seekTime);
+      updatePositionState();
     });
-  }, [current, next, prev, seek, skip]);
+    return () => {
+      // Clear handlers so a stale closure never fires after unmount.
+      for (const a of ["play", "pause", "stop", "previoustrack", "nexttrack", "seekbackward", "seekforward", "seekto"] as const) {
+        try {
+          session.setActionHandler(a, null);
+        } catch {
+          /* ignore */
+        }
+      }
+    };
+  }, [current, next, prev, seek, skip, updatePositionState]);
+
+  // Reflect play state on the lock screen.
+  useEffect(() => {
+    const session = ms();
+    if (session) session.playbackState = isPlaying ? "playing" : "paused";
+  }, [isPlaying]);
 
   const value = useMemo<PlayerApi>(
     () => ({
-      queue,
-      index,
-      current,
-      isPlaying,
-      currentTime,
-      duration,
-      rate,
-      setQueue,
-      playTrack,
-      playQueueAt,
-      playTrackAt,
-      toggle,
-      pause,
-      next,
-      prev,
-      seek,
-      skip,
-      setRate,
+      queue, index, current, isPlaying, currentTime, duration, rate, volume, muted, buffering, errored, sleep,
+      audioRef,
+      setQueue, playTrack, playQueueAt, playTrackAt, toggle, pause, next, prev, seek, skip, setRate,
+      setVolume, toggleMute, setSleep,
     }),
-    [queue, index, current, isPlaying, currentTime, duration, rate, setQueue, playTrack, playQueueAt, playTrackAt, toggle, pause, next, prev, seek, skip, setRate],
+    [queue, index, current, isPlaying, currentTime, duration, rate, volume, muted, buffering, errored, sleep, setQueue, playTrack, playQueueAt, playTrackAt, toggle, pause, next, prev, seek, skip, setRate, setVolume, toggleMute, setSleep],
   );
 
   return (
     <PlayerContext.Provider value={value}>
       {children}
-      {/* The single audio element. Never unmounted. */}
+      {/* The single audio element. Never unmounted. preload metadata only; no autoplay. */}
       <audio ref={audioRef} preload="metadata" />
     </PlayerContext.Provider>
   );
@@ -268,4 +417,14 @@ export function usePlayer(): PlayerApi {
   const ctx = useContext(PlayerContext);
   if (!ctx) throw new Error("usePlayer must be used within <PlayerProvider>");
   return ctx;
+}
+
+/** Index of the chapter active at time t, or -1. Chapters are assumed sorted by start. */
+export function activeChapterIndex(chapters: { start: number }[], t: number): number {
+  let idx = -1;
+  for (let i = 0; i < chapters.length; i++) {
+    if (chapters[i].start <= t + 0.001) idx = i;
+    else break;
+  }
+  return idx;
 }

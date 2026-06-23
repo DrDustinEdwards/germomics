@@ -10,7 +10,7 @@ export function PlayerSpacer() {
     <div
       aria-hidden
       className="transition-[height] duration-200 ease-out motion-reduce:transition-none"
-      style={{ height: p.current ? "var(--player-h)" : "0px" }}
+      style={{ height: p.current ? "calc(var(--player-h) + env(safe-area-inset-bottom))" : "0px" }}
     />
   );
 }
