@@ -1,5 +1,5 @@
 import { Link, useRouteLoaderData } from "react-router";
-import { Rss } from "lucide-react";
+import { Rss, Lock } from "lucide-react";
 import { Wordmark } from "../brand/Wordmark";
 import { ExternalCue } from "../ExternalCue";
 import { useSnippet } from "~/lib/content";
@@ -67,9 +67,9 @@ export function Footer() {
       <div className="mx-auto grid max-w-5xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
         {/* Brand block */}
         <div className="sm:col-span-2 lg:col-span-1">
-          {/* Wordmark fills the brand column width (capped to the tagline block width below it). */}
-          <Link to="/" aria-label="germomics home" className="block w-full max-w-xs">
-            <Wordmark />
+          {/* Rectangular germomics lockup as a modest mark (~80px tall) above the tagline. */}
+          <Link to="/" aria-label="germomics home" className="inline-flex">
+            <Wordmark className="h-20 w-auto" />
           </Link>
           <p className="mt-3 max-w-xs font-mono text-xs leading-relaxed text-muted">{tagline}</p>
           {socials.length ? (
@@ -157,7 +157,9 @@ export function Footer() {
           </span>
           <span aria-hidden>·</span>
           <a href="/feed/site.xml" className={link}>Writing feed</a>
-          <Link to="/admin" className="ml-auto text-muted/70 hover:text-ink">Admin</Link>
+          <Link to="/admin" className="ml-auto inline-flex items-center gap-1 text-muted/70 hover:text-ink">
+            <Lock size={14} aria-hidden /> Admin
+          </Link>
         </div>
       </div>
     </footer>

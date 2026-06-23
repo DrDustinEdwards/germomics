@@ -12,13 +12,13 @@ export function Wordmark({
   title?: string;
 }) {
   // The wrapper carries the accessible name and the brand color; the inner <svg> (aria-hidden) keeps
-  // its viewBox. The svg fills the wrapper width with height following the intrinsic ratio, so callers
-  // size it by setting a width / max-width on `className` (e.g. w-full max-w-xs).
+  // its viewBox. Height comes from `className` (e.g. h-20) and the width follows the intrinsic ratio,
+  // so this rectangular lockup stays proportional at whatever height the caller sets.
   return (
     <span
       role="img"
       aria-label={title}
-      className={`block text-brand [&>svg]:block [&>svg]:h-auto [&>svg]:w-full ${className}`}
+      className={`inline-flex text-brand [&>svg]:h-full [&>svg]:w-auto ${className}`}
       dangerouslySetInnerHTML={{ __html: markup }}
     />
   );
