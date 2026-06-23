@@ -2,6 +2,7 @@ import { Link, useRouteLoaderData } from "react-router";
 import { Rss } from "lucide-react";
 import { Wordmark } from "../brand/Wordmark";
 import { useSnippet } from "~/lib/content";
+import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 
 // Fat footer: a persistent nav + trust + SEO surface. Brand block (logo + tagline + real socials),
 // three labeled nav columns (Listen / Explore / About), and a bottom bar. Stacks to one column on
@@ -40,7 +41,7 @@ function SocialIcon({ platform }: { platform: string }) {
 export function Footer() {
   const root = useRouteLoaderData("root") as RootData | undefined;
   const socials = root?.socials ?? [];
-  const directories = Object.entries(root?.subscribeLinks ?? {});
+  const subscribeLinks = root?.subscribeLinks ?? {};
   const tagline = useSnippet("snippet:footer.tagline", "a microbiology & history podcast and writing project.");
 
   const explore: [string, string, string][] = [
@@ -57,7 +58,6 @@ export function Footer() {
     ["/privacy", useSnippet("snippet:nav.privacy", "Privacy")],
     ["/terms", useSnippet("snippet:nav.terms", "Terms")],
   ];
-  const subscribeLabel = useSnippet("snippet:nav.subscribe", "Subscribe");
   const year = new Date().getFullYear();
   const link = "text-muted hover:text-ink";
 
@@ -93,15 +93,19 @@ export function Footer() {
         <nav aria-labelledby="footer-listen">
           <h3 id="footer-listen" className="font-display text-sm font-semibold text-ink">Listen</h3>
           <ul className="mt-3 space-y-2 text-sm">
-            <li><Link to="/subscribe" className={link}>{subscribeLabel}</Link></li>
-            {directories.map(([name, url]) => (
-              <li key={name}><a href={url} className={link}>{name}</a></li>
-            ))}
+            {PRIMARY_KEYS.map((k) =>
+              subscribeLinks[k] ? (
+                <li key={k}>
+                  <a href={subscribeLinks[k]} className={link}>{SUBSCRIBE_DESTINATIONS[k].label}</a>
+                </li>
+              ) : null,
+            )}
             <li>
               <a href="/feed/podcast/" className={`inline-flex items-center gap-1 ${link}`}>
                 <Rss size={14} aria-hidden /> Podcast RSS
               </a>
             </li>
+            <li><Link to="/subscribe" className={link}>More ways to listen →</Link></li>
           </ul>
         </nav>
 

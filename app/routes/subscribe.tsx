@@ -1,13 +1,18 @@
+import { useState } from "react";
 import { Form, Link } from "react-router";
-import { Rss, Check } from "lucide-react";
+import { Rss, Check, Copy, Mail, Smartphone } from "lucide-react";
 import type { Route } from "./+types/subscribe";
 import { getEnv } from "~/lib/context.server";
 import { getDb } from "~/db/index.server";
 import { subscribers } from "~/db/schema";
 import { getShowConfig } from "~/lib/show.server";
+import { SUBSCRIBE_DESTINATIONS, PRIMARY_KEYS, SECONDARY_KEYS } from "~/lib/subscribe";
 
 export function meta() {
-  return [{ title: "Subscribe · germomics" }];
+  return [
+    { title: "Subscribe · germomics" },
+    { name: "description", content: "Follow germomics in any podcast app, by email, or by RSS." },
+  ];
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -25,7 +30,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   if (!EMAIL_RE.test(email) || email.length > 254) {
     return { ok: false as const, error: "Please enter a valid email address." };
   }
-  // Explicit, unambiguous consent is required (GDPR) — no pre-ticked box, no implied opt-in.
+  // Explicit, unambiguous consent is required (GDPR). No pre-ticked box, no implied opt-in.
   if (consent !== "on") {
     return { ok: false as const, error: "Please tick the consent box so we can email you." };
   }
@@ -44,37 +49,96 @@ export async function action({ request, context }: Route.ActionArgs) {
   return { ok: true as const };
 }
 
+const chip =
+  "inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 font-mono text-sm hover:border-accent hover:text-accent";
+
 export default function Subscribe({ loaderData, actionData }: Route.ComponentProps) {
-  const links = Object.entries(loaderData.subscribeLinks);
+  const sl = loaderData.subscribeLinks as Record<string, string>;
+  const primary = PRIMARY_KEYS.filter((k) => sl[k]);
+  const secondary = SECONDARY_KEYS.filter((k) => sl[k]);
+  const [copied, setCopied] = useState(false);
+
+  const copyRss = async () => {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/feed/podcast/`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* clipboard blocked */
+    }
+  };
+
   return (
     <div className="mx-auto max-w-2xl">
       <h1 className="font-display text-3xl font-semibold">Subscribe</h1>
       <p className="mt-2 text-muted">
-        Follow germomics in your podcast app, or get new episodes and essays by email.
+        Follow germomics in your podcast app, by email, or by RSS. New episodes and essays land
+        automatically.
       </p>
 
-      <section className="mt-8">
-        <a
-          href="/feed/podcast/"
-          className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 font-mono text-sm hover:border-accent hover:text-accent"
-        >
-          <Rss size={15} aria-hidden /> RSS feed
-        </a>
-        {links.length ? (
-          <div className="mt-4 flex flex-wrap gap-3 font-mono text-sm">
-            {links.map(([name, url]) => (
-              <a
-                key={name}
-                href={url}
-                className="rounded-full border border-border px-4 py-2 hover:border-accent hover:text-accent"
-              >
-                {name}
-              </a>
-            ))}
+      {/* Primary apps */}
+      {primary.length ? (
+        <section className="mt-8">
+          <h2 className="font-display text-lg font-semibold">Listen in your app</h2>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {primary.map((k) => {
+              const d = SUBSCRIBE_DESTINATIONS[k];
+              const Icon = d.icon;
+              return (
+                <a
+                  key={k}
+                  href={sl[k]}
+                  target="_blank"
+                  rel="noopener"
+                  className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 font-display text-sm font-medium hover:border-accent hover:text-accent"
+                >
+                  <Icon size={18} aria-hidden /> {d.label}
+                </a>
+              );
+            })}
           </div>
-        ) : null}
+        </section>
+      ) : null}
+
+      {/* Secondary directories */}
+      {secondary.length ? (
+        <section className="mt-8">
+          <h2 className="font-display text-lg font-semibold">More directories</h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {secondary.map((k) => {
+              const d = SUBSCRIBE_DESTINATIONS[k];
+              const Icon = d.icon;
+              return (
+                <a key={k} href={sl[k]} target="_blank" rel="noopener" className={chip}>
+                  <Icon size={14} aria-hidden /> {d.label}
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
+      {/* Other ways (feed mechanisms; not identity profiles) */}
+      <section className="mt-8">
+        <h2 className="font-display text-lg font-semibold">Other ways to subscribe</h2>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <a href="https://subscribeonandroid.com/germomics.com/feed/podcast/" target="_blank" rel="noopener" className={chip}>
+            <Smartphone size={14} aria-hidden /> Subscribe on Android
+          </a>
+          <a href="https://subscribebyemail.com/germomics.com/feed/podcast/" target="_blank" rel="noopener" className={chip}>
+            <Mail size={14} aria-hidden /> Subscribe by Email
+          </a>
+          <a href="/feed/podcast/" className={chip}>
+            <Rss size={14} aria-hidden /> RSS feed
+          </a>
+          <button type="button" onClick={copyRss} className={chip}>
+            {copied ? <Check size={14} aria-hidden /> : <Copy size={14} aria-hidden />}
+            {copied ? "Copied" : "Copy RSS link"}
+          </button>
+        </div>
       </section>
 
+      {/* Newsletter */}
       <section className="mt-10 rounded-2xl border border-border bg-surface p-6">
         <h2 className="font-display text-lg font-semibold">Newsletter</h2>
         {actionData?.ok ? (
@@ -84,9 +148,7 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
         ) : (
           <Form method="post" className="mt-3 space-y-3">
             <div className="flex flex-col gap-2 sm:flex-row">
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
+              <label htmlFor="email" className="sr-only">Email address</label>
               <input
                 id="email"
                 type="email"
@@ -104,27 +166,17 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
               </button>
             </div>
             <div className="flex items-start gap-2">
-              <input
-                id="consent"
-                type="checkbox"
-                name="consent"
-                required
-                className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-brand)]"
-              />
+              <input id="consent" type="checkbox" name="consent" required className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-brand)]" />
               <label htmlFor="consent" className="text-sm text-muted">
                 I agree to receive the germomics newsletter by email and accept the{" "}
-                <Link to="/privacy" className="text-accent hover:underline">
-                  privacy policy
-                </Link>
-                . You can unsubscribe anytime via the link in every email.
+                <Link to="/privacy" className="text-accent hover:underline">privacy policy</Link>. You
+                can unsubscribe anytime via the link in every email.
               </label>
             </div>
           </Form>
         )}
         {actionData?.ok === false ? (
-          <p role="alert" className="mt-2 text-sm text-accent">
-            {actionData.error}
-          </p>
+          <p role="alert" className="mt-2 text-sm text-accent">{actionData.error}</p>
         ) : null}
       </section>
     </div>
