@@ -67,8 +67,9 @@ export function Footer() {
       <div className="mx-auto grid max-w-5xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
         {/* Brand block */}
         <div className="sm:col-span-2 lg:col-span-1">
-          <Link to="/" aria-label="germomics home" className="inline-flex">
-            <Wordmark className="h-8 w-auto" />
+          {/* Wordmark fills the brand column width (capped to the tagline block width below it). */}
+          <Link to="/" aria-label="germomics home" className="block w-full max-w-xs">
+            <Wordmark />
           </Link>
           <p className="mt-3 max-w-xs font-mono text-xs leading-relaxed text-muted">{tagline}</p>
           {socials.length ? (
