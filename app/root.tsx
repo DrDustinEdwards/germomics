@@ -12,6 +12,7 @@ import "./app.css";
 import { getEnv, getSnippets, getSettings, siteContentContext } from "~/lib/context.server";
 import { loadSettings, loadSnippets, setting } from "~/lib/content.server";
 import { getShowConfig } from "~/lib/show.server";
+import { listSeasons } from "~/lib/posts.server";
 import { themeInitScript } from "~/lib/theme";
 import { PlayerProvider } from "~/components/player/player-context";
 import { PlayerDock } from "~/components/player/PlayerDock";
@@ -50,7 +51,7 @@ export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const beaconToken = (env as unknown as { CF_BEACON_TOKEN?: string }).CF_BEACON_TOKEN ?? null;
   const settings = getSettings(context);
-  const show = await getShowConfig(env);
+  const [show, seasons] = await Promise.all([getShowConfig(env), listSeasons(env)]);
   // Social links for the footer, built from the same settings social.* as Organization sameAs, so
   // footer and schema stay consistent. Only handles that are set produce a link.
   const fb = setting(settings, "social.facebook");

@@ -2,7 +2,7 @@
 // (CLAUDE.md rule #4); the one raw statement is the FTS5 MATCH, which Drizzle's DSL can't
 // express. Tag/guest filters parse the JSON columns in JS (the catalog is small), keeping
 // everything type-safe and camelCase.
-import { and, desc, eq, inArray, isNull, lte, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, lte, or, sql, type SQL } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { posts, type Post } from "~/db/schema";
 import { slugifyGuest, toPlayerTrack } from "~/lib/posts";
@@ -49,6 +49,27 @@ export async function listPosts(
 
 export const listEpisodes = (env: Env, limit?: number) =>
   listPosts(env, { kind: "episode", limit });
+
+/** Distinct published episode season numbers, newest first (for the season nav + listing). */
+export async function listSeasons(env: Env): Promise<number[]> {
+  const rows = await getDb(env)
+    .selectDistinct({ season: posts.seasonNumber })
+    .from(posts)
+    .where(and(publiclyVisible(), eq(posts.kind, "episode")));
+  return rows
+    .map((r) => r.season)
+    .filter((s): s is number => s != null)
+    .sort((a, b) => b - a);
+}
+
+/** Episodes in one season, ascending by episode number (so a listener can start at #1). */
+export async function episodesInSeason(env: Env, season: number): Promise<Post[]> {
+  return getDb(env)
+    .select()
+    .from(posts)
+    .where(and(publiclyVisible(), eq(posts.kind, "episode"), eq(posts.seasonNumber, season)))
+    .orderBy(asc(posts.episodeNumber));
+}
 export const listArticles = (env: Env, limit?: number) =>
   listPosts(env, { kind: "article", limit });
 

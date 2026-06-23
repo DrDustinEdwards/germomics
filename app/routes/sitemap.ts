@@ -2,7 +2,7 @@
 // listPosts) plus the key static pages. Resource route returning raw XML.
 import type { Route } from "./+types/sitemap";
 import { getEnv } from "~/lib/context.server";
-import { listPosts } from "~/lib/posts.server";
+import { listPosts, listSeasons } from "~/lib/posts.server";
 import { xmlEscape } from "~/lib/format";
 
 const STATIC_PATHS = [
@@ -29,11 +29,17 @@ function isoDay(value?: string | null): string | null {
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const origin = new URL(request.url).origin;
-  const posts = await listPosts(env, { limit: 1000 }); // visible only
+  const [posts, seasons] = await Promise.all([
+    listPosts(env, { limit: 1000 }), // visible only
+    listSeasons(env),
+  ]);
 
   const urls: string[] = [];
   for (const p of STATIC_PATHS) {
     urls.push(`  <url><loc>${origin}/${p}</loc></url>`);
+  }
+  for (const s of seasons) {
+    urls.push(`  <url><loc>${origin}/season/${s}</loc></url>`);
   }
   for (const post of posts) {
     const lastmod = isoDay(post.updatedAt) ?? isoDay(post.publishedAt);

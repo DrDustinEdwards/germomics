@@ -5,6 +5,7 @@ export default [
 
   // sections
   route("episodes", "routes/episodes._index.tsx"),
+  route("season/:num", "routes/season.$num.tsx"),
   route("writing", "routes/writing._index.tsx"),
   route("archive", "routes/archive.tsx"),
   route("search", "routes/search.tsx"),
