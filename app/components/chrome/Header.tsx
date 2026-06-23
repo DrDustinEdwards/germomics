@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useRouteLoaderData, useLocation } from "react-router";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ChevronDown, Menu, Search, X } from "lucide-react";
 import { LogoMark } from "../brand/LogoMark";
 import { ThemeToggle } from "./ThemeToggle";
 import { useSnippet } from "~/lib/content";
@@ -11,7 +11,6 @@ const NAV = [
   { to: "/archive", key: "snippet:nav.archive", fallback: "Archive" },
   { to: "/data", key: "snippet:nav.data", fallback: "Data" },
   { to: "/games", key: "snippet:nav.games", fallback: "Games" },
-  { to: "/search", key: "snippet:nav.search", fallback: "Search" },
 ] as const;
 
 const navCx = ({ isActive }: { isActive: boolean }) =>
@@ -138,6 +137,13 @@ export function Header() {
             </NavLink>
           ))}
           <Link to="/subscribe" className={subscribeCta}>{subscribeLabel}</Link>
+          <Link
+            to="/search"
+            aria-label="Search"
+            className="tap-target grid place-items-center rounded-full border border-border bg-surface p-2 text-muted hover:border-brand hover:text-ink"
+          >
+            <Search size={16} aria-hidden />
+          </Link>
           <ThemeToggle />
         </nav>
 
@@ -172,6 +178,11 @@ export function Header() {
                 </Link>
               </li>
             ))}
+            <li>
+              <Link to="/search" className="block rounded px-2 py-2 font-display text-sm text-muted hover:text-ink">
+                <NavLabel snippetKey="snippet:nav.search" fallback="Search" />
+              </Link>
+            </li>
             <li className="pt-1"><Link to="/subscribe" className={`inline-block ${subscribeCta}`}>{subscribeLabel}</Link></li>
           </ul>
         </nav>

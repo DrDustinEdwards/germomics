@@ -41,8 +41,8 @@ export default function Season({ loaderData }: Route.ComponentProps) {
   return (
     <div>
       <QueueSeeder tracks={tracks} />
-      <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent">Season {num}</p>
-      <h1 className="mb-6 mt-2 font-display text-3xl font-semibold">Season {num}</h1>
+      {/* Teal eyebrow is the only season marker (the page title/meta carries the heading text). */}
+      <h1 className="mb-6 font-mono text-sm font-medium uppercase tracking-[0.18em] text-accent">Season {num}</h1>
       <div className="grid gap-3">
         {episodes.map((post) => (
           <PostCard key={post.id} post={post} track={tracks.find((t) => t.id === post.id)} queue={tracks} />
