@@ -8,6 +8,7 @@ import { getDb } from "~/db/index.server";
 import { subscribers } from "~/db/schema";
 import { formatDate } from "~/lib/format";
 import { EmptyState } from "~/components/admin/ui";
+import { useSnippet } from "~/lib/content";
 
 function csvCell(v: unknown): string {
   const s = String(v ?? "");
@@ -48,6 +49,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 export default function SubscribersAdmin({ loaderData }: Route.ComponentProps) {
   const { rows } = loaderData;
   const active = rows.filter((r) => !r.unsubscribedAt).length;
+  const emptySubscribers = useSnippet("snippet:empty.subscribers", "No subscribers yet.");
   return (
     <div>
       <h1 className="flex items-center gap-2 font-display text-2xl font-semibold">
@@ -67,7 +69,7 @@ export default function SubscribersAdmin({ loaderData }: Route.ComponentProps) {
 
       {rows.length === 0 ? (
         <div className="mt-6">
-          <EmptyState>No subscribers yet.</EmptyState>
+          <EmptyState>{emptySubscribers}</EmptyState>
         </div>
       ) : (
         <div className="mt-6 overflow-hidden rounded-xl border border-border bg-card">

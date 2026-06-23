@@ -7,8 +7,9 @@ export const SETTING_DEFAULTS: Record<string, string> = {
   "site.base_url": "",
   "contact.address": "{\"streetAddress\":\"Box T-0100\",\"locality\":\"Stephenville\",\"region\":\"TX\",\"postalCode\":\"76402\",\"country\":\"US\"}",
   "contact.address_line": "Box T-0100, Stephenville, TX 76402",
-  "social.twitter": "",
-  "social.instagram": "",
+  "social.facebook": "Germomics",
+  "social.twitter": "Germomics",
+  "social.instagram": "germomics",
   "ai.model": "claude-sonnet-4-6",
   "ai.daily_cap": "100",
   "ratelimit.ai": "15",
@@ -33,9 +34,13 @@ export const SNIPPET_DEFAULTS: Record<string, string> = {
   "snippet:nav.about": "About",
   "snippet:nav.privacy": "Privacy",
   "snippet:nav.terms": "Terms",
+  "snippet:nav.contact": "Contact",
   "snippet:empty.people": "No people yet. Create one on the right.",
   "snippet:empty.versions": "No saved versions yet. They are snapshotted on each save.",
   "snippet:empty.scores": "No scores yet. Be the first.",
+  "snippet:empty.posts": "No posts match these filters.",
+  "snippet:empty.soundbites": "No soundbites yet. Create one on the right.",
+  "snippet:empty.subscribers": "No subscribers yet.",
   "snippet:meta.home_title": "germomics · microbiology & history",
   "snippet:meta.home_description": "A podcast and writing project about microbiology and history, with audio, transcripts, writing, data, and games.",
   "snippet:meta.title_template": "{title} · germomics",
@@ -72,5 +77,9 @@ export const PAGE_DEFAULTS: Record<string, { title: string; value: string }> = {
   "page:ai-txt": {
     "title": "ai.txt policy",
     "value": "# Citation and search (RAG, answer engines): ALLOWED.\n# Please cite the source and link the canonical URL.\n# Training data: rights reserved (opt-out). Contact for licensing in the address below."
+  },
+  "page:contact": {
+    "title": "Contact",
+    "value": "<p>Reach germomics by email or by post.</p><h2>Email</h2><p><a href=\"mailto:{{email}}\">{{email}}</a></p><h2>Post</h2><p>{{address_line}}</p>"
   }
 };

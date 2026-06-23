@@ -4,15 +4,31 @@
 // episode transcript only: prompts forbid inventing facts/names/dates/citations. Output is a
 // DRAFT — the route returns it, the author accepts/edits/discards (no auto-save, no overwrite).
 import type { Chapter } from "~/lib/types";
-import { loadSettings, setting } from "~/lib/content.server";
+import { loadSettings, loadSnippets, setting, snippet } from "~/lib/content.server";
+
+// User-facing AI error strings, resolved from the snippet:ai.error.* content blocks (editable in
+// /admin/content) with the in-code fallback via snippet().
+export type AiErrors = {
+  notConfigured: string;
+  rateLimit: string;
+  overloaded: string;
+  noTranscript: string;
+  dailyCap: string;
+};
+export async function aiErrors(env: Env): Promise<AiErrors> {
+  const s = await loadSnippets(env);
+  return {
+    notConfigured: snippet(s, "snippet:ai.error.not_configured"),
+    rateLimit: snippet(s, "snippet:ai.error.rate_limit"),
+    overloaded: snippet(s, "snippet:ai.error.overloaded"),
+    noTranscript: snippet(s, "snippet:ai.error.no_transcript"),
+    dailyCap: snippet(s, "snippet:ai.error.daily_cap"),
+  };
+}
 
 // Default model is configurable; sonnet-4-6 balances quality/cost for summarization. Haiku is the
 // cheaper/faster option. (Per the Tier 3 spec — these exact model strings.)
 const DEFAULT_MODEL = "claude-sonnet-4-6";
-export const AI_MODELS = {
-  default: DEFAULT_MODEL,
-  cheap: "claude-haiku-4-5-20251001",
-} as const;
 
 const API_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
@@ -43,12 +59,12 @@ const SYSTEM =
   "is asked, with no preamble, apologies, or meta-commentary. " +
   STYLE_RULE;
 
-type CallOpts = { system?: string; user: string; maxTokens: number; model?: string };
+type CallOpts = { system?: string; user: string; maxTokens: number; model?: string; errors: AiErrors };
 
 /** One non-streaming Messages API call. Returns the concatenated text. Throws a friendly Error. */
 async function callClaude(env: Env, opts: CallOpts): Promise<string> {
   const key = apiKey(env);
-  if (!key) throw new Error("AI is not configured. Set the ANTHROPIC_API_KEY worker secret.");
+  if (!key) throw new Error(opts.errors.notConfigured);
 
   let res: Response;
   try {
@@ -79,8 +95,8 @@ async function callClaude(env: Env, opts: CallOpts): Promise<string> {
       /* ignore non-JSON error bodies */
     }
     if (res.status === 401) throw new Error("ANTHROPIC_API_KEY is invalid or revoked.");
-    if (res.status === 429) throw new Error("AI rate limit hit. Wait a moment and try again.");
-    if (res.status === 529) throw new Error("AI service is overloaded. Try again shortly.");
+    if (res.status === 429) throw new Error(opts.errors.rateLimit);
+    if (res.status === 529) throw new Error(opts.errors.overloaded);
     throw new Error(`AI request failed (${res.status})${detail ? `: ${detail}` : ""}.`);
   }
 
@@ -92,9 +108,9 @@ async function callClaude(env: Env, opts: CallOpts): Promise<string> {
     .trim();
 }
 
-function requireTranscript(transcript: string): string {
+function requireTranscript(transcript: string, message: string): string {
   const t = (transcript ?? "").trim();
-  if (!t) throw new Error("This episode has no transcript yet. Add one first.");
+  if (!t) throw new Error(message);
   return t;
 }
 
@@ -102,13 +118,14 @@ function requireTranscript(transcript: string): string {
 // falls back to the generated default (content-defaults.ts) via setting(), so editing a prompt in
 // D1 changes generation with no deploy, and a missing row never breaks it.
 async function aiCfg(env: Env) {
-  const s = await loadSettings(env);
+  const [s, err] = await Promise.all([loadSettings(env), aiErrors(env)]);
   return {
     model: setting(s, "ai.model", DEFAULT_MODEL),
     system: `${setting(s, "ai.prompt.system")} ${setting(s, "ai.prompt.style")}`.trim(),
     shownotes: setting(s, "ai.prompt.shownotes"),
     chapters: setting(s, "ai.prompt.chapters"),
     seo: setting(s, "ai.prompt.seo"),
+    err,
   };
 }
 
@@ -129,18 +146,18 @@ function extractJson(text: string): unknown {
 
 /** Show-notes draft as sanitized-friendly HTML, grounded in the transcript. */
 export async function generateShowNotes(env: Env, transcript: string, model?: string): Promise<string> {
-  const t = requireTranscript(transcript);
   const cfg = await aiCfg(env);
+  const t = requireTranscript(transcript, cfg.err.noTranscript);
   const user = `${cfg.shownotes}\n\nTranscript:\n${t}`;
-  return callClaude(env, { system: cfg.system, user, maxTokens: 1800, model: model || cfg.model });
+  return callClaude(env, { system: cfg.system, user, maxTokens: 1800, model: model || cfg.model, errors: cfg.err });
 }
 
 /** Chapter suggestions as Chapter[] (start seconds + title), using real VTT cue timings. */
 export async function generateChapters(env: Env, transcript: string, model?: string): Promise<Chapter[]> {
-  const t = requireTranscript(transcript);
   const cfg = await aiCfg(env);
+  const t = requireTranscript(transcript, cfg.err.noTranscript);
   const user = `${cfg.chapters}\n\nTranscript:\n${t}`;
-  const raw = await callClaude(env, { system: cfg.system, user, maxTokens: 1200, model: model || cfg.model });
+  const raw = await callClaude(env, { system: cfg.system, user, maxTokens: 1200, model: model || cfg.model, errors: cfg.err });
   const parsed = extractJson(raw);
   if (!Array.isArray(parsed)) throw new Error("The AI returned an unexpected chapters format.");
   const chapters: Chapter[] = parsed
@@ -165,10 +182,10 @@ export async function generateSeo(
   title: string,
   model?: string,
 ): Promise<SeoDraft> {
-  const t = requireTranscript(transcript);
   const cfg = await aiCfg(env);
+  const t = requireTranscript(transcript, cfg.err.noTranscript);
   const user = `Episode working title: "${title || "(untitled)"}".\n${cfg.seo}\n\nTranscript:\n${t}`;
-  const raw = await callClaude(env, { system: cfg.system, user, maxTokens: 600, model: model || cfg.model });
+  const raw = await callClaude(env, { system: cfg.system, user, maxTokens: 600, model: model || cfg.model, errors: cfg.err });
   const o = extractJson(raw) as Partial<SeoDraft>;
   return {
     seoTitle: String(o.seoTitle ?? "").trim().slice(0, 120),

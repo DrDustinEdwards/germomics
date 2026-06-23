@@ -24,7 +24,7 @@ There is no Next.js and no OpenNext here. If a doc, snippet, or habit assumes Ne
 
 3. The podcast feed path is sacred. It is served at `/feed/podcast/` and that URL never changes. Episode `guid` values are immutable once published. Both are how every podcast directory keeps finding the show. Feeds are resource routes (a `loader` returning a raw `Response` with the right `Content-Type`), not React pages.
 
-4. Drizzle for all data access. Define schema in `app/db/schema.ts`. Generate migrations with drizzle-kit, apply with wrangler. Do not hand-write SQL in route code; use the query builder. Full text search uses the existing FTS5 virtual table.
+4. Drizzle for all data access. Define schema in `app/db/schema.ts`. Migrations are hand-authored additive SQL in `drizzle/` (kept in sync with the schema), applied with wrangler. Do not hand-write SQL in route code; use the query builder. Full text search uses the existing FTS5 virtual table.
 
 5. Design system is locked. Anchor color `#4F2D7F` (crystal violet). Light and dark are both first class, switched via `data-theme` on the root element and remembered. Cyan (`#0E7490` light, `#22D3EE` dark) is reserved for interactive and now-playing states only. Fonts: a grotesk for display/UI, Fraunces for body, JetBrains Mono for timestamps and numbers. Do not introduce new colors or fonts without updating the build plan first.
 
@@ -48,7 +48,7 @@ Applies to ALL site copy AND to any text the site generates (AI show notes, SEO,
 - `npm run build` - production build (client + server).
 - `npm run deploy` - `wrangler deploy` (Workers Builds runs this in CI on push).
 - `npm run typegen` - regenerate `worker-configuration.d.ts` from wrangler config after any binding change.
-- `npm run db:generate` - generate a Drizzle migration from schema changes.
+- Migrations are hand-authored additive SQL in `drizzle/` (kept in sync with `schema.ts`), applied with wrangler. drizzle-kit is not used.
 - `npm run db:migrate` - apply migrations to the local D1.
 - `npm run db:migrate:prod` - apply migrations to the remote D1.
 - `npm run auth:generate` - regenerate Better Auth tables into the Drizzle schema after changing auth config.

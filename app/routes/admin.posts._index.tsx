@@ -6,6 +6,7 @@ import { getEnv } from "~/lib/context.server";
 import { listAllPosts, createDraft, duplicatePost } from "~/lib/admin.server";
 import { formatDate } from "~/lib/format";
 import { Badge, inputCx, Button, EmptyState } from "~/components/admin/ui";
+import { useSnippet } from "~/lib/content";
 import type { Post } from "~/db/schema";
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -36,6 +37,7 @@ function effectiveStatus(p: Post): StatusFilter {
 
 export default function AdminPosts({ loaderData }: Route.ComponentProps) {
   const dup = useFetcher();
+  const emptyPosts = useSnippet("snippet:empty.posts", "No posts match these filters.");
   const [q, setQ] = useState("");
   const [kind, setKind] = useState<KindFilter>("all");
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -160,7 +162,7 @@ export default function AdminPosts({ loaderData }: Route.ComponentProps) {
             })}
           </tbody>
         </table>
-        {rows.length === 0 ? <EmptyState>No posts match these filters.</EmptyState> : null}
+        {rows.length === 0 ? <EmptyState>{emptyPosts}</EmptyState> : null}
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import { listEpisodes } from "~/lib/posts.server";
 import { listSoundbites, upsertSoundbite, deleteSoundbite } from "~/lib/soundbites.server";
 import { formatDuration } from "~/lib/format";
 import { Card, Field, Button, inputCx, EmptyState } from "~/components/admin/ui";
+import { useSnippet } from "~/lib/content";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
@@ -41,6 +42,7 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
   const { episodes, clips } = loaderData;
   const save = useFetcher<{ ok: boolean; message?: string }>();
   const del = useFetcher();
+  const emptySoundbites = useSnippet("snippet:empty.soundbites", "No soundbites yet. Create one on the right.");
   const titleById = new Map(episodes.map((e) => [e.id, e.title]));
 
   return (
@@ -55,7 +57,7 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_22rem]">
         <div>
           {clips.length === 0 ? (
-            <EmptyState>No soundbites yet. Create one on the right.</EmptyState>
+            <EmptyState>{emptySoundbites}</EmptyState>
           ) : (
             <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
               {clips.map((c) => (

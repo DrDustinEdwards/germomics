@@ -6,6 +6,7 @@ export function Footer() {
   const navSubscribe = useSnippet("snippet:nav.subscribe", "Subscribe");
   const navArchive = useSnippet("snippet:nav.archive", "Archive");
   const navAbout = useSnippet("snippet:nav.about", "About");
+  const navContact = useSnippet("snippet:nav.contact", "Contact");
   const navPrivacy = useSnippet("snippet:nav.privacy", "Privacy");
   const navTerms = useSnippet("snippet:nav.terms", "Terms");
   return (
@@ -44,6 +45,7 @@ export function Footer() {
           className="mx-auto flex max-w-5xl flex-wrap gap-4 px-4 py-3 font-mono text-xs text-muted"
         >
           <Link to="/about" className="hover:text-ink">{navAbout}</Link>
+          <Link to="/contact" className="hover:text-ink">{navContact}</Link>
           <Link to="/privacy" className="hover:text-ink">{navPrivacy}</Link>
           <Link to="/terms" className="hover:text-ink">{navTerms}</Link>
         </nav>

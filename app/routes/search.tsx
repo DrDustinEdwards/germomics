@@ -14,6 +14,7 @@ const PAGE_HREF: Record<string, string> = {
   "page:dustin-edwards": "/about/dustin-edwards",
   "page:privacy": "/privacy",
   "page:terms": "/terms",
+  "page:contact": "/contact",
   "page:llms": "/llms.txt",
   "page:ai-txt": "/ai.txt",
 };

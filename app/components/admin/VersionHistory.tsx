@@ -7,12 +7,14 @@ import { History, RotateCcw, GitCompare } from "lucide-react";
 import { Button, EmptyState } from "./ui";
 import { formatDate } from "~/lib/format";
 import { diffSnapshots, lineDiff, type FieldChange } from "~/lib/versions";
+import { useSnippet } from "~/lib/content";
 import type { Post } from "~/db/schema";
 
 type VersionRow = { id: number; createdAt: string };
 
 export function VersionHistory({ versions, current }: { versions: VersionRow[]; current: Post }) {
   const [openId, setOpenId] = useState<number | null>(null);
+  const emptyVersions = useSnippet("snippet:empty.versions", "No saved versions yet. They are snapshotted on each save.");
   const snap = useFetcher<{ snapshot: Post }>();
   const restore = useFetcher();
 
@@ -27,7 +29,7 @@ export function VersionHistory({ versions, current }: { versions: VersionRow[]; 
   const fieldChanges = changes.filter((c) => c.label !== "Body");
 
   if (versions.length === 0) {
-    return <EmptyState>No saved versions yet. They’re snapshotted on each save.</EmptyState>;
+    return <EmptyState>{emptyVersions}</EmptyState>;
   }
 
   return (

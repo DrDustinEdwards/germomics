@@ -3,25 +3,20 @@
 // reachable. Returns an editable DRAFT as JSON; it never writes to the database.
 import type { Route } from "./+types/admin.ai";
 import { getEnv } from "~/lib/context.server";
-import { generateShowNotes, generateChapters, generateSeo, aiConfigured } from "~/lib/ai.server";
+import { generateShowNotes, generateChapters, generateSeo, aiConfigured, aiErrors } from "~/lib/ai.server";
 import { aiCostCapExceeded, recordAiUse } from "~/lib/security.server";
 
 export async function action({ request, context }: Route.ActionArgs) {
   const env = getEnv(context);
+  const errors = await aiErrors(env);
   if (!aiConfigured(env)) {
-    return Response.json(
-      { ok: false, error: "AI is not configured. Set the ANTHROPIC_API_KEY worker secret." },
-      { status: 503 },
-    );
+    return Response.json({ ok: false, error: errors.notConfigured }, { status: 503 });
   }
 
   // Per-day cost cap (in addition to the Worker-layer rate limit): friendly 429 when exceeded so
   // AI spend can't run away. The successful generation below is then recorded against the cap.
   if (await aiCostCapExceeded(env)) {
-    return Response.json(
-      { ok: false, error: "Daily AI limit reached. Try again tomorrow." },
-      { status: 429 },
-    );
+    return Response.json({ ok: false, error: errors.dailyCap }, { status: 429 });
   }
 
   const form = await request.formData();

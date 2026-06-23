@@ -54,8 +54,11 @@ const settings = [
   ["site.base_url", "", "string", "site", "Canonical base URL", "Non-secret canonical/OG origin. Empty means use the request origin."],
   ["contact.address", JSON.stringify({ streetAddress: "Box T-0100", locality: "Stephenville", region: "TX", postalCode: "76402", country: "US" }), "json", "contact", "Postal address (structured)", "Used in schema.org PostalAddress."],
   ["contact.address_line", "Box T-0100, Stephenville, TX 76402", "string", "contact", "Postal address (one line)", "Shown on the privacy page and any newsletter footer."],
-  ["social.twitter", "", "string", "social", "X / Twitter handle", "Optional. Leave blank to omit."],
-  ["social.instagram", "", "string", "social", "Instagram handle", "Optional. Leave blank to omit."],
+  // Socials: handles only (URLs built in seo.ts socialSameAs). twitter/instagram set live in D1;
+  // facebook ships via migration 0007. INSERT OR IGNORE never clobbers a live-edited row.
+  ["social.facebook", "Germomics", "string", "social", "Facebook handle", "Optional. Leave blank to omit."],
+  ["social.twitter", "Germomics", "string", "social", "X / Twitter handle", "Optional. Leave blank to omit."],
+  ["social.instagram", "germomics", "string", "social", "Instagram handle", "Optional. Leave blank to omit."],
   ["ai.model", "claude-sonnet-4-6", "string", "ai", "AI model", "Anthropic model id for the authoring assists."],
   ["ai.daily_cap", "100", "number", "ai", "AI daily cap", "Max AI generations per day across the admin."],
   ["ratelimit.ai", "15", "number", "ratelimit", "Rate limit: /admin/ai", "Requests per minute per IP."],
@@ -85,9 +88,14 @@ const snippets = [
   ["snippet:nav.about", "Nav: About", "About"],
   ["snippet:nav.privacy", "Nav: Privacy", "Privacy"],
   ["snippet:nav.terms", "Nav: Terms", "Terms"],
+  // nav.contact + empty.posts/soundbites/subscribers ship via migration 0007.
+  ["snippet:nav.contact", "Nav: Contact", "Contact"],
   ["snippet:empty.people", "Empty: people", "No people yet. Create one on the right."],
   ["snippet:empty.versions", "Empty: versions", "No saved versions yet. They are snapshotted on each save."],
   ["snippet:empty.scores", "Empty: scores", "No scores yet. Be the first."],
+  ["snippet:empty.posts", "Empty: posts", "No posts match these filters."],
+  ["snippet:empty.soundbites", "Empty: soundbites", "No soundbites yet. Create one on the right."],
+  ["snippet:empty.subscribers", "Empty: subscribers", "No subscribers yet."],
   ["snippet:meta.home_title", "Meta: home title", "germomics · microbiology & history"],
   ["snippet:meta.home_description", "Meta: home description", "A podcast and writing project about microbiology and history, with audio, transcripts, writing, data, and games."],
   ["snippet:meta.title_template", "Meta: title template", "{title} · germomics"],
@@ -188,6 +196,15 @@ const AITXT_POLICY = [
   "# Training data: rights reserved (opt-out). Contact for licensing in the address below.",
 ].join("\n");
 
+// {{email}} and {{address_line}} are filled at render time from show_config + the contact setting.
+const CONTACT_HTML = [
+  "<p>Reach germomics by email or by post.</p>",
+  "<h2>Email</h2>",
+  '<p><a href="mailto:{{email}}">{{email}}</a></p>',
+  "<h2>Post</h2>",
+  "<p>{{address_line}}</p>",
+].join("");
+
 const pages = [
   ["page:about", "About germomics", ABOUT_HTML],
   ["page:dustin-edwards", "Dr. Dustin Edwards", "<p>" + BIO + "</p>"],
@@ -195,6 +212,8 @@ const pages = [
   ["page:terms", "Terms of use", TERMS_HTML],
   ["page:llms", "llms.txt intro", LLMS_INTRO],
   ["page:ai-txt", "ai.txt policy", AITXT_POLICY],
+  // page:contact ships via migration 0007 (0005 is already applied).
+  ["page:contact", "Contact", CONTACT_HTML],
 ];
 
 // ----- emit ------------------------------------------------------------------

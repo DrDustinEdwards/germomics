@@ -134,8 +134,19 @@ type ShowLike = {
   subscribeLinks?: Record<string, string> | null;
 };
 
-/** Organization node for the publisher (home + About). Address from the contact.address setting. */
-export function buildOrganizationLd(show: ShowLike, origin: string, address?: Partial<Address>) {
+type SiteLdOpts = { address?: Partial<Address>; sameAs?: readonly string[] };
+
+/** Build profile URLs from social handles (settings social.*). Empty handles are skipped. */
+export function socialSameAs(s: { facebook?: string; twitter?: string; instagram?: string }): string[] {
+  const urls: string[] = [];
+  if (s.facebook) urls.push(`https://www.facebook.com/${s.facebook}`);
+  if (s.twitter) urls.push(`https://x.com/${s.twitter}`);
+  if (s.instagram) urls.push(`https://www.instagram.com/${s.instagram}/`);
+  return urls;
+}
+
+/** Organization node for the publisher (home + About). Address + sameAs are DB-driven. */
+export function buildOrganizationLd(show: ShowLike, origin: string, opts: SiteLdOpts = {}) {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -144,12 +155,13 @@ export function buildOrganizationLd(show: ShowLike, origin: string, address?: Pa
     description: show.description,
     logo: show.artwork,
     founder: { "@type": "Person", name: show.author },
-    address: postalAddressLd(address),
+    address: postalAddressLd(opts.address),
+    ...(opts.sameAs && opts.sameAs.length ? { sameAs: [...opts.sameAs] } : {}),
   };
 }
 
 /** PodcastSeries node tying the show to its immutable feed (home). */
-export function buildPodcastSeriesLd(show: ShowLike, origin: string, address?: Partial<Address>) {
+export function buildPodcastSeriesLd(show: ShowLike, origin: string, opts: SiteLdOpts = {}) {
   return {
     "@context": "https://schema.org",
     "@type": "PodcastSeries",
@@ -159,10 +171,23 @@ export function buildPodcastSeriesLd(show: ShowLike, origin: string, address?: P
     image: show.artwork,
     webFeed: `${origin}/feed/podcast/`,
     author: { "@type": "Person", name: show.author },
-    address: postalAddressLd(address),
-    ...(show.subscribeLinks && Object.keys(show.subscribeLinks).length
-      ? { sameAs: Object.values(show.subscribeLinks) }
-      : {}),
+    address: postalAddressLd(opts.address),
+    ...(opts.sameAs && opts.sameAs.length ? { sameAs: [...opts.sameAs] } : {}),
+  };
+}
+
+/** WebSite node with a SearchAction pointing at /search (home only). */
+export function buildWebSiteLd(show: ShowLike, origin: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: show.title,
+    url: `${origin}/`,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: { "@type": "EntryPoint", urlTemplate: `${origin}/search?q={search_term_string}` },
+      "query-input": "required name=search_term_string",
+    },
   };
 }
 

@@ -20,7 +20,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
     { property: "og:title", content: title },
     { property: "og:description", content: description },
     { property: "og:url", content: `${origin}/about` },
-    { "script:ld+json": buildOrganizationLd(show, origin, address) },
+    { "script:ld+json": buildOrganizationLd(show, origin, { address }) },
     {
       "script:ld+json": buildBreadcrumbLd([
         { name: "Home", url: `${origin}/` },

@@ -26,7 +26,12 @@ export const AUTHOR = {
     "microbiology",
     "science education",
   ],
-  sameAs: ["https://faculty.tarleton.edu/dcedwards/", "https://dustinedwards.info"],
+  sameAs: [
+    "https://faculty.tarleton.edu/dcedwards/",
+    "https://dustinedwards.info",
+    "https://orcid.org/0000-0001-6409-8041",
+    "https://scholar.google.com/citations?user=lfzCCXwAAAAJ&hl=en",
+  ],
 } as const;
 
 export const ABOUT = {

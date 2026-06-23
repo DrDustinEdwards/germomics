@@ -8,6 +8,7 @@ import { getEnv } from "~/lib/context.server";
 import { listPeople, upsertPerson, deletePerson } from "~/lib/people.server";
 import { Card, Field, Button, inputCx, EmptyState } from "~/components/admin/ui";
 import { ImageField } from "~/components/admin/ImageField";
+import { useSnippet } from "~/lib/content";
 import type { Person, PersonLink } from "~/db/schema";
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -59,6 +60,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
   const del = useFetcher();
   const [draft, setDraft] = useState(blank);
   const editing = draft.id !== 0;
+  const emptyPeople = useSnippet("snippet:empty.people", "No people yet. Create one on the right.");
 
   function load(p: Person) {
     setDraft({
@@ -83,7 +85,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
         {/* List */}
         <div>
           {loaderData.people.length === 0 ? (
-            <EmptyState>No people yet. Create one on the right.</EmptyState>
+            <EmptyState>{emptyPeople}</EmptyState>
           ) : (
             <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
               {loaderData.people.map((p) => (

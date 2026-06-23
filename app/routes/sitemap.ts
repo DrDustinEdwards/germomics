@@ -17,6 +17,7 @@ const STATIC_PATHS = [
   "about/dustin-edwards",
   "privacy",
   "terms",
+  "contact",
 ];
 
 function isoDay(value?: string | null): string | null {

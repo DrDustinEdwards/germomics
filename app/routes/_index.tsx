@@ -4,9 +4,9 @@ import type { Route } from "./+types/_index";
 import { getEnv, getSettings, getSnippets } from "~/lib/context.server";
 import { listEpisodes, listPosts, toPlayerTrack } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
-import { snippet, settingAddress } from "~/lib/content.server";
+import { snippet, setting, settingAddress } from "~/lib/content.server";
 import { formatDate, formatDuration } from "~/lib/format";
-import { buildOrganizationLd, buildPodcastSeriesLd } from "~/lib/seo";
+import { buildOrganizationLd, buildPodcastSeriesLd, buildWebSiteLd, socialSameAs } from "~/lib/seo";
 import { SNIPPET_DEFAULTS } from "~/lib/content-defaults";
 import { PostCard } from "~/components/content/PostCard";
 import { PlayButton } from "~/components/content/PlayButton";
@@ -18,11 +18,12 @@ export function meta({ loaderData }: Route.MetaArgs) {
     { name: "description", content: loaderData?.homeDescription ?? SNIPPET_DEFAULTS["snippet:meta.home_description"] },
   ];
   if (!loaderData?.show) return base;
-  const { show, origin, address } = loaderData;
+  const { show, origin, address, sameAs } = loaderData;
   return [
     ...base,
-    { "script:ld+json": buildOrganizationLd(show, origin, address) },
-    { "script:ld+json": buildPodcastSeriesLd(show, origin, address) },
+    { "script:ld+json": buildOrganizationLd(show, origin, { address, sameAs }) },
+    { "script:ld+json": buildPodcastSeriesLd(show, origin, { address, sameAs }) },
+    { "script:ld+json": buildWebSiteLd(show, origin) },
   ];
 }
 
@@ -34,14 +35,26 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     getShowConfig(env),
   ]);
   const snippets = getSnippets(context);
+  const settings = getSettings(context);
   const tracks = episodes.map(toPlayerTrack);
+  // Org/PodcastSeries sameAs = the real socials (settings social.*) + the podcast-directory
+  // subscribe_links (show_config), so it stays DB-driven and never duplicates a show_config fact.
+  const sameAs = [
+    ...socialSameAs({
+      facebook: setting(settings, "social.facebook"),
+      twitter: setting(settings, "social.twitter"),
+      instagram: setting(settings, "social.instagram"),
+    }),
+    ...Object.values(show.subscribeLinks ?? {}),
+  ];
   return {
     featured: episodes[0] ?? null,
     items: combined,
     tracks,
     show,
     origin: new URL(request.url).origin,
-    address: settingAddress(getSettings(context)),
+    address: settingAddress(settings),
+    sameAs,
     homeTitle: snippet(snippets, "snippet:meta.home_title"),
     homeDescription: snippet(snippets, "snippet:meta.home_description"),
   };

@@ -21,6 +21,7 @@ export default [
   route("about/dustin-edwards", "routes/about.dustin-edwards.tsx"),
   route("privacy", "routes/privacy.tsx"),
   route("terms", "routes/terms.tsx"),
+  route("contact", "routes/contact.tsx"),
 
   // ops
   route("health", "routes/health.ts"),
