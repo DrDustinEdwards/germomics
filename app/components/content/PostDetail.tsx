@@ -158,7 +158,7 @@ export function PostDetail({ data }: { data: DetailData }) {
         {track ? <SoundbiteClips track={track} clips={soundbites} /> : null}
 
         {post.transcript && track ? (
-          <section className="mt-10">
+          <section id="transcript" className="mt-10 scroll-mt-20">
             <h2 className="mb-3 font-display text-xl font-semibold">Transcript</h2>
             <TranscriptPanel transcript={post.transcript} track={track} />
           </section>

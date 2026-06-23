@@ -27,9 +27,10 @@
 }
 
 :root {
-  /* Height reserved at the bottom of the page for the fixed audio player (PlayerSpacer toggles
-     between this and 0 so the footer clears the dock only while something is playing). */
-  --player-h: 5.25rem;
+  /* Real rendered height of the docked audio player, measured live by the dock with a
+     ResizeObserver (PlayerDock) and 0 when nothing is loaded. The body reserves it as
+     padding-bottom so the footer always clears the dock in every state. */
+  --player-h: 0px;
   --bg: #fbfafd;
   --surface: #f4f1fa;
   --card: #ffffff;
@@ -79,7 +80,7 @@
   html {
     /* leave room for the sticky header (top) and docked player (bottom) when anchoring */
     scroll-padding-top: 5rem;
-    scroll-padding-bottom: 7rem;
+    scroll-padding-bottom: calc(var(--player-h) + 1rem);
   }
   body {
     background: var(--color-bg);
@@ -89,6 +90,8 @@
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
     transition: background 0.35s ease, color 0.35s ease;
+    /* Reserve the live dock height so the footer always sits above the fixed dock. */
+    padding-bottom: var(--player-h);
   }
   h1, h2, h3, h4 {
     font-family: var(--font-display);

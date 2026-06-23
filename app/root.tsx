@@ -9,12 +9,12 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { getEnv, getSnippets, siteContentContext } from "~/lib/context.server";
-import { loadSettings, loadSnippets } from "~/lib/content.server";
+import { getEnv, getSnippets, getSettings, siteContentContext } from "~/lib/context.server";
+import { loadSettings, loadSnippets, setting } from "~/lib/content.server";
+import { getShowConfig } from "~/lib/show.server";
 import { themeInitScript } from "~/lib/theme";
 import { PlayerProvider } from "~/components/player/player-context";
 import { PlayerDock } from "~/components/player/PlayerDock";
-import { PlayerSpacer } from "~/components/player/PlayerSpacer";
 import { Header } from "~/components/chrome/Header";
 import { Footer } from "~/components/chrome/Footer";
 
@@ -47,8 +47,26 @@ export const middleware: Route.MiddlewareFunction[] = [
 // the dashboard via the CF_BEACON_TOKEN var; the beacon only renders when it's set. Snippets are
 // passed to the client so components can read them via useSnippet().
 export async function loader({ context }: Route.LoaderArgs) {
-  const env = getEnv(context) as unknown as { CF_BEACON_TOKEN?: string };
-  return { beaconToken: env.CF_BEACON_TOKEN ?? null, snippets: getSnippets(context) };
+  const env = getEnv(context);
+  const beaconToken = (env as unknown as { CF_BEACON_TOKEN?: string }).CF_BEACON_TOKEN ?? null;
+  const settings = getSettings(context);
+  const show = await getShowConfig(env);
+  // Social links for the footer, built from the same settings social.* as Organization sameAs, so
+  // footer and schema stay consistent. Only handles that are set produce a link.
+  const fb = setting(settings, "social.facebook");
+  const tw = setting(settings, "social.twitter");
+  const ig = setting(settings, "social.instagram");
+  const socials = [
+    fb ? { platform: "facebook", label: "Facebook", url: `https://www.facebook.com/${fb}` } : null,
+    tw ? { platform: "x", label: "X", url: `https://x.com/${tw}` } : null,
+    ig ? { platform: "instagram", label: "Instagram", url: `https://www.instagram.com/${ig}/` } : null,
+  ].filter((s): s is { platform: string; label: string; url: string } => s !== null);
+  return {
+    beaconToken,
+    snippets: getSnippets(context),
+    socials,
+    subscribeLinks: show.subscribeLinks ?? {},
+  };
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -97,8 +115,8 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <Outlet />
       </main>
       <Footer />
-      {/* Reserves the player's height so the footer clears the fixed dock while playing. */}
-      <PlayerSpacer />
+      {/* Clearance is handled by the dock measuring its own height into --player-h, which the
+          body reserves as padding-bottom (see app.css), so the footer always clears the dock. */}
       <PlayerDock />
     </PlayerProvider>
   );
