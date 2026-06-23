@@ -1,7 +1,6 @@
 import { AppLink } from "~/components/AppLink";
-import { Calendar, Clock } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { formatDate } from "~/lib/format";
-import { readingTime } from "~/lib/seo";
 import type { Post } from "~/db/schema";
 
 // Editorial card for the writing index: cover image, title, excerpt, date, reading time, tags.
@@ -21,7 +20,6 @@ export function ArticleCard({ post }: { post: Post }) {
             {post.publishedAt ? (
               <span className="flex items-center gap-1"><Calendar size={11} aria-hidden /> {formatDate(post.publishedAt)}</span>
             ) : null}
-            <span className="flex items-center gap-1"><Clock size={11} aria-hidden /> {readingTime(post.body)} min</span>
           </div>
           <h3 className="mt-1.5 font-display text-xl font-semibold text-ink group-hover:text-brand">{post.title}</h3>
           {post.excerpt ? <p className="mt-1.5 line-clamp-2 text-sm text-muted">{post.excerpt}</p> : null}

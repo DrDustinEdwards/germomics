@@ -47,16 +47,11 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     }),
     ...Object.values(show.subscribeLinks ?? {}),
   ];
-  // The card + hero never render body/transcript; drop them so the page payload stays light and free
-  // of long-form migrated content (which is the only place em dashes legitimately live).
-  const strip = <T extends { body: string; transcript: string | null }>(p: T) => ({
-    ...p,
-    body: "",
-    transcript: null,
-  });
+  // Listing loaders already return card-only rows (no body/transcript/peaks), so the payload stays
+  // light and free of long-form migrated content (the only place em dashes legitimately live).
   return {
-    featured: episodes[0] ? strip(episodes[0]) : null,
-    items: combined.map(strip),
+    featured: episodes[0] ?? null,
+    items: combined,
     tracks,
     show,
     origin: new URL(request.url).origin,

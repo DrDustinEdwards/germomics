@@ -28,11 +28,10 @@ export function meta({ loaderData }: Route.MetaArgs) {
 export async function loader({ params, request, context }: Route.LoaderArgs) {
   const num = Number(params.num);
   if (!Number.isInteger(num) || num < 1) throw new Response("Not found", { status: 404 });
-  const full = await episodesInSeason(getEnv(context), num);
-  if (!full.length) throw new Response("Not found", { status: 404 });
-  const tracks = full.map(toPlayerTrack);
-  // Card never renders body/transcript; drop them to keep the payload light + em-dash-free.
-  const episodes = full.map((e) => ({ ...e, body: "", transcript: null }));
+  // episodesInSeason returns card-only rows (no body/transcript/peaks): light + em-dash-free payload.
+  const episodes = await episodesInSeason(getEnv(context), num);
+  if (!episodes.length) throw new Response("Not found", { status: 404 });
+  const tracks = episodes.map(toPlayerTrack);
   return { num, episodes, tracks, origin: new URL(request.url).origin };
 }
 

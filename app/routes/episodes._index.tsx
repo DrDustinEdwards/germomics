@@ -12,11 +12,9 @@ export function meta() {
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
-  const full = await listEpisodes(getEnv(context));
-  const tracks = full.map(toPlayerTrack);
-  // The card never renders body or transcript; drop them so the page payload stays light and free
-  // of long-form migrated content.
-  const episodes = full.map((e) => ({ ...e, body: "", transcript: null }));
+  // listEpisodes returns card-only rows (no body/transcript/peaks), so the payload stays light.
+  const episodes = await listEpisodes(getEnv(context));
+  const tracks = episodes.map(toPlayerTrack);
   return { episodes, tracks };
 }
 

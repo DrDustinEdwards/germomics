@@ -25,11 +25,14 @@ export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
   { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
   { rel: "manifest", href: "/site.webmanifest" },
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+  // Fonts are self-hosted (app/fonts.css, served from /fonts). Preload the display weight used in the
+  // hero/h1 (the LCP text) so it paints without a swap flash; the rest load with font-display: swap.
   {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap",
+    rel: "preload",
+    as: "font",
+    type: "font/woff2",
+    href: "/fonts/space-grotesk-600-latin.woff2",
+    crossOrigin: "anonymous",
   },
 ];
 

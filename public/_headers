@@ -1,0 +1,4 @@
+# Cloudflare Workers Static Assets headers. Self-hosted fonts never change at a given URL
+# (re-fetched into new files by scripts/fetch-fonts.mjs), so cache them hard.
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable

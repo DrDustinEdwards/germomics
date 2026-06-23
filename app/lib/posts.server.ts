@@ -2,7 +2,7 @@
 // (CLAUDE.md rule #4); the one raw statement is the FTS5 MATCH, which Drizzle's DSL can't
 // express. Tag/guest filters parse the JSON columns in JS (the catalog is small), keeping
 // everything type-safe and camelCase.
-import { and, asc, desc, eq, inArray, isNull, lte, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, inArray, isNull, lte, or, sql, type SQL } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { posts, type Post } from "~/db/schema";
 import { slugifyGuest, toPlayerTrack } from "~/lib/posts";
@@ -11,6 +11,19 @@ import { slugifyGuest, toPlayerTrack } from "~/lib/posts";
 export { slugifyGuest, toPlayerTrack };
 
 type Kind = "episode" | "article";
+
+// Card projection for LISTING queries: every posts column except the heavy text we never render in a
+// list. body and full transcript are huge, and audioPeaks is the waveform array; none of them belong
+// in a listing payload. chapters and guests stay (the player queue and the guests page read them) and
+// are tiny next to body/transcript. Only the single post route (getPostBySlug/getPostById) loads the
+// full body and transcript. Rows come back with the heavy fields re-added as empty so the Post type
+// (and any consumer that reads those keys) stays intact, but nothing heavy is fetched or serialized.
+const { body: _body, transcript: _transcript, audioPeaks: _peaks, ...cardColumns } =
+  getTableColumns(posts);
+
+function asCards(rows: Array<Omit<Post, "body" | "transcript" | "audioPeaks">>): Post[] {
+  return rows.map((r) => ({ ...r, body: "", transcript: null, audioPeaks: null }) as Post);
+}
 
 // Publish-on-read scheduling gate (the mechanism chosen this pass — see the editor spec §F):
 // a post is publicly visible when it is published AND not scheduled into the future. A
@@ -39,12 +52,13 @@ export async function listPosts(
   const db = getDb(env);
   const where = [publiclyVisible()];
   if (opts.kind) where.push(eq(posts.kind, opts.kind));
-  return db
-    .select()
+  const rows = await db
+    .select(cardColumns)
     .from(posts)
     .where(and(...where))
     .orderBy(desc(posts.publishedAt))
     .limit(opts.limit ?? 200);
+  return asCards(rows);
 }
 
 export const listEpisodes = (env: Env, limit?: number) =>
@@ -64,11 +78,12 @@ export async function listSeasons(env: Env): Promise<number[]> {
 
 /** Episodes in one season, ascending by episode number (so a listener can start at #1). */
 export async function episodesInSeason(env: Env, season: number): Promise<Post[]> {
-  return getDb(env)
-    .select()
+  const rows = await getDb(env)
+    .select(cardColumns)
     .from(posts)
     .where(and(publiclyVisible(), eq(posts.kind, "episode"), eq(posts.seasonNumber, season)))
     .orderBy(asc(posts.episodeNumber));
+  return asCards(rows);
 }
 export const listArticles = (env: Env, limit?: number) =>
   listPosts(env, { kind: "article", limit });
@@ -136,11 +151,11 @@ export async function searchPosts(env: Env, rawQuery: string): Promise<Post[]> {
   const ids = idRows.map((r) => r.id);
   if (!ids.length) return [];
   const found = await db
-    .select()
+    .select(cardColumns)
     .from(posts)
     .where(and(publiclyVisible(), inArray(posts.id, ids)));
   const order = new Map(ids.map((id, i) => [id, i]));
-  return found.sort((a, b) => (order.get(a.id)! - order.get(b.id)!));
+  return asCards(found.sort((a, b) => (order.get(a.id)! - order.get(b.id)!)));
 }
 
 // FTS5 has its own query syntax; strip punctuation that could be interpreted as operators and
