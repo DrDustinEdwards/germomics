@@ -67,6 +67,8 @@ export async function loader({ context }: Route.LoaderArgs) {
     snippets: getSnippets(context),
     socials,
     subscribeLinks: show.subscribeLinks ?? {},
+    // Distinct episode season numbers (newest first) feed the global Header "Episodes" dropdown.
+    seasons,
   };
 }
 

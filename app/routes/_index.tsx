@@ -47,9 +47,16 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     }),
     ...Object.values(show.subscribeLinks ?? {}),
   ];
+  // The card + hero never render body/transcript; drop them so the page payload stays light and free
+  // of long-form migrated content (which is the only place em dashes legitimately live).
+  const strip = <T extends { body: string; transcript: string | null }>(p: T) => ({
+    ...p,
+    body: "",
+    transcript: null,
+  });
   return {
-    featured: episodes[0] ?? null,
-    items: combined,
+    featured: episodes[0] ? strip(episodes[0]) : null,
+    items: combined.map(strip),
     tracks,
     show,
     origin: new URL(request.url).origin,

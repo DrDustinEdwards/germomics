@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Form, Link } from "react-router";
 import { Rss, Check, Copy, Mail, Smartphone } from "lucide-react";
+import { ExternalCue } from "~/components/ExternalCue";
 import type { Route } from "./+types/subscribe";
 import { getEnv } from "~/lib/context.server";
 import { getDb } from "~/db/index.server";
@@ -92,7 +93,8 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
                   rel="noopener"
                   className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 font-display text-sm font-medium hover:border-accent hover:text-accent"
                 >
-                  <Icon size={18} aria-hidden /> {d.label}
+                  <Icon size={18} aria-hidden />
+                  <span className="inline-flex items-center gap-1.5">{d.label}<ExternalCue size={14} /></span>
                 </a>
               );
             })}
@@ -111,6 +113,7 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
               return (
                 <a key={k} href={sl[k]} target="_blank" rel="noopener" className={chip}>
                   <Icon size={14} aria-hidden /> {d.label}
+                  <ExternalCue />
                 </a>
               );
             })}
@@ -124,12 +127,15 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
         <div className="mt-3 flex flex-wrap gap-2">
           <a href="https://subscribeonandroid.com/germomics.com/feed/podcast/" target="_blank" rel="noopener" className={chip}>
             <Smartphone size={14} aria-hidden /> Subscribe on Android
+            <ExternalCue />
           </a>
           <a href="https://subscribebyemail.com/germomics.com/feed/podcast/" target="_blank" rel="noopener" className={chip}>
             <Mail size={14} aria-hidden /> Subscribe by Email
+            <ExternalCue />
           </a>
-          <a href="/feed/podcast/" className={chip}>
+          <a href="/feed/podcast/" target="_blank" rel="noopener" className={chip}>
             <Rss size={14} aria-hidden /> RSS feed
+            <ExternalCue />
           </a>
           <button type="button" onClick={copyRss} className={chip}>
             {copied ? <Check size={14} aria-hidden /> : <Copy size={14} aria-hidden />}

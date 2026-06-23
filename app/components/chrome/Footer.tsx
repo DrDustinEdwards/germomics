@@ -1,6 +1,7 @@
 import { Link, useRouteLoaderData } from "react-router";
 import { Rss } from "lucide-react";
 import { Wordmark } from "../brand/Wordmark";
+import { ExternalCue } from "../ExternalCue";
 import { useSnippet } from "~/lib/content";
 import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 
@@ -78,7 +79,7 @@ export function Footer() {
                     href={s.url}
                     target="_blank"
                     rel="me noopener"
-                    aria-label={s.label}
+                    aria-label={`${s.label} (opens in a new tab)`}
                     className="grid h-9 w-9 place-items-center rounded-full border border-border text-muted hover:border-accent hover:text-accent"
                   >
                     <SocialIcon platform={s.platform} />
@@ -96,13 +97,27 @@ export function Footer() {
             {PRIMARY_KEYS.map((k) =>
               subscribeLinks[k] ? (
                 <li key={k}>
-                  <a href={subscribeLinks[k]} className={link}>{SUBSCRIBE_DESTINATIONS[k].label}</a>
+                  <a
+                    href={subscribeLinks[k]}
+                    target="_blank"
+                    rel="noopener"
+                    className={`inline-flex items-center gap-1 ${link}`}
+                  >
+                    {SUBSCRIBE_DESTINATIONS[k].label}
+                    <ExternalCue />
+                  </a>
                 </li>
               ) : null,
             )}
             <li>
-              <a href="/feed/podcast/" className={`inline-flex items-center gap-1 ${link}`}>
+              <a
+                href="/feed/podcast/"
+                target="_blank"
+                rel="noopener"
+                className={`inline-flex items-center gap-1 ${link}`}
+              >
                 <Rss size={14} aria-hidden /> Podcast RSS
+                <ExternalCue />
               </a>
             </li>
             <li><Link to="/subscribe" className={link}>More ways to listen →</Link></li>
