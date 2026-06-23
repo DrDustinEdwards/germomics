@@ -1,7 +1,7 @@
 // /about/dustin-edwards - author bio. Prose comes from the page:dustin-edwards content block (D1).
 // Person + BreadcrumbList JSON-LD carry author authority. Independent framing: credentials in the
 // prose only, no institutional branding. ?preview shows the draft to a signed-in admin.
-import { Link } from "react-router";
+import { AppLink } from "~/components/AppLink";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import type { Route } from "./+types/about.dustin-edwards";
 import { getEnv } from "~/lib/context.server";
@@ -47,9 +47,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 export default function AuthorBio({ loaderData }: Route.ComponentProps) {
   return (
     <div className="mx-auto max-w-2xl">
-      <Link to="/about" className="inline-flex items-center gap-1 font-mono text-xs text-muted hover:text-ink">
+      <AppLink to="/about" className="inline-flex items-center gap-1 font-mono text-xs text-muted hover:text-ink">
         <ArrowLeft size={12} aria-hidden /> About
-      </Link>
+      </AppLink>
 
       <p className="mt-4 font-mono text-xs uppercase tracking-[0.18em] text-accent">Author</p>
       <h1 className="mt-3 font-display text-4xl font-semibold leading-tight">
@@ -80,9 +80,9 @@ export default function AuthorBio({ loaderData }: Route.ComponentProps) {
       </section>
 
       <p className="mt-8">
-        <Link to="/episodes" className="font-mono text-sm text-accent hover:underline">
+        <AppLink to="/episodes" className="font-mono text-sm text-accent hover:underline">
           Listen to germomics →
-        </Link>
+        </AppLink>
       </p>
     </div>
   );

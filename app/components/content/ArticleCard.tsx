@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { AppLink } from "~/components/AppLink";
 import { Calendar, Clock } from "lucide-react";
 import { formatDate } from "~/lib/format";
 import { readingTime } from "~/lib/seo";
@@ -8,7 +8,7 @@ import type { Post } from "~/db/schema";
 export function ArticleCard({ post }: { post: Post }) {
   return (
     <article className="group overflow-hidden rounded-2xl border border-border bg-card transition hover:border-brand">
-      <Link to={`/${post.slug}`} className="block">
+      <AppLink to={`/${post.slug}`} className="block">
         {post.coverImage ? (
           <img
             src={post.coverImage}
@@ -26,17 +26,17 @@ export function ArticleCard({ post }: { post: Post }) {
           <h3 className="mt-1.5 font-display text-xl font-semibold text-ink group-hover:text-brand">{post.title}</h3>
           {post.excerpt ? <p className="mt-1.5 line-clamp-2 text-sm text-muted">{post.excerpt}</p> : null}
         </div>
-      </Link>
+      </AppLink>
       {(post.tags ?? []).length ? (
         <div className="flex flex-wrap gap-1.5 px-4 pb-4">
           {(post.tags ?? []).slice(0, 4).map((t) => (
-            <Link
+            <AppLink
               key={t}
               to={`/tag/${encodeURIComponent(t)}`}
               className="rounded-full border border-border px-2 py-0.5 font-mono text-[11px] text-muted hover:border-brand hover:text-brand"
             >
               {t}
-            </Link>
+            </AppLink>
           ))}
         </div>
       ) : null}

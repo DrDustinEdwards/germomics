@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { AppLink } from "~/components/AppLink";
 import { Headphones, FileText } from "lucide-react";
 import { formatDate, formatDuration } from "~/lib/format";
 import { PlayButton } from "./PlayButton";
@@ -38,9 +38,9 @@ export function PostCard({
           ) : null}
         </div>
         <h3 className="mt-1 font-display text-lg font-medium">
-          <Link to={`/${post.slug}`} className="text-ink hover:text-brand">
+          <AppLink to={`/${post.slug}`} className="text-ink hover:text-brand">
             {post.title}
-          </Link>
+          </AppLink>
         </h3>
         {post.excerpt ? (
           <p className="mt-1 line-clamp-2 text-sm text-muted">{post.excerpt}</p>
@@ -48,13 +48,13 @@ export function PostCard({
         {(post.tags ?? []).length ? (
           <div className="mt-2 flex flex-wrap gap-1.5">
             {(post.tags ?? []).slice(0, 4).map((t) => (
-              <Link
+              <AppLink
                 key={t}
                 to={`/tag/${encodeURIComponent(t)}`}
                 className="rounded-full border border-border px-2 py-0.5 font-mono text-[11px] text-muted hover:border-brand hover:text-brand"
               >
                 {t}
-              </Link>
+              </AppLink>
             ))}
           </div>
         ) : null}

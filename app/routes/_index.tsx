@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { AppLink } from "~/components/AppLink";
 import { Headphones } from "lucide-react";
 import type { Route } from "./+types/_index";
 import { getEnv, getSettings, getSnippets } from "~/lib/context.server";
@@ -96,9 +96,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 ) : null}
               </div>
               <h2 className="mt-1 truncate font-display text-xl font-medium">
-                <Link to={`/${featured.slug}`} className="hover:text-brand">
+                <AppLink to={`/${featured.slug}`} className="hover:text-brand">
                   {featured.title}
-                </Link>
+                </AppLink>
               </h2>
             </div>
           </div>
@@ -108,9 +108,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       <section>
         <div className="mb-4 flex items-baseline justify-between">
           <h2 className="font-display text-2xl font-semibold">Latest</h2>
-          <Link to="/archive" className="font-mono text-xs text-accent hover:underline">
+          <AppLink to="/archive" className="font-mono text-xs text-accent hover:underline">
             view all →
-          </Link>
+          </AppLink>
         </div>
         <div className="grid gap-3">
           {items.map((post) => (

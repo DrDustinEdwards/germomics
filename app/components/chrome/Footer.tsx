@@ -1,5 +1,6 @@
-import { Link, useRouteLoaderData } from "react-router";
+import { useRouteLoaderData } from "react-router";
 import { Rss, Lock } from "lucide-react";
+import { AppLink } from "../AppLink";
 import { Wordmark } from "../brand/Wordmark";
 import { ExternalCue } from "../ExternalCue";
 import { useSnippet } from "~/lib/content";
@@ -68,9 +69,9 @@ export function Footer() {
         {/* Brand block */}
         <div className="sm:col-span-2 lg:col-span-1">
           {/* Rectangular germomics lockup as a modest mark (~80px tall) above the tagline. */}
-          <Link to="/" aria-label="germomics home" className="inline-flex">
+          <AppLink to="/" aria-label="germomics home" className="inline-flex">
             <Wordmark className="h-20 w-auto" />
-          </Link>
+          </AppLink>
           <p className="mt-3 max-w-xs font-mono text-xs leading-relaxed text-muted">{tagline}</p>
           {socials.length ? (
             <ul className="mt-4 flex items-center gap-3">
@@ -121,7 +122,7 @@ export function Footer() {
                 <ExternalCue />
               </a>
             </li>
-            <li><Link to="/subscribe" className={link}>More ways to listen →</Link></li>
+            <li><AppLink to="/subscribe" className={link}>More ways to listen →</AppLink></li>
           </ul>
         </nav>
 
@@ -130,7 +131,7 @@ export function Footer() {
           <h3 id="footer-explore" className="font-display text-sm font-semibold text-ink">Explore</h3>
           <ul className="mt-3 space-y-2 text-sm">
             {explore.map(([to, label]) => (
-              <li key={to}><Link to={to} className={link}>{label}</Link></li>
+              <li key={to}><AppLink to={to} className={link}>{label}</AppLink></li>
             ))}
           </ul>
         </nav>
@@ -140,7 +141,7 @@ export function Footer() {
           <h3 id="footer-about" className="font-display text-sm font-semibold text-ink">About</h3>
           <ul className="mt-3 space-y-2 text-sm">
             {about.map(([to, label]) => (
-              <li key={to}><Link to={to} className={link}>{label}</Link></li>
+              <li key={to}><AppLink to={to} className={link}>{label}</AppLink></li>
             ))}
           </ul>
         </nav>
@@ -157,9 +158,9 @@ export function Footer() {
           </span>
           <span aria-hidden>·</span>
           <a href="/feed/site.xml" className={link}>Writing feed</a>
-          <Link to="/admin" className="ml-auto inline-flex items-center gap-1 text-muted/70 hover:text-ink">
+          <AppLink to="/admin" className="ml-auto inline-flex items-center gap-1 text-muted/70 hover:text-ink">
             <Lock size={14} aria-hidden /> Admin
-          </Link>
+          </AppLink>
         </div>
       </div>
     </footer>
