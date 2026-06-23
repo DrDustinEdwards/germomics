@@ -1,4 +1,5 @@
 import { Link, NavLink } from "react-router";
+import { LogoMark } from "../brand/LogoMark";
 import { ThemeToggle } from "./ThemeToggle";
 import { useSnippet } from "~/lib/content";
 
@@ -31,8 +32,14 @@ export function Header() {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-bg/85 backdrop-blur">
       <div className="mx-auto flex h-15 max-w-5xl items-center justify-between gap-4 px-4 py-3">
-        <Link to="/" className="font-display text-xl font-semibold tracking-tight text-ink">
-          germ<span className="text-brand">omics</span>
+        <Link
+          to="/"
+          className="flex items-center gap-2 font-display text-xl font-semibold tracking-tight text-ink"
+        >
+          <LogoMark className="h-7 w-auto" />
+          <span>
+            germ<span className="text-brand">omics</span>
+          </span>
         </Link>
         <nav aria-label="Primary" className="flex items-center gap-1 sm:gap-2">
           {NAV.map((item) => (

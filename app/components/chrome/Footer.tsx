@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { useSnippet } from "~/lib/content";
 import { Rss, Mail, Lock } from "lucide-react";
+import { LogoMark } from "../brand/LogoMark";
 
 export function Footer() {
   const navSubscribe = useSnippet("snippet:nav.subscribe", "Subscribe");
@@ -13,11 +14,14 @@ export function Footer() {
     <footer className="border-t border-border bg-surface">
       <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-10 text-sm sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="font-display text-base font-semibold text-ink">
-            germ<span className="text-brand">omics</span>
+          <div className="flex items-center gap-2 font-display text-base font-semibold text-ink">
+            <LogoMark className="h-6 w-auto" />
+            <span>
+              germ<span className="text-brand">omics</span>
+            </span>
           </div>
           <p className="mt-1 font-mono text-xs text-muted">
-            microbiology &amp; history, a podcast and writing project.
+            a microbiology &amp; history podcast and writing project.
           </p>
         </div>
         <nav aria-label="Footer" className="flex flex-wrap items-center gap-4 font-display text-sm text-muted">
