@@ -1,6 +1,5 @@
 import { Link, useRouteLoaderData } from "react-router";
 import { Rss } from "lucide-react";
-import { LogoMark } from "../brand/LogoMark";
 import { Wordmark } from "../brand/Wordmark";
 import { useSnippet } from "~/lib/content";
 
@@ -67,9 +66,8 @@ export function Footer() {
       <div className="mx-auto grid max-w-5xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
         {/* Brand block */}
         <div className="sm:col-span-2 lg:col-span-1">
-          <Link to="/" aria-label="germomics home" className="flex items-center gap-2">
-            <LogoMark className="h-7 w-auto" />
-            <Wordmark className="h-4 w-auto" />
+          <Link to="/" aria-label="germomics home" className="inline-flex">
+            <Wordmark className="h-8 w-auto" />
           </Link>
           <p className="mt-3 max-w-xs font-mono text-xs leading-relaxed text-muted">{tagline}</p>
           {socials.length ? (
@@ -131,9 +129,12 @@ export function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-4 font-mono text-xs text-muted">
-          <span>© {year} Germomics</span>
-          <span aria-hidden>·</span>
-          <span>by Dr. Dustin Edwards</span>
+          <span>
+            © {year} Germomics and{" "}
+            <a href="https://dustinedwards.info" target="_blank" rel="me noopener" className={link}>
+              Dr. Dustin Edwards
+            </a>
+          </span>
           <span aria-hidden>·</span>
           <a href="/feed/site.xml" className={link}>Writing feed</a>
           <Link to="/admin" className="ml-auto text-muted/70 hover:text-ink">Admin</Link>
