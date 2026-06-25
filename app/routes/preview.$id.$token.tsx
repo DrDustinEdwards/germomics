@@ -6,7 +6,7 @@ import { getEnv } from "~/lib/context.server";
 import { getPostById, relatedPosts, toPlayerTrack } from "~/lib/posts.server";
 import { getEpisodeGuests } from "~/lib/people.server";
 import { getShowConfig } from "~/lib/show.server";
-import { readingTime, tableOfContents } from "~/lib/seo";
+import { readingTime, tableOfContents, demoteHeadings } from "~/lib/seo";
 import { verifyPreviewToken } from "~/lib/preview.server";
 import { PostDetail, type DetailData } from "~/components/content/PostDetail";
 
@@ -41,7 +41,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     hosts: show.hosts ?? [],
     cover: post.coverImage ?? show.artwork ?? null,
     readingMinutes: post.readingTime ?? readingTime(post.body),
-    toc: tableOfContents(post.body),
+    toc: tableOfContents(demoteHeadings(post.body)),
     preview: true,
   };
   return data;

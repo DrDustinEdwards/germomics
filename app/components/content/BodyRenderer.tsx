@@ -4,7 +4,7 @@
 // <aside class="callout">). The author is the only writer and the HTML is sanitized on save,
 // so it is rendered directly.
 import { useMemo } from "react";
-import { addHeadingIds } from "~/lib/seo";
+import { addHeadingIds, demoteHeadings } from "~/lib/seo";
 
 const PROSE =
   "max-w-none text-[1.05rem] leading-relaxed " +
@@ -23,7 +23,8 @@ const PROSE =
   "[&_aside.callout]:bg-surface [&_aside.callout]:p-4 [&_aside.callout]:not-italic";
 
 export function BodyRenderer({ html, className = "" }: { html: string; className?: string }) {
-  const withIds = useMemo(() => addHeadingIds(html ?? ""), [html]);
+  // Demote body headings (so the page keeps one h1) before injecting TOC anchor ids.
+  const withIds = useMemo(() => addHeadingIds(demoteHeadings(html ?? "")), [html]);
   return (
     <div className={`${PROSE} ${className}`} dangerouslySetInnerHTML={{ __html: withIds }} />
   );

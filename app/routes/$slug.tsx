@@ -7,6 +7,7 @@ import { getShowConfig } from "~/lib/show.server";
 import {
   readingTime,
   tableOfContents,
+  demoteHeadings,
   buildJsonLd,
   buildBreadcrumbLd,
   extractFaqLd,
@@ -87,7 +88,7 @@ export async function loader({ params, context, request }: Route.LoaderArgs) {
     hosts,
     cover,
     readingMinutes: post.readingTime ?? readingTime(post.body),
-    toc: tableOfContents(post.body),
+    toc: tableOfContents(demoteHeadings(post.body)),
     origin,
     seriesTitle: show.title,
     ogImage,

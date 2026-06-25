@@ -30,6 +30,19 @@ export function headingId(text: string): string {
     .slice(0, 64);
 }
 
+/**
+ * Demote body headings one level (h1->h2, h2->h3, h3->h4) so the page keeps a single h1 (the post
+ * title) and body sections become h2, matching the semantic outline. Render-time only; the stored
+ * (migrated) body is never modified. Heading ids are derived from text, so they stay stable across
+ * the shift and the TOC anchors still resolve.
+ */
+export function demoteHeadings(html: string): string {
+  return html.replace(
+    /<(\/?)h([1-3])(\b[^>]*)?>/gi,
+    (_m, slash: string, n: string, attrs = "") => `<${slash}h${Number(n) + 1}${attrs}>`,
+  );
+}
+
 /** Inject id attributes into h2/h3 so the TOC can anchor-link to them. */
 export function addHeadingIds(html: string): string {
   return html.replace(/<(h[23])(\s[^>]*)?>([\s\S]*?)<\/\1>/gi, (m, tag, attrs = "", inner) => {
