@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink, useRouteLoaderData, useLocation } from "react-router";
 import { ChevronDown, Menu, Search, X } from "lucide-react";
 import { AppLink } from "../AppLink";
-import { LogoMark } from "../brand/LogoMark";
+import { GMark } from "../brand/GMark";
 import { ThemeToggle } from "./ThemeToggle";
 import { useSnippet } from "~/lib/content";
 
@@ -125,7 +125,9 @@ export function Header() {
     <header className="sticky top-0 z-30 border-b border-border bg-bg/85 backdrop-blur">
       <div className="mx-auto flex h-15 max-w-5xl items-center justify-between gap-4 px-4 py-3">
         <AppLink to="/" className="flex items-center gap-2 font-display text-xl font-semibold tracking-tight text-ink">
-          <LogoMark className="h-7 w-auto" />
+          {/* Hexagon G brand mark (themes via currentColor: brand purple light / lavender dark). Sized
+              near the wordmark cap height and a touch under the old mic since the hexagon reads heavier. */}
+          <GMark className="h-5 w-auto" />
           <span>germ<span className="text-brand">omics</span></span>
         </AppLink>
 
