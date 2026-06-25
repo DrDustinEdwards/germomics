@@ -16,11 +16,11 @@ import { PostDetail, type DetailData } from "~/components/content/PostDetail";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData?.post) return [{ title: "Not found · germomics" }];
-  const { post, origin, author, seriesTitle, guests } = loaderData;
+  const { post, origin, author, seriesTitle, guests, hosts, ogImage } = loaderData;
   const title = `${post.seoTitle ?? post.title} · germomics`;
   const desc = post.seoDescription ?? post.excerpt ?? "";
-  const image = ogImageFor(post);
-  const jsonLd = buildJsonLd({ post, origin, author, seriesTitle, guests });
+  const image = ogImage;
+  const jsonLd = buildJsonLd({ post, origin, author, seriesTitle, guests, hosts });
   const isEpisode = post.kind === "episode";
   const breadcrumb = buildBreadcrumbLd([
     { name: "Home", url: `${origin}/` },
@@ -36,7 +36,9 @@ export function meta({ loaderData }: Route.MetaArgs) {
     { name: "description", content: desc },
     { property: "og:title", content: post.title },
     { property: "og:description", content: desc },
-    { property: "og:type", content: isEpisode ? "music.song" : "article" },
+    // Episodes are editorial articles with audio on this site, so og:type is article (the prior
+    // music.song regressed the social card). twitter:card is large because og:image is always set.
+    { property: "og:type", content: "article" },
     { property: "og:url", content: `${origin}/${post.slug}` },
     ...(image ? [{ property: "og:image", content: image }] : []),
     { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
@@ -62,8 +64,17 @@ export async function loader({ params, context, request }: Route.LoaderArgs) {
     post.kind === "episode" ? soundbitesForPost(env, post.id) : Promise.resolve([]),
   ]);
   const origin = new URL(request.url).origin;
+  const hosts = show.hosts ?? [];
+  // Every episode defaults its hero cover and social image to the show artwork unless it sets its own.
+  const cover = post.coverImage ?? show.artwork ?? null;
+  const ogImage = ogImageFor(post) ?? show.artwork ?? null;
 
-  const data: DetailData & { origin: string; seriesTitle: string } = {
+  const data: DetailData & {
+    origin: string;
+    seriesTitle: string;
+    hosts: typeof hosts;
+    ogImage: string | null;
+  } = {
     post,
     track: post.kind === "episode" ? toPlayerTrack(post) : null,
     soundbites: clips.map((c) => ({ id: c.id, start: c.startSeconds, duration: c.durationSeconds, title: c.title })),
@@ -73,10 +84,13 @@ export async function loader({ params, context, request }: Route.LoaderArgs) {
     next: adj.next ? { slug: adj.next.slug, title: adj.next.title } : null,
     subscribeLinks: show.subscribeLinks ?? {},
     author: show.author,
-    readingMinutes: readingTime(post.body),
+    hosts,
+    cover,
+    readingMinutes: post.readingTime ?? readingTime(post.body),
     toc: tableOfContents(post.body),
     origin,
     seriesTitle: show.title,
+    ogImage,
   };
   return data;
 }

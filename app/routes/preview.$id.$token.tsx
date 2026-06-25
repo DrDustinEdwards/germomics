@@ -38,7 +38,9 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     next: null,
     subscribeLinks: show.subscribeLinks ?? {},
     author: show.author,
-    readingMinutes: readingTime(post.body),
+    hosts: show.hosts ?? [],
+    cover: post.coverImage ?? show.artwork ?? null,
+    readingMinutes: post.readingTime ?? readingTime(post.body),
     toc: tableOfContents(post.body),
     preview: true,
   };

@@ -17,10 +17,11 @@ import {
 } from "~/lib/admin.server";
 import { listPeople, getEpisodePeople, setEpisodePeople } from "~/lib/people.server";
 import { sanitizeHtml } from "~/lib/sanitize.server";
+import { readingTime } from "~/lib/seo";
 import { previewToken } from "~/lib/preview.server";
 import { aiConfigured } from "~/lib/ai.server";
 import { PostEditor, type EditorData } from "~/components/admin/PostEditor";
-import type { Post, Chapter, Guest } from "~/db/schema";
+import type { Post, Chapter, Guest, KeyMoment, Source } from "~/db/schema";
 
 const orNull = (v: unknown): string | null => {
   const s = String(v ?? "").trim();
@@ -98,7 +99,9 @@ export async function action({ params, request, context }: Route.ActionArgs) {
     slug,
     excerpt: orNull(payload.excerpt),
     body: sanitizedBody,
+    readingTime: readingTime(sanitizedBody),
     tags: Array.isArray(payload.tags) ? (payload.tags as string[]) : [],
+    sources: Array.isArray(payload.sources) ? (payload.sources as Source[]) : [],
     featured: !!payload.featured,
     coverImage: orNull(payload.coverImage),
     coverAlt: orNull(payload.coverAlt),
@@ -124,6 +127,7 @@ export async function action({ params, request, context }: Route.ActionArgs) {
       episodeArtworkAlt: orNull(payload.episodeArtworkAlt),
       transcript: orNull(payload.transcript),
       chapters: Array.isArray(payload.chapters) ? (payload.chapters as Chapter[]) : [],
+      keyMoments: Array.isArray(payload.keyMoments) ? (payload.keyMoments as KeyMoment[]) : [],
       guests: Array.isArray(payload.guests) ? (payload.guests as Guest[]) : [],
     } satisfies Partial<Post>);
   }

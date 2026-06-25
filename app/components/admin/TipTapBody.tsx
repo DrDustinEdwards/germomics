@@ -10,7 +10,7 @@ import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import {
   Bold, Italic, Strikethrough, Heading2, Heading3, List, ListOrdered,
-  Quote, Code2, Minus, Link2, ImagePlus, Undo2, Redo2, Info,
+  Quote, Code2, Minus, Link2, ImagePlus, Images, Undo2, Redo2, Info,
 } from "lucide-react";
 
 // Minimal callout node → <aside class="callout"> … </aside> (block, holds paragraphs).
@@ -25,6 +25,74 @@ const Callout = Node.create({
     mergeAttributes(HTMLAttributes, { class: "callout" }),
     0,
   ],
+});
+
+// Figure node → <figure><img loading=lazy decoding=async><figcaption>CAPTION <span class="cr">CREDIT</span></figcaption></figure>.
+// An atom block so caption/credit ride on attributes and the whole unit survives a save round-trip.
+// Reads src/srcset/sizes off the <img>, so a server-inserted responsive <picture> figure collapses to
+// a still-responsive <img> rather than being dropped when loaded into the rich editor.
+const Figure = Node.create({
+  name: "figure",
+  group: "block",
+  atom: true,
+  draggable: true,
+  selectable: true,
+  addAttributes() {
+    return {
+      src: { default: "" },
+      srcset: { default: "" },
+      sizes: { default: "" },
+      alt: { default: "" },
+      caption: { default: "" },
+      credit: { default: "" },
+    };
+  },
+  parseHTML() {
+    return [
+      {
+        tag: "figure",
+        getAttrs: (node) => {
+          const el = node as HTMLElement;
+          const img = el.querySelector("img");
+          const cap = el.querySelector("figcaption");
+          let caption = "";
+          let credit = "";
+          if (cap) {
+            const cr = cap.querySelector(".cr");
+            credit = cr?.textContent?.trim() ?? "";
+            const clone = cap.cloneNode(true) as HTMLElement;
+            clone.querySelector(".cr")?.remove();
+            caption = clone.textContent?.trim() ?? "";
+          }
+          return {
+            src: img?.getAttribute("src") ?? "",
+            srcset: img?.getAttribute("srcset") ?? "",
+            sizes: img?.getAttribute("sizes") ?? "",
+            alt: img?.getAttribute("alt") ?? "",
+            caption,
+            credit,
+          };
+        },
+      },
+    ];
+  },
+  renderHTML({ node }) {
+    const { src, srcset, sizes, alt, caption, credit } = node.attrs as Record<string, string>;
+    const imgAttrs: Record<string, string> = { src, alt, loading: "lazy", decoding: "async" };
+    if (srcset) imgAttrs.srcset = srcset;
+    if (sizes) imgAttrs.sizes = sizes;
+    const img: (string | Record<string, string>)[] = ["img", imgAttrs];
+
+    if (!caption && !credit) return ["figure", {}, img];
+
+    const capChildren: unknown[] = [];
+    if (caption) capChildren.push(caption);
+    if (credit) {
+      if (caption) capChildren.push(" ");
+      capChildren.push(["span", { class: "cr" }, credit]);
+    }
+    return ["figure", {}, img, ["figcaption", {}, ...capChildren]] as never;
+  },
 });
 
 // Strip Google-Docs paste noise before ProseMirror parses it.
@@ -75,6 +143,7 @@ export default function TipTapBody({
 }) {
   const lastEmitted = useRef(value);
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const figureRef = useRef<HTMLInputElement | null>(null);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -84,6 +153,7 @@ export default function TipTapBody({
       Image.configure({ allowBase64: false }),
       Placeholder.configure({ placeholder: "Write the post…  (paste from Docs is cleaned automatically)" }),
       Callout,
+      Figure,
     ],
     content: value || "",
     editorProps: {
@@ -97,6 +167,7 @@ export default function TipTapBody({
           "[&_blockquote]:border-l-2 [&_blockquote]:border-brand [&_blockquote]:pl-4 [&_blockquote]:italic " +
           "[&_pre]:rounded-lg [&_pre]:bg-surface [&_pre]:p-3 [&_pre]:font-mono [&_pre]:text-sm " +
           "[&_a]:text-accent [&_a]:underline [&_img]:rounded-lg [&_img]:border [&_img]:border-border " +
+          "[&_figure]:my-4 [&_figcaption]:mt-1.5 [&_figcaption]:text-sm [&_figcaption]:text-muted [&_figcaption_.cr]:text-xs [&_figcaption_.cr]:text-muted " +
           "[&_aside.callout]:rounded-xl [&_aside.callout]:border [&_aside.callout]:border-border [&_aside.callout]:bg-surface [&_aside.callout]:p-3",
       },
     },
@@ -131,6 +202,27 @@ export default function TipTapBody({
     let alt = window.prompt("Alt text for this image (required for accessibility):", file.name) || "";
     alt = alt.trim();
     editor!.chain().focus().setImage({ src: data.url, alt }).run();
+  }
+
+  // Upload, then collect alt/caption/credit and insert a <figure> block at the cursor.
+  async function uploadFigure(file: File) {
+    const body = new FormData();
+    body.set("file", file);
+    body.set("kind", "image");
+    body.set("postId", String(postId));
+    const res = await fetch("/admin/upload", { method: "POST", body });
+    const data = (await res.json()) as { ok: boolean; url?: string };
+    if (!data.ok || !data.url) {
+      alert("Image upload failed.");
+      return;
+    }
+    const alt = (window.prompt("Alt text (required for accessibility):", file.name) || "").trim();
+    const caption = (window.prompt("Caption (optional):", "") || "").trim();
+    const credit = (window.prompt("Credit (optional, e.g. photographer or source):", "") || "").trim();
+    editor!.chain().focus().insertContent({
+      type: "figure",
+      attrs: { src: data.url, alt, caption, credit },
+    }).run();
   }
 
   function toggleLink() {
@@ -168,6 +260,7 @@ export default function TipTapBody({
         <span className="mx-1 h-5 w-px bg-border" />
         <Btn label="Link" active={editor.isActive("link")} on={toggleLink}><Link2 size={15} /></Btn>
         <Btn label="Insert image" on={() => fileRef.current?.click()}><ImagePlus size={15} /></Btn>
+        <Btn label="Insert figure (image with caption and credit)" on={() => figureRef.current?.click()}><Images size={15} /></Btn>
         <span className="mx-1 h-5 w-px bg-border" />
         <Btn label="Undo" on={() => editor.chain().focus().undo().run()}><Undo2 size={15} /></Btn>
         <Btn label="Redo" on={() => editor.chain().focus().redo().run()}><Redo2 size={15} /></Btn>
@@ -181,6 +274,17 @@ export default function TipTapBody({
         onChange={(e) => {
           const f = e.target.files?.[0];
           if (f) void uploadInlineImage(f);
+          e.target.value = "";
+        }}
+      />
+      <input
+        ref={figureRef}
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void uploadFigure(f);
           e.target.value = "";
         }}
       />

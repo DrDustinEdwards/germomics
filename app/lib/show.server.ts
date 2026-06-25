@@ -23,6 +23,7 @@ export const DEFAULT_SHOW: ShowConfig = {
     { category: "Education", subcategory: "Courses" },
   ],
   fundingLabel: null,
+  hosts: null,
 };
 
 export async function getShowConfig(env: Env): Promise<ShowConfig> {

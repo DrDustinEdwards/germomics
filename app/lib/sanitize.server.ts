@@ -11,7 +11,7 @@ const KEEP = new Set([
   "a", "p", "br", "h1", "h2", "h3", "h4", "h5", "h6",
   "strong", "b", "em", "i", "u", "s", "del", "ins", "mark", "sup", "sub",
   "ul", "ol", "li", "blockquote", "pre", "code", "hr", "img",
-  "figure", "figcaption", "aside",
+  "figure", "figcaption", "picture", "source", "aside",
   "table", "thead", "tbody", "tr", "th", "td",
 ]);
 
@@ -24,7 +24,8 @@ const DROP = new Set([
 // Allowed attributes per tag (everything else is stripped — incl. style, id, on*, data-*).
 const ATTRS: Record<string, Set<string>> = {
   a: new Set(["href", "title", "target", "rel"]),
-  img: new Set(["src", "alt", "title", "width", "height", "loading"]),
+  img: new Set(["src", "alt", "title", "width", "height", "loading", "decoding", "srcset", "sizes"]),
+  source: new Set(["src", "srcset", "sizes", "type", "media"]),
   aside: new Set(["class"]),
   code: new Set(["class"]),
   pre: new Set(["class"]),
@@ -47,6 +48,15 @@ export async function sanitizeHtml(input: string): Promise<string> {
 
       if (DROP.has(tag)) {
         el.remove(); // element + contents
+        return;
+      }
+      // Keep the figure credit span (<span class="cr">…</span>); unwrap every other
+      // cosmetic span/font/div so Google-Docs paste noise still collapses to text.
+      if (tag === "span" && el.getAttribute("class") === "cr") {
+        const attrs = el.attributes as unknown as Iterable<[string, string]>;
+        for (const [name] of attrs) {
+          if (name.toLowerCase() !== "class") el.removeAttribute(name);
+        }
         return;
       }
       if (!KEEP.has(tag)) {

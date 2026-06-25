@@ -2,12 +2,12 @@
 // Episodes keep their existing experience (player, chapters, transcript, guests); articles get an
 // editorial layout (cover, byline + reading time, table of contents, share, prev/next, related).
 // Body is rendered once via BodyRenderer for both kinds.
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
-import { Headphones, Calendar, Clock, ArrowLeft, ArrowRight, FileText } from "lucide-react";
+import { Calendar, Clock, ArrowLeft, ArrowRight, FileText, Rss, Bookmark, BookmarkCheck } from "lucide-react";
 import { AppLink } from "~/components/AppLink";
 import type { Post } from "~/db/schema";
-import type { GuestView, PlayerTrack, SoundbiteView } from "~/lib/types";
+import type { GuestView, Host, PlayerTrack, SoundbiteView } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
 import { wasUpdatedAfterPublish } from "~/lib/seo";
 import { formatDate, formatDuration } from "~/lib/format";
@@ -18,8 +18,21 @@ import { SoundbiteClips } from "./SoundbiteClips";
 import { TranscriptPanel } from "./TranscriptPanel";
 import { ShareTimestamp } from "./ShareTimestamp";
 import { CopyLink } from "./CopyLink";
-import { usePlayer } from "~/components/player/player-context";
 import { AUTHOR } from "~/lib/about";
+import { EpisodePlayerSurface } from "./EpisodePlayerSurface";
+import {
+  ReadingProgress,
+  CoverImage,
+  KeyMoments,
+  EpisodeToc,
+  Sources,
+  Hosts,
+  ChapterList,
+  useHideBrokenFigures,
+} from "./EpisodeExtras";
+import { usePlayer } from "~/components/player/player-context";
+import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
+import { ExternalCue } from "~/components/ExternalCue";
 
 export type DetailData = {
   post: Post;
@@ -30,19 +43,87 @@ export type DetailData = {
   next: { slug: string; title: string } | null;
   subscribeLinks: Record<string, string>;
   author: string;
+  hosts: Host[];
+  cover: string | null;
   readingMinutes: number;
   toc: TocItem[];
   soundbites?: SoundbiteView[];
   preview?: boolean;
 };
 
+// Lightweight "save for later": a slug set in localStorage, no server. Toggles aria-pressed.
+function SaveButton({ slug }: { slug: string }) {
+  const KEY = "germomics-saved";
+  const [saved, setSaved] = useState(false);
+  useEffect(() => {
+    try {
+      setSaved(JSON.parse(localStorage.getItem(KEY) || "[]").includes(slug));
+    } catch {
+      /* ignore */
+    }
+  }, [slug]);
+  const toggle = () => {
+    try {
+      const list: string[] = JSON.parse(localStorage.getItem(KEY) || "[]");
+      const next = list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug];
+      localStorage.setItem(KEY, JSON.stringify(next));
+      setSaved(next.includes(slug));
+    } catch {
+      /* ignore */
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-pressed={saved}
+      className="tap-target inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 font-mono text-xs text-ink hover:border-brand"
+    >
+      {saved ? <BookmarkCheck size={14} aria-hidden className="text-accent" /> : <Bookmark size={14} aria-hidden />}
+      {saved ? "Saved" : "Save"}
+    </button>
+  );
+}
+
+// Compact in-page listen row: the five primary apps + RSS, links out (the footer carries the rest).
+function SubscribeRow({ links }: { links: Record<string, string> }) {
+  const primary = PRIMARY_KEYS.filter((k) => links[k]);
+  if (!primary.length) return null;
+  return (
+    <section aria-labelledby="listen" className="mt-12 rounded-2xl border border-border bg-surface p-5">
+      <h2 id="listen" className="mb-3 font-display text-lg font-semibold">Listen and subscribe</h2>
+      <div className="flex flex-wrap gap-2">
+        {primary.map((k) => {
+          const d = SUBSCRIBE_DESTINATIONS[k];
+          const Icon = d.icon;
+          return (
+            <a key={k} href={links[k]} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-accent hover:text-accent">
+              <Icon size={14} aria-hidden /> {d.label}
+              <ExternalCue />
+            </a>
+          );
+        })}
+        <a href="/feed/podcast/" target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-accent hover:text-accent">
+          <Rss size={14} aria-hidden /> RSS
+          <ExternalCue />
+        </a>
+        <AppLink to="/subscribe" className="inline-flex items-center rounded-full px-3 py-1.5 text-sm text-muted hover:text-ink">
+          More ways to listen →
+        </AppLink>
+      </div>
+    </section>
+  );
+}
+
 export function PostDetail({ data }: { data: DetailData }) {
-  const { post, track, guests, related, prev, next, subscribeLinks, readingMinutes, toc } = data;
+  const { post, track, guests, related, prev, next, subscribeLinks, readingMinutes, toc, hosts, cover } = data;
   const soundbites = data.soundbites ?? [];
   const player = usePlayer();
   const [params] = useSearchParams();
   const isEpisode = post.kind === "episode";
   const chapters = post.chapters ?? [];
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useHideBrokenFigures(bodyRef, [post.body]);
 
   // Honor ?t=<seconds> deep links (share-at-timestamp landing) for episodes.
   useEffect(() => {
@@ -109,77 +190,102 @@ export function PostDetail({ data }: { data: DetailData }) {
     </nav>
   ) : null;
 
-  // ── Episode layout (preserved) ───────────────────────────────────────────
+  // ── Episode layout (redesigned: hero, player surface, key moments, TOC + body, sources, hosts,
+  //     transcript, subscribe, related + prev/next). See Vault episode-page-* specs. ──────────────
   if (isEpisode) {
-    return (
-      <article className="mx-auto max-w-3xl">
-        {data.preview ? <PreviewBanner post={post} /> : null}
-        <p className="font-mono text-xs uppercase tracking-wide text-accent">Episode</p>
-        <h1 className="mt-2 font-display text-4xl font-semibold leading-tight">{post.title}</h1>
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-muted">
-          {post.episodeNumber ? <span>#{post.episodeNumber}</span> : null}
-          {post.seasonNumber ? <span>Season {post.seasonNumber}</span> : null}
-          {post.publishedAt ? <span className="flex items-center gap-1"><Calendar size={12} aria-hidden /> {formatDate(post.publishedAt)}</span> : null}
-          {wasUpdatedAfterPublish(post) ? <span className="text-accent">Updated {formatDate(post.updatedAt)}</span> : null}
-          {post.audioDuration ? <span className="flex items-center gap-1 tabular-nums"><Clock size={12} aria-hidden /> {formatDuration(post.audioDuration)}</span> : null}
-        </div>
+    const eyebrow =
+      [post.seasonNumber ? `Season ${post.seasonNumber}` : null, post.episodeNumber ? `Episode ${post.episodeNumber}` : null]
+        .filter(Boolean)
+        .join(" · ") || "Episode";
+    const moments =
+      post.keyMoments && post.keyMoments.length
+        ? post.keyMoments
+        : chapters.map((c) => ({ seconds: c.start, label: c.title }));
+    const sources = post.sources ?? [];
 
-        {track ? (
-          <div className="mt-6 flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
-            <PlayButton track={track} size="lg" />
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="flex items-center gap-1 font-display text-sm text-brand"><Headphones size={14} aria-hidden /> Listen</span>
-              <ShareTimestamp slug={post.slug} />
+    return (
+      <>
+        <ReadingProgress />
+        <article className="mx-auto max-w-5xl">
+          {data.preview ? <PreviewBanner post={post} /> : null}
+
+          {/* Hero */}
+          <header className="grid gap-6 sm:grid-cols-[1fr_12rem] sm:items-start lg:grid-cols-[1fr_14rem]">
+            <div>
+              <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent">{eyebrow}</p>
+              <h1 className="mt-2 font-display text-4xl font-semibold leading-tight">{post.title}</h1>
+              <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-muted">
+                {post.publishedAt ? (
+                  <span className="flex items-center gap-1">
+                    <Calendar size={12} aria-hidden /> <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
+                  </span>
+                ) : null}
+                {post.audioDuration ? (
+                  <span className="flex items-center gap-1 tabular-nums"><Clock size={12} aria-hidden /> {formatDuration(post.audioDuration)}</span>
+                ) : null}
+                {wasUpdatedAfterPublish(post) ? <span className="text-accent">Updated {formatDate(post.updatedAt)}</span> : null}
+              </p>
+              {post.excerpt ? <p className="mt-4 max-w-2xl font-serif text-lg leading-relaxed text-muted">{post.excerpt}</p> : null}
+              {track ? (
+                <div className="mt-5 flex flex-wrap items-center gap-2">
+                  <PlayButton track={track} size="lg" />
+                  <ShareTimestamp slug={post.slug} />
+                  <SaveButton slug={post.slug} />
+                </div>
+              ) : null}
+            </div>
+            <div className="order-first w-40 sm:order-none sm:w-auto">
+              <CoverImage src={cover} alt={post.coverAlt ?? "germomics cover art"} />
+            </div>
+          </header>
+
+          {/* Player surface */}
+          {track ? (
+            <div id="player" className="mt-8 scroll-mt-20">
+              <EpisodePlayerSurface track={track} peaks={post.audioPeaks ?? null} />
+            </div>
+          ) : null}
+
+          {/* In this episode */}
+          {track ? <KeyMoments moments={moments} track={track} /> : null}
+
+          {/* TOC rail + article body */}
+          <div className="mt-12 grid gap-8 lg:grid-cols-[15rem_1fr]">
+            <div className="lg:order-1">
+              <EpisodeToc items={toc} />
+            </div>
+            <div className="min-w-0 lg:order-2">
+              {post.body ? (
+                <div ref={bodyRef}>
+                  <BodyRenderer html={post.body} />
+                </div>
+              ) : null}
             </div>
           </div>
-        ) : null}
 
-        {post.body ? <div className="mt-8"><BodyRenderer html={post.body} /></div> : null}
+          {/* Everything below the body returns to a single readable measure. */}
+          <div className="mx-auto max-w-3xl">
+            <Sources sources={sources} />
+            <Hosts hosts={hosts} />
+            {track ? <SoundbiteClips track={track} clips={soundbites} /> : null}
+            {track && chapters.length ? <ChapterList chapters={chapters} track={track} /> : null}
 
-        {chapters.length ? (
-          <section className="mt-10">
-            <h2 className="mb-3 font-display text-xl font-semibold">Chapters</h2>
-            <ol className="grid gap-1">
-              {chapters.map((c, i) => (
-                <li key={i}>
-                  <button
-                    type="button"
-                    onClick={() => (track && player.current?.id === track.id ? player.seek(c.start) : track && player.playTrackAt(track, c.start))}
-                    className="flex w-full items-center gap-3 rounded px-2 py-1.5 text-left hover:bg-surface"
-                  >
-                    <span className="font-mono text-xs tabular-nums text-accent">{formatDuration(c.start)}</span>
-                    <span>{c.title}</span>
-                  </button>
-                </li>
-              ))}
-            </ol>
-          </section>
-        ) : null}
+            {post.transcript && track ? (
+              <section id="transcript" className="mt-12 scroll-mt-20">
+                <details open>
+                  <summary className="mb-3 cursor-pointer font-display text-xl font-semibold">Transcript</summary>
+                  <TranscriptPanel transcript={post.transcript} track={track} />
+                </details>
+              </section>
+            ) : null}
 
-        {track ? <SoundbiteClips track={track} clips={soundbites} /> : null}
-
-        {post.transcript && track ? (
-          <section id="transcript" className="mt-10 scroll-mt-20">
-            <h2 className="mb-3 font-display text-xl font-semibold">Transcript</h2>
-            <TranscriptPanel transcript={post.transcript} track={track} />
-          </section>
-        ) : null}
-
-        {GuestList}
-
-        {Object.keys(subscribeLinks).length ? (
-          <section className="mt-10 rounded-xl border border-border bg-surface p-4">
-            <h2 className="mb-2 font-display text-sm font-semibold">Subscribe everywhere</h2>
-            <div className="flex flex-wrap gap-3 font-mono text-xs">
-              {Object.entries(subscribeLinks).map(([name, url]) => (
-                <a key={name} href={url} className="hover:text-accent">{name}</a>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {Related}
-      </article>
+            {GuestList}
+            <SubscribeRow links={subscribeLinks} />
+            {Related}
+            {PrevNext}
+          </div>
+        </article>
+      </>
     );
   }
 

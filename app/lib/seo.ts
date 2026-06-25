@@ -3,7 +3,7 @@
 // components alike. JSON-LD mirrors on-page content: BlogPosting for articles, PodcastEpisode
 // (+ MediaObject + partOfSeries) for episodes.
 import type { Post } from "~/db/schema";
-import type { GuestView } from "~/lib/types";
+import type { GuestView, Host } from "~/lib/types";
 import { postalAddressLd, type Address } from "~/lib/site";
 
 export function stripHtml(html: string): string {
@@ -69,10 +69,11 @@ type JsonLdOpts = {
   author: string;
   seriesTitle: string;
   guests?: GuestView[];
+  hosts?: Host[];
 };
 
 /** schema.org JSON-LD object for a post — BlogPosting (article) or PodcastEpisode. */
-export function buildJsonLd({ post, origin, author, seriesTitle, guests = [] }: JsonLdOpts) {
+export function buildJsonLd({ post, origin, author, seriesTitle, guests = [], hosts = [] }: JsonLdOpts) {
   const url = `${origin}/${post.slug}`;
   const image = ogImageFor(post);
   const description = post.seoDescription ?? post.excerpt ?? stripHtml(post.body).slice(0, 200);
@@ -102,6 +103,12 @@ export function buildJsonLd({ post, origin, author, seriesTitle, guests = [] }: 
           }
         : {}),
       partOfSeries: { "@type": "PodcastSeries", name: seriesTitle, url: `${origin}/` },
+      // Hosts are the authors/creators of the episode; per-episode guests map to actor.
+      author: (hosts.length ? hosts : [{ name: author }]).map((h) => ({
+        "@type": "Person",
+        name: h.name,
+        ...("href" in h && h.href ? { url: h.href } : {}),
+      })),
       ...(guests.length
         ? { actor: guests.map((g) => ({ "@type": "Person", name: g.name })) }
         : {}),

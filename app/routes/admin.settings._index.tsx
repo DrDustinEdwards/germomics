@@ -3,14 +3,15 @@
 // settings page. On the germomics design system, WCAG AA (labels, focus, error states).
 import { useState } from "react";
 import { useFetcher, Link } from "react-router";
-import { Settings, Megaphone, ListTree, Check, SlidersHorizontal, FileText } from "lucide-react";
+import { Settings, Megaphone, ListTree, Check, SlidersHorizontal, FileText, Users } from "lucide-react";
 import type { Route } from "./+types/admin.settings._index";
 import { getEnv } from "~/lib/context.server";
 import { getShowConfig, upsertShowConfig } from "~/lib/show.server";
 import { listSettings, listBlocks, upsertSetting } from "~/lib/content.server";
 import { Card, Field, Button, Badge, inputCx } from "~/components/admin/ui";
 import { CategoriesEditor } from "~/components/admin/CategoriesEditor";
-import type { PodcastCategory } from "~/db/schema";
+import { HostsEditor } from "~/components/admin/HostsEditor";
+import type { PodcastCategory, Host } from "~/db/schema";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
@@ -40,6 +41,13 @@ export async function action({ request, context }: Route.ActionArgs) {
   } catch {
     categories = [];
   }
+  let hosts: Host[] = [];
+  try {
+    hosts = JSON.parse(String(form.get("hosts") || "[]"));
+  } catch {
+    hosts = [];
+  }
+  hosts = hosts.filter((h) => h.name?.trim());
   const et = form.get("itunesType");
 
   await upsertShowConfig(env, {
@@ -55,6 +63,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     appleCategory: categories[0]?.category || "Science",
     fundingUrl: String(form.get("fundingUrl") || "").trim() || null,
     fundingLabel: String(form.get("fundingLabel") || "").trim() || null,
+    hosts: hosts.length ? hosts : null,
   });
   return { ok: true as const, message: "Settings saved." };
 }
@@ -64,6 +73,7 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher<{ ok: boolean; message?: string }>();
   const settingsFetcher = useFetcher<{ ok: boolean; message?: string }>();
   const [categories, setCategories] = useState<PodcastCategory[]>(show.categories ?? []);
+  const [hosts, setHosts] = useState<Host[]>(show.hosts ?? []);
   const pages = blocks.filter((b) => b.kind === "page");
   const snippets = blocks.filter((b) => b.kind === "snippet");
 
@@ -76,6 +86,7 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
 
       <fetcher.Form method="post" className="mt-6 space-y-5">
         <input type="hidden" name="categories" value={JSON.stringify(categories)} />
+        <input type="hidden" name="hosts" value={JSON.stringify(hosts)} />
 
         <Card title="Show" icon={<Megaphone size={15} aria-hidden />}>
           <div className="space-y-4">
@@ -117,6 +128,11 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
 
         <Card title="iTunes categories" icon={<ListTree size={15} aria-hidden />}>
           <CategoriesEditor value={categories} onChange={setCategories} />
+        </Card>
+
+        <Card title="Hosts" icon={<Users size={15} aria-hidden />}>
+          <p className="mb-4 text-sm text-muted">Show-level byline. Maps to podcast:person in the feed alongside per-episode guests.</p>
+          <HostsEditor hosts={hosts} onChange={setHosts} />
         </Card>
 
         <Card title="Funding">

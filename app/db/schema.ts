@@ -21,8 +21,8 @@ import {
 import { sql, relations } from "drizzle-orm";
 // JSON shapes (stored as TEXT, typed at the edge). Defined client-safe in lib/types and
 // re-exported here so loaders and components share one source of truth.
-import type { Chapter, Guest, PersonLink, PodcastCategory } from "~/lib/types";
-export type { Chapter, Guest, PersonLink, PodcastCategory };
+import type { Chapter, Guest, Host, KeyMoment, PersonLink, PodcastCategory, Source } from "~/lib/types";
+export type { Chapter, Guest, Host, KeyMoment, PersonLink, PodcastCategory, Source };
 
 // ============================================================
 // 1. Content (live)
@@ -76,7 +76,12 @@ export const posts = sqliteTable(
     guests: text("guests", { mode: "json" }).$type<Guest[]>(), // legacy/raw-JSON fallback; people[] preferred
     episodeArtwork: text("episode_artwork"),
     episodeArtworkAlt: text("episode_artwork_alt"),
-    audioPeaks: text("audio_peaks", { mode: "json" }).$type<number[]>(), // waveform (0..1)
+    audioPeaks: text("audio_peaks", { mode: "json" }).$type<number[]>(), // waveform: ints 0..100, len 400
+
+    // 0009: editorial extras for the redesigned episode page.
+    sources: text("sources", { mode: "json" }).$type<Source[]>(), // references/credits + image credits
+    keyMoments: text("key_moments", { mode: "json" }).$type<KeyMoment[]>(), // "In this episode"
+    readingTime: integer("reading_time"), // minutes, computed from body at save
   },
   (t) => ({
     slugIdx: uniqueIndex("posts_slug_idx").on(t.slug),
@@ -120,6 +125,8 @@ export const showConfig = sqliteTable("show_config", {
     .$type<PodcastCategory[]>()
     .default(sql`'[]'`),
   fundingLabel: text("funding_label"),
+  // 0009: show-level hosts byline (co-hosts). Maps to <podcast:person> alongside per-episode guests.
+  hosts: text("hosts", { mode: "json" }).$type<Host[]>(),
 });
 
 export type Post = typeof posts.$inferSelect;

@@ -7,9 +7,10 @@ import { Link, useBlocker, useFetcher } from "react-router";
 import {
   Save, UploadCloud, CalendarClock, Eye, Trash2, ExternalLink, Megaphone,
   Image as ImageIcon, Headphones, Search, History, FileText, RefreshCw, Check, Loader2, AlertCircle,
+  BookText,
 } from "lucide-react";
 import type { Post } from "~/db/schema";
-import type { Chapter, Guest } from "~/lib/types";
+import type { Chapter, Guest, KeyMoment, Source } from "~/lib/types";
 import { slugifyGuest } from "~/lib/posts";
 import { Card, Field, Button, Badge, inputCx } from "./ui";
 import { RichTextEditor } from "./RichTextEditor";
@@ -17,6 +18,8 @@ import { ImageField } from "./ImageField";
 import { AudioField, type AudioState } from "./AudioField";
 import { TranscriptField } from "./TranscriptField";
 import { ChaptersEditor } from "./ChaptersEditor";
+import { KeyMomentsEditor } from "./KeyMomentsEditor";
+import { SourcesEditor } from "./SourcesEditor";
 import { GuestsField, type PersonLite, type SelectedPerson } from "./GuestsField";
 import { SeoPanel } from "./SeoPanel";
 import { VersionHistory } from "./VersionHistory";
@@ -41,6 +44,7 @@ type FormState = {
   excerpt: string;
   body: string;
   tags: string;
+  sources: Source[];
   featured: boolean;
   coverImage: string;
   coverAlt: string;
@@ -58,6 +62,7 @@ type FormState = {
   episodeArtworkAlt: string;
   transcript: string;
   chapters: Chapter[];
+  keyMoments: KeyMoment[];
   guests: Guest[];
   people: SelectedPerson[];
 };
@@ -71,6 +76,7 @@ function initialState(d: EditorData): FormState {
     excerpt: p.excerpt ?? "",
     body: p.body ?? "",
     tags: (p.tags ?? []).join(", "),
+    sources: p.sources ?? [],
     featured: !!p.featured,
     coverImage: p.coverImage ?? "",
     coverAlt: p.coverAlt ?? "",
@@ -93,6 +99,7 @@ function initialState(d: EditorData): FormState {
     episodeArtworkAlt: p.episodeArtworkAlt ?? "",
     transcript: p.transcript ?? "",
     chapters: p.chapters ?? [],
+    keyMoments: p.keyMoments ?? [],
     guests: p.guests ?? [],
     people: d.selectedPeople,
   };
@@ -132,6 +139,7 @@ export function PostEditor({ data }: { data: EditorData }) {
       excerpt: form.excerpt,
       body: form.body,
       tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
+      sources: form.sources,
       featured: form.featured,
       coverImage: form.coverImage,
       coverAlt: form.coverAlt,
@@ -148,6 +156,7 @@ export function PostEditor({ data }: { data: EditorData }) {
       episodeArtworkAlt: form.episodeArtworkAlt,
       transcript: form.transcript,
       chapters: form.chapters,
+      keyMoments: form.keyMoments,
       guests: form.guests,
       people: form.people,
     });
@@ -316,6 +325,10 @@ export function PostEditor({ data }: { data: EditorData }) {
             )}
           </Field>
 
+          <Card title="Sources & credits" icon={<BookText size={15} aria-hidden />}>
+            <SourcesEditor sources={form.sources} onChange={(s) => set("sources", s)} />
+          </Card>
+
           {isEpisode ? (
             <Card title="Episode" icon={<Headphones size={15} aria-hidden />}>
               <div className="space-y-5">
@@ -357,6 +370,8 @@ export function PostEditor({ data }: { data: EditorData }) {
                   transcript={form.transcript}
                   aiAvailable={data.aiAvailable}
                 />
+                <hr className="border-border" />
+                <KeyMomentsEditor moments={form.keyMoments} onChange={(m) => set("keyMoments", m)} />
                 <hr className="border-border" />
                 <GuestsField
                   people={data.people}

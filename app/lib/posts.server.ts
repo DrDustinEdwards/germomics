@@ -18,11 +18,22 @@ type Kind = "episode" | "article";
 // are tiny next to body/transcript. Only the single post route (getPostBySlug/getPostById) loads the
 // full body and transcript. Rows come back with the heavy fields re-added as empty so the Post type
 // (and any consumer that reads those keys) stays intact, but nothing heavy is fetched or serialized.
-const { body: _body, transcript: _transcript, audioPeaks: _peaks, ...cardColumns } =
-  getTableColumns(posts);
+const {
+  body: _body,
+  transcript: _transcript,
+  audioPeaks: _peaks,
+  sources: _sources,
+  keyMoments: _km,
+  ...cardColumns
+} = getTableColumns(posts);
+// readingTime stays in the projection: listing cards show it without loading the body.
 
-function asCards(rows: Array<Omit<Post, "body" | "transcript" | "audioPeaks">>): Post[] {
-  return rows.map((r) => ({ ...r, body: "", transcript: null, audioPeaks: null }) as Post);
+function asCards(
+  rows: Array<Omit<Post, "body" | "transcript" | "audioPeaks" | "sources" | "keyMoments">>,
+): Post[] {
+  return rows.map(
+    (r) => ({ ...r, body: "", transcript: null, audioPeaks: null, sources: null, keyMoments: null }) as Post,
+  );
 }
 
 // Publish-on-read scheduling gate (the mechanism chosen this pass — see the editor spec §F):
