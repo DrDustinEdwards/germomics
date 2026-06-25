@@ -1,6 +1,6 @@
-// Waveform bars from precomputed peaks (0..1). Read-only preview, or interactive for chapter
-// scrubbing: click/keyboard sets a fraction (0..1) that the caller maps to a timestamp. Markers
-// overlay chapter positions.
+// Waveform bars from precomputed peaks (ints 0..100, the stored audio_peaks contract). Read-only
+// preview, or interactive for chapter scrubbing: click/keyboard sets a fraction (0..1) that the
+// caller maps to a timestamp. Markers overlay chapter positions.
 import { useRef } from "react";
 
 export function Waveform({
@@ -63,7 +63,7 @@ export function Waveform({
         <span
           key={i}
           className="flex-1 rounded-sm bg-brand/55"
-          style={{ height: `${Math.max(3, p * 100)}%` }}
+          style={{ height: `${Math.max(3, p)}%` }}
         />
       ))}
       {markers.map((m, i) => (
