@@ -9,9 +9,12 @@ import { addHeadingIds, demoteHeadings } from "~/lib/seo";
 const PROSE =
   "max-w-none text-[1.05rem] leading-relaxed " +
   "[&_a]:text-accent [&_a]:underline [&_a]:underline-offset-2 " +
-  "[&_h2]:mt-10 [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:scroll-mt-24 " +
-  "[&_h3]:mt-7 [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:scroll-mt-24 " +
-  "[&_h4]:mt-6 [&_h4]:font-display [&_h4]:text-lg [&_h4]:font-semibold " +
+  // Heading ladder: clear, legible steps in size, weight, and top spacing so the section hierarchy
+  // reads at a glance. Body headings are demoted one level at render (authored h2 -> h3, h3 -> h4),
+  // so h3/h4 carry the real section/subsection distinction; h2 covers the rare top-level case.
+  "[&_h2]:mt-12 [&_h2]:mb-3 [&_h2]:font-display [&_h2]:text-3xl [&_h2]:font-bold [&_h2]:tracking-tight [&_h2]:scroll-mt-24 " +
+  "[&_h3]:mt-10 [&_h3]:mb-2 [&_h3]:font-display [&_h3]:text-2xl [&_h3]:font-semibold [&_h3]:scroll-mt-24 " +
+  "[&_h4]:mt-6 [&_h4]:mb-1 [&_h4]:font-display [&_h4]:text-base [&_h4]:font-semibold [&_h4]:uppercase [&_h4]:tracking-wide " +
   "[&_p]:my-4 [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 " +
   "[&_blockquote]:my-5 [&_blockquote]:border-l-2 [&_blockquote]:border-brand [&_blockquote]:pl-4 [&_blockquote]:italic " +
   "[&_pre]:my-5 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-surface [&_pre]:p-4 [&_pre]:text-sm " +
