@@ -1,8 +1,8 @@
 // Supporting pieces for the redesigned episode page. All grouped here to keep the route lean; each is
 // small and client-side. Every motion (smooth scroll, auto-scroll, progress bar) is reduced-motion
 // aware. now-playing highlights use the cyan accent only.
-import { useEffect, useState } from "react";
-import { ChevronRight, ExternalLink } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronRight, ExternalLink, X } from "lucide-react";
 import type { KeyMoment, Source, Host, Chapter } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
 import type { PlayerTrack } from "~/lib/types";
@@ -326,6 +326,132 @@ export function ChapterList({ chapters, track }: { chapters: Chapter[]; track: P
         })}
       </ol>
     </section>
+  );
+}
+
+// ── Click-to-enlarge lightbox for body figures ───────────────────────────────
+// Enhances every <figure><img> in the rendered body into an accessible "view larger" trigger, then
+// opens the full-size image in a modal overlay. No new dependency. Focus moves into the dialog and is
+// trapped, Esc and a backdrop click close it, scroll is locked, and focus returns to the triggering
+// image on close. The fade is suppressed under prefers-reduced-motion (motion-safe only).
+function largestSrc(img: HTMLImageElement): string {
+  const srcset = img.getAttribute("srcset");
+  if (srcset) {
+    let best = "";
+    let bestW = -1;
+    for (const part of srcset.split(",")) {
+      const [url, descriptor] = part.trim().split(/\s+/);
+      const w = descriptor && /^\d+w$/.test(descriptor) ? parseInt(descriptor, 10) : 0;
+      if (url && w >= bestW) {
+        bestW = w;
+        best = url;
+      }
+    }
+    if (best) return best;
+  }
+  return img.currentSrc || img.src;
+}
+
+export function FigureLightbox({
+  bodyRef,
+  deps,
+}: {
+  bodyRef: React.RefObject<HTMLElement | null>;
+  deps: unknown[];
+}) {
+  const [open, setOpen] = useState<{ src: string; alt: string } | null>(null);
+  const [shown, setShown] = useState(false);
+  const triggerRef = useRef<HTMLImageElement | null>(null);
+  const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+
+  // Turn each figure image into a keyboard- and pointer-activatable "enlarge" trigger.
+  useEffect(() => {
+    const root = bodyRef.current;
+    if (!root) return;
+    const imgs = Array.from(root.querySelectorAll<HTMLImageElement>("figure img"));
+    const openFrom = (img: HTMLImageElement) => {
+      triggerRef.current = img;
+      setOpen({ src: largestSrc(img), alt: img.getAttribute("alt") || "" });
+    };
+    const onClick = (e: Event) => openFrom(e.currentTarget as HTMLImageElement);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openFrom(e.currentTarget as HTMLImageElement);
+      }
+    };
+    for (const img of imgs) {
+      img.setAttribute("role", "button");
+      img.setAttribute("tabindex", "0");
+      img.setAttribute("aria-label", `Enlarge image: ${img.getAttribute("alt") || "image"}`);
+      img.style.cursor = "zoom-in";
+      img.addEventListener("click", onClick);
+      img.addEventListener("keydown", onKey as EventListener);
+    }
+    return () => {
+      for (const img of imgs) {
+        img.removeEventListener("click", onClick);
+        img.removeEventListener("keydown", onKey as EventListener);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+
+  // While open: lock scroll, focus the close button, trap Tab, Esc closes; restore focus on close.
+  useEffect(() => {
+    if (!open) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const raf = requestAnimationFrame(() => setShown(true));
+    closeBtnRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setOpen(null);
+      } else if (e.key === "Tab") {
+        // The close button is the only focusable control inside, so keep focus on it.
+        e.preventDefault();
+        closeBtnRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+      setShown(false);
+      triggerRef.current?.focus();
+    };
+  }, [open]);
+
+  if (!open) return null;
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={open.alt || "Enlarged image"}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) setOpen(null);
+      }}
+      className={`fixed inset-0 z-[60] grid place-items-center bg-black/80 p-4 backdrop-blur-sm motion-safe:transition-opacity motion-safe:duration-150 ${
+        shown ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <button
+        ref={closeBtnRef}
+        type="button"
+        onClick={() => setOpen(null)}
+        aria-label="Close enlarged image"
+        className="tap-target absolute right-3 top-3 grid h-11 w-11 place-items-center rounded-full border border-white/30 bg-black/50 text-white hover:bg-black/70"
+      >
+        <X size={20} aria-hidden />
+      </button>
+      <img
+        src={open.src}
+        alt={open.alt}
+        className="max-h-[90vh] max-w-full rounded-lg border border-white/20 object-contain shadow-2xl"
+      />
+    </div>
   );
 }
 

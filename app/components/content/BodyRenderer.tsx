@@ -17,7 +17,12 @@ const PROSE =
   "[&_pre]:my-5 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-surface [&_pre]:p-4 [&_pre]:text-sm " +
   "[&_code]:font-mono [&_code]:text-[0.9em] " +
   "[&_img]:my-6 [&_img]:rounded-xl [&_img]:border [&_img]:border-border " +
-  "[&_figure]:my-6 [&_figcaption]:mt-2 [&_figcaption]:text-center [&_figcaption]:text-sm [&_figcaption]:text-muted " +
+  // Figures sit inline within the article column (not full-bleed), centered, the rendered width
+  // capped to the image's own width attribute (520px lead illustration, 400px photos) and scaling
+  // down on narrow screens. Caption below in small muted text, credit on its own line.
+  "[&_figure]:my-6 [&_figure_img]:mx-auto [&_figure_img]:block [&_figure_img]:my-0 [&_figure_img]:h-auto [&_figure_img]:max-w-full " +
+  "[&_figcaption]:mt-2 [&_figcaption]:text-center [&_figcaption]:text-sm [&_figcaption]:text-muted " +
+  "[&_figcaption_.cr]:mt-0.5 [&_figcaption_.cr]:block [&_figcaption_.cr]:text-xs [&_figcaption_.cr]:text-muted " +
   "[&_hr]:my-8 [&_hr]:border-border " +
   "[&_aside.callout]:my-6 [&_aside.callout]:rounded-xl [&_aside.callout]:border [&_aside.callout]:border-border " +
   "[&_aside.callout]:bg-surface [&_aside.callout]:p-4 [&_aside.callout]:not-italic";

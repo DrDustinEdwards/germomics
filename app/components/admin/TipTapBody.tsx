@@ -43,6 +43,11 @@ const Figure = Node.create({
       srcset: { default: "" },
       sizes: { default: "" },
       alt: { default: "" },
+      // width/height ride along for CLS and to encode the inline display size (the prose CSS caps
+      // the rendered width to these). loading lets the lead figure stay eager across a save.
+      width: { default: "" },
+      height: { default: "" },
+      loading: { default: "" },
       caption: { default: "" },
       credit: { default: "" },
     };
@@ -69,6 +74,9 @@ const Figure = Node.create({
             srcset: img?.getAttribute("srcset") ?? "",
             sizes: img?.getAttribute("sizes") ?? "",
             alt: img?.getAttribute("alt") ?? "",
+            width: img?.getAttribute("width") ?? "",
+            height: img?.getAttribute("height") ?? "",
+            loading: img?.getAttribute("loading") ?? "",
             caption,
             credit,
           };
@@ -77,10 +85,18 @@ const Figure = Node.create({
     ];
   },
   renderHTML({ node }) {
-    const { src, srcset, sizes, alt, caption, credit } = node.attrs as Record<string, string>;
-    const imgAttrs: Record<string, string> = { src, alt, loading: "lazy", decoding: "async" };
+    const { src, srcset, sizes, alt, width, height, loading, caption, credit } =
+      node.attrs as Record<string, string>;
+    const imgAttrs: Record<string, string> = {
+      src,
+      alt,
+      loading: loading || "lazy",
+      decoding: "async",
+    };
     if (srcset) imgAttrs.srcset = srcset;
     if (sizes) imgAttrs.sizes = sizes;
+    if (width) imgAttrs.width = width;
+    if (height) imgAttrs.height = height;
     const img: (string | Record<string, string>)[] = ["img", imgAttrs];
 
     if (!caption && !credit) return ["figure", {}, img];

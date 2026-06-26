@@ -29,6 +29,7 @@ import {
   Hosts,
   ChapterList,
   useHideBrokenFigures,
+  FigureLightbox,
 } from "./EpisodeExtras";
 import { usePlayer } from "~/components/player/player-context";
 import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
@@ -258,6 +259,7 @@ export function PostDetail({ data }: { data: DetailData }) {
               {post.body ? (
                 <div ref={bodyRef}>
                   <BodyRenderer html={post.body} />
+                  <FigureLightbox bodyRef={bodyRef} deps={[post.body]} />
                 </div>
               ) : null}
             </div>
