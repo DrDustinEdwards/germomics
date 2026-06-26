@@ -36,6 +36,9 @@ export function PostCard({
           {isEpisode && post.audioDuration ? (
             <span className="tabular-nums">{formatDuration(post.audioDuration)}</span>
           ) : null}
+          {post.readingTime ? (
+            <span className="tabular-nums">{post.readingTime} min read</span>
+          ) : null}
         </div>
         <h3 className="mt-1 font-display text-lg font-medium">
           <AppLink to={`/${post.slug}`} className="text-ink hover:text-brand">
