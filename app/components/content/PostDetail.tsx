@@ -12,7 +12,6 @@ import type { TocItem } from "~/lib/seo";
 import { wasUpdatedAfterPublish } from "~/lib/seo";
 import { formatDate, formatDuration } from "~/lib/format";
 import { BodyRenderer } from "./BodyRenderer";
-import { PlayButton } from "./PlayButton";
 import { PostCard } from "./PostCard";
 import { SoundbiteClips } from "./SoundbiteClips";
 import { TranscriptPanel } from "./TranscriptPanel";
@@ -227,23 +226,21 @@ export function PostDetail({ data }: { data: DetailData }) {
                 {wasUpdatedAfterPublish(post) ? <span className="text-accent">Updated {formatDate(post.updatedAt)}</span> : null}
               </p>
               {post.excerpt ? <p className="mt-4 max-w-2xl font-serif text-lg leading-relaxed text-muted">{post.excerpt}</p> : null}
-              {track ? (
-                <div className="mt-5 flex flex-wrap items-center gap-2">
-                  <PlayButton track={track} size="lg" />
-                  <ShareTimestamp slug={post.slug} />
-                  <SaveButton slug={post.slug} />
-                </div>
-              ) : null}
             </div>
             <div className="order-first w-40 sm:order-none sm:w-auto">
               <CoverImage src={cover} alt={post.coverAlt ?? "germomics cover art"} />
             </div>
           </header>
 
-          {/* Player surface */}
+          {/* Player surface: the one play affordance lives on the waveform; Share and Save sit
+              directly below it (the hero no longer carries a second play button). */}
           {track ? (
             <div id="player" className="mt-8 scroll-mt-20">
               <EpisodePlayerSurface track={track} peaks={post.audioPeaks ?? null} />
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <ShareTimestamp slug={post.slug} />
+                <SaveButton slug={post.slug} />
+              </div>
             </div>
           ) : null}
 
