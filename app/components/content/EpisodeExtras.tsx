@@ -1,8 +1,8 @@
 // Supporting pieces for the redesigned episode page. All grouped here to keep the route lean; each is
 // small and client-side. Every motion (smooth scroll, auto-scroll, progress bar) is reduced-motion
 // aware. now-playing highlights use the cyan accent only.
-import { useEffect, useRef, useState } from "react";
-import { Clock, ChevronRight, ExternalLink } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronRight, ExternalLink } from "lucide-react";
 import type { KeyMoment, Source, Host, Chapter } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
 import type { PlayerTrack } from "~/lib/types";
