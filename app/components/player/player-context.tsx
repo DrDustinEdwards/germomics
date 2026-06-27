@@ -30,6 +30,8 @@ type PlayerState = {
   buffering: boolean;
   errored: boolean;
   sleep: SleepMode | null;
+  /** True only while the LOADED episode's own player surface is in the viewport (drives dock auto-hide). */
+  surfaceVisible: boolean;
 };
 
 type PlayerApi = PlayerState & {
@@ -53,6 +55,10 @@ type PlayerApi = PlayerState & {
   setVolume: (v: number) => void;
   toggleMute: () => void;
   setSleep: (mode: SleepMode | null) => void;
+  /** Reported by the episode surface: whether the loaded episode's surface is on screen. */
+  setSurfaceVisible: (visible: boolean) => void;
+  /** Explicit dismiss: pause and end the session so the dock unmounts and does not return on scroll. */
+  dismiss: () => void;
 };
 
 const PlayerContext = createContext<PlayerApi | null>(null);
@@ -79,6 +85,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [buffering, setBuffering] = useState(false);
   const [errored, setErrored] = useState(false);
   const [sleep, setSleepState] = useState<SleepMode | null>(null);
+  const [surfaceVisible, setSurfaceVisibleState] = useState(false);
 
   const current = index >= 0 && index < queue.length ? queue[index] : null;
   const isPlayingRef = useRef(isPlaying);
@@ -262,6 +269,21 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
   const setSleep = useCallback((mode: SleepMode | null) => setSleepState(mode), []);
 
+  const setSurfaceVisible = useCallback((visible: boolean) => setSurfaceVisibleState(visible), []);
+
+  // Explicit dismiss (the dock's close control): stop audio and clear the now-playing state so the dock
+  // unmounts. Distinct from auto-hide (which only toggles surfaceVisible). Resume positions are kept, so
+  // pressing play on any surface revives the dock and continues where the listener left off.
+  const dismiss = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) audio.pause();
+    setIsPlaying(false);
+    setIndex(-1);
+    setQueueState([]);
+    setSleepState(null);
+    setSurfaceVisibleState(false);
+  }, []);
+
   // Sleep timer: a minute count pauses after N minutes; "end" is handled on `ended`.
   useEffect(() => {
     if (typeof sleep !== "number") return;
@@ -396,12 +418,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<PlayerApi>(
     () => ({
-      queue, index, current, isPlaying, currentTime, duration, rate, volume, muted, buffering, errored, sleep,
+      queue, index, current, isPlaying, currentTime, duration, rate, volume, muted, buffering, errored, sleep, surfaceVisible,
       audioRef,
       setQueue, playTrack, playQueueAt, playTrackAt, toggle, pause, next, prev, seek, skip, setRate,
-      setVolume, toggleMute, setSleep,
+      setVolume, toggleMute, setSleep, setSurfaceVisible, dismiss,
     }),
-    [queue, index, current, isPlaying, currentTime, duration, rate, volume, muted, buffering, errored, sleep, setQueue, playTrack, playQueueAt, playTrackAt, toggle, pause, next, prev, seek, skip, setRate, setVolume, toggleMute, setSleep],
+    [queue, index, current, isPlaying, currentTime, duration, rate, volume, muted, buffering, errored, sleep, surfaceVisible, setQueue, playTrack, playQueueAt, playTrackAt, toggle, pause, next, prev, seek, skip, setRate, setVolume, toggleMute, setSleep, setSurfaceVisible, dismiss],
   );
 
   return (
