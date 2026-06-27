@@ -59,17 +59,26 @@ export function PlayerDock() {
   const curChapIdx = activeChapterIndex(chapters, p.currentTime);
   const curChap = curChapIdx >= 0 ? chapters[curChapIdx] : null;
 
-  return (
-    <div
-      ref={dockRef}
-      role="region"
-      aria-label="Audio player"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 backdrop-blur"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-    >
-      <PlayerStatusLive />
+  // Auto-hide while the loaded episode's own surface is on screen. The dock stays mounted (playback and
+  // Media Session never break); it is only faded out, aria-hidden, and inert (not focusable). The status
+  // live region sits OUTSIDE the hidden wrapper so announcements continue while the dock is hidden.
+  const hidden = p.surfaceVisible;
 
-      <div className="mx-auto max-w-5xl px-4">
+  return (
+    <>
+      <PlayerStatusLive />
+      <div
+        ref={dockRef}
+        role="region"
+        aria-label="Audio player"
+        aria-hidden={hidden || undefined}
+        inert={hidden ? true : undefined}
+        className={`fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 backdrop-blur motion-safe:transition motion-safe:duration-300 ${
+          hidden ? "pointer-events-none translate-y-2 opacity-0" : "translate-y-0 opacity-100"
+        }`}
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div className="mx-auto max-w-5xl px-4">
         {/* Scrubber row with chapter ticks. */}
         <div className="pt-2">
           <Scrubber ticks />
@@ -130,11 +139,22 @@ export function PlayerDock() {
           >
             <ChevronUp size={20} aria-hidden />
           </button>
+
+          {/* Explicit dismiss: pause and end the session (distinct from auto-hide). */}
+          <button
+            type="button"
+            onClick={p.dismiss}
+            aria-label="Close player"
+            className="tap-target grid h-11 w-11 place-items-center rounded-full text-muted hover:text-ink"
+          >
+            <X size={18} aria-hidden />
+          </button>
         </div>
       </div>
 
-      {sheetOpen ? <DockSheet onClose={() => setSheetOpen(false)} returnFocus={moreRef} /> : null}
-    </div>
+        {sheetOpen ? <DockSheet onClose={() => setSheetOpen(false)} returnFocus={moreRef} /> : null}
+      </div>
+    </>
   );
 }
 

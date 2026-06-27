@@ -4,9 +4,13 @@
 // (play/pause, skip, scrubber + time); speed, volume, and sleep collapse into popovers. The waveform
 // is a pointer-only visual enhancement (aria-hidden); the always-present range slider in <Scrubber>
 // is the accessible, keyboard-operable seek control, so the waveform is never the only way to seek.
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect, useLayoutEffect, useRef } from "react";
 import type { PlayerTrack } from "~/lib/types";
 import { usePlayer, activeChapterIndex } from "~/components/player/player-context";
+
+// Layout effect on the client (so the dock's hidden state is set before paint, no flash on play),
+// plain effect on the server (useLayoutEffect would warn during SSR).
+const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 import {
   PlayPauseButton,
   SkipButton,
@@ -27,7 +31,32 @@ export function EpisodePlayerSurface({
   peaks: number[] | null;
 }) {
   const p = usePlayer();
+  const { setSurfaceVisible } = p;
   const isActive = p.current?.id === track.id;
+  const sectionRef = useRef<HTMLElement | null>(null);
+
+  // Drive the dock's auto-hide: report whether THIS surface is on screen, but only while this episode is
+  // the one actually loaded in the player. If a different episode is playing, never hide the dock here.
+  useIsoLayoutEffect(() => {
+    if (!isActive) {
+      setSurfaceVisible(false);
+      return;
+    }
+    const el = sectionRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setSurfaceVisible(r.top < window.innerHeight && r.bottom > 0);
+    const io = new IntersectionObserver(
+      (entries) => setSurfaceVisible(entries[0]?.isIntersecting ?? false),
+      { threshold: 0 },
+    );
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      setSurfaceVisible(false);
+    };
+  }, [isActive, setSurfaceVisible]);
+
   const dur = (isActive && p.duration) || track.durationSec || 0;
   const pos = isActive ? p.currentTime : 0;
   const frac = dur > 0 ? Math.min(1, pos / dur) : 0;
@@ -46,7 +75,7 @@ export function EpisodePlayerSurface({
       : null;
 
   return (
-    <section aria-label="Player" className="rounded-2xl border border-border bg-surface p-4">
+    <section ref={sectionRef} aria-label="Player" className="rounded-2xl border border-border bg-surface p-4">
       {chapter ? (
         <p className="mb-2 truncate font-display text-sm text-ink" title={chapter.title}>
           {chapter.title}
