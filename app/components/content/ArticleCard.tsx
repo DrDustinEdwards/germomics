@@ -20,6 +20,9 @@ export function ArticleCard({ post }: { post: Post }) {
             {post.publishedAt ? (
               <span className="flex items-center gap-1"><Calendar size={11} aria-hidden /> {formatDate(post.publishedAt)}</span>
             ) : null}
+            {post.readingTime ? (
+              <span className="tabular-nums">{post.readingTime} min read</span>
+            ) : null}
           </div>
           <h3 className="mt-1.5 font-display text-xl font-semibold text-ink group-hover:text-brand">{post.title}</h3>
           {post.excerpt ? <p className="mt-1.5 line-clamp-2 text-sm text-muted">{post.excerpt}</p> : null}
