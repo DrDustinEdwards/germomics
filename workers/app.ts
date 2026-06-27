@@ -4,6 +4,7 @@ import {
   enforceRateLimit,
   withSecurityHeaders,
 } from "../app/lib/security.server";
+import { serveWithEdgeCache } from "../app/lib/edge-cache.server";
 import { captureException } from "../app/lib/sentry.server";
 
 // Seed React Router v8's request context with the native Cloudflare bindings, so every
@@ -22,11 +23,20 @@ export default {
       const limited = await enforceRateLimit(env, request);
       if (limited) return withSecurityHeaders(limited, origin);
 
-      const context = new RouterContextProvider();
-      context.set(cloudflareContext, { env, ctx });
-      const response = await requestHandler(request, context);
-      // Security-header layer over every response (pages, feeds, resource routes, redirects).
-      return withSecurityHeaders(response, origin);
+      // Render closure: a fresh RR context per call, since the edge-cache layer may re-render in
+      // the background to refresh a stale entry. The cache layer applies the security headers (so
+      // both live and cached responses carry them) and serves public anonymous GETs from
+      // caches.default with stale-while-revalidate; authenticated/admin/api/mutating requests
+      // bypass it and stay live.
+      const render = () => {
+        const context = new RouterContextProvider();
+        context.set(cloudflareContext, { env, ctx });
+        return requestHandler(request, context);
+      };
+      // Skip the edge cache during `npm run dev` so local edits are always live; the SWR cache is
+      // a production concern and would only make local iteration serve stale anonymous HTML.
+      if (import.meta.env.DEV) return withSecurityHeaders(await render(), origin);
+      return await serveWithEdgeCache({ request, ctx, origin, render });
     } catch (err) {
       // Prod error hygiene: never leak a stack trace or internal detail to the client. Report to
       // Sentry (best-effort, server-side only) when SENTRY_DSN is set.
