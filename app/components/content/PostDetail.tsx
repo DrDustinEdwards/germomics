@@ -271,7 +271,11 @@ export function PostDetail({ data }: { data: DetailData }) {
 
             {post.transcript && track ? (
               <section id="transcript" className="mt-12 scroll-mt-20">
-                <details open>
+                {/* Collapsed by default so the page opens shorter; the reader expands it. The content is
+                    still server-rendered inside <details> (present in the SSR HTML for SEO/GEO), not
+                    lazy-fetched on expand. The read-along only scrolls inside its own box and only while
+                    open and on screen (see TranscriptPanel), so a collapsed transcript never moves the page. */}
+                <details>
                   <summary className="mb-3 cursor-pointer font-display text-xl font-semibold">Transcript</summary>
                   <TranscriptPanel transcript={post.transcript} track={track} />
                 </details>
