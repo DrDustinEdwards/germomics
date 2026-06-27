@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search, Copy, Check, ArrowDownToLine } from "lucide-react";
 import { usePlayer, activeChapterIndex } from "~/components/player/player-context";
 import { formatDuration } from "~/lib/format";
@@ -48,6 +48,8 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
   const [copied, setCopied] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const programmaticScroll = useRef(false);
+  const [panelVisible, setPanelVisible] = useState(false);
+  const scrollFlagTimer = useRef<number | undefined>(undefined);
 
   const hasNativeCue = typeof window !== "undefined" && typeof VTTCue !== "undefined";
 
@@ -105,29 +107,57 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
     setActiveStart(active);
   }, [hasNativeCue, isThis, cues, p.currentTime]);
 
-  // Auto-scroll the active line into view while following; respect reduced motion.
-  useEffect(() => {
-    if (!following || activeStart == null || query) return;
-    const el = containerRef.current?.querySelector(`[data-cue="${activeStart}"]`);
-    if (!el) return;
+  // Center the active cue WITHIN the transcript's own scroll box. Scrolls the container element only
+  // (scrollBy on it), so the document/window is never moved; a no-op when the box can't scroll or the
+  // cue is already centered. Reduced motion snaps instead of animating.
+  const centerCueInContainer = useCallback((start: number | null) => {
+    const container = containerRef.current;
+    if (start == null || !container) return;
+    const target = container.querySelector<HTMLElement>(`[data-cue="${start}"]`);
+    if (!target) return;
     const reduce =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const cRect = container.getBoundingClientRect();
+    const tRect = target.getBoundingClientRect();
+    const delta = tRect.top - cRect.top - (container.clientHeight - tRect.height) / 2;
+    if (Math.abs(delta) < 2) return;
     programmaticScroll.current = true;
-    el.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
-    const id = setTimeout(() => (programmaticScroll.current = false), 700);
-    return () => clearTimeout(id);
-  }, [activeStart, following, query]);
+    container.scrollBy({ top: delta, behavior: reduce ? "auto" : "smooth" });
+    if (scrollFlagTimer.current) window.clearTimeout(scrollFlagTimer.current);
+    scrollFlagTimer.current = window.setTimeout(() => {
+      programmaticScroll.current = false;
+    }, reduce ? 60 : 700);
+  }, []);
 
-  // A manual scroll hands control back to the reader.
+  // Keep the active line in view, but ONLY inside the transcript box and ONLY while the panel is open
+  // (rendered) and on screen. Pressing play with the transcript collapsed or off screen does nothing,
+  // so the page never jumps to the transcript.
   useEffect(() => {
-    if (!isThis) return;
+    if (!following || activeStart == null || query || !panelVisible) return;
+    centerCueInContainer(activeStart);
+  }, [activeStart, following, query, panelVisible, centerCueInContainer]);
+
+  // A manual scroll INSIDE the transcript hands control back to the reader. The IntersectionObserver
+  // on the box gates the auto-scroll above: it tracks whether the panel is open (rendered) and on
+  // screen, so a collapsed or off-screen transcript never triggers a scroll.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
     const onScroll = () => {
       if (!programmaticScroll.current) setFollowing(false);
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [isThis]);
+    container.addEventListener("scroll", onScroll, { passive: true });
+    const io = new IntersectionObserver(
+      (entries) => setPanelVisible(entries[0]?.isIntersecting ?? false),
+      { threshold: 0 },
+    );
+    io.observe(container);
+    return () => {
+      container.removeEventListener("scroll", onScroll);
+      io.disconnect();
+    };
+  }, []);
 
   const jump = (seconds: number) => {
     if (isThis) p.seek(seconds);
@@ -136,13 +166,7 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
 
   const jumpToCurrent = () => {
     setFollowing(true);
-    const el = containerRef.current?.querySelector(`[data-cue="${activeStart}"]`);
-    if (el) {
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      programmaticScroll.current = true;
-      el.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
-      setTimeout(() => (programmaticScroll.current = false), 700);
-    }
+    centerCueInContainer(activeStart);
   };
 
   const copyQuote = async () => {
@@ -214,7 +238,10 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
         </button>
       </div>
 
-      <div ref={containerRef} className="space-y-4">
+      <div
+        ref={containerRef}
+        className="max-h-[70vh] space-y-4 overflow-y-auto overscroll-contain rounded-xl border border-border p-4"
+      >
         {shown.map((para, pi) => {
           const startSec = para[0].start;
           const chap = activeChapterIndex(chapters, startSec);
