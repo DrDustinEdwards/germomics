@@ -76,7 +76,7 @@ const CHOLERA = "John Snow's map of the Broad Street outbreak: deaths clustered 
 const FLU = "The three waves of the 1918 H1N1 pandemic: mortality peaked sharply in the deadly autumn wave, a defining example of viral pandemic dynamics.";
 
 const snippets = [
-  ["snippet:footer.tagline", "Footer tagline", "a microbiology & history podcast and writing project."],
+  ["snippet:footer.tagline", "Footer tagline", "a microbiology and history podcast and writing project."],
   ["snippet:nav.episodes", "Nav: Episodes", "Episodes"],
   ["snippet:nav.writing", "Nav: Writing", "Writing"],
   ["snippet:nav.archive", "Nav: Archive", "Archive"],
@@ -97,7 +97,7 @@ const snippets = [
   ["snippet:empty.soundbites", "Empty: soundbites", "No soundbites yet. Create one on the right."],
   ["snippet:empty.subscribers", "Empty: subscribers", "No subscribers yet."],
   ["snippet:meta.home_title", "Meta: home title", "germomics · microbiology & history"],
-  ["snippet:meta.home_description", "Meta: home description", "A podcast and writing project about microbiology and history, with audio, transcripts, writing, data, and games."],
+  ["snippet:meta.home_description", "Meta: home description", "A mix of microbiology and history, this series connects different aspects of modern life and society to microbes, bacteria, viruses, and parasites through seemingly unconnected natural events, scientific discoveries, and human inventions."],
   ["snippet:meta.title_template", "Meta: title template", "{title} · germomics"],
   ["snippet:dataset.cholera-soho-1854", "Dataset: cholera", CHOLERA],
   ["snippet:dataset.influenza-1918", "Dataset: 1918 flu", FLU],

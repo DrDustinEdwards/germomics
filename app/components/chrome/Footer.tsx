@@ -44,7 +44,7 @@ export function Footer() {
   const root = useRouteLoaderData("root") as RootData | undefined;
   const socials = root?.socials ?? [];
   const subscribeLinks = root?.subscribeLinks ?? {};
-  const tagline = useSnippet("snippet:footer.tagline", "a microbiology & history podcast and writing project.");
+  const tagline = useSnippet("snippet:footer.tagline", "a microbiology and history podcast and writing project.");
 
   const explore: [string, string, string][] = [
     ["/episodes", useSnippet("snippet:nav.episodes", "Episodes"), "episodes"],

@@ -71,12 +71,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       <QueueSeeder tracks={tracks} />
 
       <section className="pt-6">
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent">
-          The purple stain, retold
-        </p>
-        <h1 className="mt-3 max-w-3xl font-display text-5xl font-semibold leading-[1.05] sm:text-6xl">
-          Microbiology &amp; history, <span className="text-brand">in your ears</span>.
+        <h1 className="max-w-3xl font-display text-5xl font-semibold leading-[1.05] sm:text-6xl">
+          A mix of <span className="text-brand">microbiology</span> and <span className="text-brand">history</span>.
         </h1>
+        <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
+          This series connects different aspects of modern life and society to microbes, bacteria, viruses,
+          and parasites through seemingly unconnected natural events, scientific discoveries, and human
+          inventions.
+        </p>
         {featured && featuredTrack ? (
           <div className="mt-8 flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
             <PlayButton track={featuredTrack} queue={tracks} size="lg" />
