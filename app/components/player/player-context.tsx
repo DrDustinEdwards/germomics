@@ -375,8 +375,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       const chapters = current.chapters ?? [];
       const init: MediaMetadataInit & { chapterInfo?: unknown } = {
         title: current.title,
-        artist: "germomics",
-        album: current.episodeNumber ? `Episode ${current.episodeNumber}` : "germomics",
+        artist: "Germomics",
+        album: current.episodeNumber ? `Episode ${current.episodeNumber}` : "Germomics",
         artwork,
       };
       if (chapters.length) {

@@ -11,8 +11,8 @@ import { SUBSCRIBE_DESTINATIONS, PRIMARY_KEYS, SECONDARY_KEYS } from "~/lib/subs
 
 export function meta() {
   return [
-    { title: "Subscribe · germomics" },
-    { name: "description", content: "Follow germomics in any podcast app, by email, or by RSS." },
+    { title: "Subscribe · Germomics" },
+    { name: "description", content: "Follow Germomics in any podcast app, by email, or by RSS." },
   ];
 }
 
@@ -73,7 +73,7 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
     <div className="mx-auto max-w-2xl">
       <h1 className="font-display text-3xl font-semibold">Subscribe</h1>
       <p className="mt-2 text-muted">
-        Follow germomics in your podcast app, by email, or by RSS. New episodes and essays land
+        Follow Germomics in your podcast app, by email, or by RSS. New episodes and essays land
         automatically.
       </p>
 
@@ -174,7 +174,7 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
             <div className="flex items-start gap-2">
               <input id="consent" type="checkbox" name="consent" required className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-brand)]" />
               <label htmlFor="consent" className="text-sm text-muted">
-                I agree to receive the germomics newsletter by email and accept the{" "}
+                I agree to receive the Germomics newsletter by email and accept the{" "}
                 <Link to="/privacy" className="text-accent hover:underline">privacy policy</Link>. You
                 can unsubscribe anytime via the link in every email.
               </label>

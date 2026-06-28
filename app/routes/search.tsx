@@ -22,7 +22,7 @@ const PAGE_HREF: Record<string, string> = {
 export function meta({ loaderData }: Route.MetaArgs) {
   const q = loaderData?.q;
   return [
-    { title: q ? `Search: ${q} · germomics` : "Search · germomics" },
+    { title: q ? `Search: ${q} · Germomics` : "Search · Germomics" },
     { name: "robots", content: "noindex" },
   ];
 }
@@ -45,7 +45,7 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
       <h1 className="font-display text-3xl font-semibold">Search</h1>
 
       <Form role="search" method="get" className="mt-4 flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2">
-        <label htmlFor="q" className="sr-only">Search germomics</label>
+        <label htmlFor="q" className="sr-only">Search Germomics</label>
         <input
           id="q"
           type="search"

@@ -51,7 +51,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const et = form.get("itunesType");
 
   await upsertShowConfig(env, {
-    title: String(form.get("title") || "").trim() || "germomics",
+    title: String(form.get("title") || "").trim() || "Germomics",
     description: String(form.get("description") || "").trim(),
     author: String(form.get("author") || "").trim(),
     ownerEmail: String(form.get("ownerEmail") || "").trim(),

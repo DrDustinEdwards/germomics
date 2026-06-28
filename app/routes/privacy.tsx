@@ -12,7 +12,7 @@ import { ReviewBanner, LegalDate } from "~/components/content/Legal";
 export function meta({ loaderData }: Route.MetaArgs) {
   return [
     { title: loaderData?.title ?? "Privacy policy" },
-    { name: "description", content: "How germomics handles your data." },
+    { name: "description", content: "How Germomics handles your data." },
   ];
 }
 

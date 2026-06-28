@@ -6,8 +6,8 @@ import { QueueSeeder } from "~/components/content/QueueSeeder";
 
 export function meta() {
   return [
-    { title: "Episodes · germomics" },
-    { name: "description", content: "Every germomics episode, grouped by season." },
+    { title: "Episodes · Germomics" },
+    { name: "description", content: "Every Germomics episode, grouped by season." },
   ];
 }
 

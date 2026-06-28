@@ -35,10 +35,10 @@ export const AUTHOR = {
 } as const;
 
 export const ABOUT = {
-  title: "About germomics",
-  lede: "germomics is a podcast and writing project about microbiology and history.",
+  title: "About Germomics",
+  lede: "Germomics is a podcast and writing project about microbiology and history.",
   paragraphs: [
-    "germomics explores the microbial world and the people, places, and discoveries behind it: the organisms, the science, and the stories that shaped how we understand life too small to see.",
+    "Germomics explores the microbial world and the people, places, and discoveries behind it: the organisms, the science, and the stories that shaped how we understand life too small to see.",
     "Alongside the podcast there is writing, interactive data pages on viruses and bacteria, and short browser games, all made independently by a single author.",
   ],
 } as const;

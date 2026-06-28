@@ -11,9 +11,9 @@ import { useSnippet } from "~/lib/content";
 const PhaserGame = lazy(() => import("~/components/game/PhaserGame.client"));
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  if (!loaderData?.game) return [{ title: "Games · germomics" }];
+  if (!loaderData?.game) return [{ title: "Games · Germomics" }];
   return [
-    { title: `${loaderData.game.title} · germomics` },
+    { title: `${loaderData.game.title} · Germomics` },
     { name: "description", content: loaderData.game.tagline },
   ];
 }

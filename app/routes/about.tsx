@@ -12,7 +12,7 @@ import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { AUTHOR } from "~/lib/about";
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  if (!loaderData) return [{ title: "About germomics" }];
+  if (!loaderData) return [{ title: "About Germomics" }];
   const { origin, show, address, title, description } = loaderData;
   return [
     { title },
@@ -42,7 +42,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     origin: new URL(request.url).origin,
     show,
     address: settingAddress(getSettings(context)),
-    title: about.title || "About germomics",
+    title: about.title || "About Germomics",
     description: stripHtml(about.value).slice(0, 160),
     aboutHtml: about.value,
     bioHtml: bio.value,

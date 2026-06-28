@@ -52,7 +52,7 @@ export const STYLE_RULE =
   "varied, human sentences.";
 
 const SYSTEM =
-  "You are an editorial assistant for the germomics podcast (microbiology and history). " +
+  "You are an editorial assistant for the Germomics podcast (microbiology and history). " +
   "You write ONLY from the transcript provided in the user message. Never invent or infer " +
   "facts, names, dates, numbers, citations, quotes, or links that are not explicitly present " +
   "in the transcript. If something is not in the transcript, leave it out. Produce exactly what " +

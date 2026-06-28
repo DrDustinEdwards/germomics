@@ -8,7 +8,7 @@ import { getAdminSession } from "~/lib/auth.server";
 import { signIn } from "~/lib/auth-client";
 
 export function meta() {
-  return [{ title: "Sign in · germomics admin" }, { name: "robots", content: "noindex" }];
+  return [{ title: "Sign in · Germomics admin" }, { name: "robots", content: "noindex" }];
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -20,7 +20,7 @@ export default function AdminLogin() {
   const [busy, setBusy] = useState(false);
   return (
     <div className="mx-auto max-w-sm py-16 text-center">
-      <h1 className="font-display text-2xl font-semibold">germomics admin</h1>
+      <h1 className="font-display text-2xl font-semibold">Germomics admin</h1>
       <p className="mt-2 text-sm text-muted">Single-administrator access.</p>
       <button
         type="button"

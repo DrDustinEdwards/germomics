@@ -8,7 +8,7 @@ import { writeFileSync } from "node:fs";
 
 // ----- settings (key/value, instant) -----------------------------------------
 const SYSTEM_BASE =
-  "You are an editorial assistant for the germomics podcast (microbiology and history). " +
+  "You are an editorial assistant for the Germomics podcast (microbiology and history). " +
   "You write ONLY from the transcript provided in the user message. Never invent or infer " +
   "facts, names, dates, numbers, citations, quotes, or links that are not explicitly present " +
   "in the transcript. If something is not in the transcript, leave it out. Produce exactly what " +
@@ -58,7 +58,7 @@ const settings = [
   // facebook ships via migration 0007. INSERT OR IGNORE never clobbers a live-edited row.
   ["social.facebook", "Germomics", "string", "social", "Facebook handle", "Optional. Leave blank to omit."],
   ["social.twitter", "Germomics", "string", "social", "X / Twitter handle", "Optional. Leave blank to omit."],
-  ["social.instagram", "germomics", "string", "social", "Instagram handle", "Optional. Leave blank to omit."],
+  ["social.instagram", "Germomics", "string", "social", "Instagram handle", "Optional. Leave blank to omit."],
   ["ai.model", "claude-sonnet-4-6", "string", "ai", "AI model", "Anthropic model id for the authoring assists."],
   ["ai.daily_cap", "100", "number", "ai", "AI daily cap", "Max AI generations per day across the admin."],
   ["ratelimit.ai", "15", "number", "ratelimit", "Rate limit: /admin/ai", "Requests per minute per IP."],
@@ -96,9 +96,9 @@ const snippets = [
   ["snippet:empty.posts", "Empty: posts", "No posts match these filters."],
   ["snippet:empty.soundbites", "Empty: soundbites", "No soundbites yet. Create one on the right."],
   ["snippet:empty.subscribers", "Empty: subscribers", "No subscribers yet."],
-  ["snippet:meta.home_title", "Meta: home title", "germomics · microbiology & history"],
+  ["snippet:meta.home_title", "Meta: home title", "Germomics · microbiology & history"],
   ["snippet:meta.home_description", "Meta: home description", "A mix of microbiology and history, this series connects different aspects of modern life and society to microbes, bacteria, viruses, and parasites through seemingly unconnected natural events, scientific discoveries, and human inventions."],
-  ["snippet:meta.title_template", "Meta: title template", "{title} · germomics"],
+  ["snippet:meta.title_template", "Meta: title template", "{title} · Germomics"],
   ["snippet:dataset.cholera-soho-1854", "Dataset: cholera", CHOLERA],
   ["snippet:dataset.influenza-1918", "Dataset: 1918 flu", FLU],
   ["snippet:ai.error.not_configured", "AI error: not configured", "AI is not configured. Set the ANTHROPIC_API_KEY worker secret."],
@@ -127,12 +127,12 @@ const BIO =
   "course and is now an independent podcast and writing project about microbiology and history.";
 
 const ABOUT_HTML =
-  "<p>germomics is a podcast and writing project about microbiology and history.</p>" +
-  "<p>germomics explores the microbial world and the people, places, and discoveries behind it: the organisms, the science, and the stories that shaped how we understand life too small to see.</p>" +
+  "<p>Germomics is a podcast and writing project about microbiology and history.</p>" +
+  "<p>Germomics explores the microbial world and the people, places, and discoveries behind it: the organisms, the science, and the stories that shaped how we understand life too small to see.</p>" +
   "<p>Alongside the podcast there is writing, interactive data pages on viruses and bacteria, and short browser games, all made independently by a single author.</p>";
 
 const PRIVACY_HTML = [
-  "<p>germomics is an independent podcast and writing project run by a single author. This policy explains what personal data the site collects, why, and your choices. We collect as little as possible.</p>",
+  "<p>Germomics is an independent podcast and writing project run by a single author. This policy explains what personal data the site collects, why, and your choices. We collect as little as possible.</p>",
   "<h2>What we collect</h2>",
   "<ul>",
   "<li><strong>Newsletter email.</strong> If you subscribe, we store your email address, the time you gave consent, and an unsubscribe token. Nothing else.</li>",
@@ -165,9 +165,9 @@ const PRIVACY_HTML = [
 ].join("");
 
 const TERMS_HTML = [
-  "<p>These terms govern your use of the germomics website, podcast, writing, data pages, and games (the site). By using the site you agree to them. If you do not agree, please do not use the site.</p>",
+  "<p>These terms govern your use of the Germomics website, podcast, writing, data pages, and games (the site). By using the site you agree to them. If you do not agree, please do not use the site.</p>",
   "<h2>Content and intellectual property</h2>",
-  '<p>Episodes, transcripts, writing, artwork, and other original material are the property of germomics and its author unless otherwise noted, and are provided for personal, non-commercial use. The podcast RSS feed may be used by podcast apps and directories in the normal way. You may quote and link to the site with attribution. AI and citation use is described in our <a href="/ai.txt">ai.txt</a> and <a href="/robots.txt">robots.txt</a>.</p>',
+  '<p>Episodes, transcripts, writing, artwork, and other original material are the property of Germomics and its author unless otherwise noted, and are provided for personal, non-commercial use. The podcast RSS feed may be used by podcast apps and directories in the normal way. You may quote and link to the site with attribution. AI and citation use is described in our <a href="/ai.txt">ai.txt</a> and <a href="/robots.txt">robots.txt</a>.</p>',
   "<h2>Your submissions</h2>",
   "<p>If you join the newsletter, you confirm the email address is yours and you consent to receive it. You can unsubscribe at any time. If you submit a game score or similar, do not include personal information or offensive content in any name field, and we may remove submissions that do.</p>",
   "<h2>Acceptable use</h2>",
@@ -177,7 +177,7 @@ const TERMS_HTML = [
   "<h2>Disclaimer</h2>",
   "<p>The site is provided as is, without warranties of any kind. Content about microbiology and history is for general information and is not medical, scientific, or professional advice.</p>",
   "<h2>Limitation of liability</h2>",
-  "<p>To the fullest extent permitted by law, germomics and its author are not liable for any indirect or consequential damages arising from your use of the site.</p>",
+  "<p>To the fullest extent permitted by law, Germomics and its author are not liable for any indirect or consequential damages arising from your use of the site.</p>",
   "<h2>Changes</h2>",
   "<p>We may update these terms. Continued use after an update means you accept the new terms.</p>",
   "<h2>Governing law</h2>",
@@ -187,9 +187,9 @@ const TERMS_HTML = [
 ].join("");
 
 const LLMS_INTRO =
-  "germomics is a podcast and writing project about microbiology and history. This is a curated index " +
+  "Germomics is a podcast and writing project about microbiology and history. This is a curated index " +
   "of the canonical hubs and key content for AI assistants and answer engines. Citation is welcome. " +
-  "Please cite germomics and link the source URL.";
+  "Please cite Germomics and link the source URL.";
 
 const AITXT_POLICY = [
   "# Citation and search (RAG, answer engines): ALLOWED.",
@@ -205,7 +205,7 @@ const TXASM_HTML = [
 
 // {{email}} and {{address_line}} are filled at render time from show_config + the contact setting.
 const CONTACT_HTML = [
-  "<p>Reach germomics by email or by post.</p>",
+  "<p>Reach Germomics by email or by post.</p>",
   "<h2>Email</h2>",
   '<p><a href="mailto:{{email}}">{{email}}</a></p>',
   "<h2>Post</h2>",
@@ -213,7 +213,7 @@ const CONTACT_HTML = [
 ].join("");
 
 const pages = [
-  ["page:about", "About germomics", ABOUT_HTML],
+  ["page:about", "About Germomics", ABOUT_HTML],
   ["page:dustin-edwards", "Dr. Dustin Edwards", "<p>" + BIO + "</p>"],
   ["page:privacy", "Privacy policy", PRIVACY_HTML],
   ["page:terms", "Terms of use", TERMS_HTML],

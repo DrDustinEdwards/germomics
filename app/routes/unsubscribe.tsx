@@ -30,7 +30,7 @@ async function unsubscribe(env: Env, token: string | null): Promise<Result> {
 }
 
 export function meta() {
-  return [{ title: "Unsubscribe · germomics" }, { name: "robots", content: "noindex" }];
+  return [{ title: "Unsubscribe · Germomics" }, { name: "robots", content: "noindex" }];
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -60,7 +60,7 @@ export default function Unsubscribe({ loaderData }: Route.ComponentProps) {
         {status === "done" && (
           <>
             {email ? <strong className="text-ink">{email}</strong> : "You"} has been removed from the
-            germomics newsletter. Sorry to see you go.
+            Germomics newsletter. Sorry to see you go.
           </>
         )}
         {status === "already" && "You’re already unsubscribed. No further emails will be sent."}

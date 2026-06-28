@@ -8,12 +8,12 @@ import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  if (!loaderData) return [{ title: "Season · germomics" }];
+  if (!loaderData) return [{ title: "Season · Germomics" }];
   const { num, origin } = loaderData;
   return [
-    { title: `Season ${num} · germomics` },
+    { title: `Season ${num} · Germomics` },
     { name: "description", content: `Germomics episodes from Season ${num}.` },
-    { property: "og:title", content: `germomics Season ${num}` },
+    { property: "og:title", content: `Germomics Season ${num}` },
     { property: "og:url", content: `${origin}/season/${num}` },
     {
       "script:ld+json": buildBreadcrumbLd([

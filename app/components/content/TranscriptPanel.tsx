@@ -183,7 +183,7 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
     if (el) t = Math.floor(Number(el.getAttribute("data-cue")));
     const url = `${window.location.origin}/${track.slug}?t=${t}`;
     try {
-      await navigator.clipboard.writeText(`${text}\n\nFrom "${track.title}" on germomics: ${url}`);
+      await navigator.clipboard.writeText(`${text}\n\nFrom "${track.title}" on Germomics: ${url}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {

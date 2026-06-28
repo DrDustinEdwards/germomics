@@ -16,9 +16,9 @@ import {
 import { PostDetail, type DetailData } from "~/components/content/PostDetail";
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  if (!loaderData?.post) return [{ title: "Not found · germomics" }];
+  if (!loaderData?.post) return [{ title: "Not found · Germomics" }];
   const { post, origin, author, seriesTitle, guests, hosts, ogImage } = loaderData;
-  const title = `${post.seoTitle ?? post.title} · germomics`;
+  const title = `${post.seoTitle ?? post.title} · Germomics`;
   const desc = post.seoDescription ?? post.excerpt ?? "";
   const image = ogImage;
   const jsonLd = buildJsonLd({ post, origin, author, seriesTitle, guests, hosts });

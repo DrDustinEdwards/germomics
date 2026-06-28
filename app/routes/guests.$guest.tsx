@@ -6,7 +6,7 @@ import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return [{ title: `${loaderData?.name ?? "Guest"} · germomics` }];
+  return [{ title: `${loaderData?.name ?? "Guest"} · Germomics` }];
 }
 
 export async function loader({ params, context }: Route.LoaderArgs) {

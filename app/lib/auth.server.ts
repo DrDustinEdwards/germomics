@@ -59,7 +59,7 @@ export function createAuth(env: Env) {
           before: async (user) => {
             if (!adminEmail || user.email?.toLowerCase() !== adminEmail) {
               throw new APIError("FORBIDDEN", {
-                message: "germomics has a single administrator.",
+                message: "Germomics has a single administrator.",
               });
             }
           },

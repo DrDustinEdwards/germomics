@@ -25,7 +25,7 @@ const TABS = [
 ] as const;
 
 export function meta() {
-  return [{ title: "Archive · germomics" }];
+  return [{ title: "Archive · Germomics" }];
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {

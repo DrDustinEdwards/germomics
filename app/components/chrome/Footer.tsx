@@ -69,7 +69,7 @@ export function Footer() {
         {/* Brand block */}
         <div className="sm:col-span-2 lg:col-span-1">
           {/* Rectangular germomics lockup as a modest mark (~80px tall) above the tagline. */}
-          <AppLink to="/" aria-label="germomics home" className="inline-flex">
+          <AppLink to="/" aria-label="Germomics home" className="inline-flex">
             <Wordmark className="h-20 w-auto" />
           </AppLink>
           <p className="mt-3 max-w-xs font-mono text-xs leading-relaxed text-muted">{tagline}</p>

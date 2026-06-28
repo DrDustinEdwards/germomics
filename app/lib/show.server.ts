@@ -6,7 +6,7 @@ import { showConfig, type ShowConfig } from "~/db/schema";
 
 export const DEFAULT_SHOW: ShowConfig = {
   id: 0,
-  title: "germomics",
+  title: "Germomics",
   description: "A podcast about microbiology and history.",
   author: "Dustin Edwards",
   ownerEmail: "emaildustinedwards@gmail.com",

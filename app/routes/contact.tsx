@@ -12,7 +12,7 @@ import { BodyRenderer } from "~/components/content/BodyRenderer";
 export function meta({ loaderData }: Route.MetaArgs) {
   return [
     { title: loaderData?.title ?? "Contact" },
-    { name: "description", content: "How to reach germomics by email or post." },
+    { name: "description", content: "How to reach Germomics by email or post." },
   ];
 }
 

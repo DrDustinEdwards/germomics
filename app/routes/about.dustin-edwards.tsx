@@ -81,7 +81,7 @@ export default function AuthorBio({ loaderData }: Route.ComponentProps) {
 
       <p className="mt-8">
         <AppLink to="/episodes" className="font-mono text-sm text-accent hover:underline">
-          Listen to germomics →
+          Listen to Germomics →
         </AppLink>
       </p>
     </div>

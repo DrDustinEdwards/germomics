@@ -153,7 +153,7 @@ export function buildSiteFeed(show: ShowConfig, articles: Post[], origin: string
   <link>${origin}/writing</link>
   <atom:link href="${origin}/feed/site.xml" rel="self" type="application/rss+xml"/>
   <language>${xmlEscape(show.language)}</language>
-  <description>${cdata("Essays and notes from germomics.")}</description>
+  <description>${cdata("Essays and notes from Germomics.")}</description>
 ${items}
 </channel>
 </rss>`;
