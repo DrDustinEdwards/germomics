@@ -190,8 +190,9 @@ export function PostDetail({ data }: { data: DetailData }) {
     </nav>
   ) : null;
 
-  // ── Episode layout (redesigned: hero, player surface, key moments, TOC + body, sources, hosts,
-  //     transcript, subscribe, related + prev/next). See Vault episode-page-* specs. ──────────────
+  // ── Episode layout (redesigned: hero, player surface, key moments, TOC + body, hosts, then the
+  //     collapsed Sources/Credits + Transcript pair, subscribe, related + prev/next). See Vault
+  //     episode-page-* specs. ──────────────────────────────────────────────────────────────────────
   if (isEpisode) {
     const eyebrow =
       [post.seasonNumber ? `Season ${post.seasonNumber}` : null, post.episodeNumber ? `Episode ${post.episodeNumber}` : null]
@@ -264,10 +265,13 @@ export function PostDetail({ data }: { data: DetailData }) {
 
           {/* Everything below the body returns to a single readable measure. */}
           <div className="mx-auto max-w-3xl">
-            <Sources sources={sources} />
             <Hosts hosts={hosts} />
             {track ? <SoundbiteClips track={track} clips={soundbites} /> : null}
             {track && chapters.length ? <ChapterList chapters={chapters} track={track} /> : null}
+
+            {/* Sources and Credits sits directly above the Transcript, both collapsed by default so they
+                read as a matched pair. */}
+            <Sources sources={sources} />
 
             {post.transcript && track ? (
               <section id="transcript" className="mt-12 scroll-mt-20">

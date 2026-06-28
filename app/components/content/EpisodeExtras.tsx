@@ -231,32 +231,36 @@ const SOURCE_KIND: Record<string, string> = {
 export function Sources({ sources }: { sources: Source[] }) {
   if (!sources.length) return null;
   return (
-    <section aria-labelledby="sources" className="mt-12">
-      <h2 id="sources" className="mb-3 font-display text-xl font-semibold">
-        Sources and credits
-      </h2>
-      <ol className="space-y-2 text-sm">
-        {sources.map((s, i) => (
-          <li key={i} className="flex flex-wrap items-baseline gap-x-2 text-muted">
-            <span className="rounded bg-surface px-1.5 py-0.5 font-mono text-[11px] uppercase tracking-wide text-muted">
-              {SOURCE_KIND[s.type] ?? s.type}
-            </span>
-            {s.url ? (
-              <a href={s.url} target="_blank" rel="noopener" className="inline-flex items-center gap-1 text-accent hover:underline">
-                {s.title}
-                <ExternalLink size={12} aria-hidden />
-                <span className="sr-only"> (opens in a new tab)</span>
-              </a>
-            ) : (
-              <span className="text-ink">{s.title}</span>
-            )}
-            {s.authors ? <span>{s.authors}</span> : null}
-            {s.publisher ? <span>{s.publisher}</span> : null}
-            {s.license ? <span className="font-mono text-[11px]">{s.license}</span> : null}
-            {s.note ? <span className="italic">{s.note}</span> : null}
-          </li>
-        ))}
-      </ol>
+    <section id="sources" className="mt-12 scroll-mt-20">
+      {/* Collapsed by default to match the Transcript section directly below it; the two read as a
+          matched pair. The full content (including the legally-required CC BY music attribution and the
+          image credits) stays server-rendered inside <details> so it's present in view-source while
+          collapsed, not lazy-mounted on open. */}
+      <details>
+        <summary className="mb-3 cursor-pointer font-display text-xl font-semibold">Sources and Credits</summary>
+        <ol className="space-y-2 text-sm">
+          {sources.map((s, i) => (
+            <li key={i} className="flex flex-wrap items-baseline gap-x-2 text-muted">
+              <span className="rounded bg-surface px-1.5 py-0.5 font-mono text-[11px] uppercase tracking-wide text-muted">
+                {SOURCE_KIND[s.type] ?? s.type}
+              </span>
+              {s.url ? (
+                <a href={s.url} target="_blank" rel="noopener" className="inline-flex items-center gap-1 text-accent hover:underline">
+                  {s.title}
+                  <ExternalLink size={12} aria-hidden />
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </a>
+              ) : (
+                <span className="text-ink">{s.title}</span>
+              )}
+              {s.authors ? <span>{s.authors}</span> : null}
+              {s.publisher ? <span>{s.publisher}</span> : null}
+              {s.license ? <span className="font-mono text-[11px]">{s.license}</span> : null}
+              {s.note ? <span className="italic">{s.note}</span> : null}
+            </li>
+          ))}
+        </ol>
+      </details>
     </section>
   );
 }
