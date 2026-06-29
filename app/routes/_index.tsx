@@ -13,6 +13,7 @@ import { PlayButton } from "~/components/content/PlayButton";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 import { HeroEqualizer } from "~/components/content/HeroEqualizer";
 import { HeroBackground } from "~/components/content/HeroBackground";
+import { CoverArt } from "~/components/content/CoverArt";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   const base = [
@@ -65,7 +66,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { featured, items, tracks, show } = loaderData;
+  const { featured, items, tracks } = loaderData;
   const featuredTrack = tracks.find((t) => t.id === featured?.id);
 
   return (
@@ -90,15 +91,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           </p>
         </div>
         <div className="relative flex flex-col items-center gap-3 lg:col-span-2">
-          {show.artwork ? (
-            <img
-              src={show.artwork}
-              alt={`${show.title} cover art`}
-              width={208}
-              height={208}
-              className="h-auto w-44 rounded-2xl shadow-lg ring-1 ring-border sm:w-52"
-            />
-          ) : null}
+          <div className="w-44 sm:w-52">
+            <CoverArt alt="Germomics cover art" className="shadow-lg ring-1 ring-border" />
+          </div>
           <HeroEqualizer />
         </div>
       </section>

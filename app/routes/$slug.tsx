@@ -66,8 +66,9 @@ export async function loader({ params, context, request }: Route.LoaderArgs) {
   ]);
   const origin = new URL(request.url).origin;
   const hosts = show.hosts ?? [];
-  // Every episode defaults its hero cover and social image to the show artwork unless it sets its own.
-  const cover = post.coverImage ?? show.artwork ?? null;
+  // Hero cover uses the item's own artwork; when it has none, the CoverArt component renders the SVG
+  // brand default (so no raster default here). The social image still defaults to the show artwork.
+  const cover = post.episodeArtwork ?? post.coverImage ?? null;
   const ogImage = ogImageFor(post) ?? show.artwork ?? null;
 
   const data: DetailData & {

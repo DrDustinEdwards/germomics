@@ -55,31 +55,6 @@ export function ReadingProgress() {
   );
 }
 
-// ── Hero cover with a branded fallback if the image is missing ────────────────
-export function CoverImage({ src, alt }: { src: string | null; alt: string }) {
-  const [failed, setFailed] = useState(false);
-  if (!src || failed) {
-    return (
-      <div className="grid aspect-square w-full place-items-center rounded-2xl border border-border bg-surface">
-        <GMark className="h-1/3 w-auto" />
-      </div>
-    );
-  }
-  return (
-    <img
-      src={src}
-      alt={alt}
-      width={1400}
-      height={1400}
-      loading="eager"
-      fetchPriority="high"
-      decoding="async"
-      onError={() => setFailed(true)}
-      className="aspect-square w-full rounded-2xl border border-border object-cover"
-    />
-  );
-}
-
 // ── "In this episode" key moments ────────────────────────────────────────────
 export function KeyMoments({
   moments,

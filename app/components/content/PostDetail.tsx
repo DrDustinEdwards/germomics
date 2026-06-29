@@ -19,9 +19,9 @@ import { ShareTimestamp } from "./ShareTimestamp";
 import { CopyLink } from "./CopyLink";
 import { AUTHOR } from "~/lib/about";
 import { EpisodePlayerSurface } from "./EpisodePlayerSurface";
+import { CoverArt } from "./CoverArt";
 import {
   ReadingProgress,
-  CoverImage,
   KeyMoments,
   EpisodeToc,
   Sources,
@@ -229,7 +229,7 @@ export function PostDetail({ data }: { data: DetailData }) {
               {post.excerpt ? <p className="mt-4 max-w-2xl font-serif text-lg leading-relaxed text-muted">{post.excerpt}</p> : null}
             </div>
             <div className="order-first w-40 sm:order-none sm:w-auto">
-              <CoverImage src={cover} alt={post.coverAlt ?? "Germomics cover art"} />
+              <CoverArt src={cover} alt={post.coverAlt ?? "Germomics cover art"} eager className="border border-border" />
             </div>
           </header>
 
