@@ -11,6 +11,7 @@ import { SNIPPET_DEFAULTS } from "~/lib/content-defaults";
 import { PostCard } from "~/components/content/PostCard";
 import { PlayButton } from "~/components/content/PlayButton";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
+import { HeroEqualizer } from "~/components/content/HeroEqualizer";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   const base = [
@@ -70,36 +71,22 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     <div className="space-y-12">
       <QueueSeeder tracks={tracks} />
 
-      <section className="pt-6">
-        <h1 className="max-w-3xl font-display text-5xl font-semibold leading-[1.05] sm:text-6xl">
-          A mix of <span className="text-brand">microbiology</span> and <span className="text-brand">history</span>.
-        </h1>
-        <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
-          This series connects different aspects of modern life and society to microbes, bacteria, viruses,
-          and parasites through seemingly unconnected natural events, scientific discoveries, and human
-          inventions.
-        </p>
-        {featured && featuredTrack ? (
-          <div className="mt-8 flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
-            <PlayButton track={featuredTrack} queue={tracks} size="lg" />
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-muted">
-                <span className="flex items-center gap-1 text-brand">
-                  <Headphones size={12} aria-hidden /> Latest episode
-                </span>
-                {featured.publishedAt ? <span>{formatDate(featured.publishedAt)}</span> : null}
-                {featured.audioDuration ? (
-                  <span className="tabular-nums">{formatDuration(featured.audioDuration)}</span>
-                ) : null}
-              </div>
-              <h2 className="mt-1 truncate font-display text-xl font-medium">
-                <AppLink to={`/${featured.slug}`} className="hover:text-brand">
-                  {featured.title}
-                </AppLink>
-              </h2>
-            </div>
-          </div>
-        ) : null}
+      {/* Split hero: words on the left, the ambient equalizer in the right ~40%. Columns stack on
+          mobile (words first, then the equalizer as a slim row under the lede). */}
+      <section className="grid gap-8 pt-6 lg:grid-cols-5 lg:items-center">
+        <div className="lg:col-span-3">
+          <h1 className="max-w-3xl font-display text-5xl font-semibold leading-[1.05] sm:text-6xl">
+            A mix of <span className="text-brand">microbiology</span> and <span className="text-brand">history</span>.
+          </h1>
+          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
+            This series connects different aspects of modern life and society to microbes, bacteria, viruses,
+            and parasites through seemingly unconnected natural events, scientific discoveries, and human
+            inventions.
+          </p>
+        </div>
+        <div className="flex items-center justify-center lg:col-span-2 lg:justify-end">
+          <HeroEqualizer />
+        </div>
       </section>
 
       <section>
@@ -110,14 +97,42 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           </AppLink>
         </div>
         <div className="grid gap-3">
-          {items.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              track={tracks.find((t) => t.id === post.id)}
-              queue={tracks}
-            />
-          ))}
+          {/* Latest episode, promoted to the elevated first row of the list (same teal play chip). */}
+          {featured && featuredTrack ? (
+            <article className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm ring-1 ring-brand/10">
+              <PlayButton track={featuredTrack} queue={tracks} size="lg" />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-muted">
+                  <span className="flex items-center gap-1 text-brand">
+                    <Headphones size={12} aria-hidden /> Latest episode
+                  </span>
+                  {featured.publishedAt ? <span>{formatDate(featured.publishedAt)}</span> : null}
+                  {featured.audioDuration ? (
+                    <span className="tabular-nums">{formatDuration(featured.audioDuration)}</span>
+                  ) : null}
+                </div>
+                <h3 className="mt-1 font-display text-xl font-medium">
+                  <AppLink to={`/${featured.slug}`} className="text-ink hover:text-brand">
+                    {featured.title}
+                  </AppLink>
+                </h3>
+                {featured.excerpt ? (
+                  <p className="mt-1 line-clamp-2 text-sm text-muted">{featured.excerpt}</p>
+                ) : null}
+              </div>
+            </article>
+          ) : null}
+          {/* The promoted episode is already shown above, so drop it from the rest of the list. */}
+          {items
+            .filter((post) => post.id !== featured?.id)
+            .map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                track={tracks.find((t) => t.id === post.id)}
+                queue={tracks}
+              />
+            ))}
         </div>
       </section>
     </div>
