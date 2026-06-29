@@ -34,15 +34,19 @@ export function HeroEqualizer() {
   return (
     <div
       aria-hidden="true"
-      className="flex h-16 items-center justify-center gap-px lg:h-44"
+      // Slim centered strip docked under the cover (a soundwave shelf). Hidden below sm so it
+      // never crowds the headline on phones; the cover above it carries the right column there.
+      className="hidden items-center justify-center gap-px sm:flex"
     >
       {/* Keyframes live with the component so it stays self-contained. scaleY from the default
-          center origin grows each bar symmetrically up and down. */}
+          center origin grows each bar symmetrically up and down. Every bar shares one fixed base
+          height (h-10); the only per-bar difference is the animation duration and delay, so the
+          row reads as a clean equalizer rather than a jagged skyline. */}
       <style>{"@keyframes germomics-eq{from{transform:scaleY(0.3)}to{transform:scaleY(1)}}"}</style>
       {BARS.map((b, i) => (
         <span
           key={i}
-          className="h-full w-[5px] rounded-sm bg-accent"
+          className="h-10 w-[5px] rounded-sm bg-accent"
           style={{
             // Resting state (also what shows when reduced motion freezes the animation).
             transform: "scaleY(0.55)",

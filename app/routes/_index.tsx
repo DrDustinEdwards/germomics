@@ -12,6 +12,7 @@ import { PostCard } from "~/components/content/PostCard";
 import { PlayButton } from "~/components/content/PlayButton";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 import { HeroEqualizer } from "~/components/content/HeroEqualizer";
+import { HeroBackground } from "~/components/content/HeroBackground";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   const base = [
@@ -64,17 +65,19 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { featured, items, tracks } = loaderData;
+  const { featured, items, tracks, show } = loaderData;
   const featuredTrack = tracks.find((t) => t.id === featured?.id);
 
   return (
     <div className="space-y-12">
       <QueueSeeder tracks={tracks} />
 
-      {/* Split hero: words on the left, the ambient equalizer in the right ~40%. Columns stack on
-          mobile (words first, then the equalizer as a slim row under the lede). */}
-      <section className="grid gap-8 pt-6 lg:grid-cols-5 lg:items-center">
-        <div className="lg:col-span-3">
+      {/* Split hero: words on the left, the show cover (with the equalizer docked beneath it as a
+          soundwave shelf) in the right ~40%, over a soft drifting brand backdrop. Columns stack on
+          mobile (words first, then the cover). */}
+      <section className="relative grid gap-8 overflow-hidden pt-6 lg:grid-cols-5 lg:items-center">
+        <HeroBackground />
+        <div className="relative lg:col-span-3">
           <h1 className="max-w-3xl font-display text-5xl font-semibold leading-[1.05] sm:text-6xl">
             A mix of <span className="text-brand">microbiology</span> and <span className="text-brand">history</span>.
           </h1>
@@ -84,7 +87,16 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             inventions.
           </p>
         </div>
-        <div className="flex items-center justify-center lg:col-span-2 lg:justify-end">
+        <div className="relative flex flex-col items-center gap-3 lg:col-span-2">
+          {show.artwork ? (
+            <img
+              src={show.artwork}
+              alt={`${show.title} cover art`}
+              width={208}
+              height={208}
+              className="h-auto w-44 rounded-2xl shadow-lg ring-1 ring-border sm:w-52"
+            />
+          ) : null}
           <HeroEqualizer />
         </div>
       </section>
