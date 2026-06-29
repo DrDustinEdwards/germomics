@@ -34,19 +34,24 @@ export function HeroEqualizer() {
   return (
     <div
       aria-hidden="true"
-      // Slim centered strip docked under the cover (a soundwave shelf). Hidden below sm so it
-      // never crowds the headline on phones; the cover above it carries the right column there.
-      className="hidden items-center justify-center gap-px sm:flex"
+      // Same row as the episode waveform (EpisodeWaveform.tsx): flex, h-16, items-center, gap-px.
+      // The 14 flex-1 bars evenly fill this fixed-width shelf under the cover, so every bar gets an
+      // identical computed width (no hardcoded bar width). Hidden below sm so it never crowds the
+      // headline on phones; the cover above it carries the right column there.
+      className="hidden h-16 w-44 items-center gap-px sm:flex sm:w-52"
     >
       {/* Keyframes live with the component so it stays self-contained. scaleY from the default
-          center origin grows each bar symmetrically up and down. Every bar shares one fixed base
-          height (h-10); the only per-bar difference is the animation duration and delay, so the
-          row reads as a clean equalizer rather than a jagged skyline. */}
+          center origin grows each bar symmetrically around the centerline, the way the player
+          waveform renders. Every bar shares one identical base height (h-full); the only per-bar
+          difference is the animation duration and delay, so the row reads as a clean uniform
+          equalizer rather than a jagged cluster. */}
       <style>{"@keyframes germomics-eq{from{transform:scaleY(0.3)}to{transform:scaleY(1)}}"}</style>
       {BARS.map((b, i) => (
         <span
           key={i}
-          className="h-10 w-[5px] rounded-sm bg-accent"
+          // The waveform's exact bar classes: relative, flex-1 (identical width, never a fixed
+          // width), rounded-sm, bg-accent. h-full is the one shared base height for every bar.
+          className="relative h-full flex-1 rounded-sm bg-accent"
           style={{
             // Resting state (also what shows when reduced motion freezes the animation).
             transform: "scaleY(0.55)",
