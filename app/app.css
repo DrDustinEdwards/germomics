@@ -83,6 +83,10 @@
     /* leave room for the sticky header (top) and docked player (bottom) when anchoring */
     scroll-padding-top: 5rem;
     scroll-padding-bottom: calc(var(--player-h) + 1rem);
+    /* Let full-bleed decoration (the hero backdrop) reach the screen edges without ever adding a
+       horizontal scrollbar. clip (not hidden) leaves overflow-y visible, so sticky/fixed chrome
+       and vertical scrolling are unaffected. */
+    overflow-x: clip;
   }
   body {
     background: var(--color-bg);

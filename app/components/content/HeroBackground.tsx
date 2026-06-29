@@ -19,21 +19,41 @@ type Blob = {
   delay: string;
 };
 
-// 3 brand tints + 1 faint accent. Positions bleed past the edges (the wrapper clips with
-// overflow-hidden). Durations 26s to 38s with varied negative delays so the drift never syncs.
-// The dense cores are deliberately weighted to the top corners and the right (the cover side),
-// not behind the left text column, so the h1 and lede keep their contrast in both themes; only
-// faint blurred tails reach the words. Adjust positions/opacity here (never the text) if needed.
+// 3 brand tints + 1 faint accent. The layer spans the full page width (see below) and the bottom
+// dissolves via a mask, so positions are measured against the viewport. Durations 26s to 38s with
+// varied negative delays so the drift never syncs. The dense cores are weighted to the corners and
+// the right (the cover side), not behind the left text column, so the h1 and lede keep their
+// contrast in both themes; only faint blurred tails reach the words. Adjust positions/opacity here
+// (never the text) if needed.
 const BLOBS: Blob[] = [
-  { color: "bg-brand/30", top: "-24%", left: "-14%", size: "24rem", dx: "26px", dy: "20px", s: "1.12", dur: "30s", delay: "-4s" },
-  { color: "bg-brand/25", top: "22%", left: "60%", size: "26rem", dx: "-30px", dy: "16px", s: "1.10", dur: "36s", delay: "-12s" },
-  { color: "bg-brand/20", top: "-16%", left: "66%", size: "20rem", dx: "18px", dy: "-22px", s: "1.14", dur: "26s", delay: "-8s" },
-  { color: "bg-accent/20", top: "50%", left: "52%", size: "22rem", dx: "-20px", dy: "-18px", s: "1.08", dur: "38s", delay: "-2s" },
+  { color: "bg-brand/30", top: "-30%", left: "-10%", size: "26rem", dx: "26px", dy: "20px", s: "1.12", dur: "30s", delay: "-4s" },
+  { color: "bg-brand/25", top: "16%", left: "64%", size: "28rem", dx: "-30px", dy: "16px", s: "1.10", dur: "36s", delay: "-12s" },
+  { color: "bg-brand/20", top: "-22%", left: "72%", size: "22rem", dx: "18px", dy: "-22px", s: "1.14", dur: "26s", delay: "-8s" },
+  { color: "bg-accent/20", top: "46%", left: "60%", size: "24rem", dx: "-20px", dy: "-18px", s: "1.08", dur: "38s", delay: "-2s" },
 ];
 
 export function HeroBackground() {
   return (
-    <div aria-hidden="true" className="hero-blobs pointer-events-none absolute inset-0 overflow-hidden">
+    <div
+      aria-hidden="true"
+      className="hero-blobs pointer-events-none absolute"
+      style={{
+        top: 0,
+        bottom: 0,
+        // Full-bleed to the viewport width WITHOUT 100vw: these insets pull the layer's edges from
+        // inside the centered content wrap out to the screen edges. overflow-x: clip on <html>
+        // (app.css) guards against any subpixel horizontal scrollbar. No border, no rounding, no
+        // overflow clip, so the wash no longer reads as a bordered banner box.
+        left: "calc(50% - 50vw)",
+        right: "calc(50% - 50vw)",
+        // Dissolve into the page at the bottom instead of ending on a hard line. no-repeat keeps the
+        // single gradient sized to the box, so it also clips the blobs that overflow the top/sides.
+        WebkitMaskImage: "linear-gradient(to bottom, black 56%, transparent 86%)",
+        maskImage: "linear-gradient(to bottom, black 56%, transparent 86%)",
+        WebkitMaskRepeat: "no-repeat",
+        maskRepeat: "no-repeat",
+      }}
+    >
       {/* Self-contained: theme-aware group opacity (dimmer in dark) and the shared drift keyframe.
           Each blob parameterizes the drift with its own --dx/--dy/--s so one keyframe serves all. */}
       <style>{`.hero-blobs{opacity:0.6}

@@ -73,9 +73,11 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       <QueueSeeder tracks={tracks} />
 
       {/* Split hero: words on the left, the show cover (with the equalizer docked beneath it as a
-          soundwave shelf) in the right ~40%, over a soft drifting brand backdrop. Columns stack on
-          mobile (words first, then the cover). */}
-      <section className="relative grid gap-8 overflow-hidden pt-6 lg:grid-cols-5 lg:items-center">
+          soundwave shelf) in the right ~40%, over a soft drifting brand backdrop. The backdrop
+          full-bleeds the page width and fades out at the bottom (see HeroBackground); the section
+          stays relative as its positioning context but no longer clips, so the wash is not boxed.
+          Columns stack on mobile (words first, then the cover). */}
+      <section className="relative grid gap-8 pt-6 lg:grid-cols-5 lg:items-center">
         <HeroBackground />
         <div className="relative lg:col-span-3">
           <h1 className="max-w-3xl font-display text-5xl font-semibold leading-[1.05] sm:text-6xl">
