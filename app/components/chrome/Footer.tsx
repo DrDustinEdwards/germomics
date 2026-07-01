@@ -10,7 +10,7 @@ import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 // three labeled nav columns (Listen / Explore / About), and a bottom bar. Stacks to one column on
 // mobile. Tagline + nav labels come from content snippets; socials + podcast directories come from
 // the root loader (settings social.* + show_config.subscribe_links), so footer and schema agree.
-// Reuses Dustin's brand LogoMark/Wordmark. This consumes snippet:footer.tagline.
+// Reuses Dustin's brand Wordmark. This consumes snippet:footer.tagline.
 
 type RootData = {
   socials?: { platform: string; label: string; url: string }[];
