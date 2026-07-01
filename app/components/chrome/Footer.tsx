@@ -62,12 +62,16 @@ export function Footer() {
   ];
   const year = new Date().getFullYear();
   const link = "text-muted hover:text-ink";
+  // Below sm the three lists go 3-up; give each link a 44px tappable row there. Inert at sm+.
+  const tap = "max-sm:flex max-sm:min-h-11 max-sm:items-center";
 
   return (
     <footer className="border-t border-border bg-surface">
-      <div className="mx-auto grid max-w-5xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Base is 3 columns so Listen/Explore/About sit side by side on phones; sm/lg layout is unchanged.
+          The brand block spans all 3 at base to stay full width above them. */}
+      <div className="mx-auto grid max-w-5xl grid-cols-3 gap-x-3 gap-y-8 px-4 py-12 sm:grid-cols-2 sm:gap-x-8 lg:grid-cols-4">
         {/* Brand block */}
-        <div className="sm:col-span-2 lg:col-span-1">
+        <div className="col-span-3 sm:col-span-2 lg:col-span-1">
           {/* Rectangular germomics lockup as a modest mark (~80px tall) above the tagline. */}
           <AppLink to="/" aria-label="Germomics home" className="inline-flex">
             <Wordmark className="h-20 w-auto" />
@@ -103,7 +107,7 @@ export function Footer() {
                     href={subscribeLinks[k]}
                     target="_blank"
                     rel="noopener"
-                    className={`inline-flex items-center gap-1 ${link}`}
+                    className={`inline-flex items-center gap-1 ${link} ${tap}`}
                   >
                     {SUBSCRIBE_DESTINATIONS[k].label}
                     <ExternalCue />
@@ -116,13 +120,13 @@ export function Footer() {
                 href="/feed/podcast/"
                 target="_blank"
                 rel="noopener"
-                className={`inline-flex items-center gap-1 ${link}`}
+                className={`inline-flex items-center gap-1 ${link} ${tap}`}
               >
                 <Rss size={14} aria-hidden /> Podcast RSS
                 <ExternalCue />
               </a>
             </li>
-            <li><AppLink to="/subscribe" className={link}>More ways to listen →</AppLink></li>
+            <li><AppLink to="/subscribe" className={`${link} ${tap}`}>More ways to listen →</AppLink></li>
           </ul>
         </nav>
 
@@ -131,7 +135,7 @@ export function Footer() {
           <h3 id="footer-explore" className="font-display text-sm font-semibold text-ink">Explore</h3>
           <ul className="mt-3 space-y-2 text-sm">
             {explore.map(([to, label]) => (
-              <li key={to}><AppLink to={to} className={link}>{label}</AppLink></li>
+              <li key={to}><AppLink to={to} className={`${link} ${tap}`}>{label}</AppLink></li>
             ))}
           </ul>
         </nav>
@@ -141,7 +145,7 @@ export function Footer() {
           <h3 id="footer-about" className="font-display text-sm font-semibold text-ink">About</h3>
           <ul className="mt-3 space-y-2 text-sm">
             {about.map(([to, label]) => (
-              <li key={to}><AppLink to={to} className={link}>{label}</AppLink></li>
+              <li key={to}><AppLink to={to} className={`${link} ${tap}`}>{label}</AppLink></li>
             ))}
           </ul>
         </nav>
