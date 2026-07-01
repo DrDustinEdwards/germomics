@@ -150,9 +150,17 @@ export function Header() {
           <ThemeToggle />
         </nav>
 
-        {/* Mobile controls */}
+        {/* Mobile controls: search + Subscribe stay visible in the bar so neither needs a hamburger tap. */}
         <div className="flex items-center gap-1 md:hidden">
           <ThemeToggle />
+          <AppLink
+            to="/search"
+            aria-label="Search"
+            className="tap-target grid place-items-center rounded-full border border-border bg-surface p-2 text-muted hover:border-brand hover:text-ink"
+          >
+            <Search size={16} aria-hidden />
+          </AppLink>
+          <AppLink to="/subscribe" className={subscribeCta}>{subscribeLabel}</AppLink>
           <button
             type="button"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -181,12 +189,6 @@ export function Header() {
                 </AppLink>
               </li>
             ))}
-            <li>
-              <AppLink to="/search" className="block rounded px-2 py-2 font-display text-sm text-muted hover:text-ink">
-                <NavLabel snippetKey="snippet:nav.search" fallback="Search" />
-              </AppLink>
-            </li>
-            <li className="pt-1"><AppLink to="/subscribe" className={`inline-block ${subscribeCta}`}>{subscribeLabel}</AppLink></li>
           </ul>
         </nav>
       )}
