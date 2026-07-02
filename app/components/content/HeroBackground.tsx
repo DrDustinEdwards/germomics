@@ -23,8 +23,10 @@ type Blob = {
 };
 
 // 3 brand tints + 1 faint accent. Each blob is a radial-gradient that fades to transparent well
-// before its box edge, so it has no boundary anywhere to be clipped against: it just trails off in
-// every direction. No mask, no overflow clip. Cores are weighted HIGH in the hero (negative top so
+// before its box edge, so within the viewport it has no visible boundary: it just trails off in
+// every direction. No mask. The wrapper does clip on the x axis (see below), but only at the screen
+// edges, where nothing is visible anyway, so there is still no visible cutoff. Cores are weighted
+// HIGH in the hero (negative top so
 // the dense center sits up near the header) and across the width with the cover side covered, so
 // the falloff trails downward and runs out before the "Latest" section, while the lower-left lede
 // only catches faint tails and keeps WCAG AA in both themes. The layer spans the full page width
@@ -42,15 +44,17 @@ export function HeroBackground() {
   return (
     <div
       aria-hidden="true"
-      className="hero-blobs pointer-events-none absolute"
+      className="hero-blobs pointer-events-none absolute overflow-x-clip"
       style={{
         top: 0,
         bottom: 0,
         // Full-bleed to the viewport width WITHOUT 100vw: these insets pull the layer's edges from
-        // inside the centered content wrap out to the screen edges. overflow-x: clip on <html>
-        // (app.css) guards against any subpixel horizontal scrollbar. No border, no rounding, and no
-        // overflow clip or mask anywhere, so there is no straight-line cutoff (top or bottom): each
-        // blob fades on its own via its radial gradient.
+        // inside the centered content wrap out to the screen edges. This wrapper is positioned, so it
+        // is the containing block for the absolute blobs; overflow-x: clip on it (not just the
+        // ineffective rule on <html>) clips the blobs to the viewport width so a wide blob cannot
+        // create horizontal scroll. overflow-y stays visible, so there is still no straight-line
+        // cutoff top or bottom: each blob fades on its own via its radial gradient. No border, no
+        // rounding, no mask.
         left: "calc(50% - 50vw)",
         right: "calc(50% - 50vw)",
       }}

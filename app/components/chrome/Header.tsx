@@ -123,7 +123,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-bg/85 backdrop-blur">
-      <div className="mx-auto flex h-15 max-w-5xl items-center justify-between gap-4 px-4 py-3">
+      <div className="mx-auto flex h-15 max-w-5xl items-center justify-between gap-4 px-4 py-3 max-[374px]:gap-1">
         <AppLink to="/" className="flex items-center gap-2 font-display text-xl font-semibold tracking-tight text-ink">
           {/* Hexagon G brand mark (themes via currentColor: brand purple light / lavender dark). Sized
               near the wordmark cap height and a touch under the old mic since the hexagon reads heavier. */}
@@ -150,17 +150,20 @@ export function Header() {
           <ThemeToggle />
         </nav>
 
-        {/* Mobile controls: search + Subscribe stay visible in the bar so neither needs a hamburger tap. */}
-        <div className="flex items-center gap-1 md:hidden">
-          <ThemeToggle />
+        {/* Mobile controls: search + Subscribe stay visible in the bar so neither needs a hamburger tap.
+            At <=374px the wordmark plus four controls would overflow 320px (pushing the hamburger off
+            screen), so the group tightens there: no inter-item gap, smaller icon padding, and a compact
+            Subscribe pill. All of it is restored above 374px, so 375px and up are unchanged. */}
+        <div className="flex items-center gap-1 md:hidden max-[374px]:gap-0">
+          <ThemeToggle className="max-[374px]:p-1" />
           <AppLink
             to="/search"
             aria-label="Search"
-            className="tap-target grid place-items-center rounded-full border border-border bg-surface p-2 text-muted hover:border-brand hover:text-ink"
+            className="tap-target grid place-items-center rounded-full border border-border bg-surface p-2 text-muted hover:border-brand hover:text-ink max-[374px]:p-1"
           >
             <Search size={16} aria-hidden />
           </AppLink>
-          <AppLink to="/subscribe" className={subscribeCta}>{subscribeLabel}</AppLink>
+          <AppLink to="/subscribe" className={`${subscribeCta} max-[374px]:px-1.5 max-[374px]:text-xs`}>{subscribeLabel}</AppLink>
           <button
             type="button"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
