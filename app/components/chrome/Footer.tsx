@@ -70,8 +70,9 @@ export function Footer() {
       {/* Base is 3 columns so Listen/Explore/About sit side by side on phones; sm/lg layout is unchanged.
           The brand block spans all 3 at base to stay full width above them. */}
       <div className="mx-auto grid max-w-5xl grid-cols-3 gap-x-3 gap-y-8 px-4 py-12 sm:grid-cols-2 sm:gap-x-8 lg:grid-cols-4">
-        {/* Brand block */}
-        <div className="col-span-3 sm:col-span-2 lg:col-span-1">
+        {/* Brand block. max-sm:order-last flows it below the three nav columns on phones only; DOM order
+            is unchanged, so at sm it is still the full-width top row and at lg still the first/left column. */}
+        <div className="col-span-3 max-sm:order-last sm:col-span-2 lg:col-span-1">
           {/* Rectangular germomics lockup as a modest mark (~80px tall) above the tagline. */}
           <AppLink to="/" aria-label="Germomics home" className="inline-flex">
             <Wordmark className="h-20 w-auto" />
@@ -99,7 +100,7 @@ export function Footer() {
         {/* Listen */}
         <nav aria-labelledby="footer-listen">
           <h3 id="footer-listen" className="font-display text-sm font-semibold text-ink">Listen</h3>
-          <ul className="mt-3 space-y-2 text-sm">
+          <ul className="mt-3 space-y-2 max-sm:space-y-0 text-sm">
             {PRIMARY_KEYS.map((k) =>
               subscribeLinks[k] ? (
                 <li key={k}>
@@ -133,7 +134,7 @@ export function Footer() {
         {/* Explore */}
         <nav aria-labelledby="footer-explore">
           <h3 id="footer-explore" className="font-display text-sm font-semibold text-ink">Explore</h3>
-          <ul className="mt-3 space-y-2 text-sm">
+          <ul className="mt-3 space-y-2 max-sm:space-y-0 text-sm">
             {explore.map(([to, label]) => (
               <li key={to}><AppLink to={to} className={`${link} ${tap}`}>{label}</AppLink></li>
             ))}
@@ -143,7 +144,7 @@ export function Footer() {
         {/* About */}
         <nav aria-labelledby="footer-about">
           <h3 id="footer-about" className="font-display text-sm font-semibold text-ink">About</h3>
-          <ul className="mt-3 space-y-2 text-sm">
+          <ul className="mt-3 space-y-2 max-sm:space-y-0 text-sm">
             {about.map(([to, label]) => (
               <li key={to}><AppLink to={to} className={`${link} ${tap}`}>{label}</AppLink></li>
             ))}
