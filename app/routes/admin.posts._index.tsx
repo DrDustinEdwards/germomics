@@ -112,7 +112,7 @@ export default function AdminPosts({ loaderData }: Route.ComponentProps) {
         <select value={sort} onChange={(e) => setSort(e.target.value as Sort)} aria-label="Sort by" className={`${inputCx} w-auto`}>
           <option value="updated">Recently updated</option>
           <option value="published">Recently published</option>
-          <option value="title">Title A–Z</option>
+          <option value="title">Title A-Z</option>
         </select>
       </div>
 

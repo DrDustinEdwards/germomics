@@ -53,7 +53,7 @@ const DATASETS: Record<string, Dataset> = {
   },
   "influenza-1918": {
     slug: "influenza-1918",
-    title: "Influenza, 1918–1919",
+    title: "Influenza, 1918-1919",
     kind: "virus",
     summary:
       "The three waves of the 1918 H1N1 pandemic: mortality peaked sharply in the deadly autumn wave, a defining example of viral pandemic dynamics.",

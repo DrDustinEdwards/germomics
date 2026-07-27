@@ -46,7 +46,7 @@ export async function submitScore(
   const rlKey = `score-rl:${input.gameSlug}:${input.ip}`;
   const count = Number(await env.APP_KV.get(rlKey)) || 0;
   if (count >= RL_MAX_PER_WINDOW) {
-    return { ok: false, error: "Too many submissions — try again in a minute." };
+    return { ok: false, error: "Too many submissions, try again in a minute." };
   }
   await env.APP_KV.put(rlKey, String(count + 1), { expirationTtl: RL_WINDOW_SECONDS });
 
