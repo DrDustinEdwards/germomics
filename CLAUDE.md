@@ -26,6 +26,32 @@ End: write a `session-YYYY-MM-DD.md` episodic (type `episodic`, under ~2KB) to t
 - `npm run db:migrate` / `db:migrate:prod`
 - `npm run auth:generate` - regenerate Better Auth tables after changing auth config
 
+## Backup: the whole-database export does not work here
+
+`npx wrangler d1 export germomics` FAILS: `D1 Export error: cannot export databases with Virtual Tables (fts5)`, exit 1, no file written. This database has two FTS5 virtual tables, so the one command anyone reaches for in a recovery is not available, and episode and post prose has no second copy in git. Export per table, data only:
+
+```
+npx wrangler d1 export germomics --remote --no-schema --table posts --output export-posts.sql
+npx wrangler d1 export germomics --remote --no-schema --table content_blocks --output export-content_blocks.sql
+npx wrangler d1 export germomics --remote --no-schema --table settings --output export-settings.sql
+npx wrangler d1 export germomics --remote --no-schema --table show_config --output export-show_config.sql
+```
+
+Those four carry the irreplaceable content. `post_versions`, `people`, `episode_people`, `soundbites`, `subscribers` and `scores` were empty as of 2026-08-17: check counts rather than trusting that, because an empty table today is a populated table after the next feature lands. `user`, `account`, `session` and `verification` are Better Auth's and regenerate on next login. `d1_migrations` is rebuilt by running migrations, and `_cf_KV` and `sqlite_sequence` are internals.
+
+**Never export** `posts_fts`, `content_blocks_fts`, or any `_config`, `_data`, `_docsize` or `_idx` shadow table. They are derived data, they are what makes the whole-database export fail, and restoring them corrupts the index.
+
+Restore in order: apply the `drizzle/` migrations first, since the exports were taken with `--no-schema` and carry no schema; then the per-table data files; then rebuild the search index.
+
+```
+INSERT INTO posts_fts (posts_fts) VALUES ('rebuild');
+INSERT INTO content_blocks_fts (content_blocks_fts) VALUES ('rebuild');
+```
+
+**Check that each export file actually contains INSERT rows.** An empty export still writes a file and still exits 0, so a "the file exists" check passes over nothing.
+
+Full version, with row counts and the two FTS5 traps that make a naive integrity check useless: Capsid namespace `germomics`, path `protocol-backup.md`.
+
 ## Hard rules
 
 1. The podcast feed path is sacred. It is served at `/feed/podcast/` and that URL never changes. Episode `guid` values are immutable once published. Both are how every podcast directory keeps finding the show. Feeds are resource routes (a `loader` returning a raw `Response` with the right `Content-Type`), not React pages.
