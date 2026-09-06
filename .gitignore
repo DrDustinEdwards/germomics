@@ -16,3 +16,8 @@ worker-configuration.d.ts
 !.dev.vars.example
 !.env.example
 scripts/_generated/
+
+# The holdout suite is pulled here by improve-score.yml and must NEVER be committed:
+# a hidden test set in the repo is one the attempt path can read, which defeats the
+# measurement entirely.
+.improve-holdout/
