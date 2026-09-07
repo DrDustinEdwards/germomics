@@ -1,0 +1,9 @@
+# Probe: does the Capsid GitHub App hold Workflows: write?
+# This file exists for one API call and is closed immediately.
+name: zz-permission-probe
+on: workflow_dispatch
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo probe
