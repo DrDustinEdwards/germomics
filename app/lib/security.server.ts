@@ -14,23 +14,39 @@
 // ── Security headers ─────────────────────────────────────────────────────────
 
 // Content-Security-Policy. REPORT-ONLY for now. Allowlist mirrors the spec: self + cdnjs,
-// Google Fonts, MapLibre tiles, and the media/images subdomains. The MapLibre tile hosts below
-// are the common providers as a best guess — Dustin should confirm the real tile origin against
-// the report-only violations and tighten img-src/connect-src before enforcing. script-src/
-// style-src keep 'unsafe-inline' because React Router streams inline hydration scripts and the
-// pre-paint theme script is inline (nonces aren't wired through RR8 streaming); revisit at enforce.
+// Google Fonts, the Maps JS API, and the media/images subdomains. script-src/style-src keep
+// 'unsafe-inline' because React Router streams inline hydration scripts and the pre-paint theme
+// script is inline (nonces aren't wired through RR8 streaming); revisit at enforce.
+//
+// THE MAP ORIGINS CHANGED 2026-09-08, when maplibre-gl was removed for GHSA-jrc7-96c5-q579 and
+// the map moved to the Google Maps JS API.
+//
+// GONE: the three MapLibre tile hosts (`*.basemaps.cartocdn.com`, `*.tile.openstreetmap.org`,
+// `api.maptiler.com`). They were a documented BEST GUESS at the tile origin and were wrong: the
+// old style pulled from demotiles.maplibre.org, which was never listed. Nothing requests any of
+// them now, and an allowlist entry nothing uses is a permission granted for no reason.
+//
+// ADDED: `maps.googleapis.com` (the API script, its tile and vector requests) and
+// `maps.gstatic.com` (the static image assets it references). This is the trade the removal
+// made, and it is worth naming: script-src now carries a third-party origin that serves
+// EXECUTABLE JavaScript, where the MapLibre host only ever served data.
+//
+// STILL TO CONFIRM AGAINST REPORT-ONLY VIOLATIONS BEFORE ENFORCING: the Maps API also pulls
+// Roboto from fonts.googleapis.com / fonts.gstatic.com on some surfaces. Those are deliberately
+// NOT added on speculation. Read the reports and add what actually fires, which is the same
+// discipline that caught the wrong tile hosts above.
 const CSP = [
   "default-src 'self'",
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://static.cloudflareinsights.com",
+  "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://maps.googleapis.com",
   "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
-  "img-src 'self' data: blob: https://images.germomics.com https://media.germomics.com https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://api.maptiler.com",
+  "img-src 'self' data: blob: https://images.germomics.com https://media.germomics.com https://maps.googleapis.com https://maps.gstatic.com",
   "media-src 'self' blob: https://media.germomics.com https://op3.dev",
   "font-src 'self' data: https://cdnjs.cloudflare.com",
-  "connect-src 'self' https://images.germomics.com https://media.germomics.com https://op3.dev https://cloudflareinsights.com https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://api.maptiler.com",
+  "connect-src 'self' https://images.germomics.com https://media.germomics.com https://op3.dev https://cloudflareinsights.com https://maps.googleapis.com",
   "worker-src 'self' blob:",
   "child-src 'self' blob:",
   "frame-src 'self'",
