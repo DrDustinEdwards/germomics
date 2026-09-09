@@ -1,6 +1,23 @@
-# CI gate — runs on every push and PR. Type-checks, builds, and audits production
-# dependencies. (Cloudflare Workers Builds still runs `npm run deploy` on push to main;
-# this is the correctness/security gate that should pass before that.)
+# CI gate. Runs on every push and PR. (Cloudflare Workers Builds still runs `npm run deploy`
+# on push to main; this is the correctness/security gate that should pass before that.)
+#
+# TWO JOBS, NOT ONE, AND THE SPLIT IS THE POINT (2026-09-08).
+#
+# `verify` and `audit` used to be one job with the audit as its last step. The audit step had
+# failed on EVERY run since 2026-07-27, six weeks, because three production advisories were
+# reported and unactioned. That did not just leave the advisories open, it retired the whole
+# gate: any typecheck or build regression in those six weeks arrived in a run that was already
+# red, so there was no signal to notice. A permanently red gate gates nothing.
+#
+# What made it concrete: a CRITICAL advisory (GHSA-jrc7-96c5-q579, maplibre-gl) appeared on
+# 2026-09-08 and produced NO new signal at all, because the line was already red. It was found
+# by reading audit output by hand.
+#
+# Split, the two answer different questions and fail on their own lines. `verify` is "does this
+# commit compile and build", which is about the change in front of you. `audit` is "has the
+# dependency tree grown a new hole", which is about the world moving underneath you and often
+# has nothing to do with the commit that surfaced it. Neither can now mask the other, and a new
+# critical goes red on a line of its own.
 name: CI
 
 on:
@@ -35,8 +52,29 @@ jobs:
       - name: Build
         run: npm run build
 
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Deliberately NOT `needs: verify`. A dependency advisory is independent of whether this
+    # commit compiles, and chaining them would reintroduce the masking this split removes: a
+    # broken build would skip the audit and a new critical would go unreported until it was
+    # fixed.
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
       # Fail only on high+ advisories in PRODUCTION deps. Dev-only advisories (the tracked
       # drizzle-kit chain) don't ship to the Worker, so --omit=dev keeps the gate meaningful
       # without blocking on them.
+      #
+      # Never raise --audit-level past high, and never drop this step. Both convert a known
+      # problem into an unknown one, which is how six weeks of red happened in the first place.
       - name: Audit (production deps)
         run: npm audit --omit=dev --audit-level=high
