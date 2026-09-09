@@ -52,6 +52,15 @@ jobs:
       - name: Build
         run: npm run build
 
+      # THE SUITE, ADDED 2026-09-08 (germomics/TASK-security-deps.md). It runs in the workers
+      # pool because app/lib/sanitize.server.ts, the XSS boundary on every post body, is built
+      # on the Workers HTMLRewriter global and cannot load under plain node. It runs AFTER the
+      # typecheck deliberately: the typecheck now covers test/ too, and a test that stops
+      # compiling would otherwise still report green, because the runner strips types rather
+      # than checking them.
+      - name: Test
+        run: npm test
+
   audit:
     runs-on: ubuntu-latest
     timeout-minutes: 10
