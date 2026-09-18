@@ -53,7 +53,8 @@ export async function sanitizeHtml(input: string): Promise<string> {
       // Keep the figure credit span (<span class="cr">…</span>); unwrap every other
       // cosmetic span/font/div so Google-Docs paste noise still collapses to text.
       if (tag === "span" && el.getAttribute("class") === "cr") {
-        const attrs = el.attributes as unknown as Iterable<[string, string]>;
+        // SNAPSHOT BEFORE MUTATING. See the note on the attribute loop below.
+        const attrs = [...(el.attributes as unknown as Iterable<[string, string]>)];
         for (const [name] of attrs) {
           if (name.toLowerCase() !== "class") el.removeAttribute(name);
         }
@@ -67,7 +68,15 @@ export async function sanitizeHtml(input: string): Promise<string> {
       const allowed = ATTRS[tag] ?? new Set<string>();
       // el.attributes on the Workers HTMLRewriter Element is an iterator of [name, value];
       // cast past the ambient DOM `Element.attributes` (NamedNodeMap) typing.
-      const attrs = el.attributes as unknown as Iterable<[string, string]>;
+      //
+      // SPREAD INTO AN ARRAY FIRST, and this is a fix rather than a style choice. The Workers
+      // HTMLRewriter REFUSES to continue an attribute iterator after removeAttribute has run:
+      // "The attributes of this element have been modified during iteration. You must create a
+      // new iterator after modifying attributes." So the loop below threw on the FIRST
+      // disallowed attribute it met, which meant style, id and every on* handler survived on
+      // any element that carried one. Found 2026-09-08 by the first test ever written against
+      // this file (test/sanitize.test.ts); it had been live since the sanitizer was written.
+      const attrs = [...(el.attributes as unknown as Iterable<[string, string]>)];
       for (const [name, value] of attrs) {
         const lname = name.toLowerCase();
         if (!allowed.has(lname)) {
@@ -86,7 +95,15 @@ export async function sanitizeHtml(input: string): Promise<string> {
     comments(c) {
       c.remove();
     },
-  });
+  })
+    // TOP-LEVEL COMMENTS TOO. An element selector's `comments` handler only sees comments INSIDE
+    // a matching element, so a comment between two block elements (exactly what a Google-Docs or
+    // Word paste leaves behind) survived the "*" handler above. Found by the same first test.
+    .onDocument({
+      comments(c) {
+        c.remove();
+      },
+    });
 
   const res = rewriter.transform(new Response(input));
   const out = await res.text();
