@@ -64,7 +64,11 @@ export default function DataMap({
         if (cancelled) return;
 
         const map = new Map(container, {
-          center: { lat: center[0], lng: center[1] },
+          // `center` IS [lng, lat], the order maplibre-gl took and the order every dataset in
+          // datasets.server.ts is written in (Broad Street is [-0.1367, 51.5132]). Google wants
+          // { lat, lng }. The rewrite read them the other way round, so the first live render
+          // opened in the Indian Ocean while the markers, which use named fields, sat in London.
+          center: { lat: center[1], lng: center[0] },
           zoom,
           mapId: MAP_ID,
           // The old map carried a navigation control and nothing else. Keep the surface that
