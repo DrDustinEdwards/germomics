@@ -34,6 +34,14 @@ const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY as string | undefined;
 // id and is the documented fallback; a real id belongs in the environment before launch.
 const MAP_ID = (import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as string | undefined) || "DEMO_MAP_ID";
 
+// THE PIN IS THE BRAND VIOLET, and it is set here because nowhere else can set it. The base map
+// is styled in the Google Cloud console against the map ID (a `styles` option is refused when a
+// mapId is present), but that styling reaches Google's own place pins only. These markers are
+// ours, drawn by this component. The values are app.css's light-theme --brand and
+// --brand-strong; they are literals rather than var() because PinElement paints into its own
+// SVG and does not resolve CSS custom properties from the page.
+const PIN = { background: "#4f2d7f", borderColor: "#402567", glyphColor: "#ffffff" } as const;
+
 export default function DataMap({
   center,
   zoom,
@@ -57,7 +65,7 @@ export default function DataMap({
     (async () => {
       try {
         setOptions({ key: API_KEY, v: "weekly", mapIds: [MAP_ID] });
-        const [{ Map, InfoWindow }, { AdvancedMarkerElement }] = await Promise.all([
+        const [{ Map, InfoWindow }, { AdvancedMarkerElement, PinElement }] = await Promise.all([
           importLibrary("maps"),
           importLibrary("marker"),
         ]);
@@ -80,10 +88,12 @@ export default function DataMap({
 
         const info = new InfoWindow();
         for (const p of points) {
+          const pin = new PinElement(PIN);
           const marker = new AdvancedMarkerElement({
             map,
             position: { lat: p.lat, lng: p.lng },
             title: `${p.label}: ${p.value}`,
+            content: pin.element,
           });
           marker.addListener("click", () => {
             // TEXT NODE, NOT A STRING. setContent(string) parses markup; setContent(Node) does
