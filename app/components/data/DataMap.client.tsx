@@ -37,10 +37,21 @@ const MAP_ID = (import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as string | undefined) |
 // THE PIN IS THE BRAND VIOLET, and it is set here because nowhere else can set it. The base map
 // is styled in the Google Cloud console against the map ID (a `styles` option is refused when a
 // mapId is present), but that styling reaches Google's own place pins only. These markers are
-// ours, drawn by this component. The values are app.css's light-theme --brand and
-// --brand-strong; they are literals rather than var() because PinElement paints into its own
-// SVG and does not resolve CSS custom properties from the page.
-const PIN = { background: "#4f2d7f", borderColor: "#402567", glyphColor: "#ffffff" } as const;
+// ours, drawn by this component. The values are app.css's --brand and --brand-strong for each
+// theme; they are literals rather than var() because PinElement paints into its own SVG and
+// does not resolve CSS custom properties from the page.
+const PIN_LIGHT = { background: "#4f2d7f", borderColor: "#402567", glyphColor: "#ffffff" } as const;
+const PIN_DARK = { background: "#c4aef0", borderColor: "#b29ad9", glyphColor: "#120b1f" } as const;
+
+// THE SITE'S THEME, READ THE WAY app.css DECIDES IT. An explicit data-theme on <html> wins in
+// either direction; with none set, the system preference decides. Anything else here would let
+// the map and the page disagree.
+function siteIsDark(): boolean {
+  const chosen = document.documentElement.getAttribute("data-theme");
+  if (chosen === "dark") return true;
+  if (chosen === "light") return false;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
 
 export default function DataMap({
   center,
@@ -53,6 +64,20 @@ export default function DataMap({
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [failed, setFailed] = useState(!API_KEY);
+  const [dark, setDark] = useState(siteIsDark);
+
+  // Follow the theme switch and the system preference while the page is open.
+  useEffect(() => {
+    const update = () => setDark(siteIsDark());
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    media.addEventListener("change", update);
+    return () => {
+      observer.disconnect();
+      media.removeEventListener("change", update);
+    };
+  }, []);
 
   useEffect(() => {
     if (!ref.current || !API_KEY) return;
@@ -71,6 +96,9 @@ export default function DataMap({
         ]);
         if (cancelled) return;
 
+        // A map rebuilt for a theme change goes into the same node, so clear the old one out.
+        container.replaceChildren();
+
         const map = new Map(container, {
           // `center` IS [lng, lat], the order maplibre-gl took and the order every dataset in
           // datasets.server.ts is written in (Broad Street is [-0.1367, 51.5132]). Google wants
@@ -79,6 +107,12 @@ export default function DataMap({
           center: { lat: center[1], lng: center[0] },
           zoom,
           mapId: MAP_ID,
+          // WHICH OF THE MAP ID'S TWO STYLES TO DRAW. The map ID carries a light style and a dark
+          // style in the Cloud console (germomics-light, germomics-dark). Google reads this option
+          // ONLY when the map is created; setting it later does nothing. That is why `dark` is a
+          // dependency of this effect: a theme change rebuilds the map. A rebuild counts as one
+          // more map load against the daily quota, which a visitor flipping the switch can afford.
+          colorScheme: dark ? "DARK" : "LIGHT",
           // The old map carried a navigation control and nothing else. Keep the surface that
           // small: no street view, no map-type switcher, no fullscreen.
           mapTypeControl: false,
@@ -88,7 +122,7 @@ export default function DataMap({
 
         const info = new InfoWindow();
         for (const p of points) {
-          const pin = new PinElement(PIN);
+          const pin = new PinElement(dark ? PIN_DARK : PIN_LIGHT);
           const marker = new AdvancedMarkerElement({
             map,
             position: { lat: p.lat, lng: p.lng },
@@ -115,7 +149,7 @@ export default function DataMap({
       for (const marker of markers) marker.map = null;
       markers = [];
     };
-  }, [center, zoom, points]);
+  }, [center, zoom, points, dark]);
 
   return (
     <>
