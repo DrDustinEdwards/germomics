@@ -12,7 +12,10 @@
     "composite": true,
     "strict": true,
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "types": ["vite/client"],
+    // google.maps: the Maps JS API's ambient namespace, used by
+    // app/components/data/DataMap.client.tsx. `types` is an explicit allowlist, so a
+    // transitively installed @types package is NOT picked up without being named here.
+    "types": ["vite/client", "google.maps"],
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "bundler",
