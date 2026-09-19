@@ -21,6 +21,7 @@
 import { useEffect, useRef, useState } from "react";
 import { importLibrary, setOptions } from "@googlemaps/js-api-loader";
 import type { DataPoint } from "~/lib/datasets.server";
+import { siteIsDark, toLatLng } from "~/lib/map";
 
 // BUILD-TIME, NOT RUNTIME. Vite inlines import.meta.env.VITE_* into the CLIENT bundle at build
 // time, so the value has to be present when `react-router build` runs (a Workers Builds
@@ -43,14 +44,15 @@ const MAP_ID = (import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as string | undefined) |
 const PIN_LIGHT = { background: "#4f2d7f", borderColor: "#402567", glyphColor: "#ffffff" } as const;
 const PIN_DARK = { background: "#c4aef0", borderColor: "#b29ad9", glyphColor: "#120b1f" } as const;
 
-// THE SITE'S THEME, READ THE WAY app.css DECIDES IT. An explicit data-theme on <html> wins in
-// either direction; with none set, the system preference decides. Anything else here would let
-// the map and the page disagree.
-function siteIsDark(): boolean {
-  const chosen = document.documentElement.getAttribute("data-theme");
-  if (chosen === "dark") return true;
-  if (chosen === "light") return false;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+// THE SITE'S THEME, READ THE WAY app.css DECIDES IT. This is only the pair of DOM reads; the
+// rule that resolves them lives in ~/lib/map as siteIsDark(), where a test can reach it without
+// a browser. Splitting it that way is the whole point: the reads need a document, the rule does
+// not, and it was the rule that nothing covered.
+function readSiteIsDark(): boolean {
+  return siteIsDark(
+    document.documentElement.getAttribute("data-theme"),
+    window.matchMedia("(prefers-color-scheme: dark)").matches,
+  );
 }
 
 export default function DataMap({
@@ -64,11 +66,11 @@ export default function DataMap({
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [failed, setFailed] = useState(!API_KEY);
-  const [dark, setDark] = useState(siteIsDark);
+  const [dark, setDark] = useState(readSiteIsDark);
 
   // Follow the theme switch and the system preference while the page is open.
   useEffect(() => {
-    const update = () => setDark(siteIsDark());
+    const update = () => setDark(readSiteIsDark());
     const observer = new MutationObserver(update);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -104,7 +106,8 @@ export default function DataMap({
           // datasets.server.ts is written in (Broad Street is [-0.1367, 51.5132]). Google wants
           // { lat, lng }. The rewrite read them the other way round, so the first live render
           // opened in the Indian Ocean while the markers, which use named fields, sat in London.
-          center: { lat: center[1], lng: center[0] },
+          // toLatLng is that conversion, named and tested, rather than two indices inline.
+          center: toLatLng(center),
           zoom,
           mapId: MAP_ID,
           // WHICH OF THE MAP ID'S TWO STYLES TO DRAW. The map ID carries a light style and a dark
