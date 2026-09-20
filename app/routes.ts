@@ -40,6 +40,9 @@ export default [
   route("llms.txt", "routes/llms.ts"),
   route("llms-full.txt", "routes/llms-full.ts"),
   route("ai.txt", "routes/ai-txt.ts"),
+  // Google Search Console ownership proof. The path is Google's and never changes; removing it
+  // un-verifies the property. See the route file.
+  route("google7e6923f5a0eb8ba9.html", "routes/google-verification.ts"),
 
   // per-episode resource endpoints referenced by the podcast feed
   route(":slug/transcript.vtt", "routes/transcript.ts"),
