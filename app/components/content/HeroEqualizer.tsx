@@ -9,25 +9,45 @@
 // the only path to anything. Reduced motion is handled globally in app.css (prefers-reduced-
 // motion sets animation: none on everything), which freezes the bars to their resting row.
 
-// 14 bars, each with a staggered duration (1.2s to 2s) and a negative delay so they start out
+// 28 bars, each with a staggered duration (1.2s to 2s) and a negative delay so they start out
 // of phase and never read as a synchronized, audio-reactive meter. The values are fixed (no
 // Math.random) so the server and client render identically. Bars scale from their default
 // center origin, mirroring how the real waveform renders symmetrically around its centerline.
+//
+// BAR COUNT IS HOW BAR WIDTH IS SET. The row below is a fixed-width shelf and every bar is
+// flex-1, so each one is (shelf - gaps) / BARS.length wide. Doubling this list from 14 to 28
+// is what halves the bars; there is no width to edit, and adding a fixed width would break the
+// match with EpisodeWaveform. Neighbours are given different durations so the finer row still
+// reads as an out-of-phase equalizer rather than a travelling wave.
 const BARS: { dur: string; delay: string }[] = [
   { dur: "1.5s", delay: "-0.20s" },
+  { dur: "1.3s", delay: "-1.05s" },
   { dur: "1.8s", delay: "-1.10s" },
+  { dur: "1.6s", delay: "-0.35s" },
   { dur: "1.3s", delay: "-0.60s" },
+  { dur: "1.9s", delay: "-1.45s" },
   { dur: "2.0s", delay: "-1.50s" },
+  { dur: "1.2s", delay: "-0.25s" },
   { dur: "1.6s", delay: "-0.30s" },
+  { dur: "1.7s", delay: "-1.70s" },
   { dur: "1.4s", delay: "-0.90s" },
+  { dur: "2.0s", delay: "-0.55s" },
   { dur: "1.9s", delay: "-1.80s" },
+  { dur: "1.5s", delay: "-1.25s" },
   { dur: "1.2s", delay: "-0.50s" },
+  { dur: "1.8s", delay: "-0.75s" },
   { dur: "1.7s", delay: "-1.30s" },
+  { dur: "1.3s", delay: "-0.15s" },
   { dur: "1.5s", delay: "-0.70s" },
+  { dur: "2.0s", delay: "-1.95s" },
   { dur: "2.0s", delay: "-1.60s" },
+  { dur: "1.4s", delay: "-0.45s" },
   { dur: "1.4s", delay: "-0.40s" },
+  { dur: "1.9s", delay: "-1.15s" },
   { dur: "1.8s", delay: "-1.00s" },
+  { dur: "1.6s", delay: "-0.65s" },
   { dur: "1.6s", delay: "-0.80s" },
+  { dur: "1.2s", delay: "-1.40s" },
 ];
 
 export function HeroEqualizer() {
@@ -35,7 +55,7 @@ export function HeroEqualizer() {
     <div
       aria-hidden="true"
       // Same row as the episode waveform (EpisodeWaveform.tsx): flex, h-16, items-center, gap-px.
-      // The 14 flex-1 bars evenly fill this fixed-width shelf under the cover, so every bar gets an
+      // The 28 flex-1 bars evenly fill this fixed-width shelf under the cover, so every bar gets an
       // identical computed width (no hardcoded bar width). Hidden below sm so it never crowds the
       // headline on phones; the cover above it carries the right column there.
       className="hidden h-16 w-44 items-center gap-px sm:flex sm:w-52"
