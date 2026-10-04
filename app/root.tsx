@@ -47,12 +47,11 @@ export const middleware: Route.MiddlewareFunction[] = [
   },
 ];
 
-// Cloudflare Web Analytics is cookieless (no consent banner needed). The site token comes from
-// the dashboard via the CF_BEACON_TOKEN var; the beacon only renders when it's set. Snippets are
-// passed to the client so components can read them via useSnippet().
+// Cloudflare Web Analytics is injected automatically by Cloudflare (one beacon; Dustin's ruling,
+// 2026-10-03), so the app renders none of its own. Snippets are passed to the client so
+// components can read them via useSnippet().
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
-  const beaconToken = (env as unknown as { CF_BEACON_TOKEN?: string }).CF_BEACON_TOKEN ?? null;
   const settings = getSettings(context);
   const [show, seasons] = await Promise.all([getShowConfig(env), listSeasons(env)]);
   // Social links for the footer, built from the same settings social.* as Organization sameAs, so
@@ -66,7 +65,6 @@ export async function loader({ context }: Route.LoaderArgs) {
     ig ? { platform: "instagram", label: "Instagram", url: `https://www.instagram.com/${ig}/` } : null,
   ].filter((s): s is { platform: string; label: string; url: string } => s !== null);
   return {
-    beaconToken,
     snippets: getSnippets(context),
     socials,
     subscribeLinks: show.subscribeLinks ?? {},
@@ -98,18 +96,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App({ loaderData }: Route.ComponentProps) {
+export default function App() {
   // PlayerProvider lives at the root, above the Outlet, so the single <audio> element and the
   // queue survive every client-side navigation (CLAUDE.md §04 — uninterrupted playback).
   return (
     <PlayerProvider>
-      {loaderData?.beaconToken ? (
-        <script
-          defer
-          src="https://static.cloudflareinsights.com/beacon.min.js"
-          data-cf-beacon={JSON.stringify({ token: loaderData.beaconToken })}
-        />
-      ) : null}
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-brand focus:px-3 focus:py-2 focus:text-white"
