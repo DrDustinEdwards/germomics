@@ -35,6 +35,11 @@
 // Roboto from fonts.googleapis.com / fonts.gstatic.com on some surfaces. Those are deliberately
 // NOT added on speculation. Read the reports and add what actually fires, which is the same
 // discipline that caught the wrong tile hosts above.
+//
+// WEB ANALYTICS (2026-10-04, Dustin's ruling 2026-10-03): one beacon, injected automatically by
+// Cloudflare. script-src keeps static.cloudflareinsights.com for it. It reports to this origin's
+// /cdn-cgi/rum, so connect-src no longer lists cloudflareinsights.com: only the hand-installed
+// beacon, now removed from root.tsx, used it.
 const CSP = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -46,7 +51,7 @@ const CSP = [
   "img-src 'self' data: blob: https://images.germomics.com https://media.germomics.com https://maps.googleapis.com https://maps.gstatic.com",
   "media-src 'self' blob: https://media.germomics.com https://op3.dev",
   "font-src 'self' data: https://cdnjs.cloudflare.com",
-  "connect-src 'self' https://images.germomics.com https://media.germomics.com https://op3.dev https://cloudflareinsights.com https://maps.googleapis.com",
+  "connect-src 'self' https://images.germomics.com https://media.germomics.com https://op3.dev https://maps.googleapis.com",
   "worker-src 'self' blob:",
   "child-src 'self' blob:",
   "frame-src 'self'",
