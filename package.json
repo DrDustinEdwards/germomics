@@ -16,7 +16,8 @@
     "cf-typegen": "wrangler types",
     "db:migrate": "wrangler d1 migrations apply germomics --local",
     "db:migrate:prod": "wrangler d1 migrations apply germomics --remote",
-    "postinstall": "wrangler types"
+    "postinstall": "node scripts/run-wrangler-types.mjs",
+    "check:postinstall": "node scripts/check-postinstall.mjs"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.1.1",
