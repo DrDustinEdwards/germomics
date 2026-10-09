@@ -32,7 +32,8 @@ export async function runBackup(env: Env): Promise<void> {
     throw new Error(`backup ${dump.run_id} left incomplete: ${problems.join("; ")}`);
   }
   await writeCompleteMarker(env.BACKUPS, dump);
-  // 90 days, and the 14 newest complete runs are always kept.
+  // d1-dump's default graduated retention: the newest complete run of each of the last 14 days,
+  // 8 ISO weeks and 6 months; the newest complete run is never deleted.
   await pruneDumps(env.BACKUPS);
 }
 

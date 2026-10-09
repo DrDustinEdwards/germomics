@@ -15,6 +15,7 @@ const SCHEMA = [
   "CREATE TABLE show_config (id INTEGER PRIMARY KEY, title TEXT)",
   "CREATE TABLE user (id TEXT PRIMARY KEY, email TEXT)",
   "CREATE TABLE session (id TEXT PRIMARY KEY, token TEXT, user_id TEXT)",
+  "CREATE TABLE account (id TEXT PRIMARY KEY, refresh_token TEXT, user_id TEXT)",
   "CREATE TABLE verification (id TEXT PRIMARY KEY, value TEXT)",
 ];
 
@@ -36,6 +37,7 @@ async function seed() {
     env.DB.prepare("INSERT INTO show_config VALUES (1, 'Germomics')"),
     env.DB.prepare("INSERT INTO user VALUES ('u1', 'admin@example.com')"),
     env.DB.prepare("INSERT INTO session VALUES ('s1', 'SECRET-SESSION-TOKEN', 'u1')"),
+    env.DB.prepare("INSERT INTO account VALUES ('a1', 'SECRET-OAUTH-REFRESH-TOKEN', 'u1')"),
     env.DB.prepare("INSERT INTO verification VALUES ('v1', 'SECRET-ONE-TIME-VALUE')"),
   ]);
 }
@@ -43,7 +45,7 @@ async function seed() {
 describe("nightly backup", () => {
   beforeEach(reset);
 
-  it("dumps the content, leaves out session and verification, and reports a fresh age", async () => {
+  it("dumps the content, leaves out session, verification and account, and reports a fresh age", async () => {
     await seed();
     await runBackup(env as unknown as Env);
 
@@ -54,11 +56,13 @@ describe("nightly backup", () => {
     }
     expect(keys.some((k) => k.endsWith("/session.json"))).toBe(false);
     expect(keys.some((k) => k.endsWith("/verification.json"))).toBe(false);
+    expect(keys.some((k) => k.endsWith("/account.json"))).toBe(false);
 
     for (const k of keys) {
       const text = await (await env.BACKUPS.get(k))!.text();
       expect(text).not.toContain("SECRET-SESSION-TOKEN");
       expect(text).not.toContain("SECRET-ONE-TIME-VALUE");
+      expect(text).not.toContain("SECRET-OAUTH-REFRESH-TOKEN");
     }
 
     const health = await backupHealth(env.BACKUPS);

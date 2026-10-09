@@ -10,7 +10,7 @@ const good: DumpSummary = {
     { name: "show_config", rows: 1 },
     { name: "user", rows: 1 },
   ],
-  excluded: ["session", "verification"],
+  excluded: ["session", "verification", "account"],
 };
 
 describe("nightly dump checks", () => {
@@ -19,7 +19,7 @@ describe("nightly dump checks", () => {
   });
 
   it("fails an empty dump", () => {
-    const problems = dumpProblems({ tables: [], excluded: ["session", "verification"] }, live);
+    const problems = dumpProblems({ tables: [], excluded: ["session", "verification", "account"] }, live);
     expect(problems).toContain("the dump holds no tables");
     expect(problems).toContain("posts is missing from the dump");
   });
@@ -43,6 +43,11 @@ describe("nightly dump checks", () => {
   it("fails a dump that carries the session table", () => {
     const dump = { ...good, tables: [...good.tables, { name: "session", rows: 3 }] };
     expect(dumpProblems(dump, live)).toContain("session is in the dump but must be excluded");
+  });
+
+  it("fails a dump that carries the account table", () => {
+    const dump = { ...good, tables: [...good.tables, { name: "account", rows: 1 }] };
+    expect(dumpProblems(dump, live)).toContain("account is in the dump but must be excluded");
   });
 
   it("fails a dump that does not record the exclusions", () => {

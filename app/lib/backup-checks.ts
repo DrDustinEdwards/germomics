@@ -2,14 +2,14 @@
 // bindings) so the tests can plant a bad dump and watch each check go red.
 //
 // EXCLUDED on purpose, because they hold live credentials or one-time tokens. A backup copy is
-// one more place a session could leak from, and restoring one revives old sessions:
+// one more place a credential could leak from, and restoring a session revives old sign-ins:
 //   session       Better Auth sessions: a bearer `token` per row, plus IP and user agent.
 //   verification  Better Auth one-time sign-in and verification values.
-// KEPT: user and account (account rows are how a restored database recognises the admin). Note
-// account also carries Google access/refresh/id tokens; see the PR for that decision.
+//   account       the Google OAuth access, refresh and id tokens (and a password column).
+// KEPT: user. Better Auth recreates an account row at the next sign-in.
 // When job_7e3fefd2f0db drops the Better Auth tables, remove them from this list in the same
 // change, because d1-dump fails the run on an excluded name that is not a table.
-export const BACKUP_EXCLUDE = ["session", "verification"] as const;
+export const BACKUP_EXCLUDE = ["session", "verification", "account"] as const;
 
 // The irreplaceable content. Each must be dumped, non-empty, and match the live count.
 export const BACKUP_COUNTED_TABLES = ["posts", "content_blocks", "settings", "show_config"] as const;

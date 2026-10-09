@@ -20,9 +20,9 @@ React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-pl
 
 ## Backup: nightly d1-dump into R2
 
-`wrangler d1 export` fails on the two FTS5 tables, so the Worker's scheduled handler (03:17 UTC, `wrangler.jsonc` `triggers.crons`) runs `runBackup` in `app/lib/backup.server.ts`. It uses `@dustinedwards/d1-dump` to write one JSON object per table to the `BACKUPS` R2 bucket (`germomics-backups`) under `backups/json/<run id>/`, checks it, and only then writes `_complete.json`. It keeps 90 days and always the 14 newest complete runs.
+`wrangler d1 export` fails on the two FTS5 tables, so the Worker's scheduled handler (03:17 UTC, `wrangler.jsonc` `triggers.crons`) runs `runBackup` in `app/lib/backup.server.ts`. It uses `@dustinedwards/d1-dump` to write one JSON object per table to the `BACKUPS` R2 bucket (`germomics-backups`) under `backups/json/<run id>/`, checks it, and only then writes `_complete.json`. Retention is d1-dump's default: the newest complete run of each of the last 14 days, 8 weeks and 6 months (about 25 runs, six months back).
 
-- `session` and `verification` are excluded (live credentials and one-time tokens; restoring them would revive old sessions). The list is `BACKUP_EXCLUDE` in `app/lib/backup-checks.ts`; when Better Auth's tables are dropped, remove them there in the same change.
+- `session`, `verification` and `account` are excluded (live credentials, one-time tokens and OAuth tokens; restoring sessions would revive old sign-ins). The list is `BACKUP_EXCLUDE` in `app/lib/backup-checks.ts`; when Better Auth's tables are dropped, remove them there in the same change.
 - A dump is left without its marker, and the run fails, if a content table (`posts`, `content_blocks`, `settings`, `show_config`) differs from its live count, a credential table is present, or everything is empty.
 - `/health` reports `backup: { last_ok, age_hours, warning? }`; it warns past 26 hours.
 - Restore and the drill: the d1-dump README ("Restore" and "Restore drill"). Download a run with `npx wrangler r2 object get germomics-backups/backups/json/<run id>/<file> --remote`, then `npx d1-dump drill --dir <dir>` (needs a Cloudflare API token that can create and delete D1 databases; Node 24).
