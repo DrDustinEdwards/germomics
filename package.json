@@ -17,7 +17,11 @@
     "db:migrate": "wrangler d1 migrations apply germomics --local",
     "db:migrate:prod": "wrangler d1 migrations apply germomics --remote",
     "postinstall": "node scripts/run-wrangler-types.mjs",
-    "check:postinstall": "node scripts/check-postinstall.mjs"
+    "check:postinstall": "node scripts/check-postinstall.mjs",
+    "nobloat:knip": "react-router typegen && mkdir -p .nobloat && knip --no-exit-code --no-progress --reporter json > .nobloat/knip.json && node scripts/nobloat.mjs knip",
+    "nobloat:jscpd": "jscpd && node scripts/nobloat.mjs jscpd",
+    "nobloat:weight": "node scripts/nobloat.mjs weight",
+    "nobloat:baseline": "npm run nobloat:knip && npm run nobloat:jscpd && npm run build && node scripts/nobloat.mjs baseline"
   },
   "dependencies": {
     "@dustinedwards/d1-dump": "github:DrDustinEdwards/d1-dump#v0.4.1",
@@ -49,6 +53,8 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "audio-decode": "^3.11.0",
+    "jscpd": "5.4.0",
+    "knip": "6.39.0",
     "sharp": "^0.34.5",
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",

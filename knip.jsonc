@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  // Knip's react-router, vite, vitest, wrangler and github-actions plugins enable
+  // themselves from package.json and supply the framework entries: app/routes.ts, every
+  // route file it names, app/root.tsx, app/entry.server.tsx, wrangler.jsonc's main
+  // (workers/app.ts) and test/**/*.test.ts. Only what no plugin can know is listed here.
+  //
+  // The route files import ./+types/*, which `react-router typegen` writes under
+  // .react-router/types (tsconfig rootDirs). Run typegen before Knip, as `npm run
+  // nobloat:knip` does, or every route reports an unresolved import.
+  "entry": [
+    // Hand-run maintenance and import scripts (`node scripts/<name>.mjs`), plus the
+    // improve scorer's report script, which improve-score.yml copies by path.
+    "scripts/**/*.{mjs,ts}"
+  ],
+  // `cloudflare:test` is the workers pool's virtual module, not an npm package.
+  "ignoreDependencies": ["cloudflare"]
+}
