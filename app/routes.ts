@@ -48,15 +48,11 @@ export default [
   route(":slug/transcript.vtt", "routes/transcript.ts"),
   route(":slug/chapters.json", "routes/chapters.ts"),
 
-  // Better Auth catch-all
-  route("api/auth/*", "routes/api.auth.$.ts"),
 
-  // admin — login is OUTSIDE the gated layout; everything under admin.tsx is gated by its
-  // middleware (one check for the whole subtree).
-  route("admin/login", "routes/admin.login.tsx"),
+  // admin: Cloudflare Access signs people in; admin.tsx middleware re-verifies its JWT once for the
+  // whole subtree.
   route("admin", "routes/admin.tsx", [
     index("routes/admin._index.tsx"),
-    route("logout", "routes/admin.logout.tsx"),
     route("posts", "routes/admin.posts._index.tsx"),
     route("posts/:id", "routes/admin.posts.$id.tsx"),
     route("people", "routes/admin.people._index.tsx"),

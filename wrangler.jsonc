@@ -4,8 +4,8 @@
 	"main": "./workers/app.ts",
 	"compatibility_date": "2026-06-21",
 	"compatibility_flags": ["nodejs_compat"],
-	// Keep dashboard-set vars/secrets (BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID/SECRET,
-	// ADMIN_EMAIL, BETTER_AUTH_URL) from being wiped on deploy.
+	// Keep dashboard-set vars/secrets (ADMIN_EMAIL, ACCESS_TEAM_DOMAIN, ACCESS_AUD,
+	// BETTER_AUTH_SECRET for preview tokens) from being wiped on deploy.
 	"keep_vars": true,
 	"observability": { "enabled": true },
 	// THE MAPS KEY IS A BUILD-TIME VALUE AND IS DELIBERATELY NOT A `vars` ENTRY HERE.
