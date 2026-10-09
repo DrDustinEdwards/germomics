@@ -1,0 +1,14 @@
+/* The admin's design system, loaded only with the admin routes (imported by routes/admin.tsx).
+   Capsomer v0.5.0: layers, tokens, both themes, the base rules, and the pieces AdminShell uses. */
+@import "capsomer/tokens.css";
+@import "capsomer/themes.css" layer(cap.tokens);
+@import "capsomer/base.css";
+@import "capsomer/admin-shell.css";
+@import "capsomer/dialog.css";
+
+/* Capsomer's type faces are not loaded here; the site's own self-hosted faces stand in, so the
+   admin keeps germomics' type until the design job decides otherwise. */
+[data-cap-theme] {
+  --ui: var(--font-display);
+  --mono: var(--font-mono);
+}

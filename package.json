@@ -26,6 +26,7 @@
     "@tiptap/pm": "^2.27.2",
     "@tiptap/react": "^2.27.2",
     "@tiptap/starter-kit": "^2.27.2",
+    "capsomer": "github:DrDustinEdwards/capsomer#v0.5.0",
     "drizzle-orm": "^0.45.2",
     "isbot": "^5.1.36",
     "jose": "^6.2.12",
