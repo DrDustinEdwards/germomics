@@ -3,11 +3,16 @@
 // (per the v8_middleware instruction). Cloudflare Access signs people in before a request gets
 // here; this re-verifies its JWT (app/lib/access.server.ts) and answers 403 to anything else, so
 // a request that bypassed Access, or an Access setup that is wrong, never reaches an admin route.
-import { Outlet, Link } from "react-router";
-import { LayoutDashboard, FileAudio, LogOut, ExternalLink, Users, Settings, Mail, Scissors } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Outlet, Link, useLocation } from "react-router";
+import { LayoutDashboard, FileAudio, Users, Settings, Mail, Scissors } from "lucide-react";
+import { AdminShell, type AdminEntry } from "capsomer/react/admin-shell";
+import "~/admin.css";
 import type { Route } from "./+types/admin";
 import { getEnv } from "~/lib/context.server";
 import { getAdminSession } from "~/lib/access.server";
+import { applyTheme, effectiveTheme } from "~/lib/theme";
+import type { Theme } from "~/lib/types";
 
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ request, context }, next) => {
@@ -22,45 +27,81 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return { email: session?.email ?? "" };
 }
 
+const icon = (Icon: typeof LayoutDashboard) => <Icon className="cap-admin-icon" aria-hidden />;
+
+// The admin's pages, grouped as the menu shows them. `match` decides which entry is current.
+const ENTRIES: Array<AdminEntry & { match: (path: string) => boolean }> = [
+  { id: "dashboard", label: "Dashboard", href: "/admin", group: "Overview", icon: icon(LayoutDashboard), match: (p) => p === "/admin" },
+  { id: "posts", label: "Posts", href: "/admin/posts", group: "Content", icon: icon(FileAudio), match: (p) => p.startsWith("/admin/posts") },
+  { id: "people", label: "People", href: "/admin/people", group: "Content", icon: icon(Users), match: (p) => p.startsWith("/admin/people") },
+  { id: "soundbites", label: "Soundbites", href: "/admin/soundbites", group: "Content", icon: icon(Scissors), match: (p) => p.startsWith("/admin/soundbites") },
+  { id: "subscribers", label: "Subscribers", href: "/admin/subscribers", group: "Audience", icon: icon(Mail), match: (p) => p.startsWith("/admin/subscribers") },
+  { id: "settings", label: "Settings", href: "/admin/settings", group: "Site", icon: icon(Settings), match: (p) => p.startsWith("/admin/settings") || p.startsWith("/admin/content") },
+];
+
+// Capsomer's tokens are keyed on data-cap-theme; the site's own switch is data-theme on <html>
+// (or the system preference when none is set). Follow it, so the admin never disagrees with it.
+function useCapTheme(): Theme {
+  const [theme, setTheme] = useState<Theme>("light");
+  useEffect(() => {
+    const sync = () => setTheme(effectiveTheme());
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    mq.addEventListener("change", sync);
+    return () => {
+      observer.disconnect();
+      mq.removeEventListener("change", sync);
+    };
+  }, []);
+  return theme;
+}
+
+// Sets the theme before first paint, from the same storage the site's own script reads, so the
+// server-rendered shell does not flash the wrong palette.
+const THEME_BOOT = `(function(s){try{var t=localStorage.getItem("germomics-theme");if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";s.parentElement.setAttribute("data-cap-theme",t);}catch(e){}})(document.currentScript)`;
+
 export default function AdminLayout({ loaderData }: Route.ComponentProps) {
+  const { pathname } = useLocation();
+  const theme = useCapTheme();
+  const nav = ENTRIES.map(({ match, ...entry }) => ({ ...entry, current: match(pathname) }));
+  const email = loaderData.email;
+
   return (
-    <div className="min-h-dvh bg-bg text-ink">
-      <header className="border-b border-border bg-surface">
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-          <nav className="flex items-center gap-4 font-display text-sm">
-            <Link to="/admin" className="flex items-center gap-1.5 font-semibold">
-              <LayoutDashboard size={16} aria-hidden /> Admin
-            </Link>
-            <Link to="/admin/posts" className="flex items-center gap-1.5 text-muted hover:text-ink">
-              <FileAudio size={16} aria-hidden /> Posts
-            </Link>
-            <Link to="/admin/people" className="flex items-center gap-1.5 text-muted hover:text-ink">
-              <Users size={16} aria-hidden /> People
-            </Link>
-            <Link to="/admin/soundbites" className="flex items-center gap-1.5 text-muted hover:text-ink">
-              <Scissors size={16} aria-hidden /> Soundbites
-            </Link>
-            <Link to="/admin/subscribers" className="flex items-center gap-1.5 text-muted hover:text-ink">
-              <Mail size={16} aria-hidden /> Subscribers
-            </Link>
-            <Link to="/admin/settings" className="flex items-center gap-1.5 text-muted hover:text-ink">
-              <Settings size={16} aria-hidden /> Settings
-            </Link>
-          </nav>
-          <div className="flex items-center gap-3 font-mono text-xs text-muted">
-            <Link to="/" className="flex items-center gap-1 hover:text-ink">
-              <ExternalLink size={13} aria-hidden /> site
-            </Link>
-            <span className="hidden sm:inline">{loaderData.email}</span>
-            <a href="/cdn-cgi/access/logout" className="flex items-center gap-1 hover:text-ink">
-              <LogOut size={13} aria-hidden /> sign out
-            </a>
-          </div>
+    <div data-cap-theme={theme} suppressHydrationWarning style={{ display: "contents" }}>
+      <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+      <AdminShell
+        title="Germomics"
+        apps={[{ id: "germomics", label: "Germomics admin", href: "/admin", mono: "G", current: true }]}
+        nav={nav}
+        renderLink={({ href, children, ...rest }) => (
+          <Link to={href} {...rest}>
+            {children}
+          </Link>
+        )}
+        account={{
+          name: email || "Administrator",
+          initials: (email[0] ?? "A").toUpperCase(),
+          role: "Administrator",
+          email,
+          appLinks: [
+            { label: "View site", href: "/" },
+            {
+              label: theme === "dark" ? "Switch to light theme" : "Switch to dark theme",
+              onClick: () => applyTheme(theme === "dark" ? "light" : "dark"),
+            },
+          ],
+          // Access owns sign-out: it ends the Access session, then returns to its own login.
+          onSignOut: () => {
+            window.location.href = "/cdn-cgi/access/logout";
+          },
+        }}
+      >
+        <div className="mx-auto max-w-5xl px-4 py-6">
+          <Outlet />
         </div>
-      </header>
-      <main className="mx-auto max-w-5xl px-4 py-8">
-        <Outlet />
-      </main>
+      </AdminShell>
     </div>
   );
 }
