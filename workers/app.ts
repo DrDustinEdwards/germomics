@@ -6,6 +6,7 @@ import {
 } from "../app/lib/security.server";
 import { serveWithEdgeCache } from "../app/lib/edge-cache.server";
 import { captureException } from "../app/lib/sentry.server";
+import { carrelApi } from "../app/lib/carrel/handler.server";
 
 // Seed React Router v8's request context with the native Cloudflare bindings, so every
 // loader/action/middleware reaches D1/R2/KV through `context` and never over HTTP or a
@@ -19,6 +20,11 @@ export default {
   async fetch(request, env, ctx) {
     const origin = new URL(request.url).origin;
     try {
+      // Carrel's site API. Its own guard (prefix, rate limit, key, route) runs first and answers
+      // everything under /api/carrel/v1; nothing else is served by it.
+      const carrel = carrelApi(env);
+      if (carrel.matches(request)) return withSecurityHeaders(await carrel.handle(request), origin);
+
       // Abuse mitigation before any work: rate-limit auth/admin/AI paths (KV sliding window).
       const limited = await enforceRateLimit(env, request);
       if (limited) return withSecurityHeaders(limited, origin);
