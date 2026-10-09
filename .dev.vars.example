@@ -1,13 +1,10 @@
 # Copy to .dev.vars for local `npm run dev` (vite + workerd). Never commit .dev.vars.
 # Production values are Cloudflare secrets (wrangler secret put / dashboard), not these.
 
-# Better Auth
-BETTER_AUTH_SECRET=dev-only-secret-change-me
-BETTER_AUTH_URL=http://localhost:5173
-
-# Google OAuth client (Google Cloud Console)
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-
-# The single email allowed to sign in to /admin
+# The single admin. Behind Cloudflare Access in production (ACCESS_TEAM_DOMAIN and ACCESS_AUD are
+# dashboard variables). Locally there is no Access: this lets a localhost request be the admin.
 ADMIN_EMAIL=emaildustinedwards@gmail.com
+ACCESS_DEV_BYPASS=1
+
+# Signs the preview links (app/lib/preview.server.ts).
+BETTER_AUTH_SECRET=dev-only-secret-change-me
