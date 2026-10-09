@@ -42,12 +42,12 @@ function bypassPath(pathname: string): boolean {
   );
 }
 
-// Better Auth's session cookie is `better-auth.session_token`, prefixed with `__Secure-` over
-// HTTPS (and a `better-auth.session_data` cookie when cookie-cache is on). Match the stable
-// substring so every form is caught — any request carrying one is treated as authenticated.
+// Cloudflare Access sets a `CF_Authorization` cookie on the host once the admin has signed in. Any
+// request carrying one is treated as authenticated and bypasses the cache, which is also what lets
+// the admin see their own edits at once. (Visitors never have one.)
 function hasSessionCookie(request: Request): boolean {
   const cookie = request.headers.get("Cookie");
-  return cookie ? /better-auth/i.test(cookie) : false;
+  return cookie ? /(?:^|;\s*)CF_Authorization=/.test(cookie) : false;
 }
 
 // Tracking params never change the rendered page; strip them (and sort the rest) so they don't
