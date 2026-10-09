@@ -9,7 +9,7 @@ germomics.com: a podcast and writing site about microbiology and history, with i
 
 ## Stack
 
-React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-plugin; D1 with Drizzle; R2 for audio and images; KV for sessions; Better Auth (Google sign-in, one allowlisted admin); Tailwind v4 with the germomics palette as tokens (until the Capsomer move); lucide-react; Tiptap for the editor; Google Maps on the data pages; Recharts for charts (moving to Enarratio in the Capsomer move); Phaser 4 for games.
+React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-plugin; D1 with Drizzle; R2 for audio and images; KV for sessions; Cloudflare Access (application germomics-login) in front of /admin, verified with jose; Tailwind v4 with the germomics palette as tokens (until the Capsomer move); lucide-react; Tiptap for the editor; Google Maps on the data pages; Recharts for charts (moving to Enarratio in the Capsomer move); Phaser 4 for games.
 
 ## Commands
 
@@ -22,7 +22,7 @@ React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-pl
 
 `wrangler d1 export` fails on the two FTS5 tables, so the Worker's scheduled handler (03:17 UTC, `wrangler.jsonc` `triggers.crons`) runs `runBackup` in `app/lib/backup.server.ts`. It uses `@dustinedwards/d1-dump` to write one JSON object per table to the `BACKUPS` R2 bucket (`germomics-backups`) under `backups/json/<run id>/`, checks it, and only then writes `_complete.json`. Retention is d1-dump's default: the newest complete run of each of the last 14 days, 8 weeks and 6 months (about 25 runs, six months back).
 
-- `session`, `verification` and `account` are excluded (live credentials, one-time tokens and OAuth tokens; restoring sessions would revive old sign-ins). The list is `BACKUP_EXCLUDE` in `app/lib/backup-checks.ts`; when Better Auth's tables are dropped, remove them there in the same change.
+- `session`, `verification` and `account` (Better Auth's credential tables, dropped by `drizzle/0010_retire_better_auth.sql`) never go into a dump: live credentials, one-time tokens and OAuth tokens, and restoring sessions would revive old sign-ins. The list is `BACKUP_EXCLUDE` in `app/lib/backup-checks.ts`. A run excludes only the ones that exist at that moment (d1-dump fails on an excluded name that is not a table), so it passes before and after the migration.
 - A dump is left without its marker, and the run fails, if a content table (`posts`, `content_blocks`, `settings`, `show_config`) differs from its live count, a credential table is present, or everything is empty.
 - `/health` reports `backup: { last_ok, age_hours, warning? }`; it warns past 26 hours.
 - Restore and the drill: the d1-dump README ("Restore" and "Restore drill"). Download a run with `npx wrangler r2 object get germomics-backups/backups/json/<run id>/<file> --remote`, then `npx d1-dump drill --dir <dir>` (needs a Cloudflare API token that can create and delete D1 databases; Node 24).

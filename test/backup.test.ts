@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dumpProblems, type DumpSummary } from "../app/lib/backup-checks";
+import { dumpProblems, presentExcludes, type DumpSummary } from "../app/lib/backup-checks";
 
 const live = { posts: 40, content_blocks: 25, settings: 60, show_config: 1 };
 const good: DumpSummary = {
@@ -50,7 +50,36 @@ describe("nightly dump checks", () => {
     expect(dumpProblems(dump, live)).toContain("account is in the dump but must be excluded");
   });
 
-  it("fails a dump that does not record the exclusions", () => {
-    expect(dumpProblems({ ...good, excluded: [] }, live)).toContain("verification is not recorded as excluded");
+  it("fails a dump that carries the verification table", () => {
+    const dump = { ...good, tables: [...good.tables, { name: "verification", rows: 2 }] };
+    expect(dumpProblems(dump, live)).toContain("verification is in the dump but must be excluded");
+  });
+
+  it("passes a dump of a database that no longer has the credential tables (after 0010)", () => {
+    const after: DumpSummary = { tables: good.tables.filter((t) => t.name !== "user"), excluded: [] };
+    expect(dumpProblems(after, live)).toEqual([]);
+  });
+
+  it("fails a dump that carries a credential table even when nothing was excluded", () => {
+    const dump: DumpSummary = { tables: [...good.tables, { name: "session", rows: 1 }], excluded: [] };
+    expect(dumpProblems(dump, live)).toContain("session is in the dump but must be excluded");
+  });
+});
+
+describe("which credential tables to exclude", () => {
+  it("excludes all three while they exist (before 0010)", () => {
+    expect(presentExcludes(["posts", "user", "session", "account", "verification"])).toEqual([
+      "session",
+      "verification",
+      "account",
+    ]);
+  });
+
+  it("excludes none once they are dropped, so d1-dump does not fail on a missing name", () => {
+    expect(presentExcludes(["posts", "content_blocks", "settings", "show_config"])).toEqual([]);
+  });
+
+  it("excludes only the ones left", () => {
+    expect(presentExcludes(["posts", "account"])).toEqual(["account"]);
   });
 });
