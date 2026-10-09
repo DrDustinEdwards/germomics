@@ -18,18 +18,14 @@ React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-pl
 - `npm run db:migrate` (local) and `db:migrate:prod` (remote).
 - Deploys: Cloudflare Workers Builds deploys on every push to `main`. A merge to `main` is a production deploy. `npm run deploy` deploys by hand.
 
-## Backup: the whole-database export does not work here
+## Backup: nightly d1-dump into R2
 
-`npx wrangler d1 export germomics` fails on the two FTS5 tables. Export per table, data only, the irreplaceable content first:
+`wrangler d1 export` fails on the two FTS5 tables, so the Worker's scheduled handler (03:17 UTC, `wrangler.jsonc` `triggers.crons`) runs `runBackup` in `app/lib/backup.server.ts`. It uses `@dustinedwards/d1-dump` to write one JSON object per table to the `BACKUPS` R2 bucket (`germomics-backups`) under `backups/json/<run id>/`, checks it, and only then writes `_complete.json`. It keeps 90 days and always the 14 newest complete runs.
 
-```
-npx wrangler d1 export germomics --remote --no-schema --table posts --output export-posts.sql
-npx wrangler d1 export germomics --remote --no-schema --table content_blocks --output export-content_blocks.sql
-npx wrangler d1 export germomics --remote --no-schema --table settings --output export-settings.sql
-npx wrangler d1 export germomics --remote --no-schema --table show_config --output export-show_config.sql
-```
-
-Check counts on the other tables rather than trusting a list; Better Auth's tables regenerate on login. Never export `posts_fts`, `content_blocks_fts` or any FTS shadow table. Restore: apply `drizzle/` migrations, then the data files, then rebuild the indexes (`INSERT INTO posts_fts (posts_fts) VALUES ('rebuild');` and the same for `content_blocks_fts`). Check each export file actually contains INSERT rows. Full version: `germomics/protocol-backup.md` in Capsid. A nightly per-table backup job (d1-dump) is queued to replace this by hand.
+- `session` and `verification` are excluded (live credentials and one-time tokens; restoring them would revive old sessions). The list is `BACKUP_EXCLUDE` in `app/lib/backup-checks.ts`; when Better Auth's tables are dropped, remove them there in the same change.
+- A dump is left without its marker, and the run fails, if a content table (`posts`, `content_blocks`, `settings`, `show_config`) differs from its live count, a credential table is present, or everything is empty.
+- `/health` reports `backup: { last_ok, age_hours, warning? }`; it warns past 26 hours.
+- Restore and the drill: the d1-dump README ("Restore" and "Restore drill"). Download a run with `npx wrangler r2 object get germomics-backups/backups/json/<run id>/<file> --remote`, then `npx d1-dump drill --dir <dir>` (needs a Cloudflare API token that can create and delete D1 databases; Node 24).
 
 ## Hard rules
 

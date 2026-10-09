@@ -35,8 +35,12 @@
 	"r2_buckets": [
 		{ "binding": "MEDIA", "bucket_name": "germomics-audio" },
 		{ "binding": "BLOG_IMAGES", "bucket_name": "germomics-blog-images" },
-		{ "binding": "GAME_ASSETS", "bucket_name": "germomics-game-assets" }
+		{ "binding": "GAME_ASSETS", "bucket_name": "germomics-game-assets" },
+		// Nightly D1 dumps (d1-dump). The bucket must exist before this deploys; see CLAUDE.md "Backup".
+		{ "binding": "BACKUPS", "bucket_name": "germomics-backups" }
 	],
+	// 03:17 UTC nightly: runBackup() in app/lib/backup.server.ts.
+	"triggers": { "crons": ["17 3 * * *"] },
 	"kv_namespaces": [
 		{ "binding": "APP_KV", "id": "da89f831723f4ce5802f0c877f4c2209" }
 	]

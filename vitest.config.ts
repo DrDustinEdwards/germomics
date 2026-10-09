@@ -30,7 +30,7 @@ export default defineConfig({
         // never be one typo away from touching them. These are empty local equivalents.
         d1Databases: ["DB"],
         kvNamespaces: ["APP_KV"],
-        r2Buckets: ["MEDIA", "BLOG_IMAGES", "GAME_ASSETS"],
+        r2Buckets: ["MEDIA", "BLOG_IMAGES", "GAME_ASSETS", "BACKUPS"],
         bindings: {
           // Obviously fake, and never a real value: capsid/conventions.md forbids real content
           // in any fixture. The auth tests assert the single-admin lock's BEHAVIOUR against
