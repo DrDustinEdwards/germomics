@@ -129,6 +129,16 @@ describe("downscaleImage", () => {
     expect(close).toHaveBeenCalledTimes(1);
   });
 
+  it("copes with a browser whose bitmaps have no close method", async () => {
+    const file = png();
+    vi.stubGlobal("createImageBitmap", async () => ({ width: 1000, height: 500 }));
+    expect(await downscaleImage(file)).toBe(file);
+    vi.stubGlobal("createImageBitmap", async () => ({ width: 4000, height: 1000 }));
+    expect((await downscaleImage(file)).type).toBe("image/webp");
+    canvas.ctx = false;
+    expect(await downscaleImage(file)).toBe(file);
+  });
+
   it("uses a width given by the caller", async () => {
     vi.stubGlobal("createImageBitmap", async () => bitmap(1000, 500));
     await downscaleImage(png(), 400);
@@ -169,6 +179,11 @@ describe("waveform-client", () => {
     expect(seen).not.toBe(source);
     expect(new Uint8Array(seen!)).toEqual(new Uint8Array([1, 2, 3]));
     expect(closed).toHaveBeenCalledTimes(1);
+  });
+
+  it("hears the second channel of a stereo file even when the first is silent", async () => {
+    vi.stubGlobal("AudioContext", audioContext(() => buffer([new Array(400).fill(0), new Array(400).fill(0.8)])));
+    expect((await decodePeaks(new ArrayBuffer(1)))!.peaks.every((p) => p === 100)).toBe(true);
   });
 
   it("uses only the first two channels of a multichannel file", async () => {

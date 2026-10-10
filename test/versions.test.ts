@@ -60,6 +60,15 @@ describe("lineDiff", () => {
     expect(lineDiff("", "")).toEqual([{ type: "same", text: "" }]);
   });
 
+  it("prefers adding a new first line over deleting the old one when that keeps more lines in common", () => {
+    expect(lineDiff("x\ny", "z\nx\ny")).toEqual([{ type: "add", text: "z" }, { type: "same", text: "x" }, { type: "same", text: "y" }]);
+  });
+
+  it("deletes the lines left over when the new text ends first, and adds the lines left over when the old ends first", () => {
+    expect(lineDiff("a\nb\nc", "a")).toEqual([{ type: "same", text: "a" }, { type: "del", text: "b" }, { type: "del", text: "c" }]);
+    expect(lineDiff("a", "a\nb\nc")).toEqual([{ type: "same", text: "a" }, { type: "add", text: "b" }, { type: "add", text: "c" }]);
+  });
+
   it("keeps the longest common run of lines, so a moved line shows as one delete and one add", () => {
     const diff = lineDiff("1\n2\n3\n4", "2\n3\n4\n1");
     expect(diff.filter((d) => d.type === "same").map((d) => d.text)).toEqual(["2", "3", "4"]);

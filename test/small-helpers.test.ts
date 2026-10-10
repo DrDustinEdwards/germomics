@@ -196,10 +196,24 @@ describe("captureException", () => {
       exception: { values: [{ type: "TypeError", value: "boom" }] },
     });
     expect(event.event_id).toMatch(/^[0-9a-f]{32}$/);
-    expect(typeof event.timestamp).toBe("number");
+    expect(Math.abs(event.timestamp - Date.now() / 1000)).toBeLessThan(5);
+    expect(event).toMatchObject({ logger: "worker", tags: { runtime: "cloudflare-workers" } });
     expect(raw).not.toContain("Bearer");
     expect(raw).not.toContain("a=b");
     expect(raw).not.toContain("private body");
+  });
+
+  it("sends the first line of the stack when there is one, and none when there is not", () => {
+    const spy = sent();
+    const withStack = new TypeError("boom");
+    withStack.stack = "TypeError: boom\n    at somewhere (file.ts:1:1)";
+    const without = new Error("quiet");
+    without.stack = undefined;
+    captureException({ SENTRY_DSN: DSN } as unknown as Env, withStack, request, ctx().ctx);
+    captureException({ SENTRY_DSN: DSN } as unknown as Env, without, request, ctx().ctx);
+    const [a, b] = spy.mock.calls.map((c) => JSON.parse(String((c[1] as RequestInit).body)).exception.values[0]);
+    expect(a.stacktrace).toEqual({ frames: [{ function: "TypeError: boom" }] });
+    expect(b).not.toHaveProperty("stacktrace");
   });
 
   it("wraps a thrown non-error, and names an error with no message", () => {

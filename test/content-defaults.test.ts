@@ -1,6 +1,6 @@
 import { env } from "cloudflare:test";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { PAGE_DEFAULTS, SETTING_DEFAULTS, SNIPPET_DEFAULTS } from "~/lib/content-defaults";
+import { SNIPPET_DEFAULTS } from "~/lib/content-defaults";
 import { applyMigrations } from "./helpers/d1";
 
 // content-defaults.ts is generated from the migration seed and is every page's fallback when a row
@@ -12,10 +12,18 @@ const rows = async (sql: string) => (await e.DB.prepare(sql).all<Record<string, 
 
 beforeAll(() => applyMigrations(e.DB), 60_000);
 
+// Imported inside each test, from a fresh module registry, so the values the test reads are the ones
+// the source file holds at that moment (and a mutation run sees a changed value).
+async function defaults() {
+  vi.resetModules();
+  return import("~/lib/content-defaults");
+}
+
 describe("the in-code content defaults", () => {
   it("match the settings the migrations seed, key for key and value for value", async () => {
     const seeded = Object.fromEntries((await rows("SELECT key, value FROM settings")).map((r) => [r.key, r.value]));
     expect(Object.keys(seeded).length).toBeGreaterThan(10);
+    const { SETTING_DEFAULTS } = await defaults();
     expect(Object.keys(SETTING_DEFAULTS).sort()).toEqual(Object.keys(seeded).sort());
     expect(SETTING_DEFAULTS).toEqual(seeded);
   });
@@ -23,13 +31,15 @@ describe("the in-code content defaults", () => {
   it("match the snippets the migrations seed", async () => {
     const seeded = Object.fromEntries((await rows("SELECT key, value FROM content_blocks WHERE kind = 'snippet'")).map((r) => [r.key, r.value]));
     expect(Object.keys(seeded).length).toBeGreaterThan(10);
-    expect(Object.keys(SNIPPET_DEFAULTS).sort()).toEqual(Object.keys(seeded).sort());
-    expect(SNIPPET_DEFAULTS).toEqual(seeded);
+    const fresh = (await defaults()).SNIPPET_DEFAULTS;
+    expect(Object.keys(fresh).sort()).toEqual(Object.keys(seeded).sort());
+    expect(fresh).toEqual(seeded);
   });
 
   it("match the pages the migrations seed, with their titles", async () => {
     const seeded = Object.fromEntries((await rows("SELECT key, title, value FROM content_blocks WHERE kind = 'page'")).map((r) => [r.key, { title: r.title, value: r.value }]));
     expect(Object.keys(seeded).length).toBeGreaterThan(0);
+    const { PAGE_DEFAULTS } = await defaults();
     expect(Object.keys(PAGE_DEFAULTS).sort()).toEqual(Object.keys(seeded).sort());
     expect(PAGE_DEFAULTS).toEqual(seeded);
   });
@@ -55,6 +65,8 @@ describe("useSnippet", () => {
     expect(useSnippet("snippet:none", "given")).toBe("given");
     expect(useSnippet("snippet:none")).toBe("");
     data.mockReturnValue(undefined);
+    expect(useSnippet("snippet:nav.writing")).toBe(SNIPPET_DEFAULTS["snippet:nav.writing"]);
+    data.mockReturnValue({});
     expect(useSnippet("snippet:nav.writing")).toBe(SNIPPET_DEFAULTS["snippet:nav.writing"]);
     data.mockReturnValue({ snippets: { "snippet:nav.writing": "" } });
     expect(useSnippet("snippet:nav.writing")).toBe("");

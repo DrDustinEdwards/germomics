@@ -149,6 +149,55 @@ describe("buildPodcastFeed", () => {
   });
 });
 
+describe("the feed envelope", () => {
+  it("declares the namespaces every tag in the podcast feed depends on, exactly", () => {
+    const xml = buildPodcastFeed(show, [], ORIGIN);
+    expect(xml.split("\n")[1]).toBe(
+      '<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:podcast="https://podcastindex.org/namespace/1.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">',
+    );
+    expect(buildSiteFeed(show, [], ORIGIN).split("\n")[1]).toBe(
+      '<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">',
+    );
+  });
+
+  it("puts one category per line and one item per block, in the order given", () => {
+    const xml = buildPodcastFeed(show, [episode({ slug: "first", guid: "g-first" }), episode({ slug: "second", guid: "g-second" })], ORIGIN);
+    expect(xml).toContain('</itunes:category>\n  <itunes:category text="History"/>');
+    expect(xml).toContain("</item>\n  <item>");
+    expect(xml.indexOf("g-first")).toBeLessThan(xml.indexOf("g-second"));
+  });
+
+  it("writes a minimal episode as exactly this item, so no tag changes without a test noticing", () => {
+    const [item] = items(buildPodcastFeed(show, [episode()], ORIGIN));
+    expect("  <item>" + item.split("</item>")[0] + "</item>").toBe(
+      [
+        "  <item>",
+        "    <title>Episode &lt;one&gt; &amp; &quot;two&quot;</title>",
+        "    <link>https://germomics.com/ep-1</link>",
+        '    <guid isPermaLink="false">urn:germomics:g1</guid>',
+        "    <pubDate>Tue, 05 Mar 2024 10:00:00 GMT</pubDate>",
+        "    <description><![CDATA[Short notes]]></description>",
+        "    <content:encoded><![CDATA[<p>Full</p>]]></content:encoded>",
+        '    <enclosure url="https://op3.dev/e/media.germomics.com/ep1.mp3" length="12345" type="audio/mpeg"/>',
+        "    <itunes:duration>01:02:05</itunes:duration>",
+        "    <itunes:explicit>false</itunes:explicit>",
+        "    <itunes:episodeType>full</itunes:episodeType>",
+        "    ",
+        "  </item>",
+      ].join("\n"),
+    );
+  });
+});
+
+describe("guests with no links", () => {
+  it("still link to their own page when their links list is empty, as the episode page builds it", () => {
+    const guests = new Map<number, GuestView[]>([[1, [{ name: "Cy", slug: "cy", links: [] }, { name: "Di", slug: "di", link: "https://di.example", links: [] }]]]);
+    const [item] = items(buildPodcastFeed(show, [episode()], ORIGIN, guests));
+    expect(item).toContain('<podcast:person role="guest" href="https://germomics.com/guests/cy">Cy</podcast:person>');
+    expect(item).toContain('<podcast:person role="guest" href="https://di.example">Di</podcast:person>');
+  });
+});
+
 describe("buildSiteFeed", () => {
   it("writes each article with its URL as the guid, and the show's writing feed as the channel", () => {
     const xml = buildSiteFeed(show, [episode({ slug: "essay", title: "An <essay>", guid: null, excerpt: null })], ORIGIN);
