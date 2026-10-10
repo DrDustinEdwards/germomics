@@ -1,0 +1,618 @@
+[
+  {
+    "file": "test/carrel.test.ts",
+    "name": "the guard: planted requests must be refused does not serve the key off its prefix",
+    "kills": 0,
+    "unique": 0,
+    "kind": "zero-kill",
+    "protected": true
+  },
+  {
+    "file": "test/carrel.test.ts",
+    "name": "the guard: planted requests must be refused refuses a wrong key and no key",
+    "kills": 0,
+    "unique": 0,
+    "kind": "zero-kill",
+    "protected": false
+  },
+  {
+    "file": "test/carrel.test.ts",
+    "name": "the guard: planted requests must be refused refuses an unknown route",
+    "kills": 0,
+    "unique": 0,
+    "kind": "zero-kill",
+    "protected": false
+  },
+  {
+    "file": "test/carrel.test.ts",
+    "name": "the guard: planted requests must be refused refuses a stale expectedVersion and leaves the article as it was",
+    "kills": 91,
+    "unique": 0,
+    "kind": "covered",
+    "protected": false
+  },
+  {
+    "file": "test/carrel.test.ts",
+    "name": "the guard: planted requests must be refused refuses a create when the id is taken, and a version for an id that does not exist",
+    "kills": 30,
+    "unique": 0,
+    "kind": "covered",
+    "protected": false
+  },
+  {
+    "file": "test/carrel.test.ts",
+    "name": "content round-trips an article: create, read, edit, publish, unpublish",
+    "kills": 150,
+    "unique": 34,
+    "kind": "",
+    "protected": false
+  },
+  {
+    "file": "test/carrel.test.ts",
+    "name": "content sanitizes the body on every write, as the editor does",
+    "kills": 67,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/carrel.test.ts",
+    "name": "content schedules into the future and reports it as scheduled",
+    "kills": 56,
+    "unique": 10,
+    "kind": "",
+    "protected": false
+  },
+  {
+    "file": "test/carrel.test.ts",
+    "name": "content never lists, reads or overwrites a podcast episode",
+    "kills": 16,
+    "unique": 4,
+    "kind": "",
+    "protected": false
+  },
+  {
+    "file": "test/carrel.test.ts",
+    "name": "content filters the list by status",
+    "kills": 76,
+    "unique": 14,
+    "kind": "",
+    "protected": false
+  },
+  {
+    "file": "test/carrel.test.ts",
+    "name": "content renders a preview without saving anything",
+    "kills": 34,
+    "unique": 2,
+    "kind": "",
+    "protected": false
+  },
+  {
+    "file": "test/carrel.test.ts",
+    "name": "media uploads, lists, and deletes an unused image",
+    "kills": 35,
+    "unique": 12,
+    "kind": "",
+    "protected": false
+  },
+  {
+    "file": "test/carrel.test.ts",
+    "name": "media refuses to delete an image a post uses, and names the post",
+    "kills": 32,
+    "unique": 13,
+    "kind": "",
+    "protected": false
+  },
+  {
+    "file": "test/carrel.test.ts",
+    "name": "media refuses a type the site did not declare and bytes that are not the declared type",
+    "kills": 0,
+    "unique": 0,
+    "kind": "zero-kill",
+    "protected": false
+  },
+  {
+    "file": "test/carrel.test.ts",
+    "name": "conformance passes site-api's own conformance suite",
+    "kills": 17,
+    "unique": 2,
+    "kind": "",
+    "protected": false
+  },
+  {
+    "file": "test/post-render.test.ts",
+    "name": "demoteHeadings demotes the ladder by one so the page keeps a single h1",
+    "kills": 7,
+    "unique": 0,
+    "kind": "covered",
+    "protected": false
+  },
+  {
+    "file": "test/post-render.test.ts",
+    "name": "demoteHeadings preserves attributes on the tag it rewrites",
+    "kills": 9,
+    "unique": 2,
+    "kind": "",
+    "protected": false
+  },
+  {
+    "file": "test/post-render.test.ts",
+    "name": "demoteHeadings leaves h4 and non-heading tags alone",
+    "kills": 2,
+    "unique": 0,
+    "kind": "covered",
+    "protected": false
+  },
+  {
+    "file": "test/post-render.test.ts",
+    "name": "demoteHeadings returns empty input unchanged",
+    "kills": 1,
+    "unique": 0,
+    "kind": "covered",
+    "protected": false
+  },
+  {
+    "file": "test/post-render.test.ts",
+    "name": "addHeadingIds injects an id on h2 and h3 so the table of contents can anchor",
+    "kills": 13,
+    "unique": 0,
+    "kind": "covered",
+    "protected": false
+  },
+  {
+    "file": "test/post-render.test.ts",
+    "name": "addHeadingIds does not overwrite an id the author already set",
+    "kills": 4,
+    "unique": 2,
+    "kind": "",
+    "protected": true
+  },
+  {
+    "file": "test/post-render.test.ts",
+    "name": "addHeadingIds leaves headings outside the h2/h3 range alone",
+    "kills": 2,
+    "unique": 0,
+    "kind": "covered",
+    "protected": false
+  },
+  {
+    "file": "test/post-render.test.ts",
+    "name": "addHeadingIds agrees with tableOfContents on the id for the same heading",
+    "kills": 23,
+    "unique": 11,
+    "kind": "",
+    "protected": false
+  },
+  {
+    "file": "test/post-render.test.ts",
+    "name": "the render pipeline in the order BodyRenderer applies it demotes first, then anchors the demoted headings",
+    "kills": 20,
+    "unique": 0,
+    "kind": "covered",
+    "protected": false
+  },
+  {
+    "file": "test/post-render.test.ts",
+    "name": "the render pipeline in the order BodyRenderer applies it passes an empty body through without throwing",
+    "kills": 2,
+    "unique": 0,
+    "kind": "covered",
+    "protected": false
+  },
+  {
+    "file": "test/sanitize.test.ts",
+    "name": "sanitizeHtml drops a script element AND its contents, never just unwrapping it",
+    "kills": 12,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/sanitize.test.ts",
+    "name": "sanitizeHtml drops the other dangerous elements with their contents",
+    "kills": 12,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/sanitize.test.ts",
+    "name": "sanitizeHtml drops the void dangerous elements too",
+    "kills": 9,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/sanitize.test.ts",
+    "name": "sanitizeHtml unwraps a cosmetic span but keeps the text inside it",
+    "kills": 16,
+    "unique": 4,
+    "kind": "",
+    "protected": true
+  },
+  {
+    "file": "test/sanitize.test.ts",
+    "name": "sanitizeHtml keeps the figure credit span, and strips everything on it but class",
+    "kills": 24,
+    "unique": 13,
+    "kind": "",
+    "protected": true
+  },
+  {
+    "file": "test/sanitize.test.ts",
+    "name": "sanitizeHtml strips style, id and on* handlers from a tag it keeps",
+    "kills": 19,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/sanitize.test.ts",
+    "name": "sanitizeHtml strips a javascript: href but keeps an ordinary one",
+    "kills": 33,
+    "unique": 4,
+    "kind": "",
+    "protected": true
+  },
+  {
+    "file": "test/sanitize.test.ts",
+    "name": "sanitizeHtml strips data: and vbscript: URLs on both href and src",
+    "kills": 32,
+    "unique": 3,
+    "kind": "",
+    "protected": true
+  },
+  {
+    "file": "test/sanitize.test.ts",
+    "name": "sanitizeHtml forces rel=noopener noreferrer on a link that opens in a new tab",
+    "kills": 27,
+    "unique": 9,
+    "kind": "",
+    "protected": true
+  },
+  {
+    "file": "test/sanitize.test.ts",
+    "name": "sanitizeHtml removes comments",
+    "kills": 4,
+    "unique": 2,
+    "kind": "",
+    "protected": true
+  },
+  {
+    "file": "test/sanitize.test.ts",
+    "name": "sanitizeHtml returns an empty string for empty or whitespace input",
+    "kills": 2,
+    "unique": 1,
+    "kind": "",
+    "protected": true
+  },
+  {
+    "file": "test/sanitize.test.ts",
+    "name": "sanitizeHtml keeps the semantic tags the policy allows",
+    "kills": 11,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/csp-analytics.test.ts",
+    "name": "the CSP and Cloudflare Web Analytics keeps the automatic beacon's script host",
+    "kills": 0,
+    "unique": 0,
+    "kind": "zero-kill",
+    "protected": true
+  },
+  {
+    "file": "test/csp-analytics.test.ts",
+    "name": "the CSP and Cloudflare Web Analytics does not let pages connect to cloudflareinsights.com",
+    "kills": 0,
+    "unique": 0,
+    "kind": "zero-kill",
+    "protected": true
+  },
+  {
+    "file": "test/backup.integration.test.ts",
+    "name": "nightly backup dumps the content, leaves out session, verification and account, and reports a fresh age",
+    "kills": 41,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/backup.integration.test.ts",
+    "name": "nightly backup passes a database without the Better Auth tables (after 0010) and marks the dump complete",
+    "kills": 38,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/backup.integration.test.ts",
+    "name": "nightly backup leaves an emptied database without a marker, and throws",
+    "kills": 23,
+    "unique": 3,
+    "kind": "",
+    "protected": true
+  },
+  {
+    "file": "test/backup.integration.test.ts",
+    "name": "nightly backup warns when the newest complete dump is older than 26 hours",
+    "kills": 41,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/access.test.ts",
+    "name": "getAdminSession accepts a valid assertion header for the admin",
+    "kills": 26,
+    "unique": 4,
+    "kind": "",
+    "protected": true
+  },
+  {
+    "file": "test/access.test.ts",
+    "name": "getAdminSession accepts the same token from the CF_Authorization cookie (public page with ?preview)",
+    "kills": 27,
+    "unique": 5,
+    "kind": "",
+    "protected": true
+  },
+  {
+    "file": "test/access.test.ts",
+    "name": "getAdminSession refuses a request with no assertion",
+    "kills": 3,
+    "unique": 1,
+    "kind": "",
+    "protected": true
+  },
+  {
+    "file": "test/access.test.ts",
+    "name": "getAdminSession refuses a token for a different audience",
+    "kills": 5,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/access.test.ts",
+    "name": "getAdminSession refuses an expired token",
+    "kills": 4,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/access.test.ts",
+    "name": "getAdminSession refuses a token from another issuer",
+    "kills": 5,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/access.test.ts",
+    "name": "getAdminSession refuses a token signed by a key that is not the team's",
+    "kills": 4,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/access.test.ts",
+    "name": "getAdminSession refuses a valid token for an email that is not the admin",
+    "kills": 7,
+    "unique": 3,
+    "kind": "",
+    "protected": true
+  },
+  {
+    "file": "test/access.test.ts",
+    "name": "getAdminSession refuses garbage in the header",
+    "kills": 4,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/access.test.ts",
+    "name": "getAdminSession fails closed when the team domain or audience is not configured",
+    "kills": 6,
+    "unique": 2,
+    "kind": "",
+    "protected": true
+  },
+  {
+    "file": "test/access.test.ts",
+    "name": "getAdminSession honours the dev bypass on localhost only",
+    "kills": 13,
+    "unique": 9,
+    "kind": "",
+    "protected": true
+  },
+  {
+    "file": "test/backup.test.ts",
+    "name": "nightly dump checks passes a dump that matches the live counts and excludes the credential tables",
+    "kills": 21,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/backup.test.ts",
+    "name": "nightly dump checks fails an empty dump",
+    "kills": 9,
+    "unique": 5,
+    "kind": "",
+    "protected": true
+  },
+  {
+    "file": "test/backup.test.ts",
+    "name": "nightly dump checks fails a dump where every content table is empty, even if the live counts agree",
+    "kills": 8,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/backup.test.ts",
+    "name": "nightly dump checks fails a dump with a table dumped empty",
+    "kills": 12,
+    "unique": 3,
+    "kind": "",
+    "protected": true
+  },
+  {
+    "file": "test/backup.test.ts",
+    "name": "nightly dump checks fails a dump whose count differs from the live table",
+    "kills": 15,
+    "unique": 2,
+    "kind": "",
+    "protected": true
+  },
+  {
+    "file": "test/backup.test.ts",
+    "name": "nightly dump checks fails a dump that carries the session table",
+    "kills": 6,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/backup.test.ts",
+    "name": "nightly dump checks fails a dump that carries the account table",
+    "kills": 6,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/backup.test.ts",
+    "name": "nightly dump checks fails a dump that carries the verification table",
+    "kills": 6,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/backup.test.ts",
+    "name": "nightly dump checks passes a dump of a database that no longer has the credential tables (after 0010)",
+    "kills": 21,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/backup.test.ts",
+    "name": "nightly dump checks fails a dump that carries a credential table even when nothing was excluded",
+    "kills": 6,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/backup.test.ts",
+    "name": "which credential tables to exclude excludes all three while they exist (before 0010)",
+    "kills": 2,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/backup.test.ts",
+    "name": "which credential tables to exclude excludes none once they are dropped, so d1-dump does not fail on a missing name",
+    "kills": 2,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/backup.test.ts",
+    "name": "which credential tables to exclude excludes only the ones left",
+    "kills": 3,
+    "unique": 0,
+    "kind": "covered",
+    "protected": true
+  },
+  {
+    "file": "test/map.test.ts",
+    "name": "toLatLng reads a dataset's [lng, lat] into Google's { lat, lng }",
+    "kills": 2,
+    "unique": 0,
+    "kind": "covered",
+    "protected": false
+  },
+  {
+    "file": "test/map.test.ts",
+    "name": "toLatLng keeps the sign of each coordinate with its own axis",
+    "kills": 2,
+    "unique": 0,
+    "kind": "covered",
+    "protected": false
+  },
+  {
+    "file": "test/map.test.ts",
+    "name": "every dataset's map center finds at least one dataset with a map, so the cases below are not vacuous",
+    "kills": 0,
+    "unique": 0,
+    "kind": "zero-kill",
+    "protected": false
+  },
+  {
+    "file": "test/map.test.ts",
+    "name": "every dataset's map center cholera-soho-1854 is a coordinate that exists",
+    "kills": 0,
+    "unique": 0,
+    "kind": "zero-kill",
+    "protected": false
+  },
+  {
+    "file": "test/map.test.ts",
+    "name": "every dataset's map center cholera-soho-1854 has points to be centered on",
+    "kills": 0,
+    "unique": 0,
+    "kind": "zero-kill",
+    "protected": false
+  },
+  {
+    "file": "test/map.test.ts",
+    "name": "every dataset's map center cholera-soho-1854 sits within 5 degrees of its own points",
+    "kills": 0,
+    "unique": 0,
+    "kind": "zero-kill",
+    "protected": false
+  },
+  {
+    "file": "test/map.test.ts",
+    "name": "siteIsDark an explicit dark theme wins over a light system",
+    "kills": 5,
+    "unique": 3,
+    "kind": "",
+    "protected": false
+  },
+  {
+    "file": "test/map.test.ts",
+    "name": "siteIsDark an explicit light theme wins over a dark system",
+    "kills": 7,
+    "unique": 2,
+    "kind": "",
+    "protected": false
+  },
+  {
+    "file": "test/map.test.ts",
+    "name": "siteIsDark with no explicit theme, the system decides, both ways",
+    "kills": 5,
+    "unique": 0,
+    "kind": "covered",
+    "protected": false
+  },
+  {
+    "file": "test/map.test.ts",
+    "name": "siteIsDark an attribute value that is neither light nor dark falls through to the system",
+    "kills": 6,
+    "unique": 0,
+    "kind": "covered",
+    "protected": false
+  }
+]

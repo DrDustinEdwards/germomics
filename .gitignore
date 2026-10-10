@@ -27,3 +27,7 @@ scripts/_generated/
 
 # No-bloat reports (scripts/nobloat-*.mjs, jscpd); CI prints them, never commit them
 .nobloat/
+
+# Stryker (job_f5acaeb4e003)
+/reports/
+.stryker-tmp/
