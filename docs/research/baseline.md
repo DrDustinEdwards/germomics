@@ -107,11 +107,22 @@ since 166ff3b or where newly covered static code is now counted.
 | 1 auth | app/lib/access.server.ts | 78.13% | 90.63% | 64 (58 / 6 / 0) |
 | 1 auth | app/lib/security.server.ts | 0.00% | 98.84% | 86 (85 / 1 / 0) |
 | 1 auth | app/lib/preview.server.ts | 0.00% | 86.67% | 30 (26 / 3 / 1) |
+| 2 Carrel | app/lib/carrel/adapter.server.ts | 55.36% | 90.82% | 294 (267 / 23 / 4) |
+| 2 Carrel | app/lib/carrel/source.ts | 60.44% | 92.31% | 91 (84 / 7 / 0) |
+| 2 Carrel | app/lib/carrel/handler.server.ts | 0.00% | 66.67% | 3 (2 / 1 / 0) |
 
 Survivors left on purpose in batch 1: in `access.server.ts` the key-set cache (`if (!set)`), the
 early `if (!token)` return and the catch body are equivalent mutants (jose throws on the same inputs and the
 function returns null either way); in `preview.server.ts` the hex padding and the loop bound are equivalent
 for a 32-byte digest.
+
+Bug found in batch 2, not fixed (the job says report, not fix): Carrel's media list
+(`adapter.server.ts`, `media.list`) reads each file's content type, alt and filename from
+`BLOG_IMAGES.list()`, but R2 returns no `httpMetadata` or `customMetadata` on a list unless the call passes
+`include: ["httpMetadata", "customMetadata"]`. So every listed file shows as `application/octet-stream` with an
+empty alt and a filename taken from its key; `media.get` (which uses `head`) is right. Seen in Miniflare: the
+same object listed without `include` has `contentType` undefined and `{}` custom metadata, and with it has
+both. `test/carrel-adapter.test.ts` leaves that assertion out so the suite stays green.
 
 ## Per-test kill matrix
 
