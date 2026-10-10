@@ -226,6 +226,12 @@ describe("media", () => {
     expect(logged).toEqual([{ event: "carrel.media.upload", id: item.id, version: head.etag, changeId: "chg_u" }]);
   });
 
+  it("lists a file with the type, alt and filename it was uploaded with", async () => {
+    const item = await media.upload({ bytes: PNG, contentType: "image/png", filename: "Pump.png", alt: "The Broad Street pump", changeId: "c" });
+    const [listed] = (await media.list({ limit: 10 })).items;
+    expect(listed).toMatchObject({ id: item.id, contentType: "image/png", alt: "The Broad Street pump", filename: "Pump.png" });
+  });
+
   it("describes a file with no metadata from its key", async () => {
     await e.BLOG_IMAGES.put("posts/1/raw.jpg", PNG);
     const got = (await media.get("posts/1/raw.jpg"))!;
@@ -237,6 +243,7 @@ describe("media", () => {
     for (const k of ["a/Cholera.png", "a/plague.png", "a/cholera-2.png"]) await e.BLOG_IMAGES.put(k, PNG, { httpMetadata: { contentType: "image/png" } });
     const hits = await media.list({ q: "CHOLERA", limit: 10 });
     expect(hits.items.map((i) => i.id).sort()).toEqual(["a/Cholera.png", "a/cholera-2.png"]);
+    expect(hits.items.map((i) => i.contentType)).toEqual(["image/png", "image/png"]);
     expect(hits.nextCursor).toBeNull();
     expect((await media.list({ limit: 2 })).items).toHaveLength(2);
   });

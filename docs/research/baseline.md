@@ -126,13 +126,13 @@ early `if (!token)` return and the catch body are equivalent mutants (jose throw
 function returns null either way); in `preview.server.ts` the hex padding and the loop bound are equivalent
 for a 32-byte digest.
 
-Bug found in batch 2, not fixed (the job says report, not fix): Carrel's media list
+Bug found in batch 2, reported here and fixed in a separate pull request (branch `claude/fix-feed-and-media-list`): Carrel's media list
 (`adapter.server.ts`, `media.list`) reads each file's content type, alt and filename from
 `BLOG_IMAGES.list()`, but R2 returns no `httpMetadata` or `customMetadata` on a list unless the call passes
 `include: ["httpMetadata", "customMetadata"]`. So every listed file shows as `application/octet-stream` with an
 empty alt and a filename taken from its key; `media.get` (which uses `head`) is right. Seen in Miniflare: the
 same object listed without `include` has `contentType` undefined and `{}` custom metadata, and with it has
-both. `test/carrel-adapter.test.ts` leaves that assertion out so the suite stays green.
+both. The fix passes `include`, and `test/carrel-adapter.test.ts` now asserts the listed type, alt and filename.
 
 The adapter's second score comes from building it per test rather than at import: built once at import, the
 adapter object was made before Stryker switched a mutant on, so those mutants survived without being tested.
@@ -152,7 +152,7 @@ the audio bucket, and empty files accepted.
 
 ### Second bug, and where the job stopped
 
-Found after batch 5, not fixed: the podcast feed carries no transcripts and no show notes. `/feed/podcast/`
+Found after batch 5, fixed in the same separate pull request. It also reached `/llms-full.txt`, which printed summaries instead of bodies for the same reason: the podcast feed carries no transcripts and no show notes. `/feed/podcast/`
 (`app/routes/feed.podcast.ts`) builds from `listEpisodes`, which returns listing cards (`asCards` in
 `posts.server.ts`) with `transcript: null` and `body: ""`. `buildPodcastFeed` only writes
 `<podcast:transcript>` when `e.transcript` is set, and fills `description` and `content:encoded` from `excerpt ??

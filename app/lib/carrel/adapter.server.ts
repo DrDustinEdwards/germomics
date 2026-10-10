@@ -263,7 +263,12 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
       limits: { maxBytes: MAX_IMAGE_BYTES, types: IMAGE_TYPES },
 
       async list({ q, cursor, limit }) {
-        const listed = await env.BLOG_IMAGES.list({ limit: Math.min(limit * 4, 1000), cursor: cursor || undefined });
+        // R2 leaves metadata off a list unless asked for it; without include every file reads as untyped.
+        const listed = await env.BLOG_IMAGES.list({
+          limit: Math.min(limit * 4, 1000),
+          cursor: cursor || undefined,
+          include: ["httpMetadata", "customMetadata"],
+        });
         const matching = listed.objects.filter((o) => !q || o.key.toLowerCase().includes(q.toLowerCase()));
         const page = matching.slice(0, limit);
         const items = page.map((o) => toMediaItem(o.key, o.size, o.httpMetadata?.contentType, o.customMetadata, o.uploaded));
