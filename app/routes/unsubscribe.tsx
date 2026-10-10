@@ -1,28 +1,32 @@
-// /unsubscribe?token=… — tokenized one-click unsubscribe. The token is unguessable, so the GET
-// performs the unsubscribe directly (the standard email-link behavior) and is idempotent; a POST
-// is also accepted for RFC 8058 List-Unsubscribe-Post one-click. No login, no PII beyond the email
-// the token resolves to. noindex.
-import { Link } from "react-router";
+// /unsubscribe?token=...: tokenized unsubscribe. Opening the link only looks the token up and shows
+// a confirm button: mail scanners and link previews open every link in a message, so a GET that
+// changed data would unsubscribe people who never asked. The change happens on POST, from that
+// button or from an RFC 8058 List-Unsubscribe-Post one-click request, and is idempotent. No login,
+// no PII beyond the email the token resolves to. noindex.
+import { Form, Link } from "react-router";
 import { and, eq, isNull } from "drizzle-orm";
 import type { Route } from "./+types/unsubscribe";
 import { getEnv } from "~/lib/context.server";
 import { getDb } from "~/db/index.server";
 import { subscribers } from "~/db/schema";
 
-type Result = { status: "done" | "already" | "invalid"; email?: string };
+type Result = { status: "confirm" | "done" | "already" | "invalid"; email?: string; token?: string };
 
-async function unsubscribe(env: Env, token: string | null): Promise<Result> {
-  if (!token) return { status: "invalid" };
-  const db = getDb(env);
-  const rows = await db
+async function lookup(env: Env, token: string | null) {
+  if (!token) return null;
+  const rows = await getDb(env)
     .select({ email: subscribers.email, unsubscribedAt: subscribers.unsubscribedAt })
     .from(subscribers)
     .where(eq(subscribers.unsubscribeToken, token))
     .limit(1);
-  const row = rows[0];
-  if (!row) return { status: "invalid" };
+  return rows[0] ?? null;
+}
+
+async function unsubscribe(env: Env, token: string | null): Promise<Result> {
+  const row = await lookup(env, token);
+  if (!row || !token) return { status: "invalid" };
   if (row.unsubscribedAt) return { status: "already", email: row.email };
-  await db
+  await getDb(env)
     .update(subscribers)
     .set({ unsubscribedAt: new Date().toISOString() })
     .where(and(eq(subscribers.unsubscribeToken, token), isNull(subscribers.unsubscribedAt)));
@@ -33,9 +37,13 @@ export function meta() {
   return [{ title: "Unsubscribe · Germomics" }, { name: "robots", content: "noindex" }];
 }
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+// Read only: never changes the row (see the header).
+export async function loader({ request, context }: Route.LoaderArgs): Promise<Result> {
   const token = new URL(request.url).searchParams.get("token");
-  return unsubscribe(getEnv(context), token);
+  const row = await lookup(getEnv(context), token);
+  if (!row || !token) return { status: "invalid" };
+  if (row.unsubscribedAt) return { status: "already", email: row.email };
+  return { status: "confirm", email: row.email, token };
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -49,14 +57,20 @@ export async function action({ request, context }: Route.ActionArgs) {
   return unsubscribe(getEnv(context), token);
 }
 
-export default function Unsubscribe({ loaderData }: Route.ComponentProps) {
-  const { status, email } = loaderData;
+export default function Unsubscribe({ loaderData, actionData }: Route.ComponentProps) {
+  const { status, email, token } = actionData ?? loaderData;
   return (
     <div className="mx-auto max-w-md py-16 text-center">
       <h1 className="font-display text-2xl font-semibold">
-        {status === "invalid" ? "Link not recognized" : "Unsubscribed"}
+        {status === "invalid" ? "Link not recognized" : status === "confirm" ? "Unsubscribe?" : "Unsubscribed"}
       </h1>
       <p className="mt-3 text-muted">
+        {status === "confirm" && (
+          <>
+            Stop sending the Germomics newsletter to{" "}
+            {email ? <strong className="text-ink">{email}</strong> : "this address"}?
+          </>
+        )}
         {status === "done" && (
           <>
             {email ? <strong className="text-ink">{email}</strong> : "You"} has been removed from the
@@ -67,6 +81,17 @@ export default function Unsubscribe({ loaderData }: Route.ComponentProps) {
         {status === "invalid" &&
           "This unsubscribe link is missing or invalid. If you keep receiving emails, reply to one and we’ll remove you."}
       </p>
+      {status === "confirm" && (
+        <Form method="post" className="mt-6">
+          <input type="hidden" name="token" value={token} />
+          <button
+            type="submit"
+            className="rounded-lg bg-brand px-4 py-2 font-display text-sm font-medium text-bg hover:bg-brand-strong"
+          >
+            Unsubscribe
+          </button>
+        </Form>
+      )}
       <div className="mt-6 flex justify-center gap-4 font-mono text-sm">
         <Link to="/" className="text-accent hover:underline">
           Home
