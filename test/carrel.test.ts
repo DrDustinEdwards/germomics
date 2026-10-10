@@ -4,10 +4,7 @@ import { createSiteApi } from "@dustinedwards/site-api";
 import { runConformance } from "@dustinedwards/site-api/conformance";
 import { createCarrelAdapter } from "~/lib/carrel/adapter.server";
 import { parseSource, renderSource } from "~/lib/carrel/source";
-
-// The schema is the real migrations, applied in order, so these tests run against the real tables
-// (posts with its FTS5 triggers, post_versions) rather than a copy that could drift.
-const migrations = import.meta.glob("../drizzle/*.sql", { query: "?raw", import: "default", eager: true }) as Record<string, string>;
+import { applyMigrations } from "./helpers/d1";
 
 const KEY = "k".repeat(40);
 const e = env as unknown as Env;
@@ -34,49 +31,7 @@ const put = (id: string, source: string, expectedVersion: string | null) =>
 const post = (path: string, body: unknown) =>
   call(`/api/carrel/v1/content/${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
-beforeAll(async () => {
-  for (const name of Object.keys(migrations).sort()) {
-    for (const stmt of splitSql(migrations[name])) await e.DB.prepare(stmt).run();
-  }
-});
-
-// Splits a migration into statements: strips comments, respects quotes, and keeps
-// CREATE TRIGGER ... BEGIN ... END whole.
-function splitSql(sql: string): string[] {
-  const out: string[] = [];
-  let buf = "";
-  let quote = "";
-  let depth = 0;
-  for (let i = 0; i < sql.length; i++) {
-    const c = sql[i];
-    if (quote) {
-      buf += c;
-      if (c === quote) quote = "";
-      continue;
-    }
-    if (c === "-" && sql[i + 1] === "-") {
-      while (i < sql.length && sql[i] !== "\n") i++;
-      buf += "\n";
-      continue;
-    }
-    if (c === "'" || c === '"') {
-      quote = c;
-      buf += c;
-      continue;
-    }
-    if (c === ";" && depth === 0) {
-      if (buf.trim()) out.push(buf.trim());
-      buf = "";
-      continue;
-    }
-    buf += c;
-    const tail = buf.slice(-6).toUpperCase();
-    if (/\bBEGIN$/.test(tail) && /^\W/.test(buf.slice(-6, -5) || " ")) depth++;
-    if (depth > 0 && /;\s*END$/i.test(buf.slice(-12)) && !/[A-Za-z_]/.test(sql[i + 1] ?? " ")) depth--;
-  }
-  if (buf.trim()) out.push(buf.trim());
-  return out;
-}
+beforeAll(() => applyMigrations(e.DB));
 
 beforeEach(async () => {
   await e.DB.exec("DELETE FROM post_versions");

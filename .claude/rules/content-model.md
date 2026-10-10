@@ -20,7 +20,7 @@ The episode/article row (`posts`) and the single `show_config` row carry a few J
 
 ## Listing projection
 
-Listing loaders use the `cardColumns` projection in `posts.server.ts`, which omits the heavy detail-only fields (`body`, `transcript`, `audio_peaks`, `sources`, `key_moments`). Only the single episode/article route loads the full body and transcript.
+Listing loaders use the `cardColumns` projection in `posts.server.ts`, which omits the heavy detail-only fields (`body`, `transcript`, `audio_peaks`, `sources`, `key_moments`). Only the single episode/article route and the readers that print the body or point at the transcript load full rows: the feeds and llms-full.txt use `listFullPosts` (guarded by `test/feeds.test.ts`).
 
 ## Migrated content
 
