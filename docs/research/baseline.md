@@ -107,7 +107,7 @@ since 166ff3b or where newly covered static code is now counted.
 | 1 auth | app/lib/access.server.ts | 78.13% | 90.63% | 64 (58 / 6 / 0) |
 | 1 auth | app/lib/security.server.ts | 0.00% | 98.84% | 86 (85 / 1 / 0) |
 | 1 auth | app/lib/preview.server.ts | 0.00% | 86.67% | 30 (26 / 3 / 1) |
-| 2 Carrel | app/lib/carrel/adapter.server.ts | 55.36% | 93.54% | 294 (275 / 15 / 4) |
+| 2 Carrel | app/lib/carrel/adapter.server.ts | 55.36% | 92.52% | 294 (272 / 18 / 4) |
 | 2 Carrel | app/lib/carrel/source.ts | 60.44% | 92.31% | 91 (84 / 7 / 0) |
 | 2 Carrel | app/lib/carrel/handler.server.ts | 0.00% | 66.67% | 3 (2 / 1 / 0) |
 | 3 D1 writers | app/lib/scores.server.ts | 0.00% | 100.00% | 49 (49 / 0 / 0) |
@@ -115,9 +115,11 @@ since 166ff3b or where newly covered static code is now counted.
 | 3 D1 writers | app/lib/people.server.ts | 0.00% | 92.00% | 125 (115 / 7 / 3) |
 | 3 D1 writers | app/lib/soundbites.server.ts | 0.00% | 100.00% | 26 (26 / 0 / 0) |
 | 3 D1 writers | app/lib/show.server.ts | 0.00% | 100.00% | 8 (8 / 0 / 0) |
-| 3 D1 writers | app/lib/content.server.ts | 0.00% | 79.82% | 109 (87 / 14 / 8) |
+| 3 D1 writers | app/lib/content.server.ts | 0.00% | 87.16% | 109 (95 / 14 / 0) |
 | 4 editor | app/routes/admin.posts.$id.tsx (action) | not mutated | 12 of 12 plants caught | hand-planted |
 | 4 editor | app/routes/admin.upload.ts | not mutated | 5 of 5 plants caught | hand-planted |
+| 5 public reads | app/lib/edge-cache.server.ts | 0.00% | 91.82% | 159 (146 / 13 / 0) |
+| 5 public reads | app/lib/posts.server.ts | 0.00% | 86.96% | 138 (120 / 13 / 5) |
 
 Survivors left on purpose in batch 1: in `access.server.ts` the key-set cache (`if (!set)`), the
 early `if (!token)` return and the catch body are equivalent mutants (jose throws on the same inputs and the
@@ -134,6 +136,9 @@ both. `test/carrel-adapter.test.ts` leaves that assertion out so the suite stays
 
 The adapter's second score comes from building it per test rather than at import: built once at import, the
 adapter object was made before Stryker switched a mutant on, so those mutants survived without being tested.
+Three of its survivors are the `NotFoundError` guards in publish, schedule and unpublish: the contract types
+`expectedVersion` as a string, so a missing article always fails the version check first and those guards
+cannot be reached through site-api.
 
 Batch 4: Stryker mutates `app/lib`, `app/db` and `workers` only, so the two route files were planted by hand,
 one break at a time, and the two test files rerun. Each of the 15 new tests failed under at least one plant,
@@ -144,6 +149,34 @@ delete redirecting elsewhere, non-numeric person ids kept; and in the upload rou
 loosened to allow `.` and `/`, the image type check skipped, the 25 MB limit made exclusive, images written to
 the audio bucket, and empty files accepted.
 
+
+### Second bug, and where the job stopped
+
+Found after batch 5, not fixed: the podcast feed carries no transcripts and no show notes. `/feed/podcast/`
+(`app/routes/feed.podcast.ts`) builds from `listEpisodes`, which returns listing cards (`asCards` in
+`posts.server.ts`) with `transcript: null` and `body: ""`. `buildPodcastFeed` only writes
+`<podcast:transcript>` when `e.transcript` is set, and fills `description` and `content:encoded` from `excerpt ??
+body`, so every item has no transcript tag and an empty `content:encoded`, and an empty description when there
+is no excerpt. Seen by calling the route's loader on a published episode with a transcript and a body: the item
+and its guid are there, the transcript tag and the body are not. `/feed/site.xml` uses `listArticles` the same
+way, so its `content:encoded` is empty too. The job says to stop and report on a proven bug, so the work stopped
+here.
+
+Other things seen while writing the tests, none proven to be a live fault:
+
+- `preview.server.ts` falls back to the fixed string `germomics-preview-secret` when `BETTER_AUTH_SECRET` is
+  unset. If that secret is ever removed (Better Auth is retired), every preview link becomes forgeable from the
+  source. Failing closed would be safer.
+- `edge-cache.server.ts` `revalidate` catches and drops a failed background render with no report, which
+  conventions 7.3 rules out.
+- `admin.upload.ts` defaults audio to `audio/mpeg` only when the file has no type, but a browser sends
+  `application/octet-stream` for a type it does not know, so the default rarely applies.
+
+Left, by mutant count (baseline no-coverage), not started: `seo.ts` (225), `ai.server.ts` (196),
+`versions.ts` (158), `discovery.server.ts` (132), `rss.server.ts` (111), `apple-categories.ts` (111),
+`sentry.server.ts` (54), `image-client.ts` (49), `peaks.ts` (37), `theme.ts` (30), `subscribe.ts` (25),
+`waveform-client.ts` (25), `workers/app.ts` (22), `app/db/schema.ts` (26 survived), and the smaller ones.
+`format.ts`, `vtt.ts` and `r2.server.ts` stay with the improve loop's holdout suite, as `vitest.config.ts` says.
 
 ## Per-test kill matrix
 

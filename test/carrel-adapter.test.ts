@@ -89,10 +89,17 @@ describe("saving a draft", () => {
 });
 
 describe("publishing, scheduling and unpublishing", () => {
-  it("refuses each of them for an article that does not exist", async () => {
-    await expect(content.publish("ghost", { expectedVersion: null, changeId: "c" })).rejects.toThrow(NotFoundError);
-    await expect(content.schedule("ghost", { expectedVersion: null, changeId: "c", publishAt: new Date().toISOString() })).rejects.toThrow(NotFoundError);
-    await expect(content.unpublish("ghost", { expectedVersion: null, changeId: "c" })).rejects.toThrow(NotFoundError);
+  it("refuses each of them for an article that does not exist, naming no current version", async () => {
+    const v = "a".repeat(32);
+    for (const attempt of [
+      content.publish("ghost", { expectedVersion: v, changeId: "c" }),
+      content.schedule("ghost", { expectedVersion: v, changeId: "c", publishAt: new Date().toISOString() }),
+      content.unpublish("ghost", { expectedVersion: v, changeId: "c" }),
+    ]) {
+      const err = await attempt.catch((x) => x);
+      expect(err).toBeInstanceOf(VersionConflictError);
+      expect(err.currentVersion).toBeNull();
+    }
     expect(await row("ghost")).toBeNull();
   });
 
@@ -262,9 +269,9 @@ describe("the mounted handler", () => {
 
   it("answers with the configured key and refuses everything when no key is set", async () => {
     const withKey = carrelApi({ ...e, CARREL_SITE_KEY: "k".repeat(40), CARREL_RATE_LIMIT: limiter } as unknown as Env);
-    expect(withKey.matches(meta)).toBe(true);
-    expect((await withKey.handle(meta.clone())).status).toBe(200);
+    expect(withKey.matches(meta as Request)).toBe(true);
+    expect((await withKey.handle(meta.clone() as Request)).status).toBe(200);
     const noKey = carrelApi({ ...e, CARREL_SITE_KEY: undefined, CARREL_RATE_LIMIT: limiter } as unknown as Env);
-    expect((await noKey.handle(meta.clone())).status).toBe(503);
+    expect((await noKey.handle(meta.clone() as Request)).status).toBe(503);
   });
 });
