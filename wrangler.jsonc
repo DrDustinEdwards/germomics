@@ -39,6 +39,11 @@
 		// Nightly D1 dumps (d1-dump). The bucket must exist before this deploys; see CLAUDE.md "Backup".
 		{ "binding": "BACKUPS", "bucket_name": "germomics-backups" }
 	],
+	// Rate limit for Carrel's site API (app/lib/carrel). namespace_id must be unique to this site:
+	// sites in one account that share one share counters.
+	"ratelimits": [
+		{ "name": "CARREL_RATE_LIMIT", "namespace_id": "7301", "simple": { "limit": 120, "period": 60 } }
+	],
 	// 03:17 UTC nightly: runBackup() in app/lib/backup.server.ts.
 	"triggers": { "crons": ["17 3 * * *"] },
 	"kv_namespaces": [

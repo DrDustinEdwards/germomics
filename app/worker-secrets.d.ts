@@ -4,6 +4,8 @@
 interface Env {
   /** The one allowed admin address. Checked behind the Access policy as a second lock. */
   ADMIN_EMAIL: string;
+  /** Carrel's key for /api/carrel/v1 (32 characters or more). Unset or short refuses every request. */
+  CARREL_SITE_KEY?: string;
   /** Still read by app/lib/preview.server.ts to sign preview links, so keep the secret set. */
   BETTER_AUTH_SECRET?: string;
   /** https://<team>.cloudflareaccess.com. Unset means no one is admin (fails closed). */
