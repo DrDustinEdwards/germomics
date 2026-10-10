@@ -107,9 +107,17 @@ since 166ff3b or where newly covered static code is now counted.
 | 1 auth | app/lib/access.server.ts | 78.13% | 90.63% | 64 (58 / 6 / 0) |
 | 1 auth | app/lib/security.server.ts | 0.00% | 98.84% | 86 (85 / 1 / 0) |
 | 1 auth | app/lib/preview.server.ts | 0.00% | 86.67% | 30 (26 / 3 / 1) |
-| 2 Carrel | app/lib/carrel/adapter.server.ts | 55.36% | 90.82% | 294 (267 / 23 / 4) |
+| 2 Carrel | app/lib/carrel/adapter.server.ts | 55.36% | 93.54% | 294 (275 / 15 / 4) |
 | 2 Carrel | app/lib/carrel/source.ts | 60.44% | 92.31% | 91 (84 / 7 / 0) |
 | 2 Carrel | app/lib/carrel/handler.server.ts | 0.00% | 66.67% | 3 (2 / 1 / 0) |
+| 3 D1 writers | app/lib/scores.server.ts | 0.00% | 100.00% | 49 (49 / 0 / 0) |
+| 3 D1 writers | app/lib/admin.server.ts | 17.95% | 97.44% | 39 (38 / 1 / 0) |
+| 3 D1 writers | app/lib/people.server.ts | 0.00% | 92.00% | 125 (115 / 7 / 3) |
+| 3 D1 writers | app/lib/soundbites.server.ts | 0.00% | 100.00% | 26 (26 / 0 / 0) |
+| 3 D1 writers | app/lib/show.server.ts | 0.00% | 100.00% | 8 (8 / 0 / 0) |
+| 3 D1 writers | app/lib/content.server.ts | 0.00% | 79.82% | 109 (87 / 14 / 8) |
+| 4 editor | app/routes/admin.posts.$id.tsx (action) | not mutated | 12 of 12 plants caught | hand-planted |
+| 4 editor | app/routes/admin.upload.ts | not mutated | 5 of 5 plants caught | hand-planted |
 
 Survivors left on purpose in batch 1: in `access.server.ts` the key-set cache (`if (!set)`), the
 early `if (!token)` return and the catch body are equivalent mutants (jose throws on the same inputs and the
@@ -123,6 +131,19 @@ Bug found in batch 2, not fixed (the job says report, not fix): Carrel's media l
 empty alt and a filename taken from its key; `media.get` (which uses `head`) is right. Seen in Miniflare: the
 same object listed without `include` has `contentType` undefined and `{}` custom metadata, and with it has
 both. `test/carrel-adapter.test.ts` leaves that assertion out so the suite stays green.
+
+The adapter's second score comes from building it per test rather than at import: built once at import, the
+adapter object was made before Stryker switched a mutant on, so those mutants survived without being tested.
+
+Batch 4: Stryker mutates `app/lib`, `app/db` and `workers` only, so the two route files were planted by hand,
+one break at a time, and the two test files rerun. Each of the 15 new tests failed under at least one plant,
+and every plant was caught: the 404 guard removed, the body left unsanitized, the slug fallback changed,
+autosave snapshotting, the slug check skipped, the default episode type changed, articles treated as
+episodes, the guid regenerated on republish, the empty schedule time accepted, restore without its snapshot,
+delete redirecting elsewhere, non-numeric person ids kept; and in the upload route the post id cleaner
+loosened to allow `.` and `/`, the image type check skipped, the 25 MB limit made exclusive, images written to
+the audio bucket, and empty files accepted.
+
 
 ## Per-test kill matrix
 

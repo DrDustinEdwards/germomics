@@ -2,6 +2,7 @@ import { env } from "cloudflare:test";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   bustContentCache,
+  isPreviewing,
   listBlocks,
   listSettings,
   loadBlock,
@@ -139,5 +140,15 @@ describe("searchPages", () => {
     expect((await searchPages(e, '"broad" OR (pump)*')).map((p) => p.key)).toEqual([]);
     expect((await searchPages(e, '"pump"*')).map((p) => p.key)).toEqual(["page:cholera"]);
     expect(await searchPages(e, "  !!! ")).toEqual([]);
+  });
+});
+
+describe("isPreviewing", () => {
+  const dev = { ...e, ADMIN_EMAIL: "admin@example.com", ACCESS_DEV_BYPASS: "1" } as unknown as Env;
+
+  it("is true only for the admin, and only with ?preview", async () => {
+    expect(await isPreviewing(dev, new Request("http://localhost/about?preview"))).toBe(true);
+    expect(await isPreviewing(dev, new Request("http://localhost/about"))).toBe(false);
+    expect(await isPreviewing(e, new Request("https://germomics.com/about?preview=1"))).toBe(false);
   });
 });
