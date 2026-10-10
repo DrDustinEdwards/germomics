@@ -5,6 +5,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
 } from "react-router";
 
 import type { Route } from "./+types/root";
@@ -97,6 +98,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  // The admin brings its own shell (AdminShell), so it gets none of the public site's chrome.
+  const isAdmin = useLocation().pathname.startsWith("/admin");
+  if (isAdmin) return <Outlet />;
   // PlayerProvider lives at the root, above the Outlet, so the single <audio> element and the
   // queue survive every client-side navigation (CLAUDE.md §04 — uninterrupted playback).
   return (

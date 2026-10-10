@@ -5,7 +5,7 @@
 //      non-React responses (CLAUDE.md: prefer the Worker entry). CSP ships REPORT-ONLY first —
 //      it reports violations without blocking, so TipTap (inline styles) and MapLibre (blob
 //      workers, tiles) keep working while Dustin reviews real violations, then flips to enforce.
-//   2. A best-effort KV sliding-window rate limiter on /api/auth/*, /admin/*, /admin/ai.
+//   2. A best-effort KV sliding-window rate limiter on /admin/*, /admin/ai.
 //   3. A per-day cost cap on the AI endpoint so spend can't run away.
 //
 // Cloudflare's WAF managed ruleset + bot rules are the primary perimeter defense (dashboard,
@@ -112,7 +112,6 @@ type Limit = { limit: number; windowSec: number };
 // defaults. Window is fixed at 60s.
 const RULES: Array<{ test: (p: string) => boolean; bucket: string; settingKey: string; def: number; json: boolean }> = [
   { test: (p) => p.startsWith("/admin/ai"), bucket: "ai", settingKey: "ratelimit.ai", def: 15, json: true },
-  { test: (p) => p.startsWith("/api/auth"), bucket: "auth", settingKey: "ratelimit.auth", def: 30, json: true },
   { test: (p) => p.startsWith("/admin"), bucket: "admin", settingKey: "ratelimit.admin", def: 150, json: false },
 ];
 

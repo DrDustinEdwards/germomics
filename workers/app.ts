@@ -7,6 +7,7 @@ import {
 import { serveWithEdgeCache } from "../app/lib/edge-cache.server";
 import { captureException } from "../app/lib/sentry.server";
 import { carrelApi } from "../app/lib/carrel/handler.server";
+import { runBackup } from "../app/lib/backup.server";
 
 // Seed React Router v8's request context with the native Cloudflare bindings, so every
 // loader/action/middleware reaches D1/R2/KV through `context` and never over HTTP or a
@@ -56,5 +57,16 @@ export default {
         origin,
       );
     }
+  },
+
+  // Nightly D1 backup (wrangler.jsonc triggers.crons). Errors are logged and rethrown, never
+  // swallowed: a failed run must show as a failed invocation and age /health's backup reading.
+  async scheduled(_controller, env, ctx) {
+    ctx.waitUntil(
+      runBackup(env).catch((err: unknown) => {
+        console.error("Nightly backup failed:", err);
+        throw err;
+      }),
+    );
   },
 } satisfies ExportedHandler<Env>;

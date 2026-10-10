@@ -4,8 +4,8 @@
 	"main": "./workers/app.ts",
 	"compatibility_date": "2026-06-21",
 	"compatibility_flags": ["nodejs_compat"],
-	// Keep dashboard-set vars/secrets (BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID/SECRET,
-	// ADMIN_EMAIL, BETTER_AUTH_URL) from being wiped on deploy.
+	// Keep dashboard-set vars/secrets (ADMIN_EMAIL, ACCESS_TEAM_DOMAIN, ACCESS_AUD,
+	// BETTER_AUTH_SECRET for preview tokens) from being wiped on deploy.
 	"keep_vars": true,
 	"observability": { "enabled": true },
 	// THE MAPS KEY IS A BUILD-TIME VALUE AND IS DELIBERATELY NOT A `vars` ENTRY HERE.
@@ -35,13 +35,17 @@
 	"r2_buckets": [
 		{ "binding": "MEDIA", "bucket_name": "germomics-audio" },
 		{ "binding": "BLOG_IMAGES", "bucket_name": "germomics-blog-images" },
-		{ "binding": "GAME_ASSETS", "bucket_name": "germomics-game-assets" }
+		{ "binding": "GAME_ASSETS", "bucket_name": "germomics-game-assets" },
+		// Nightly D1 dumps (d1-dump). The bucket must exist before this deploys; see CLAUDE.md "Backup".
+		{ "binding": "BACKUPS", "bucket_name": "germomics-backups" }
 	],
 	// Rate limit for Carrel's site API (app/lib/carrel). namespace_id must be unique to this site:
 	// sites in one account that share one share counters.
 	"ratelimits": [
 		{ "name": "CARREL_RATE_LIMIT", "namespace_id": "7301", "simple": { "limit": 120, "period": 60 } }
 	],
+	// 03:17 UTC nightly: runBackup() in app/lib/backup.server.ts.
+	"triggers": { "crons": ["17 3 * * *"] },
 	"kv_namespaces": [
 		{ "binding": "APP_KV", "id": "da89f831723f4ce5802f0c877f4c2209" }
 	]

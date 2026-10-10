@@ -4,6 +4,7 @@ import { sql } from "drizzle-orm";
 import type { Route } from "./+types/health";
 import { getEnv } from "~/lib/context.server";
 import { getDb } from "~/db/index.server";
+import { backupStatus } from "~/lib/backup.server";
 
 export async function loader({ context }: Route.LoaderArgs) {
   let dbUp = false;
@@ -13,8 +14,12 @@ export async function loader({ context }: Route.LoaderArgs) {
   } catch {
     dbUp = false;
   }
+  // Age of the newest complete nightly dump. A stale or unreadable backup is a warning inside
+  // this field, never a 503: the site is still up. Unauthenticated, so only last_ok, age_hours
+  // and warning (no keys, no table names).
+  const backup = await backupStatus(getEnv(context));
   return new Response(
-    JSON.stringify({ ok: dbUp, db: dbUp ? "up" : "down", time: new Date().toISOString() }),
+    JSON.stringify({ ok: dbUp, db: dbUp ? "up" : "down", backup, time: new Date().toISOString() }),
     {
       status: dbUp ? 200 : 503,
       headers: {

@@ -1,0 +1,22 @@
+{
+  "path": ["."],
+  "format": ["typescript", "tsx", "javascript", "css"],
+  "ignore": [
+    "**/node_modules/**",
+    "**/.react-router/**",
+    "**/.wrangler/**",
+    "**/.nobloat/**",
+    "build/**",
+    "public/**",
+    "docs/**",
+    "research/**",
+    "improve/**",
+    "drizzle/**",
+    ".claude/**",
+    "scripts/_generated/**",
+    "worker-configuration.d.ts"
+  ],
+  "reporters": ["json"],
+  "output": ".nobloat/jscpd",
+  "gitignore": true
+}

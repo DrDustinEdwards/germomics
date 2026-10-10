@@ -8,7 +8,7 @@ import { eq, sql } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { settings as settingsTable, contentBlocks } from "~/db/schema";
 import { SETTING_DEFAULTS, SNIPPET_DEFAULTS, PAGE_DEFAULTS } from "~/lib/content-defaults";
-import { getAdminSession } from "~/lib/auth.server";
+import { getAdminSession } from "~/lib/access.server";
 
 /** True only for an admin viewing a page with ?preview (so drafts render in real context). */
 export async function isPreviewing(env: Env, request: Request): Promise<boolean> {
