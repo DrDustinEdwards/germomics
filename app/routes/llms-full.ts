@@ -3,7 +3,7 @@
 // and excludes transcripts (avoids the duplicate-content trap).
 import type { Route } from "./+types/llms-full";
 import { getEnv } from "~/lib/context.server";
-import { listEpisodes, listArticles } from "~/lib/posts.server";
+import { listFullPosts } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
 import { buildLlmsFullTxt } from "~/lib/discovery.server";
 
@@ -12,8 +12,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const origin = new URL(request.url).origin;
   const [show, episodes, articles] = await Promise.all([
     getShowConfig(env),
-    listEpisodes(env),
-    listArticles(env),
+    listFullPosts(env, "episode"),
+    listFullPosts(env, "article"),
   ]);
   return new Response(buildLlmsFullTxt(show, episodes, articles, origin), {
     headers: {

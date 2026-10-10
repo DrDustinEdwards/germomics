@@ -72,6 +72,19 @@ export async function listPosts(
   return asCards(rows);
 }
 
+/**
+ * Visible posts of one kind with every column, newest first. For the readers that print the body or
+ * the transcript (the podcast and writing feeds, llms-full.txt); listing pages use listPosts' cards.
+ */
+export async function listFullPosts(env: Env, kind: Kind, limit = 200): Promise<Post[]> {
+  return getDb(env)
+    .select()
+    .from(posts)
+    .where(and(publiclyVisible(), eq(posts.kind, kind)))
+    .orderBy(desc(posts.publishedAt))
+    .limit(limit);
+}
+
 export const listEpisodes = (env: Env, limit?: number) =>
   listPosts(env, { kind: "episode", limit });
 
