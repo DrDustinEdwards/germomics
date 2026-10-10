@@ -93,5 +93,38 @@ describe("getAdminSession", () => {
     const dev = { ADMIN_EMAIL: ADMIN, ACCESS_DEV_BYPASS: "1" } as unknown as Env;
     expect(await getAdminSession(dev, req({}, "http://localhost:5173/admin"))).toEqual({ email: ADMIN });
     expect(await getAdminSession(dev, req({}, "https://germomics.com/admin"))).toBeNull();
+    // Any other value, or no admin address, is not the opt-in.
+    const loose = { ADMIN_EMAIL: ADMIN, ACCESS_DEV_BYPASS: "true" } as unknown as Env;
+    expect(await getAdminSession(loose, req({}, "http://localhost:5173/admin"))).toBeNull();
+    expect(await getAdminSession({ ADMIN_EMAIL: ADMIN } as unknown as Env, req({}, "http://localhost:5173/admin"))).toBeNull();
+    expect(await getAdminSession({ ACCESS_DEV_BYPASS: "1" } as unknown as Env, req({}, "http://localhost:5173/admin"))).toBeNull();
+  });
+
+  it("refuses everyone when no admin address is configured", async () => {
+    const noAdmin = { ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: AUD } as unknown as Env;
+    expect(await getAdminSession(noAdmin, req({ "Cf-Access-Jwt-Assertion": await token() }))).toBeNull();
+  });
+
+  it("matches the admin address without regard to case, and tolerates a trailing slash on the team domain", async () => {
+    const shouty = { ADMIN_EMAIL: "Admin@Example.com", ACCESS_TEAM_DOMAIN: `${TEAM}//`, ACCESS_AUD: AUD } as unknown as Env;
+    const session = await getAdminSession(shouty, req({ "Cf-Access-Jwt-Assertion": await token({ email: "ADMIN@example.COM" }) }));
+    expect(session).toEqual({ email: ADMIN });
+  });
+
+  it("refuses a token with no email claim", async () => {
+    const bare = await new SignJWT({})
+      .setProtectedHeader({ alg: "RS256", kid: "k1" })
+      .setIssuer(TEAM)
+      .setAudience(AUD)
+      .setExpirationTime("5m")
+      .sign(privateKey);
+    expect(await getAdminSession(env, req({ "Cf-Access-Jwt-Assertion": bare }))).toBeNull();
+  });
+
+  it("reads the cookie wherever it sits, with or without a space, and only under its exact name", async () => {
+    const t = await token();
+    expect(await getAdminSession(env, req({ Cookie: `CF_Authorization=${t}; theme=dark` }))).toEqual({ email: ADMIN });
+    expect(await getAdminSession(env, req({ Cookie: `theme=dark;CF_Authorization=${t}` }))).toEqual({ email: ADMIN });
+    expect(await getAdminSession(env, req({ Cookie: `NOT_CF_Authorization=${t}` }))).toBeNull();
   });
 });

@@ -94,6 +94,25 @@ No test file asserts on raw source text, so none had to be left out of the mutat
 | app/lib/waveform-client.ts | 25 | 0 | 0 | 25 | 0.00% |
 | workers/app.ts | 22 | 0 | 0 | 22 | 0.00% |
 
+## Coverage follow-up (job_4a1b21f87c0d)
+
+Tests added for the uncovered code, highest risk first. After each batch Stryker 9.6.1 (`--no-save`) was rerun
+on that batch's files alone, with the full suite, and the score is recorded here next to the baseline. Every
+new test kills at least one mutant in that run, which is its planted break seen failing; a test that killed
+none was planted by hand and is named below. Mutant counts can differ from the baseline where a file changed
+since 166ff3b or where newly covered static code is now counted.
+
+| Batch | File | Baseline score | New score | Mutants (killed / survived / no coverage) |
+|---|---|---|---|---|
+| 1 auth | app/lib/access.server.ts | 78.13% | 90.63% | 64 (58 / 6 / 0) |
+| 1 auth | app/lib/security.server.ts | 0.00% | 98.84% | 86 (85 / 1 / 0) |
+| 1 auth | app/lib/preview.server.ts | 0.00% | 86.67% | 30 (26 / 3 / 1) |
+
+Survivors left on purpose in batch 1: in `access.server.ts` the key-set cache (`if (!set)`), the
+early `if (!token)` return and the catch body are equivalent mutants (jose throws on the same inputs and the
+function returns null either way); in `preview.server.ts` the hex padding and the loop bound are equivalent
+for a 32-byte digest.
+
 ## Per-test kill matrix
 
 77 tests, keyed by file and test name; the full matrix (kills, unique kills, candidate kind, protected flag)
