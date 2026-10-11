@@ -1,7 +1,7 @@
 import { env } from "cloudflare:test";
 import { is } from "drizzle-orm";
 import { SQLiteTable, getTableConfig } from "drizzle-orm/sqlite-core";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import * as schema from "~/db/schema";
 import { getDb } from "~/db/index.server";
 import { applyMigrations } from "./helpers/d1";
@@ -15,20 +15,29 @@ const e = env as unknown as Env;
 const tables = Object.values(schema).filter((v) => is(v, SQLiteTable)) as unknown as SQLiteTable[];
 const nameOf = (t: SQLiteTable) => getTableConfig(t).name;
 
+// The schema is loaded inside each test from a fresh module registry, so the definitions a test
+// reads are the ones the file holds at that moment (and a mutation run sees a changed definition).
+async function freshTables() {
+  vi.resetModules();
+  const fresh = await import("~/db/schema");
+  return Object.values(fresh).filter((v) => is(v, SQLiteTable)) as unknown as SQLiteTable[];
+}
+
 type Pragma = { name: string; type: string; notnull: number; dflt_value: string | null; pk: number };
 const pragma = async (table: string) => (await e.DB.prepare(`PRAGMA table_info("${table}")`).all<Pragma>()).results;
 
 beforeAll(() => applyMigrations(e.DB), 60_000);
 
 describe("app/db/schema.ts against the migrations", () => {
-  it("reads every table the schema defines", () => {
-    expect(tables.length).toBeGreaterThanOrEqual(10);
-    expect(new Set(tables.map(nameOf)).size).toBe(tables.length);
+  it("reads every table the schema defines", async () => {
+    const fresh = await freshTables();
+    expect(fresh.length).toBeGreaterThanOrEqual(10);
+    expect(new Set(fresh.map(nameOf)).size).toBe(fresh.length);
   });
 
-  it.each(tables.map((t) => [nameOf(t), t] as const))("%s has the same columns, nullability, primary key and defaults", async (name, table) => {
+  it.each(tables.map(nameOf))("%s has the same columns, nullability, primary key and defaults", async (name) => {
     const live = await pragma(name);
-    const cfg = getTableConfig(table);
+    const cfg = getTableConfig((await freshTables()).find((t) => nameOf(t) === name)!);
     expect(live.length, `${name} exists in the migrated database`).toBeGreaterThan(0);
     expect(cfg.columns.map((c) => c.name).sort()).toEqual(live.map((c) => c.name).sort());
     for (const col of cfg.columns) {
@@ -47,7 +56,7 @@ describe("app/db/schema.ts against the migrations", () => {
 
   it("has the same indexes, both ways", async () => {
     const live = (await e.DB.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%'").all<{ name: string }>()).results.map((r) => r.name);
-    const declared = tables.flatMap((t) => getTableConfig(t).indexes.map((i) => i.config.name));
+    const declared = (await freshTables()).flatMap((t) => getTableConfig(t).indexes.map((i) => i.config.name));
     expect(declared.length).toBeGreaterThan(0);
     expect(declared.filter((n) => !live.includes(n))).toEqual([]);
     expect(live.filter((n) => !declared.includes(n))).toEqual([]);
