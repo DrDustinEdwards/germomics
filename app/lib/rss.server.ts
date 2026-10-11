@@ -13,7 +13,8 @@ const PODCAST_NS =
   'xmlns:atom="http://www.w3.org/2005/Atom"';
 
 function cdata(value: string | null | undefined): string {
-  return `<![CDATA[${value ?? ""}]]>`;
+  // A literal "]]>" would end the section early, so split it across two sections.
+  return `<![CDATA[${(value ?? "").replaceAll("]]>", "]]]]><![CDATA[>")}]]>`;
 }
 
 // OP3 (op3.dev) open, privacy-respecting download analytics. Podcast apps fetch the enclosure
