@@ -1,5 +1,5 @@
 import { env } from "cloudflare:test";
-import { is } from "drizzle-orm";
+import { eq, is } from "drizzle-orm";
 import { SQLiteTable, getTableConfig } from "drizzle-orm/sqlite-core";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import * as schema from "~/db/schema";
@@ -21,6 +21,19 @@ async function freshTables() {
   vi.resetModules();
   const fresh = await import("~/db/schema");
   return Object.values(fresh).filter((v) => is(v, SQLiteTable)) as unknown as SQLiteTable[];
+}
+
+// The default as SQLite stores it, rebuilt from what Drizzle declares.
+function declaredDefault(col: { default?: unknown }): string | null {
+  const d = col.default;
+  if (d === undefined) return null;
+  if (typeof d === "string") return `'${d}'`;
+  if (typeof d === "number") return String(d);
+  if (typeof d === "boolean") return d ? "1" : "0";
+  const chunks = (d as { queryChunks?: { value?: string[] }[] }).queryChunks;
+  // SQLite reports a parenthesised expression default, "(datetime('now'))", without the outer brackets.
+  if (chunks) return chunks.map((c) => (c.value ?? []).join("")).join("").replace(/^\((.*)\)$/, "$1");
+  return JSON.stringify(d);
 }
 
 type Pragma = { name: string; type: string; notnull: number; dflt_value: string | null; pk: number };
@@ -50,6 +63,8 @@ describe("app/db/schema.ts against the migrations", () => {
       if (!col.primary) {
         expect(real.notnull === 1, `${label} not null`).toBe(col.notNull);
         expect(real.dflt_value !== null, `${label} has a default`).toBe(col.hasDefault);
+        // ... and the value is the same one, not only the fact of having one.
+        expect(real.dflt_value, `${label} default value`).toBe(declaredDefault(col));
       }
     }
   });
@@ -60,6 +75,26 @@ describe("app/db/schema.ts against the migrations", () => {
     expect(declared.length).toBeGreaterThan(0);
     expect(declared.filter((n) => !live.includes(n))).toEqual([]);
     expect(live.filter((n) => !declared.includes(n))).toEqual([]);
+  });
+});
+
+describe("what the schema's column modes do", () => {
+  it("gives a post inserted with only a title and slug every declared default, as typed values", async () => {
+    const db = getDb(e);
+    const [row] = await db.insert(schema.posts).values({ title: "T", slug: "defaults-check" }).returning();
+    expect(row).toMatchObject({ kind: "article", status: "draft", body: "", featured: false, explicit: false, episodeType: "full", audioMimeType: "audio/mpeg", tags: [] });
+    expect(row.createdAt).toMatch(/^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$/);
+    await db.delete(schema.posts).where(eq(schema.posts.slug, "defaults-check"));
+  });
+
+  it("stores booleans as 0 and 1 and JSON columns as text, and reads them back typed", async () => {
+    const db = getDb(e);
+    await db.insert(schema.posts).values({ title: "T", slug: "modes-check", featured: true, explicit: true, tags: ["a", "b"], chapters: [{ start: 1, title: "C" }] });
+    const raw = await e.DB.prepare("SELECT featured, explicit, tags, chapters FROM posts WHERE slug = 'modes-check'").first<Record<string, unknown>>();
+    expect(raw).toEqual({ featured: 1, explicit: 1, tags: '["a","b"]', chapters: '[{"start":1,"title":"C"}]' });
+    const [row] = await db.select().from(schema.posts).where(eq(schema.posts.slug, "modes-check"));
+    expect(row).toMatchObject({ featured: true, explicit: true, tags: ["a", "b"], chapters: [{ start: 1, title: "C" }] });
+    await db.delete(schema.posts).where(eq(schema.posts.slug, "modes-check"));
   });
 });
 
