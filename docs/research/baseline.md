@@ -178,6 +178,67 @@ Left, by mutant count (baseline no-coverage), not started: `seo.ts` (225), `ai.s
 `waveform-client.ts` (25), `workers/app.ts` (22), `app/db/schema.ts` (26 survived), and the smaller ones.
 `format.ts`, `vtt.ts` and `r2.server.ts` stay with the improve loop's holdout suite, as `vitest.config.ts` says.
 
+### Third pass (job_4a1b21f87c0d, the remaining library files)
+
+Tests for the files still at or near 0% after the high-risk batches. Same method: Stryker 9.6.1 (`--no-save`) on
+each batch's files with the full suite, new score next to the baseline.
+
+| Batch | File | Baseline score | New score | Mutants (killed / survived / no coverage) |
+|---|---|---|---|---|
+| 6 | app/lib/seo.ts | 11.36% | 87.34% | 308 (269 / 36 / 3) |
+| 6 | app/lib/versions.ts | 0.00% | 95.88% | 97 (93 / 4 / 0) |
+| 6 | app/lib/discovery.server.ts | 0.00% | 78.03% | 132 (103 / 27 / 2) |
+| 6 | app/lib/rss.server.ts | 0.00% | 87.39% | 111 (97 / 12 / 2) |
+| 6 | app/lib/sentry.server.ts | 0.00% | 92.59% | 54 (50 / 3 / 1) |
+| 6 | app/lib/peaks.ts | 0.00% | 91.89% | 37 (34 / 3 / 0) |
+| 6 | app/lib/theme.ts | 0.00% | 100.00% | 28 (28 / 0 / 0) |
+| 6 | app/lib/posts.ts | 0.00% | 86.96% | 23 (20 / 3 / 0) |
+| 6 | app/lib/site.ts | 0.00% | 88.89% | 9 (8 / 1 / 0) |
+| 6 | app/lib/content.ts | 0.00% | 100.00% | 6 (6 / 0 / 0) |
+| 6 | app/lib/datasets.server.ts | n/a | 100.00% | 5 (5 / 0 / 0) |
+| 6 | app/lib/image-client.ts | 0.00% | 93.88% | 49 (46 / 3 / 0) |
+| 6 | app/lib/waveform-client.ts | 0.00% | 100.00% | 25 (25 / 0 / 0) |
+| 6 | app/lib/content-defaults.ts | n/a | 100.00% | 72 (72 / 0 / 0) |
+| 6 | app/db/schema.ts | 7.14% | 46.18% | 275 (127 / 148 / 0) |
+| 6 | app/db/index.server.ts | 50.00% | 100.00% | 2 (2 / 0 / 0) |
+| 6 | app/lib/apple-categories.ts, app/lib/subscribe.ts | 0.00% | not scored | constants only, see below |
+
+Reading the table:
+
+- Mutant counts differ from the baseline for several files, because the first run counted constants no test imported
+  as "no coverage" and a constant-only file that is now imported has its mutants set aside as static
+  (`ignoreStatic`). `apple-categories.ts` and `subscribe.ts` are such files; their tests derive each list from its
+  source of truth and fail both ways (the subscribe tiers, the Apple taxonomy, the show's default categories).
+  `content-defaults.ts` and `schema.ts` load fresh inside each test so a changed definition is seen.
+- `schema.ts` stays at 46% because the remaining survivors are the `{ enum: [...] }` arrays and `$type<>` notes, which
+  exist for TypeScript only and change nothing in SQLite. `test/schema.test.ts` compares every table with the
+  migrated database both ways (columns, types, nullability, key, default values, indexes), and a typed round trip
+  checks the boolean and JSON modes.
+- Tests that Stryker cannot kill (data and schema checks) were each seen red under a hand-planted break: a changed
+  address line, a duplicated subcategory, an emptied category list, a default category the taxonomy lacks, a
+  dropped subscribe key, an empty label, a missing icon, a no-flash script that accepts any stored value, a seeded
+  page set to draft, a snippet key outside its namespace, one renamed column in each of the ten tables, a column
+  made nullable, a table made private, and four changed defaults and modes.
+
+Found, not fixed (the job says report a proven bug, not fix it):
+
+1. **A `]]>` in an excerpt or in show notes breaks the podcast feed.** `cdata()` in `rss.server.ts` wraps text in
+   `<![CDATA[...]]>` without splitting a `]]>` inside it, so the section ends early and the rest is raw text.
+   Seen with an episode whose body was `<p>a ]]> b</p>` (the sanitizer leaves those characters as they are): the item
+   came out as `<![CDATA[<p>a ]]> b</p>]]>`, which is not well-formed XML. An excerpt is plain text typed in the
+   editor, so it reaches the feed unchanged. One such episode would make directories reject the whole feed at the
+   URL that must never change. The standard fix is to write `]]]]><![CDATA[>` for each `]]>`.
+2. **Names such as `constructor` and `toString` pass the unknown-game check.** `getGame` and `getDataset` read
+   `GAMES[slug] ?? null`, and a plain object has inherited keys. Seen in the real code: `getGame("constructor")` is a
+   function, and `submitScore` for the game `constructor` returned `{ ok: true }` and stored a row. Anyone can POST a
+   score to `/games/constructor` or `/games/toString`, within the per-address limit of five a minute for each game
+   name, and fill the table with rows for games that do not exist. `/data/constructor` and the game page load the
+   same way. Checking with `Object.hasOwn` would close it. The test for an unknown game uses `not-a-game`, so
+   it passes today.
+
+Smaller notes, no proof of harm: `llms-full.txt` prints two blank lines for a post with no publish date (the filter
+meant to drop the empty line compares with `null`, not `""`).
+
 ## Per-test kill matrix
 
 77 tests, keyed by file and test name; the full matrix (kills, unique kills, candidate kind, protected flag)
