@@ -23,5 +23,5 @@ export function listGames(): GameMeta[] {
 }
 
 export function getGame(slug: string): GameMeta | null {
-  return GAMES[slug] ?? null;
+  return Object.hasOwn(GAMES, slug) ? GAMES[slug] : null;
 }

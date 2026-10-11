@@ -143,6 +143,13 @@ describe("buildPodcastFeed", () => {
     expect(item).toContain('<podcast:soundbite startTime="90" duration="20">Episode &lt;one&gt; &amp; &quot;two&quot;</podcast:soundbite>');
   });
 
+  it("splits a ]]> inside CDATA so the section cannot end early", () => {
+    const xml = buildPodcastFeed(show, [episode({ excerpt: "a ]]> b", body: "<p>x ]]> y</p>" })], ORIGIN);
+    expect(xml).toContain("a ]]]]><![CDATA[> b");
+    expect(xml).not.toMatch(/a \]\]> b/);
+    expect(xml).toContain("<p>x ]]]]><![CDATA[> y</p>");
+  });
+
   it("uses the body as the description when there is no excerpt", () => {
     const [item] = items(buildPodcastFeed(show, [episode({ excerpt: null })], ORIGIN));
     expect(item).toContain("<description><![CDATA[<p>Full</p>]]></description>");

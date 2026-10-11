@@ -89,5 +89,5 @@ export function listDatasets(): Pick<Dataset, "slug" | "title" | "kind" | "summa
 }
 
 export function getDataset(slug: string): Dataset | null {
-  return DATASETS[slug] ?? null;
+  return Object.hasOwn(DATASETS, slug) ? DATASETS[slug] : null;
 }
