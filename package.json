@@ -33,7 +33,7 @@
     "@tiptap/pm": "2.27.3",
     "@tiptap/react": "2.27.3",
     "@tiptap/starter-kit": "2.27.3",
-    "capsomer": "github:DrDustinEdwards/capsomer#v0.8.0",
+    "capsomer": "github:DrDustinEdwards/capsomer#v0.8.1",
     "drizzle-orm": "0.45.2",
     "isbot": "5.1.43",
     "jose": "6.2.12",
