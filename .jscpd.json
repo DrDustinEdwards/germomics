@@ -10,7 +10,6 @@
     "public/**",
     "docs/**",
     "research/**",
-    "improve/**",
     "drizzle/**",
     ".claude/**",
     "scripts/_generated/**",

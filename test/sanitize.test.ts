@@ -7,7 +7,7 @@ import { sanitizeHtml } from "~/lib/sanitize.server";
 // editor's output and the raw-HTML toggle. It is the one thing standing between what is typed
 // into the admin editor and what BodyRenderer later hands to dangerouslySetInnerHTML, and until
 // now nothing tested it: it is built on the Workers `HTMLRewriter` global, so `node --test`
-// could not load it and the improve loop's holdout suite could not reach it either.
+// could not load it.
 //
 // These tests pin CURRENT behaviour, deliberately. They are the safety net for a dependency
 // bump, not a redesign of the policy: if a bump changes what survives sanitization, one of

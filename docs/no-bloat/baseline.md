@@ -61,6 +61,7 @@ dropping `export`, not deleting code. Two things Knip cannot see, for whoever do
 the improve loop's hidden holdout suite imports app/lib/format.ts and app/lib/r2.server.ts
 (vitest.config.ts says so), so `secondsToStamp`, `MEDIA_BASE`, `IMAGE_BASE`, `mediaUrl` and
 `imageUrl` may be used there; and CLAUDE.md hard rule 5 names `STYLE_RULE` by its export.
+(Note, 2026-10-19: the improve loop and its holdout suite were removed, so that holdout caveat no longer applies.)
 
 Before the config, the default run also listed 16 scripts as unused files and `sharp` and
 `audio-decode` as unused devDependencies; all of those are used by the hand-run scripts, which
