@@ -284,7 +284,7 @@ function linesOfCode() {
   const files = execSync("git ls-files", { cwd: ROOT, encoding: "utf8" }).split("\n").filter(Boolean);
   const loc = {};
   for (const file of files) {
-    if (/^(docs|research|public|improve|\.claude)\//.test(file)) continue;
+    if (/^(docs|research|public|\.claude)\//.test(file)) continue;
     if (file === "package-lock.json") continue;
     const language = LANGUAGES[path.extname(file)];
     if (!language) continue;

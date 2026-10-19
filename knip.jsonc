@@ -9,8 +9,7 @@
   // .react-router/types (tsconfig rootDirs). Run typegen before Knip, as `npm run
   // nobloat:knip` does, or every route reports an unresolved import.
   "entry": [
-    // Hand-run maintenance and import scripts (`node scripts/<name>.mjs`), plus the
-    // improve scorer's report script, which improve-score.yml copies by path.
+    // Hand-run maintenance and import scripts (`node scripts/<name>.mjs`).
     "scripts/**/*.{mjs,ts}"
   ],
   // `cloudflare:test` is the workers pool's virtual module, not an npm package.

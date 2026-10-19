@@ -177,6 +177,7 @@ Left, by mutant count (baseline no-coverage), not started: `seo.ts` (225), `ai.s
 `sentry.server.ts` (54), `image-client.ts` (49), `peaks.ts` (37), `theme.ts` (30), `subscribe.ts` (25),
 `waveform-client.ts` (25), `workers/app.ts` (22), `app/db/schema.ts` (26 survived), and the smaller ones.
 `format.ts`, `vtt.ts` and `r2.server.ts` stay with the improve loop's holdout suite, as `vitest.config.ts` says.
+(Note, 2026-10-19: the improve loop and its holdout suite were removed, so these three files no longer have that cover.)
 
 ### Third pass (job_4a1b21f87c0d, the remaining library files)
 

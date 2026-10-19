@@ -7,14 +7,8 @@
 //
 // WORKERS POOL, NOT NODE, and that is forced rather than chosen. app/lib/sanitize.server.ts is
 // the XSS boundary on every post body and it is built on the Workers `HTMLRewriter` global,
-// which plain `node --test` has no implementation of. That is exactly why the improve loop's
-// hidden holdout suite could never cover it. A miniflare-backed runner is the only place it can
-// be tested at all, so the whole suite runs there.
-//
-// WHAT THIS DELIBERATELY DOES NOT COVER: app/lib/format.ts, app/lib/vtt.ts and
-// app/lib/r2.server.ts. The improve loop's holdout suite already covers those 27 cases, and the
-// task doc is explicit that duplicating them here would be wasted effort AND would let an
-// attempt satisfy the hidden suite by reading the visible one.
+// which plain `node --test` has no implementation of. A miniflare-backed runner is the only
+// place it can be tested at all, so the whole suite runs there.
 import { cloudflareTest } from "@cloudflare/vitest-pool-workers";
 import path from "node:path";
 import { defineConfig } from "vitest/config";
