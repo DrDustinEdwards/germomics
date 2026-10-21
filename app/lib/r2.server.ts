@@ -2,8 +2,7 @@
 // BLOG_IMAGES (images.germomics.com); game assets read from GAME_ASSETS. Reads/writes go
 // through the native bindings only — never over HTTP (CLAUDE.md rule #1). Enclosure/media
 // URLs ALWAYS point at media.germomics.com, never the worker origin (germomics invariant).
-const MEDIA_BASE = "https://media.germomics.com";
-const IMAGE_BASE = "https://images.germomics.com";
+import { IMAGE_ORIGIN as IMAGE_BASE, MEDIA_ORIGIN as MEDIA_BASE } from "~/lib/site";
 
 function mediaUrl(key: string): string {
   return `${MEDIA_BASE}/${key.replace(/^\/+/, "")}`;

@@ -5,6 +5,7 @@
 import type { Post, ShowConfig, Soundbite } from "~/db/schema";
 import type { GuestView } from "~/lib/types";
 import { formatHMS, rfc822, xmlEscape } from "~/lib/format";
+import { OP3_ORIGIN } from "~/lib/site";
 
 const PODCAST_NS =
   'xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" ' +
@@ -21,7 +22,7 @@ function cdata(value: string | null | undefined): string {
 // through this prefix, which counts the download then redirects to the real file. ONLY the
 // enclosure URL is wrapped — guid, length, duration, and type are rendered verbatim and never
 // change (guid is the immutable dedup key directories rely on). Idempotent: never double-wraps.
-const OP3_PREFIX = "https://op3.dev/e/";
+const OP3_PREFIX = `${OP3_ORIGIN}/e/`;
 export function op3Enclosure(url: string): string {
   if (!url || url.includes("op3.dev/e/")) return url;
   return OP3_PREFIX + url.replace(/^https?:\/\//i, "");

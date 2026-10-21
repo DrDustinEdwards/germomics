@@ -8,6 +8,7 @@ import { getDb } from "~/db/index.server";
 import { subscribers } from "~/db/schema";
 import { getShowConfig } from "~/lib/show.server";
 import { SUBSCRIBE_DESTINATIONS, PRIMARY_KEYS, SECONDARY_KEYS } from "~/lib/subscribe";
+import { SITE_HOST } from "~/lib/site";
 
 export function meta() {
   return [
@@ -125,11 +126,11 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
       <section className="mt-8">
         <h2 className="font-display text-lg font-semibold">Other ways to subscribe</h2>
         <div className="mt-3 flex flex-wrap gap-2">
-          <a href="https://subscribeonandroid.com/germomics.com/feed/podcast/" target="_blank" rel="noopener" className={chip}>
+          <a href={`https://subscribeonandroid.com/${SITE_HOST}/feed/podcast/`} target="_blank" rel="noopener" className={chip}>
             <Smartphone size={14} aria-hidden /> Subscribe on Android
             <ExternalCue />
           </a>
-          <a href="https://subscribebyemail.com/germomics.com/feed/podcast/" target="_blank" rel="noopener" className={chip}>
+          <a href={`https://subscribebyemail.com/${SITE_HOST}/feed/podcast/`} target="_blank" rel="noopener" className={chip}>
             <Mail size={14} aria-hidden /> Subscribe by Email
             <ExternalCue />
           </a>

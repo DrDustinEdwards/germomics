@@ -24,11 +24,11 @@ import { getDb } from "~/db/index.server";
 import { posts, postVersions, type Post } from "~/db/schema";
 import { generateGuid, snapshotVersion, updatePost } from "~/lib/admin.server";
 import { buildKey, imageUrl } from "~/lib/r2.server";
+import { SITE_ORIGIN } from "~/lib/site";
 import { sanitizeHtml } from "~/lib/sanitize.server";
 import { addHeadingIds, demoteHeadings, readingTime } from "~/lib/seo";
 import { parseSource, renderSource } from "./source";
 
-const ORIGIN = "https://germomics.com";
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/;
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif", "image/avif"];
@@ -149,7 +149,7 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
   }
 
   return {
-    site: { id: "germomics", name: "Germomics", origin: ORIGIN },
+    site: { id: "germomics", name: "Germomics", origin: SITE_ORIGIN },
 
     content: {
       async list({ status, q, cursor, limit }) {
