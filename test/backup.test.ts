@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { dumpProblems, presentExcludes, type DumpSummary } from "../app/lib/backup-checks";
+import { presentExcludes, siteProblems } from "../app/lib/backup-checks";
 
+// d1-dump tests its standard checks (empty, excluded present, required missing); these are germomics' own.
 const live = { posts: 40, content_blocks: 25, settings: 60, show_config: 1 };
-const good: DumpSummary = {
+const good = {
   tables: [
     { name: "posts", rows: 40 },
     { name: "content_blocks", rows: 25 },
@@ -10,76 +11,38 @@ const good: DumpSummary = {
     { name: "show_config", rows: 1 },
     { name: "user", rows: 1 },
   ],
-  excluded: ["session", "verification", "account"],
 };
 
-describe("nightly dump checks", () => {
-  it("passes a dump that matches the live counts and excludes the credential tables", () => {
-    expect(dumpProblems(good, live)).toEqual([]);
-  });
-
-  it("fails an empty dump", () => {
-    const problems = dumpProblems({ tables: [], excluded: ["session", "verification", "account"] }, live);
-    expect(problems).toContain("the dump holds no tables");
-    expect(problems).toContain("posts is missing from the dump");
+describe("germomics' dump checks", () => {
+  it("passes a dump that matches the live counts", () => {
+    expect(siteProblems(good, live)).toEqual([]);
   });
 
   it("fails a dump where every content table is empty, even if the live counts agree", () => {
     const empty = { posts: 0, content_blocks: 0, settings: 0, show_config: 0 };
-    const dump = { ...good, tables: good.tables.map((t) => ({ ...t, rows: 0 })) };
-    expect(dumpProblems(dump, empty)).toContain("every content table dumped empty");
-  });
-
-  it("fails a dump with a table dumped empty", () => {
-    const dump = { ...good, tables: good.tables.map((t) => (t.name === "posts" ? { ...t, rows: 0 } : t)) };
-    expect(dumpProblems(dump, live)).toContain("posts dumped empty but has 40 rows");
+    const dump = { tables: good.tables.map((t) => ({ ...t, rows: 0 })) };
+    expect(siteProblems(dump, empty)).toContain("every content table dumped empty");
   });
 
   it("fails a dump whose count differs from the live table", () => {
-    const dump = { ...good, tables: good.tables.map((t) => (t.name === "settings" ? { ...t, rows: 59 } : t)) };
-    expect(dumpProblems(dump, live)).toContain("settings dumped 59 rows but has 60");
-  });
-
-  it("fails a dump that carries the session table", () => {
-    const dump = { ...good, tables: [...good.tables, { name: "session", rows: 3 }] };
-    expect(dumpProblems(dump, live)).toContain("session is in the dump but must be excluded");
-  });
-
-  it("fails a dump that carries the account table", () => {
-    const dump = { ...good, tables: [...good.tables, { name: "account", rows: 1 }] };
-    expect(dumpProblems(dump, live)).toContain("account is in the dump but must be excluded");
-  });
-
-  it("fails a dump that carries the verification table", () => {
-    const dump = { ...good, tables: [...good.tables, { name: "verification", rows: 2 }] };
-    expect(dumpProblems(dump, live)).toContain("verification is in the dump but must be excluded");
-  });
-
-  it("passes a dump of a database that no longer has the credential tables (after 0010)", () => {
-    const after: DumpSummary = { tables: good.tables.filter((t) => t.name !== "user"), excluded: [] };
-    expect(dumpProblems(after, live)).toEqual([]);
+    const dump = { tables: good.tables.map((t) => (t.name === "settings" ? { ...t, rows: 59 } : t)) };
+    expect(siteProblems(dump, live)).toContain("settings dumped 59 rows but has 60");
   });
 
   it("fails a dump that carries a credential table even when nothing was excluded", () => {
-    const dump: DumpSummary = { tables: [...good.tables, { name: "session", rows: 1 }], excluded: [] };
-    expect(dumpProblems(dump, live)).toContain("session is in the dump but must be excluded");
+    const dump = { tables: [...good.tables, { name: "session", rows: 1 }] };
+    expect(siteProblems(dump, live)).toContain("session is in the dump but must be excluded");
   });
 });
 
 describe("which credential tables to exclude", () => {
-  it("excludes all three while they exist (before 0010)", () => {
+  it("excludes only the ones that exist, so d1-dump does not fail on a missing name", () => {
     expect(presentExcludes(["posts", "user", "session", "account", "verification"])).toEqual([
       "session",
       "verification",
       "account",
     ]);
-  });
-
-  it("excludes none once they are dropped, so d1-dump does not fail on a missing name", () => {
-    expect(presentExcludes(["posts", "content_blocks", "settings", "show_config"])).toEqual([]);
-  });
-
-  it("excludes only the ones left", () => {
     expect(presentExcludes(["posts", "account"])).toEqual(["account"]);
+    expect(presentExcludes(["posts", "content_blocks", "settings", "show_config"])).toEqual([]);
   });
 });

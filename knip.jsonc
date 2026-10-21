@@ -10,8 +10,10 @@
   // nobloat:knip` does, or every route reports an unresolved import.
   "entry": [
     // Hand-run maintenance and import scripts (`node scripts/<name>.mjs`).
-    "scripts/**/*.{mjs,ts}"
+    "scripts/**/*.{mjs,ts}",
+    // Hand-run mutation testing (docs/research/baseline.md); Stryker is installed --no-save.
+    "stryker.config.mjs"
   ],
-  // `cloudflare:test` is the workers pool's virtual module, not an npm package.
-  "ignoreDependencies": ["cloudflare"]
+  // `cloudflare:test` is the workers pool's virtual module, not an npm package; Stryker is not installed.
+  "ignoreDependencies": ["cloudflare", "@stryker-mutator/api"]
 }

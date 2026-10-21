@@ -7,5 +7,3 @@ export function getDb(env: Env) {
   return drizzle(env.DB, { schema });
 }
 
-export type Db = ReturnType<typeof getDb>;
-export { schema };

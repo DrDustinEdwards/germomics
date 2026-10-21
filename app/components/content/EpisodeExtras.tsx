@@ -9,7 +9,7 @@ import type { PlayerTrack } from "~/lib/types";
 import { usePlayer } from "~/components/player/player-context";
 import { GMark } from "~/components/brand/GMark";
 
-export function usePrefersReducedMotion(): boolean {
+function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");

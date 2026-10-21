@@ -4,7 +4,7 @@
 import { Info } from "lucide-react";
 
 // Bump this whenever the legal copy changes.
-export const LEGAL_LAST_UPDATED = "June 22, 2026";
+const LEGAL_LAST_UPDATED = "June 22, 2026";
 
 export function LegalDate() {
   return (

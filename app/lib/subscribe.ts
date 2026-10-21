@@ -5,7 +5,7 @@
 // feed redirects, not identity profiles) and live only on the /subscribe page.
 import { Podcast, Music, Music2, Radio, Antenna, Disc3, Library, Star, type LucideIcon } from "lucide-react";
 
-export type SubTier = "primary" | "secondary";
+type SubTier = "primary" | "secondary";
 export type SubDest = { label: string; tier: SubTier; icon: LucideIcon };
 
 export const SUBSCRIBE_DESTINATIONS: Record<string, SubDest> = {

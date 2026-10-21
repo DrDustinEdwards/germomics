@@ -23,8 +23,8 @@ import { formatDuration, spokenTime } from "~/lib/format";
 import type { PlayerTrack } from "~/lib/types";
 
 // ── Shared option sets ───────────────────────────────────────────────────────
-export const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3];
-export const SLEEP_OPTIONS: { value: SleepMode | null; label: string }[] = [
+const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3];
+const SLEEP_OPTIONS: { value: SleepMode | null; label: string }[] = [
   { value: null, label: "Off" },
   { value: "end", label: "End of episode" },
   { value: 5, label: "5 minutes" },
