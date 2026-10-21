@@ -4,7 +4,8 @@ germomics.com: a podcast and writing site about microbiology and history, with i
 
 ## Rules that come first
 
-- The portfolio rules are in Capsid: `capsid/conventions.md`. Read it with this file and `germomics/core.md`. Where they disagree, conventions wins. Rulings for this site go in `germomics/decisions.md`.
+- Tests: keep the minimal set (a few browser tests for flows that must never break, one integration test per real behaviour, unit tests only for tricky logic, shared code tested once where it lives), and remove any test that pins design, repeats coverage or has never caught a real mistake, unless it guards a harm that cannot be undone.
+- Read `germomics/core.md` in Capsid with this file. Rulings for this site go in `germomics/decisions.md`.
 - germomics is the best-designed site in the family (Dustin, 2026-10-04). It will move onto Capsomer carefully, in its own design job that starts with a study and baseline screenshots; until then, do not change its look casually, and do not treat it as unchangeable either.
 
 ## Stack
@@ -33,12 +34,8 @@ React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-pl
 2. Migrations are hand-written additive SQL in `drizzle/`, kept in sync with `app/db/schema.ts`, applied with wrangler; drizzle-kit is not used. Search uses the FTS5 tables. No hand-written SQL in route code; use the query builder.
 3. The audio player is the highest-risk accessibility component: full keyboard support, seeking without dragging, correct name, role and state on every control. Every episode has a transcript.
 4. Heavy client libraries (maps, charts, Phaser) are lazy-loaded per route and never reach the server bundle or the shared client chunk. Phaser loads only on `/games/:slug`.
-5. The site's writing-style rule is in every generator prompt in `app/lib/ai.server.ts` (`STYLE_RULE`). Keep it in step with the portfolio writing rules; it also covers the generated robots.txt, llms.txt and ai.txt.
+5. The site's writing-style rule is in every generator prompt in `app/lib/ai.server.ts` (`STYLE_RULE`). It also covers the generated robots.txt, llms.txt and ai.txt.
 
 ## Content model
 
 Column-level detail loads from `.claude/rules/content-model.md` when working under `app/db/` or the post routes.
-
-## Done means
-
-Typecheck clean, server and client separated (`.server` only on the server), accessible (keyboard, names and roles), works against local D1 and a preview deploy, and the worker bundle does not grow without reason.
