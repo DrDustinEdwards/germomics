@@ -19,5 +19,6 @@ export const SUBSCRIBE_DESTINATIONS: Record<string, SubDest> = {
   podchaser: { label: "Podchaser", tier: "secondary", icon: Star },
 };
 
-export const PRIMARY_KEYS = ["apple", "spotify", "amazon", "pandora", "tunein"] as const;
-export const SECONDARY_KEYS = ["deezer", "podcastindex", "podchaser"] as const;
+const keysOf = (tier: SubTier) => Object.keys(SUBSCRIBE_DESTINATIONS).filter((k) => SUBSCRIBE_DESTINATIONS[k].tier === tier);
+export const PRIMARY_KEYS = keysOf("primary");
+export const SECONDARY_KEYS = keysOf("secondary");

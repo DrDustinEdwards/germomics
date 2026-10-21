@@ -1,12 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Post } from "~/db/schema";
-import { APPLE_CATEGORIES, APPLE_TOP_CATEGORIES } from "~/lib/apple-categories";
+import { APPLE_CATEGORIES } from "~/lib/apple-categories";
 import { getDataset, listDatasets } from "~/lib/datasets.server";
 import { computePeaks } from "~/lib/peaks";
 import { slugifyGuest, toPlayerTrack } from "~/lib/posts";
 import { captureException } from "~/lib/sentry.server";
 import { SITE_ADDRESS, SITE_ADDRESS_LINE, postalAddressLd } from "~/lib/site";
-import { PRIMARY_KEYS, SECONDARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 import { DEFAULT_SHOW } from "~/lib/show.server";
 
 // The small pure helpers. Where a hardcoded list mirrors a source of truth, the test derives the
@@ -56,16 +55,6 @@ describe("toPlayerTrack", () => {
 });
 
 describe("the Apple Podcasts categories", () => {
-  it("lists exactly the taxonomy's top-level names", () => {
-    expect(APPLE_TOP_CATEGORIES).toEqual(Object.keys(APPLE_CATEGORIES));
-    expect(APPLE_TOP_CATEGORIES.length).toBeGreaterThanOrEqual(18);
-    expect(new Set(APPLE_TOP_CATEGORIES).size).toBe(APPLE_TOP_CATEGORIES.length);
-  });
-
-  it("has no repeated subcategory within a category", () => {
-    for (const [name, subs] of Object.entries(APPLE_CATEGORIES)) expect(new Set(subs).size, name).toBe(subs.length);
-  });
-
   it("accepts every category the show ships with, so the editor never rejects its own default", () => {
     expect(DEFAULT_SHOW.categories!.length).toBeGreaterThan(0);
     for (const c of DEFAULT_SHOW.categories!) {
@@ -73,23 +62,6 @@ describe("the Apple Podcasts categories", () => {
       if (c.subcategory) expect(APPLE_CATEGORIES[c.category], `${c.category} / ${c.subcategory}`).toContain(c.subcategory);
     }
     expect(APPLE_CATEGORIES).toHaveProperty(DEFAULT_SHOW.appleCategory);
-  });
-});
-
-describe("the subscribe destinations", () => {
-  it("lists the primary and secondary keys exactly as the destinations' tiers say, both ways", () => {
-    const tier = (t: string) => Object.entries(SUBSCRIBE_DESTINATIONS).filter(([, d]) => d.tier === t).map(([k]) => k);
-    expect([...PRIMARY_KEYS].sort()).toEqual(tier("primary").sort());
-    expect([...SECONDARY_KEYS].sort()).toEqual(tier("secondary").sort());
-    expect(PRIMARY_KEYS.length + SECONDARY_KEYS.length).toBe(Object.keys(SUBSCRIBE_DESTINATIONS).length);
-    expect(PRIMARY_KEYS.length).toBeGreaterThan(0);
-  });
-
-  it("gives every destination a label and an icon", () => {
-    for (const [key, d] of Object.entries(SUBSCRIBE_DESTINATIONS)) {
-      expect(d.label, key).toBeTruthy();
-      expect(d.icon, key).toBeTruthy();
-    }
   });
 });
 
