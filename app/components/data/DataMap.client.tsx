@@ -89,7 +89,7 @@ export default function DataMap({
     let cancelled = false;
     let markers: google.maps.marker.AdvancedMarkerElement[] = [];
 
-    (async () => {
+    void (async () => {
       try {
         setOptions({ key: API_KEY, v: "weekly", mapIds: [MAP_ID] });
         const [{ Map, InfoWindow }, { AdvancedMarkerElement, PinElement }] = await Promise.all([

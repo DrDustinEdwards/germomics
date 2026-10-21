@@ -2,12 +2,12 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "germomics",
 	"main": "./workers/app.ts",
-	"compatibility_date": "2026-06-21",
+	"compatibility_date": "2026-09-08",
 	"compatibility_flags": ["nodejs_compat"],
 	// Keep dashboard-set vars/secrets (ADMIN_EMAIL, ACCESS_TEAM_DOMAIN, ACCESS_AUD,
 	// BETTER_AUTH_SECRET for preview tokens) from being wiped on deploy.
 	"keep_vars": true,
-	"observability": { "enabled": true },
+	"observability": { "enabled": true, "traces": { "enabled": true, "head_sampling_rate": 0.1 } },
 	// THE MAPS KEY IS A BUILD-TIME VALUE AND IS DELIBERATELY NOT A `vars` ENTRY HERE.
 	//
 	//   VITE_GOOGLE_MAPS_KEY      the Maps JavaScript API browser key
