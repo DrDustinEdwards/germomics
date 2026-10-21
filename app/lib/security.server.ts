@@ -11,6 +11,8 @@
 // Cloudflare's WAF managed ruleset + bot rules are the primary perimeter defense (dashboard,
 // see manual steps); this is the in-Worker layer the audit asked for.
 
+import { IMAGE_ORIGIN, MEDIA_ORIGIN, OP3_ORIGIN } from "~/lib/site";
+
 // ── Security headers ─────────────────────────────────────────────────────────
 
 // Content-Security-Policy. REPORT-ONLY for now. Allowlist: self + cdnjs, the Maps JS API
@@ -28,10 +30,10 @@ const CSP = [
   "form-action 'self'",
   "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://maps.googleapis.com",
   "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
-  "img-src 'self' data: blob: https://images.germomics.com https://media.germomics.com https://maps.googleapis.com https://maps.gstatic.com",
-  "media-src 'self' blob: https://media.germomics.com https://op3.dev",
+  `img-src 'self' data: blob: ${IMAGE_ORIGIN} ${MEDIA_ORIGIN} https://maps.googleapis.com https://maps.gstatic.com`,
+  `media-src 'self' blob: ${MEDIA_ORIGIN} ${OP3_ORIGIN}`,
   "font-src 'self' data: https://cdnjs.cloudflare.com",
-  "connect-src 'self' https://images.germomics.com https://media.germomics.com https://op3.dev https://maps.googleapis.com",
+  `connect-src 'self' ${IMAGE_ORIGIN} ${MEDIA_ORIGIN} ${OP3_ORIGIN} https://maps.googleapis.com`,
   "worker-src 'self' blob:",
   "child-src 'self' blob:",
   "frame-src 'self'",

@@ -1,23 +1,22 @@
 // Pure formatting helpers — framework-agnostic, used by both loaders/feeds (server) and
 // components (client). No bindings, no Node APIs.
 
+/** Whole hours, minutes and seconds of a duration; negative, missing or NaN is zero. */
+function splitSeconds(totalSeconds?: number | null): [h: number, m: number, s: number] {
+  const t = Math.max(0, Math.floor(totalSeconds || 0));
+  return [Math.floor(t / 3600), Math.floor((t % 3600) / 60), t % 60];
+}
+
 /** "1:02:03" or "4:05" for human display. */
 export function formatDuration(totalSeconds?: number | null): string {
-  if (!totalSeconds || totalSeconds < 0) return "0:00";
-  const s = Math.floor(totalSeconds % 60);
-  const m = Math.floor((totalSeconds / 60) % 60);
-  const h = Math.floor(totalSeconds / 3600);
+  const [h, m, s] = splitSeconds(totalSeconds);
   const ss = String(s).padStart(2, "0");
   return h ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`;
 }
 
 /** "HH:MM:SS" — the form iTunes wants for <itunes:duration>. */
 export function formatHMS(totalSeconds?: number | null): string {
-  const t = Math.max(0, Math.floor(totalSeconds ?? 0));
-  const h = Math.floor(t / 3600);
-  const m = Math.floor((t % 3600) / 60);
-  const s = t % 60;
-  return [h, m, s].map((n) => String(n).padStart(2, "0")).join(":");
+  return splitSeconds(totalSeconds).map((n) => String(n).padStart(2, "0")).join(":");
 }
 
 /** "June 21, 2026" from an ISO/date string. */
@@ -49,10 +48,7 @@ export function stampToSeconds(stamp: string): number {
 
 /** Human-readable spoken duration for screen readers, e.g. "3 minutes 12 seconds". */
 export function spokenTime(totalSeconds?: number | null): string {
-  const t = Math.max(0, Math.floor(totalSeconds ?? 0));
-  const h = Math.floor(t / 3600);
-  const m = Math.floor((t % 3600) / 60);
-  const s = t % 60;
+  const [h, m, s] = splitSeconds(totalSeconds);
   const parts: string[] = [];
   if (h) parts.push(`${h} hour${h === 1 ? "" : "s"}`);
   if (m) parts.push(`${m} minute${m === 1 ? "" : "s"}`);

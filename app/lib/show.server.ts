@@ -3,6 +3,7 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { showConfig, type ShowConfig } from "~/db/schema";
+import { IMAGE_ORIGIN } from "~/lib/site";
 
 export const DEFAULT_SHOW: ShowConfig = {
   id: 0,
@@ -10,7 +11,7 @@ export const DEFAULT_SHOW: ShowConfig = {
   description: "A podcast about microbiology and history.",
   author: "Dustin Edwards",
   ownerEmail: "emaildustinedwards@gmail.com",
-  artwork: "https://images.germomics.com/cover.jpg",
+  artwork: `${IMAGE_ORIGIN}/cover.jpg`,
   appleCategory: "Science",
   language: "en-us",
   itunesType: "episodic",

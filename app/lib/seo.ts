@@ -156,13 +156,21 @@ type ShowLike = {
 
 type SiteLdOpts = { address?: Partial<Address>; sameAs?: readonly string[] };
 
-/** Build profile URLs from social handles (settings social.*). Empty handles are skipped. */
-export function socialSameAs(s: { facebook?: string; twitter?: string; instagram?: string }): string[] {
-  const urls: string[] = [];
-  if (s.facebook) urls.push(`https://www.facebook.com/${s.facebook}`);
-  if (s.twitter) urls.push(`https://x.com/${s.twitter}`);
-  if (s.instagram) urls.push(`https://www.instagram.com/${s.instagram}/`);
-  return urls;
+type SocialHandles = { facebook?: string; twitter?: string; instagram?: string };
+export type SocialLink = { platform: string; label: string; url: string };
+
+/** Profile links from social handles (settings social.*), for the footer. Empty handles are skipped. */
+export function socialLinks(s: SocialHandles): SocialLink[] {
+  const links: SocialLink[] = [];
+  if (s.facebook) links.push({ platform: "facebook", label: "Facebook", url: `https://www.facebook.com/${s.facebook}` });
+  if (s.twitter) links.push({ platform: "x", label: "X", url: `https://x.com/${s.twitter}` });
+  if (s.instagram) links.push({ platform: "instagram", label: "Instagram", url: `https://www.instagram.com/${s.instagram}/` });
+  return links;
+}
+
+/** The same profiles as schema.org sameAs URLs, so footer and schema stay consistent. */
+export function socialSameAs(s: SocialHandles): string[] {
+  return socialLinks(s).map((l) => l.url);
 }
 
 /** Organization node for the publisher (home + About). Address + sameAs are DB-driven. */

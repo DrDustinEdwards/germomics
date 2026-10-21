@@ -15,6 +15,7 @@ import { loadSettings, loadSnippets, setting } from "~/lib/content.server";
 import { getShowConfig } from "~/lib/show.server";
 import { listSeasons } from "~/lib/posts.server";
 import { themeInitScript } from "~/lib/theme";
+import { socialLinks } from "~/lib/seo";
 import { PlayerProvider } from "~/components/player/player-context";
 import { PlayerDock } from "~/components/player/PlayerDock";
 import { Header } from "~/components/chrome/Header";
@@ -57,14 +58,11 @@ export async function loader({ context }: Route.LoaderArgs) {
   const [show, seasons] = await Promise.all([getShowConfig(env), listSeasons(env)]);
   // Social links for the footer, built from the same settings social.* as Organization sameAs, so
   // footer and schema stay consistent. Only handles that are set produce a link.
-  const fb = setting(settings, "social.facebook");
-  const tw = setting(settings, "social.twitter");
-  const ig = setting(settings, "social.instagram");
-  const socials = [
-    fb ? { platform: "facebook", label: "Facebook", url: `https://www.facebook.com/${fb}` } : null,
-    tw ? { platform: "x", label: "X", url: `https://x.com/${tw}` } : null,
-    ig ? { platform: "instagram", label: "Instagram", url: `https://www.instagram.com/${ig}/` } : null,
-  ].filter((s): s is { platform: string; label: string; url: string } => s !== null);
+  const socials = socialLinks({
+    facebook: setting(settings, "social.facebook"),
+    twitter: setting(settings, "social.twitter"),
+    instagram: setting(settings, "social.instagram"),
+  });
   return {
     snippets: getSnippets(context),
     socials,
