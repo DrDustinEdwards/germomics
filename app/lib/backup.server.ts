@@ -1,10 +1,11 @@
-// Nightly D1 backup, run from the Worker's scheduled handler (wrangler.jsonc triggers.crons).
-// d1-dump writes one JSON object per table into the BACKUPS R2 bucket and works where
-// `wrangler d1 export` fails on our FTS5 tables. Procedure and restore: CLAUDE.md "Backup".
-import { backupHealth, dumpDatabase, pruneDumps, writeCompleteMarker } from "@dustinedwards/d1-dump";
+// Nightly D1 backup, run from the Worker's scheduled handler (wrangler.jsonc triggers.crons), by
+// d1-dump's runCheckedBackup: dump without the marker, check, mark complete, prune. A dump that
+// fails a check throws BackupIncomplete and keeps its objects without the marker, so the health age
+// keeps growing toward its 26 hour warning. Procedure and restore: CLAUDE.md "Backup".
+import { backupHealth, runCheckedBackup } from "@dustinedwards/d1-dump";
 import { getDb } from "~/db/index.server";
 import { contentBlocks, posts, settings, showConfig } from "~/db/schema";
-import { BACKUP_EXCLUDE, dumpProblems, presentExcludes } from "~/lib/backup-checks";
+import { BACKUP_COUNTED_TABLES, BACKUP_EXCLUDE, presentExcludes, siteProblems } from "~/lib/backup-checks";
 
 async function liveCounts(env: Env): Promise<Record<string, number>> {
   const db = getDb(env);
@@ -17,9 +18,7 @@ async function liveCounts(env: Env): Promise<Record<string, number>> {
   return { posts: p, content_blocks: c, settings: s, show_config: sc };
 }
 
-// Which of the credential tables exist right now. They are dropped by 0010, which may be applied
-// before or after the code that stops expecting them is deployed; d1-dump refuses an excluded
-// name that is not a table, so only the ones still present are excluded.
+// Which of the credential tables exist right now (see BACKUP_EXCLUDE).
 async function liveExcludes(env: Env): Promise<string[]> {
   const placeholders = BACKUP_EXCLUDE.map(() => "?").join(", ");
   const { results } = await env.DB.prepare(
@@ -30,24 +29,12 @@ async function liveExcludes(env: Env): Promise<string[]> {
   return presentExcludes(results.map((r) => r.name));
 }
 
-/**
- * Dump, check, then mark complete. A dump that fails its checks is left WITHOUT the marker (it
- * is kept as evidence and never counts as the latest), and this throws so the failure shows in
- * Workers Logs and the health age keeps growing toward its 26 hour warning.
- */
 export async function runBackup(env: Env): Promise<void> {
-  const dump = await dumpDatabase(env.DB, env.BACKUPS, {
+  await runCheckedBackup(env.DB, env.BACKUPS, {
     exclude: await liveExcludes(env),
-    markComplete: false,
+    required: [...BACKUP_COUNTED_TABLES],
+    check: async (dump) => siteProblems(dump, await liveCounts(env)),
   });
-  const problems = dumpProblems(dump, await liveCounts(env));
-  if (problems.length > 0) {
-    throw new Error(`backup ${dump.run_id} left incomplete: ${problems.join("; ")}`);
-  }
-  await writeCompleteMarker(env.BACKUPS, dump);
-  // d1-dump's default graduated retention: the newest complete run of each of the last 14 days,
-  // 8 ISO weeks and 6 months; the newest complete run is never deleted.
-  await pruneDumps(env.BACKUPS);
 }
 
 /** Age of the newest complete dump, for /health. Never throws. */
