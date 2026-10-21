@@ -34,12 +34,8 @@ React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-pl
 2. Migrations are hand-written additive SQL in `drizzle/`, kept in sync with `app/db/schema.ts`, applied with wrangler; drizzle-kit is not used. Search uses the FTS5 tables. No hand-written SQL in route code; use the query builder.
 3. The audio player is the highest-risk accessibility component: full keyboard support, seeking without dragging, correct name, role and state on every control. Every episode has a transcript.
 4. Heavy client libraries (maps, charts, Phaser) are lazy-loaded per route and never reach the server bundle or the shared client chunk. Phaser loads only on `/games/:slug`.
-5. The site's writing-style rule is in every generator prompt in `app/lib/ai.server.ts` (`STYLE_RULE`). Keep it in step with the portfolio writing rules; it also covers the generated robots.txt, llms.txt and ai.txt.
+5. The site's writing-style rule is in every generator prompt in `app/lib/ai.server.ts` (`STYLE_RULE`). It also covers the generated robots.txt, llms.txt and ai.txt.
 
 ## Content model
 
 Column-level detail loads from `.claude/rules/content-model.md` when working under `app/db/` or the post routes.
-
-## Done means
-
-Typecheck clean, server and client separated (`.server` only on the server), accessible (keyboard, names and roles), works against local D1 and a preview deploy, and the worker bundle does not grow without reason.
