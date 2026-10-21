@@ -169,7 +169,7 @@ export function PostEditor({ data }: { data: EditorData }) {
       fd.set("payload", buildPayload());
       for (const [k, v] of Object.entries(extra)) fd.set(k, v);
       savedRef.current = JSON.stringify(form);
-      fetcher.submit(fd, { method: "post" });
+      void fetcher.submit(fd, { method: "post" });
     },
     [buildPayload, fetcher, form],
   );

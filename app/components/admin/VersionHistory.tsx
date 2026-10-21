@@ -19,7 +19,7 @@ export function VersionHistory({ versions, current }: { versions: VersionRow[]; 
   const restore = useFetcher();
 
   useEffect(() => {
-    if (openId != null) snap.load(`/admin/version/${openId}`);
+    if (openId != null) void snap.load(`/admin/version/${openId}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openId]);
 
