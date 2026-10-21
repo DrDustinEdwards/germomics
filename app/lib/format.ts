@@ -40,11 +40,7 @@ export function rfc822(value?: string | null): string {
   return (Number.isNaN(d.getTime()) ? new Date(0) : d).toUTCString();
 }
 
-/** "mm:ss" / "h:mm:ss" timestamp ↔ seconds, for transcript cues and share-at-timestamp. */
-export function secondsToStamp(seconds: number): string {
-  return formatDuration(seconds);
-}
-
+/** "mm:ss" / "h:mm:ss" timestamp to seconds, for transcript cues and share-at-timestamp. */
 export function stampToSeconds(stamp: string): number {
   const parts = stamp.split(":").map(Number);
   if (parts.some((n) => Number.isNaN(n))) return 0;

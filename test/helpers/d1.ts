@@ -10,7 +10,7 @@ export async function applyMigrations(db: D1Database): Promise<void> {
 
 // Splits a migration into statements: strips comments, respects quotes, and keeps
 // CREATE TRIGGER ... BEGIN ... END whole.
-export function splitSql(sql: string): string[] {
+function splitSql(sql: string): string[] {
   const out: string[] = [];
   let buf = "";
   let quote = "";

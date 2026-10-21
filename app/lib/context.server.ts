@@ -15,10 +15,6 @@ export function getEnv(context: Readonly<RouterContextProvider>): Env {
   return context.get(cloudflareContext).env;
 }
 
-export function getExecutionCtx(context: Readonly<RouterContextProvider>): ExecutionContext {
-  return context.get(cloudflareContext).ctx;
-}
-
 // Per-request site content (settings + snippets), loaded once by the root middleware and read by any
 // loader via getSettings()/getSnippets(). Values are KV-cached in content.server; this just carries
 // the resolved maps so a request hits KV at most once.

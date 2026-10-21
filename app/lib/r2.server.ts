@@ -2,10 +2,10 @@
 // BLOG_IMAGES (images.germomics.com); game assets read from GAME_ASSETS. Reads/writes go
 // through the native bindings only — never over HTTP (CLAUDE.md rule #1). Enclosure/media
 // URLs ALWAYS point at media.germomics.com, never the worker origin (germomics invariant).
-export const MEDIA_BASE = "https://media.germomics.com";
-export const IMAGE_BASE = "https://images.germomics.com";
+const MEDIA_BASE = "https://media.germomics.com";
+const IMAGE_BASE = "https://images.germomics.com";
 
-export function mediaUrl(key: string): string {
+function mediaUrl(key: string): string {
   return `${MEDIA_BASE}/${key.replace(/^\/+/, "")}`;
 }
 export function imageUrl(key: string): string {

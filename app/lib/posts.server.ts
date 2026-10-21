@@ -40,7 +40,7 @@ function asCards(
 // a post is publicly visible when it is published AND not scheduled into the future. A
 // "scheduled" post is status=published with a future publishAt; it stays hidden from every
 // public read (lists, detail, search, feeds) until publishAt passes — no cron required.
-export function publiclyVisible(): SQL {
+function publiclyVisible(): SQL {
   const now = new Date().toISOString();
   return and(
     eq(posts.status, "published"),
