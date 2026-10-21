@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.42.1",
-    "@cloudflare/vitest-pool-workers": "^0.22.0",
+    "@cloudflare/vitest-plugin": "^1.0.0",
     "@react-router/dev": "8.3.1",
     "@tailwindcss/vite": "4.3.1",
     "@types/google.maps": "3.66.2",
