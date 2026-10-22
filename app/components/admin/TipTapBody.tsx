@@ -5,9 +5,8 @@
 import { useEffect, useRef } from "react";
 import { useEditor, EditorContent, Node, mergeAttributes } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
-import Placeholder from "@tiptap/extension-placeholder";
+import { Placeholder } from "@tiptap/extensions";
 import {
   Bold, Italic, Strikethrough, Heading2, Heading3, List, ListOrdered,
   Quote, Code2, Minus, Link2, ImagePlus, Images, Undo2, Redo2, Info,
@@ -163,9 +162,17 @@ export default function TipTapBody({
 
   const editor = useEditor({
     immediatelyRender: false,
+    // Tiptap 3 stopped re-rendering on every transaction; the toolbar's active states need it.
+    shouldRerenderOnTransaction: true,
     extensions: [
-      StarterKit.configure({ heading: { levels: [2, 3, 4] } }),
-      Link.configure({ openOnClick: false, autolink: true, HTMLAttributes: { rel: "noopener noreferrer" } }),
+      // Tiptap 3's StarterKit carries Link, Underline and a trailing paragraph. Link is configured
+      // here; the other two stay off so the editor writes the same HTML it did on 2.x.
+      StarterKit.configure({
+        heading: { levels: [2, 3, 4] },
+        link: { openOnClick: false, autolink: true, HTMLAttributes: { rel: "noopener noreferrer" } },
+        underline: false,
+        trailingNode: false,
+      }),
       Image.configure({ allowBase64: false }),
       Placeholder.configure({ placeholder: "Write the post…  (paste from Docs is cleaned automatically)" }),
       Callout,
@@ -197,7 +204,7 @@ export default function TipTapBody({
   // Sync external value changes (e.g. toggling back from raw HTML) without clobbering the cursor.
   useEffect(() => {
     if (editor && value !== lastEmitted.current && value !== editor.getHTML()) {
-      editor.commands.setContent(value || "", false);
+      editor.commands.setContent(value || "", { emitUpdate: false });
       lastEmitted.current = value;
     }
   }, [value, editor]);

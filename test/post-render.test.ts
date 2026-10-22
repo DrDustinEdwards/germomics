@@ -12,14 +12,6 @@ import { addHeadingIds, demoteHeadings, tableOfContents } from "~/lib/seo";
 // renderer would pin the class list and nothing that matters. These are the functions a
 // dependency bump could break silently, and a broken heading id is a table of contents whose
 // links all 404 to nowhere on the page.
-//
-// The `linkify-it` advisory is NOT on this path, and the task doc was wrong about that too. It
-// records linkify-it as "reached through markdown rendering of post bodies", but post bodies are
-// stored as HTML and rendered as HTML: nothing in app/ or workers/ imports markdown-it or
-// prosemirror-markdown at all. linkify-it arrives only as a transitive dependency of @tiptap/pm,
-// and it ships in exactly one client chunk (build/client/assets/TipTapBody-*.js), the admin
-// editor, behind the single-admin gate. Its DoS input would have to be typed by the admin into
-// their own editor.
 
 describe("demoteHeadings", () => {
   it("demotes the ladder by one so the page keeps a single h1", () => {
