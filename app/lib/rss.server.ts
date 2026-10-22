@@ -133,14 +133,15 @@ function itemXml(e: Post, origin: string, guests: GuestView[], soundbites: Sound
   </item>`;
 }
 
-/** The writing feed — articles for regular feed readers. */
+/** The writing feed — articles for regular feed readers. The guid is the one stored at first
+ *  publish, so a later slug change does not re-announce the article (Grok audit 2026-10-21, GE-13). */
 export function buildSiteFeed(show: ShowConfig, articles: Post[], origin: string): string {
   const items = articles
     .map(
       (a) => `  <item>
     <title>${xmlEscape(a.title)}</title>
     <link>${origin}/${a.slug}</link>
-    <guid>${origin}/${a.slug}</guid>
+    ${a.guid ? `<guid isPermaLink="false">${xmlEscape(a.guid)}</guid>` : `<guid>${origin}/${a.slug}</guid>`}
     <pubDate>${rfc822(a.publishedAt)}</pubDate>
     <description>${cdata(a.excerpt ?? a.body)}</description>
     <content:encoded>${cdata(a.body)}</content:encoded>
