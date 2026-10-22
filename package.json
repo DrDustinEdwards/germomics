@@ -45,7 +45,7 @@
     "recharts": "3.8.1"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.42.1",
+    "@cloudflare/vite-plugin": "1.64.0",
     "@cloudflare/vitest-plugin": "^1.0.0",
     "@react-router/dev": "8.3.1",
     "@tailwindcss/vite": "4.3.1",
