@@ -1,4 +1,4 @@
-// The site's side of Carrel's contract (@dustinedwards/site-api v0.2.0): an adapter over the
+// The site's side of Carrel's contract (@dustinedwards/site-api): an adapter over the
 // articles in D1 and the images in the BLOG_IMAGES bucket, using the same save and publish
 // invariants as the admin editor (sanitize on every write, a snapshot before every edit, a guid
 // generated once at first publish and never rewritten).

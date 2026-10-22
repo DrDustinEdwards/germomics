@@ -164,7 +164,7 @@ describe("captureException", () => {
       level: "error",
       transaction: "/episodes/ep-1",
       server_name: "germomics.com",
-      request: { url: "https://germomics.com/episodes/ep-1?secret=1", method: "POST" },
+      request: { url: "https://germomics.com/episodes/ep-1", method: "POST" },
       exception: { values: [{ type: "TypeError", value: "boom" }] },
     });
     expect(event.event_id).toMatch(/^[0-9a-f]{32}$/);
@@ -173,6 +173,8 @@ describe("captureException", () => {
     expect(raw).not.toContain("Bearer");
     expect(raw).not.toContain("a=b");
     expect(raw).not.toContain("private body");
+    // The query can hold a capability (an unsubscribe token), so it is not sent (GE-10).
+    expect(raw).not.toContain("secret=1");
   });
 
   it("sends the first line of the stack when there is one, and none when there is not", () => {

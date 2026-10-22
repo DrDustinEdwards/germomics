@@ -3,7 +3,7 @@
 //   1. The security-header layer applied to EVERY response in the Worker path (pages, feeds,
 //      resource routes, redirects, errors). Lives here, not in root.tsx, so headers also cover
 //      non-React responses (CLAUDE.md: prefer the Worker entry). CSP ships REPORT-ONLY first —
-//      it reports violations without blocking, so TipTap (inline styles) and MapLibre (blob
+//      it reports violations without blocking, so TipTap (inline styles) and Google Maps (blob
 //      workers, tiles) keep working while Dustin reviews real violations, then flips to enforce.
 //   2. A best-effort KV sliding-window rate limiter on /admin/*, /admin/ai.
 //   3. A per-day cost cap on the AI endpoint so spend can't run away.
@@ -92,9 +92,12 @@ type Limit = { limit: number; windowSec: number };
 // the WAF rate-limit ruleset is the hard control.)
 // Per-minute limits are tunable live via the settings table (ratelimit.*), falling back to these
 // defaults. Window is fixed at 60s.
-const RULES: Array<{ test: (p: string) => boolean; bucket: string; settingKey: string; def: number; json: boolean }> = [
+const RULES: Array<{ test: (p: string, method: string) => boolean; bucket: string; settingKey: string; def: number; json: boolean }> = [
   { test: (p) => p.startsWith("/admin/ai"), bucket: "ai", settingKey: "ratelimit.ai", def: 15, json: true },
   { test: (p) => p.startsWith("/admin"), bucket: "admin", settingKey: "ratelimit.admin", def: 150, json: false },
+  // A signup stores an address, so a script could fill the list (Grok audit 2026-10-21, GE-6).
+  // Only the POST is metered; reading the page is not. /subscribe.data is the same action.
+  { test: (p, m) => m === "POST" && (p === "/subscribe" || p === "/subscribe.data"), bucket: "subscribe", settingKey: "ratelimit.subscribe", def: 5, json: false },
 ];
 
 async function overLimit(env: Env, key: string, { limit, windowSec }: Limit): Promise<boolean> {
@@ -122,7 +125,7 @@ function tooMany(retrySec: number, json: boolean): Response {
 /** Returns a 429 Response if this request is rate-limited, otherwise null. */
 export async function enforceRateLimit(env: Env, request: Request): Promise<Response | null> {
   const pathname = new URL(request.url).pathname;
-  const match = RULES.find((r) => r.test(pathname));
+  const match = RULES.find((r) => r.test(pathname, request.method));
   if (!match) return null;
   const limit = settingNum(await loadSettings(env), match.settingKey, match.def);
   const ip = request.headers.get("cf-connecting-ip") || "anon";

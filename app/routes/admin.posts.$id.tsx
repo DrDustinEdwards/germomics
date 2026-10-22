@@ -53,7 +53,7 @@ export async function loader({ params, context, request }: Route.LoaderArgs) {
     selectedPeople: links.map((l) => ({ personId: l.person.id, role: l.role ?? "" })),
     takenSlugs: all.filter((p) => p.id !== post.id).map((p) => p.slug),
     origin,
-    previewUrl: `${origin}/preview/${post.id}/${token}`,
+    previewUrl: token ? `${origin}/preview/${post.id}/${token}` : null,
     aiAvailable: aiConfigured(env),
   };
   return data;

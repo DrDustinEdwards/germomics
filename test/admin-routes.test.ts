@@ -168,7 +168,8 @@ describe("content block action", () => {
   it("saves a page as draft unless published is chosen, and a snippet always published", async () => {
     await content.action(args(form("/admin/content/page:about", { title: "About", value: "<p>v</p>" }), { key: "page:about" }));
     expect(await loadBlock(e, "page:about", { includeDrafts: true })).toMatchObject({ title: "About", status: "draft" });
-    await content.action(args(form("/admin/content/page:about", { value: "<p>v2</p>", status: "published" }), { key: "page:about" }));
+    // A page body is injected as HTML, so a script in it is dropped on save (GE-3).
+    await content.action(args(form("/admin/content/page:about", { value: '<p onclick="x()">v2</p><script>alert(1)</script>', status: "published" }), { key: "page:about" }));
     expect(await loadBlock(e, "page:about")).toMatchObject({ value: "<p>v2</p>", status: "published", title: "" });
     await content.action(args(form("/admin/content/snippet:x", { value: "Hi", status: "draft" }), { key: "snippet:x" }));
     expect(await loadBlock(e, "snippet:x")).toMatchObject({ status: "published" });

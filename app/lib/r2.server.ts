@@ -1,6 +1,6 @@
 // R2 helpers. Audio → MEDIA (germomics-audio, public via media.germomics.com); images →
 // BLOG_IMAGES (images.germomics.com); game assets read from GAME_ASSETS. Reads/writes go
-// through the native bindings only — never over HTTP (CLAUDE.md rule #1). Enclosure/media
+// through the native bindings only — never over HTTP. Enclosure/media
 // URLs ALWAYS point at media.germomics.com, never the worker origin (germomics invariant).
 import { IMAGE_ORIGIN as IMAGE_BASE, MEDIA_ORIGIN as MEDIA_BASE } from "~/lib/site";
 

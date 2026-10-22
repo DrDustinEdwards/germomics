@@ -42,15 +42,18 @@ export function captureException(
 
   const err = error instanceof Error ? error : new Error(String(error));
   const url = new URL(request.url);
+  // The query and a preview link's token segment are capabilities (an unsubscribe token, a preview
+  // token), so neither leaves the Worker (Grok audit 2026-10-21, GE-10).
+  const path = url.pathname.replace(/^(\/preview\/[^/]+\/)[^/]+/, "$1:token");
   const event = {
     event_id: crypto.randomUUID().replace(/-/g, ""),
     timestamp: Date.now() / 1000,
     platform: "javascript",
     level: "error",
     logger: "worker",
-    transaction: url.pathname,
+    transaction: path,
     server_name: url.host,
-    request: { url: url.href, method: request.method },
+    request: { url: `${url.origin}${path}`, method: request.method },
     tags: { runtime: "cloudflare-workers" },
     exception: {
       values: [

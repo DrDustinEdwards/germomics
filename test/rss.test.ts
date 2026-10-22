@@ -219,6 +219,11 @@ describe("buildSiteFeed", () => {
     expect(item).not.toContain("enclosure");
     expect(buildSiteFeed(show, [], ORIGIN)).not.toContain("<item>");
   });
+
+  it("keeps the stored guid when the slug changes after publish", () => {
+    const xml = buildSiteFeed(show, [episode({ slug: "renamed", guid: "urn:germomics:abc", excerpt: null })], ORIGIN);
+    expect(items(xml)[0]).toContain('<guid isPermaLink="false">urn:germomics:abc</guid>');
+  });
 });
 
 describe("buildChaptersJson", () => {

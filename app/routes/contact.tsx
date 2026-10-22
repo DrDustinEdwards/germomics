@@ -5,7 +5,7 @@
 import type { Route } from "./+types/contact";
 import { getEnv, getSettings } from "~/lib/context.server";
 import { getShowConfig } from "~/lib/show.server";
-import { loadPage, isPreviewing, setting } from "~/lib/content.server";
+import { fillPagePlaceholders, loadPage, isPreviewing, setting } from "~/lib/content.server";
 import { SITE_ADDRESS_LINE } from "~/lib/site";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 
@@ -24,9 +24,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     getShowConfig(env),
   ]);
   const addressLine = setting(getSettings(context), "contact.address_line", SITE_ADDRESS_LINE);
-  const html = page.value
-    .replaceAll("{{email}}", show.ownerEmail)
-    .replaceAll("{{address_line}}", addressLine);
+  const html = fillPagePlaceholders(page.value, { email: show.ownerEmail, addressLine });
   return { title: page.title || "Contact", html };
 }
 

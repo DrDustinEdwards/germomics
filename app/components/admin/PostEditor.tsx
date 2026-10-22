@@ -33,7 +33,8 @@ export type EditorData = {
   selectedPeople: SelectedPerson[];
   takenSlugs: string[];
   origin: string;
-  previewUrl: string;
+  /** Null when the Worker has no BETTER_AUTH_SECRET to sign a preview link with. */
+  previewUrl: string | null;
   aiAvailable: boolean;
 };
 
@@ -229,7 +230,13 @@ export function PostEditor({ data }: { data: EditorData }) {
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="ghost" type="button" onClick={() => window.open(previewUrl, "_blank")}>
+            <Button
+              variant="ghost"
+              type="button"
+              disabled={!previewUrl}
+              title={previewUrl ? undefined : "Preview links need the BETTER_AUTH_SECRET secret set on the Worker."}
+              onClick={() => previewUrl && window.open(previewUrl, "_blank")}
+            >
               <Eye size={14} aria-hidden /> Preview
             </Button>
             <Button variant="ghost" type="button" disabled={busy || slugTaken} onClick={() => submit("save")}>

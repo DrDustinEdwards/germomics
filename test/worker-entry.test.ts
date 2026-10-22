@@ -105,10 +105,8 @@ describe("the Worker entry", () => {
 });
 
 describe("the nightly backup", () => {
-  it("runs the backup inside waitUntil", async () => {
-    const c = ctx();
-    await worker.scheduled!({} as ScheduledController, e, c);
-    await Promise.all(c.pending);
+  it("runs the backup before the invocation returns", async () => {
+    await worker.scheduled!({} as ScheduledController, e);
     expect(h.backup).toHaveBeenCalledWith(e);
   });
 
@@ -117,9 +115,7 @@ describe("the nightly backup", () => {
       throw new Error("dump failed");
     });
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-    const c = ctx();
-    await worker.scheduled!({} as ScheduledController, e, c);
-    await expect(c.pending[0]).rejects.toThrow("dump failed");
+    await expect(worker.scheduled!({} as ScheduledController, e)).rejects.toThrow("dump failed");
     expect(spy).toHaveBeenCalledWith("Nightly backup failed:", expect.any(Error));
     spy.mockRestore();
   });

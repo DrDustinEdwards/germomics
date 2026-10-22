@@ -3,7 +3,7 @@
 import type { Route } from "./+types/terms";
 import { getEnv } from "~/lib/context.server";
 import { getShowConfig } from "~/lib/show.server";
-import { loadPage, isPreviewing } from "~/lib/content.server";
+import { fillPagePlaceholders, loadPage, isPreviewing } from "~/lib/content.server";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { ReviewBanner, LegalDate } from "~/components/content/Legal";
 
@@ -21,7 +21,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     loadPage(env, "page:terms", { includeDrafts: preview }),
     getShowConfig(env),
   ]);
-  const html = page.value.replaceAll("{{email}}", show.ownerEmail);
+  const html = fillPagePlaceholders(page.value, { email: show.ownerEmail });
   return { title: page.title || "Terms of use", html };
 }
 

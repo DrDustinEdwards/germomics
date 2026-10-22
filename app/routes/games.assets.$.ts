@@ -1,6 +1,6 @@
 // Streams game assets (sprites / sfx / wasm) from the GAME_ASSETS R2 bucket over the native
-// binding. Path: /games/assets/* — Phaser scenes load from here. CLAUDE.md rule #1 (no HTTP
-// to a Cloudflare service): reads go through env.GAME_ASSETS, not fetch().
+// binding. Path: /games/assets/* — Phaser scenes load from here. No HTTP to a
+// Cloudflare service: reads go through env.GAME_ASSETS, not fetch().
 import type { Route } from "./+types/games.assets.$";
 import { getEnv } from "~/lib/context.server";
 import { getGameAsset } from "~/lib/r2.server";
