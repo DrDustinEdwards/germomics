@@ -8,7 +8,10 @@ import { getEnv } from "~/lib/context.server";
 import { uploadAudio, uploadImage, buildKey } from "~/lib/r2.server";
 
 const MAX_IMAGE = 25 * 1024 * 1024; // 25 MB
-const MAX_AUDIO = 500 * 1024 * 1024; // 500 MB
+// Cloudflare refuses a request body over 100 MB on the Free and Pro plans before the Worker sees it,
+// so a larger cap only promised uploads that could never arrive (Grok audit 2026-10-21, GE-9).
+// An hour of 128 kbps MP3 is about 58 MB.
+const MAX_AUDIO = 100 * 1024 * 1024; // 100 MB
 
 export async function action({ request, context }: Route.ActionArgs) {
   const env = getEnv(context);
@@ -35,7 +38,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   if (kind === "audio") {
     if (file.size > MAX_AUDIO) {
-      return Response.json({ ok: false, error: "Audio exceeds 500 MB." }, { status: 413 });
+      return Response.json({ ok: false, error: "Audio exceeds 100 MB." }, { status: 413 });
     }
     const key = buildKey(`episodes/${postId}`, file.name);
     const ct = file.type || "audio/mpeg";

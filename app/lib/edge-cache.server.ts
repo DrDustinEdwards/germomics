@@ -27,8 +27,8 @@ const STATUS = "x-cache"; // HIT | STALE | MISS | BYPASS, for verification
 const HTML_CLIENT_CC = "public, max-age=0, must-revalidate";
 
 // Paths that must always be live. /admin + /api (incl. /api/auth) are gated/mutating; /search is
-// query-driven and low-repeat; /preview shows tokenized drafts; /unsubscribe mutates on GET and
-// renders a per-token email; /health is an ops probe (no-store); /games/assets are immutable R2
+// query-driven and low-repeat; /preview shows tokenized drafts; /unsubscribe renders a
+// per-token email; /health is an ops probe (no-store); /games/assets are immutable R2
 // binaries that already cache on their own.
 function bypassPath(pathname: string): boolean {
   return (

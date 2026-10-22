@@ -11,7 +11,7 @@ import { runBackup } from "../app/lib/backup.server";
 
 // Seed React Router v8's request context with the native Cloudflare bindings, so every
 // loader/action/middleware reaches D1/R2/KV through `context` and never over HTTP or a
-// Node API (CLAUDE.md hard rule #1). Read them with getEnv(context) from context.server.
+// Node API. Read them with getEnv(context) from context.server.
 const requestHandler = createRequestHandler(
   () => import("virtual:react-router/server-build"),
   import.meta.env.MODE,
@@ -61,12 +61,14 @@ export default {
 
   // Nightly D1 backup (wrangler.jsonc triggers.crons). Errors are logged and rethrown, never
   // swallowed: a failed run must show as a failed invocation and age /health's backup reading.
-  async scheduled(_controller, env, ctx) {
-    ctx.waitUntil(
-      runBackup(env).catch((err: unknown) => {
-        console.error("Nightly backup failed:", err);
-        throw err;
-      }),
-    );
+  // Awaited rather than handed to waitUntil, whose rejection is only logged while the invocation
+  // still counts as a success (Grok audit 2026-10-21, GE-11).
+  async scheduled(_controller, env) {
+    try {
+      await runBackup(env);
+    } catch (err) {
+      console.error("Nightly backup failed:", err);
+      throw err;
+    }
   },
 } satisfies ExportedHandler<Env>;

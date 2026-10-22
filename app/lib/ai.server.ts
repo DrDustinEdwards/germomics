@@ -1,4 +1,4 @@
-// AI authoring assists — server-only (CLAUDE.md rule #1/#2). All Anthropic calls happen here,
+// AI authoring assists — server-only. All Anthropic calls happen here,
 // in route actions, via the Workers global `fetch` against the Messages API. ANTHROPIC_API_KEY is
 // a Worker secret and must NEVER reach the client bundle. Every generator is grounded in the
 // episode transcript only: prompts forbid inventing facts/names/dates/citations. Output is a

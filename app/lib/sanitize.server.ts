@@ -1,6 +1,6 @@
 // Server-side HTML sanitizer for post bodies. Runs on every save (both the rich editor output
 // and the raw-HTML toggle) as defense-in-depth + structural cleanup, using the native Workers
-// HTMLRewriter — no DOM, no Node deps (CLAUDE.md rule #1).
+// HTMLRewriter — no DOM, no Node deps.
 //
 // Policy (single trusted admin, so this is mainly hygiene + the Google-Docs paste cleanup we
 // hit in the migration): keep a known set of semantic tags + attributes; unwrap cosmetic
@@ -85,6 +85,15 @@ export async function sanitizeHtml(input: string): Promise<string> {
         }
         if ((lname === "href" || lname === "src") && !safeUrl(value)) {
           el.removeAttribute(name);
+        } else if (lname === "srcset") {
+          // Each candidate is "url [descriptor]"; one with an unsafe URL is dropped, and an
+          // attribute left with none is removed (Grok audit 2026-10-21, GE-5).
+          const kept = value
+            .split(",")
+            .map((c) => c.trim())
+            .filter((c) => c && safeUrl(c.split(/\s+/)[0] ?? ""));
+          if (kept.length === 0) el.removeAttribute(name);
+          else el.setAttribute(name, kept.join(", "));
         }
       }
       // Force safe rel on links that open in a new tab.

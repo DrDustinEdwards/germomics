@@ -16,6 +16,20 @@ export async function isPreviewing(env: Env, request: Request): Promise<boolean>
   return !!(await getAdminSession(env, request));
 }
 
+/**
+ * Fills a page body's {{email}} and {{address_line}} placeholders. The values are escaped: they come
+ * from settings, not from the sanitized body, and are injected as HTML (Grok audit 2026-10-21, GE-3).
+ */
+export function fillPagePlaceholders(html: string, fill: { email: string; addressLine?: string }): string {
+  const esc = (v: string) =>
+    v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  const out = html.replaceAll("{{email}}", esc(fill.email));
+  return fill.addressLine === undefined ? out : out.replaceAll("{{address_line}}", esc(fill.addressLine));
+}
+
+/** Pages served as plain text (llms.txt, ai.txt): their bodies are not HTML, so the sanitizer is not run on them. */
+export const TEXT_PAGES = new Set(["page:llms", "page:ai-txt"]);
+
 const TTL = 600; // seconds; also explicitly busted on write
 const K_SETTINGS = "cache:content:settings";
 const K_SNIPPETS = "cache:content:snippets";

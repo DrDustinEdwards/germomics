@@ -87,6 +87,14 @@ describe("sanitizeHtml", () => {
     expect(img).toContain('alt="x"');
   });
 
+  it("drops an unsafe srcset candidate and keeps the safe ones", async () => {
+    const img = await sanitizeHtml('<img src="/a.jpg" srcset="javascript:alert(1) 1x, /a-2x.jpg 2x" alt="x">');
+    expect(img).not.toContain("javascript:");
+    expect(img).toContain("/a-2x.jpg 2x");
+    const only = await sanitizeHtml('<img src="/a.jpg" srcset="vbscript:x 1x" alt="x">');
+    expect(only).not.toContain("srcset");
+  });
+
   it("forces rel=noopener noreferrer on a link that opens in a new tab", async () => {
     const out = await sanitizeHtml('<a href="https://example.com" target="_blank">x</a>');
     expect(out).toContain('rel="noopener noreferrer"');

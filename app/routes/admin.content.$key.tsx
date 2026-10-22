@@ -5,7 +5,8 @@ import { useFetcher } from "react-router";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import type { Route } from "./+types/admin.content.$key";
 import { getEnv } from "~/lib/context.server";
-import { loadBlock, upsertBlock } from "~/lib/content.server";
+import { loadBlock, TEXT_PAGES, upsertBlock } from "~/lib/content.server";
+import { sanitizeHtml } from "~/lib/sanitize.server";
 import { Card, Field, Button, inputCx } from "~/components/admin/ui";
 
 const PAGE_HREF: Record<string, string> = {
@@ -29,11 +30,15 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 export async function action({ params, request, context }: Route.ActionArgs) {
   const form = await request.formData();
   const kind = params.key.startsWith("page:") ? "page" : "snippet";
+  const raw = String(form.get("value") ?? "");
+  // A page body is injected as HTML, so it goes through the same sanitizer as a post body
+  // (Grok audit 2026-10-21, GE-3). The plain-text pages are served as text and keep their bytes.
+  const value = kind === "page" && !TEXT_PAGES.has(params.key) ? await sanitizeHtml(raw) : raw;
   await upsertBlock(getEnv(context), {
     key: params.key,
     kind,
     title: String(form.get("title") ?? "") || null,
-    value: String(form.get("value") ?? ""),
+    value,
     status: kind === "page" ? (form.get("status") === "published" ? "published" : "draft") : "published",
   });
   return { ok: true as const, message: "Saved." };
