@@ -15,7 +15,7 @@ React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-pl
 ## Commands
 
 - `npm run typecheck` (wrangler types, typegen, tsc -b) and `npm test`: the quick local checks.
-- `npm run dev`: Vite in workerd with bindings. `npm run typegen` after any binding change.
+- `npm run dev`: Vite in workerd with bindings.
 - `npm run db:migrate` (local) and `db:migrate:prod` (remote).
 - Deploys: Cloudflare Workers Builds deploys on every push to `main`. A merge to `main` is a production deploy. `npm run deploy` deploys by hand.
 
@@ -35,7 +35,3 @@ React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-pl
 3. The audio player is the highest-risk accessibility component: full keyboard support, seeking without dragging, correct name, role and state on every control. Every episode has a transcript.
 4. Heavy client libraries (maps, charts, Phaser) are lazy-loaded per route and never reach the server bundle or the shared client chunk. Phaser loads only on `/games/:slug`.
 5. The site's writing-style rule is in every generator prompt in `app/lib/ai.server.ts` (`STYLE_RULE`). It also covers the generated robots.txt, llms.txt and ai.txt.
-
-## Content model
-
-Column-level detail loads from `.claude/rules/content-model.md` when working under `app/db/` or the post routes.
