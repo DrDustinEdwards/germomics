@@ -30,7 +30,7 @@ const BODIES: Record<string, { body: string; excerpt: string }> = JSON.parse(
 );
 
 // Technical fields parsed from https://germomics.com/feed/podcast/ (the source of truth).
-// pubDate stored ISO-UTC so format.ts rfc822()/formatDate() parse it (they require a 'T').
+// pubDate stored ISO-UTC so rfc822() and formatDate() parse it (they require a 'T').
 type Ep = {
   guid: string;
   slug: string; // == legacy WordPress permalink == feed <link> slug

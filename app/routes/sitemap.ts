@@ -3,7 +3,8 @@
 import type { Route } from "./+types/sitemap";
 import { getEnv } from "~/lib/context.server";
 import { listPosts, listSeasons } from "~/lib/posts.server";
-import { xmlEscape } from "~/lib/format";
+import { isoDay } from "@drdustinedwards/site-helpers/xml";
+import { sitemapDocument } from "@drdustinedwards/site-helpers/sitemap";
 
 const STATIC_PATHS = [
   "",
@@ -21,12 +22,6 @@ const STATIC_PATHS = [
   "txasm",
 ];
 
-function isoDay(value?: string | null): string | null {
-  if (!value) return null;
-  const d = new Date(value.includes("T") ? value : value.replace(" ", "T") + "Z");
-  return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
-}
-
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const origin = new URL(request.url).origin;
@@ -35,24 +30,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     listSeasons(env),
   ]);
 
-  const urls: string[] = [];
-  for (const p of STATIC_PATHS) {
-    urls.push(`  <url><loc>${origin}/${p}</loc></url>`);
-  }
-  for (const s of seasons) {
-    urls.push(`  <url><loc>${origin}/season/${s}</loc></url>`);
-  }
-  for (const post of posts) {
-    const lastmod = isoDay(post.updatedAt) ?? isoDay(post.publishedAt);
-    urls.push(
-      `  <url><loc>${xmlEscape(`${origin}/${post.slug}`)}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ""}</url>`,
-    );
-  }
-
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.join("\n")}
-</urlset>`;
+  const xml = sitemapDocument(
+    [
+      ...STATIC_PATHS.map((p) => ({ loc: `${origin}/${p}` })),
+      ...seasons.map((s) => ({ loc: `${origin}/season/${s}` })),
+      ...posts.map((post) => ({
+        loc: `${origin}/${post.slug}`,
+        lastmod: isoDay(post.updatedAt) ?? isoDay(post.publishedAt),
+      })),
+    ],
+    { trailingNewline: false },
+  );
 
   return new Response(xml, {
     headers: {

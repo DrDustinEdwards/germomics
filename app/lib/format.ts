@@ -32,13 +32,6 @@ export function formatDate(value?: string | null): string {
   });
 }
 
-/** RFC-822 date, required by RSS <pubDate>. */
-export function rfc822(value?: string | null): string {
-  if (!value) return new Date(0).toUTCString();
-  const d = new Date(value.includes("T") ? value : value.replace(" ", "T") + "Z");
-  return (Number.isNaN(d.getTime()) ? new Date(0) : d).toUTCString();
-}
-
 /** "mm:ss" / "h:mm:ss" timestamp to seconds, for transcript cues and share-at-timestamp. */
 export function stampToSeconds(stamp: string): number {
   const parts = stamp.split(":").map(Number);
@@ -54,14 +47,4 @@ export function spokenTime(totalSeconds?: number | null): string {
   if (m) parts.push(`${m} minute${m === 1 ? "" : "s"}`);
   if (s || !parts.length) parts.push(`${s} second${s === 1 ? "" : "s"}`);
   return parts.join(" ");
-}
-
-/** XML-escape text destined for a feed. */
-export function xmlEscape(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
 }
