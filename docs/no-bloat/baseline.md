@@ -8,17 +8,17 @@ phases, in Capsomer's order.
   tooling commit only: knip.jsonc, .jscpd.json, scripts/nobloat.mjs, the two dev dependencies and
   the CI steps; no app code changed).
 - Date: 2026-10-09. Node 22.22.0, Knip 6.39.0, jscpd 5.4.0, Vite 8 production build.
-- The machine-readable numbers CI compares against are in `docs/no-bloat/baseline.json`.
+- The numbers CI compares against are the `baseline` in `.no-bloat.json` (devkit-no-bloat, since the
+  2026-10-23 sweep; this file's tables are the phase-0 record).
 
 ## Commands
 
 ```sh
 npm ci
-npm run nobloat:knip      # react-router typegen, then knip --reporter json > .nobloat/knip.json
-npm run nobloat:jscpd     # jscpd with .jscpd.json, report in .nobloat/jscpd/
+npm run nobloat           # react-router typegen, then devkit-no-bloat --warn-only (Knip, and jscpd with .jscpd.json)
 npm run build
 npm run nobloat:weight    # devkit-route-weight: build/client's manifest against .route-weight.json
-npm run nobloat:baseline  # all of the above, then rewrites docs/no-bloat/baseline.json and .route-weight.json
+npm run nobloat:baseline  # rewrites .no-bloat.json's baseline and .route-weight.json
 ```
 
 Refreshing the baseline is a deliberate act: run `npm run nobloat:baseline` on a clean checkout,
@@ -158,8 +158,8 @@ dependencies and no missing packages.
 ## CI
 
 The `verify` job in .github/workflows/ci.yml runs Knip, jscpd and the page-weight report after
-its gate steps, each `continue-on-error`, and scripts/nobloat.mjs always exits 0. A number above
-this baseline (any Knip count, the duplication percentage, or a route more than 512 bytes gzip
+its gate steps, each `continue-on-error`, and devkit-no-bloat --warn-only always exits 0. A number above
+the baseline (any Knip count, the jscpd clone count, or a route more than 512 bytes gzip
 over its baseline in .route-weight.json; the Worker bundle is `.worker-size.json`'s) becomes a warning annotation and a line in the job summary. Measured
 locally, the three add about 8 seconds (Knip 6.7 s including typegen, jscpd 0.4 s, page weight
 0.3 s), well under a minute of Actions time per run, because they reuse the job's install and
