@@ -8,6 +8,7 @@
 //   /ai.txt         — purpose-based access policy: citation/search welcome, training reserved.
 //
 // Builders are pure (data in, string out) so they're trivial to test; routes fetch + pass data.
+import { llmsDocument, type LlmsLink } from "@drdustinedwards/site-helpers/llms";
 import type { Post, ShowConfig } from "~/db/schema";
 import { stripHtml } from "~/lib/seo";
 import { ABOUT, AUTHOR } from "~/lib/about";
@@ -26,12 +27,9 @@ function summaryFor(p: Post): string {
   return oneLine(p.excerpt ?? p.seoDescription ?? p.body);
 }
 
-function listItem(p: Post, origin: string): string {
-  const s = summaryFor(p);
-  return `- [${p.title}](${origin}/${p.slug})${s ? `: ${s}` : ""}`;
-}
+const link = (p: Post, origin: string): LlmsLink => ({ title: p.title, url: `${origin}/${p.slug}`, description: summaryFor(p) });
 
-/** Curated Markdown index of hubs + key content. */
+/** Curated Markdown index of hubs + key content, in Prelum's llms.txt skeleton. */
 export function buildLlmsTxt(
   show: ShowConfig,
   episodes: Post[],
@@ -39,43 +37,32 @@ export function buildLlmsTxt(
   origin: string,
   intro?: string,
 ): string {
-  const out: string[] = [
-    `# ${show.title}`,
-    "",
-    `> ${oneLine(show.description, 240)}`,
-    "",
-    intro ||
-      `${show.title} is a podcast and writing project about microbiology and history by ${show.author}. ` +
-        `This is a curated index of the canonical hubs and key content for AI assistants and answer engines. ` +
-        `Citation is welcome. Please cite ${show.title} and link the source URL.`,
-    "",
-    "## About",
-    `- [About ${show.title}](${origin}/about): what the project is and how to follow it.`,
-    `- [${AUTHOR.name}, author](${origin}/about/${AUTHOR.slug}): ${AUTHOR.jobTitle.toLowerCase()}; bio and research.`,
-    "",
-  ];
-
-  if (episodes.length) {
-    out.push("## Episodes");
-    for (const e of episodes.slice(0, INDEX_LIMIT)) out.push(listItem(e, origin));
-    out.push("");
-  }
-  if (articles.length) {
-    out.push("## Writing");
-    for (const a of articles.slice(0, INDEX_LIMIT)) out.push(listItem(a, origin));
-    out.push("");
-  }
-
-  out.push(
-    "## Explore",
-    `- [Subscribe](${origin}/subscribe): podcast apps and the email newsletter.`,
-    `- [Podcast RSS feed](${origin}/feed/podcast/): the canonical feed.`,
-    `- [Data](${origin}/data): interactive virus & bacteria data pages.`,
-    `- [Games](${origin}/games): short browser games.`,
-    `- [Archive](${origin}/archive): everything, filterable.`,
-    "",
-  );
-  return out.join("\n");
+  const page = (path: string, title: string, description: string): LlmsLink => ({ title, url: `${origin}${path}`, description });
+  return llmsDocument({
+    title: show.title,
+    summary: oneLine(show.description, 240),
+    intro: [
+      intro ||
+        `${show.title} is a podcast and writing project about microbiology and history by ${show.author}. ` +
+          `This is a curated index of the canonical hubs and key content for AI assistants and answer engines. ` +
+          `Citation is welcome. Please cite ${show.title} and link the source URL.`,
+    ],
+    sections: [
+      { heading: "About", links: [
+        page("/about", `About ${show.title}`, "what the project is and how to follow it."),
+        page(`/about/${AUTHOR.slug}`, `${AUTHOR.name}, author`, `${AUTHOR.jobTitle.toLowerCase()}; bio and research.`),
+      ] },
+      { heading: "Episodes", links: episodes.slice(0, INDEX_LIMIT).map((e) => link(e, origin)) },
+      { heading: "Writing", links: articles.slice(0, INDEX_LIMIT).map((a) => link(a, origin)) },
+      { heading: "Explore", links: [
+        page("/subscribe", "Subscribe", "podcast apps and the email newsletter."),
+        page("/feed/podcast/", "Podcast RSS feed", "the canonical feed."),
+        page("/data", "Data", "interactive virus & bacteria data pages."),
+        page("/games", "Games", "short browser games."),
+        page("/archive", "Archive", "everything, filterable."),
+      ] },
+    ],
+  });
 }
 
 function fullSection(p: Post, origin: string): string {
