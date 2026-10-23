@@ -1,0 +1,42 @@
+{
+  "growth": {
+    "ratio": 0,
+    "bytes": 512
+  },
+  "baseline": {
+    "measured_at": "d2cbf36",
+    "routes": {
+      "routes/admin.posts.$id": 183502,
+      "routes/admin.settings._index": 167398,
+      "routes/admin.people._index": 167360,
+      "routes/admin.posts._index": 165660,
+      "routes/admin.soundbites._index": 164193,
+      "routes/admin.content.$key": 163818,
+      "routes/admin.subscribers._index": 163565,
+      "routes/admin._index": 162927,
+      "routes/admin": 161383,
+      "routes/$slug": 154915,
+      "routes/preview.$id.$token": 154570,
+      "routes/_index": 144227,
+      "routes/about": 143392,
+      "routes/about.dustin-edwards": 142533,
+      "routes/season.$num": 141834,
+      "routes/privacy": 141338,
+      "routes/terms": 141335,
+      "routes/txasm": 141013,
+      "routes/contact": 140635,
+      "routes/archive": 140430,
+      "routes/search": 140348,
+      "routes/subscribe": 140054,
+      "routes/episodes._index": 140030,
+      "routes/guests.$guest": 140017,
+      "routes/tag.$tag": 139806,
+      "routes/games.$slug": 139372,
+      "routes/data.$slug": 138785,
+      "routes/writing._index": 138726,
+      "routes/games._index": 138612,
+      "routes/data._index": 138594,
+      "routes/unsubscribe": 138414
+    }
+  }
+}
