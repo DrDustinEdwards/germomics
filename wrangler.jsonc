@@ -43,7 +43,9 @@
 	// Rate limit for Carrel's site API (app/lib/carrel). namespace_id must be unique to this site:
 	// sites in one account that share one share counters.
 	"ratelimits": [
-		{ "name": "CARREL_RATE_LIMIT", "namespace_id": "7301", "simple": { "limit": 120, "period": 60 } }
+		{ "name": "CARREL_RATE_LIMIT", "namespace_id": "7301", "simple": { "limit": 120, "period": 60 } },
+		// CSP violation reports (/csp-report), per address. Loose, because a page tripping ten rules sends ten.
+		{ "name": "CSP_REPORT_RATE_LIMIT", "namespace_id": "7302", "simple": { "limit": 60, "period": 60 } }
 	],
 	// 03:17 UTC nightly: runBackup() in app/lib/backup.server.ts.
 	"triggers": { "crons": ["17 3 * * *"] },
