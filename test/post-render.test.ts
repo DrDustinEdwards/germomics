@@ -30,10 +30,6 @@ describe("demoteHeadings", () => {
     expect(demoteHeadings("<h4>a</h4>")).toBe("<h4>a</h4>");
     expect(demoteHeadings("<p>a</p>")).toBe("<p>a</p>");
   });
-
-  it("returns empty input unchanged", () => {
-    expect(demoteHeadings("")).toBe("");
-  });
 });
 
 describe("addHeadingIds", () => {

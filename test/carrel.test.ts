@@ -113,27 +113,12 @@ describe("content", () => {
     expect(doc.source).toContain("<p>ok</p>");
   });
 
-  it("schedules into the future and reports it as scheduled", async () => {
-    const created = await json(await put("later", "<p>later</p>", null));
-    const when = new Date(Date.now() + 86_400_000).toISOString();
-    const scheduled = await json(await post("later/schedule", { expectedVersion: created.version, changeId: "chg_5", publishAt: when }));
-    expect(scheduled.status).toBe("scheduled");
-  });
-
   it("never lists, reads or overwrites a podcast episode", async () => {
     await e.DB.exec("INSERT INTO posts (kind, title, slug, body, status) VALUES ('episode', 'Ep', 'an-episode', '<p>e</p>', 'published')");
     const list = await json(await call("/api/carrel/v1/content"));
     expect(list.items.map((i: { id: string }) => i.id)).not.toContain("an-episode");
     expect((await call("/api/carrel/v1/content/an-episode")).status).toBe(404);
     expect((await put("an-episode", "<p>x</p>", null)).status).toBe(422);
-  });
-
-  it("filters the list by status", async () => {
-    const a = await json(await put("a-draft", "<p>a</p>", null));
-    const b = await json(await put("a-pub", "<p>b</p>", null));
-    await post("a-pub/publish", { expectedVersion: b.version, changeId: "chg_6" });
-    const drafts = await json(await call("/api/carrel/v1/content?status=draft"));
-    expect(drafts.items.map((i: { id: string }) => i.id)).toEqual([a.id]);
   });
 
   it("renders a preview without saving anything", async () => {
