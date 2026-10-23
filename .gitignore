@@ -20,7 +20,7 @@ scripts/_generated/
 # Project MCP config: carries a driver bearer token
 .mcp.json
 
-# No-bloat reports (scripts/nobloat-*.mjs, jscpd); CI prints them, never commit them
+# No-bloat reports (jscpd's own output); CI prints them, never commit them
 .nobloat/
 
 # Stryker (job_f5acaeb4e003)

@@ -63,22 +63,17 @@ jobs:
         run: npm test
 
       # NO-BLOAT REPORTS (capsid/decisions.md "no bloat, as a standing plan", 2026-10-01).
-      # WARN-ONLY BY RULING: they report against docs/no-bloat/baseline.json (page weight against
-      # .route-weight.json, through devkit-route-weight) and never block a merge. Every step is
-      # continue-on-error and scripts/nobloat.mjs always exits 0; a number
-      # above the baseline is a warning annotation and a line in the job summary. They run
+      # WARN-ONLY BY RULING: they report against .no-bloat.json's baseline (devkit-no-bloat
+      # --warn-only, Knip and jscpd) and page weight against .route-weight.json (devkit-route-weight),
+      # and never block a merge. Every step is continue-on-error and devkit-no-bloat --warn-only
+      # always exits 0; a number above the baseline is a warning annotation and a line in the job summary. They run
       # after the gate steps so they cannot change its result, and `!cancelled()` keeps them
       # reporting when a gate step failed. Together they add about 10 seconds: they reuse this
       # job's install and build rather than a job of their own.
-      - name: Knip (warn-only)
+      - name: Knip and jscpd (warn-only)
         if: ${{ !cancelled() }}
         continue-on-error: true
-        run: npm run --silent nobloat:knip
-
-      - name: jscpd (warn-only)
-        if: ${{ !cancelled() }}
-        continue-on-error: true
-        run: npm run --silent nobloat:jscpd
+        run: npm run --silent nobloat
 
       - name: Page weight (warn-only)
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}

@@ -1,0 +1,15 @@
+{
+  "tools": {
+    "jscpd": "jscpd@5.4.0"
+  },
+  "baseline": {
+    "measured_at": "04ec5c2",
+    "knip": {
+      "Unused dependencies": 1
+    },
+    "jscpd": {
+      "clones": 74,
+      "percentage": 2.68
+    }
+  }
+}
