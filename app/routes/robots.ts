@@ -4,6 +4,7 @@
 // this file states our intent. Resource route returning plain text.
 import type { Route } from "./+types/robots";
 import { getEnv } from "~/lib/context.server";
+import { HOURLY_CACHE_CONTROL } from "~/lib/edge-cache.server";
 
 // Citation/search crawlers we explicitly welcome. (Training-data preference is stated in
 // /ai.txt + the TDMRep header; here we opt these specific bots IN to crawling public content.)
@@ -38,7 +39,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return new Response(body, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": HOURLY_CACHE_CONTROL,
     },
   });
 }

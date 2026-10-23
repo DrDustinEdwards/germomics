@@ -4,6 +4,7 @@ import { getEnv } from "~/lib/context.server";
 import { listFullPosts } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
 import { buildSiteFeed } from "~/lib/rss.server";
+import { FEED_CACHE_CONTROL } from "~/lib/edge-cache.server";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = getEnv(context);
@@ -13,7 +14,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return new Response(xml, {
     headers: {
       "Content-Type": "application/rss+xml; charset=utf-8",
-      "Cache-Control": "public, max-age=300",
+      "Cache-Control": FEED_CACHE_CONTROL,
     },
   });
 }
