@@ -6,6 +6,7 @@ import { listEpisodes, listArticles } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
 import { loadPage } from "~/lib/content.server";
 import { buildLlmsTxt } from "~/lib/discovery.server";
+import { HOURLY_CACHE_CONTROL } from "~/lib/edge-cache.server";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = getEnv(context);
@@ -20,7 +21,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
       "X-Robots-Tag": "noindex",
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": HOURLY_CACHE_CONTROL,
     },
   });
 }

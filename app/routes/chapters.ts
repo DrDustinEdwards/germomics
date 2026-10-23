@@ -4,6 +4,7 @@ import type { Route } from "./+types/chapters";
 import { getEnv } from "~/lib/context.server";
 import { getPostBySlug } from "~/lib/posts.server";
 import { buildChaptersJson } from "~/lib/rss.server";
+import { FEED_CACHE_CONTROL } from "~/lib/edge-cache.server";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const post = await getPostBySlug(getEnv(context), params.slug);
@@ -11,7 +12,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   return new Response(buildChaptersJson(post), {
     headers: {
       "Content-Type": "application/json+chapters; charset=utf-8",
-      "Cache-Control": "public, max-age=300",
+      "Cache-Control": FEED_CACHE_CONTROL,
       // Podcast apps fetch chapters cross-origin — must be CORS-enabled.
       "Access-Control-Allow-Origin": "*",
     },

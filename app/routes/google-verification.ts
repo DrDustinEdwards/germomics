@@ -11,13 +11,15 @@
 // so it never falls through to the article lookup.
 //
 // The token is public by design: it proves control of the site, it is not a secret.
+import { HOURLY_CACHE_CONTROL } from "~/lib/edge-cache.server";
+
 const BODY = "google-site-verification: google7e6923f5a0eb8ba9.html\n";
 
 export async function loader() {
   return new Response(BODY, {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": HOURLY_CACHE_CONTROL,
     },
   });
 }

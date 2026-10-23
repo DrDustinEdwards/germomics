@@ -4,7 +4,8 @@
 // worker origin. guid is permanent + isPermaLink=false. Served from resource routes.
 import type { Post, ShowConfig, Soundbite } from "~/db/schema";
 import type { GuestView } from "~/lib/types";
-import { formatHMS, rfc822, xmlEscape } from "~/lib/format";
+import { cdata, escapeXml, rfc822 } from "@drdustinedwards/site-helpers/xml";
+import { formatHMS } from "~/lib/format";
 import { OP3_ORIGIN } from "~/lib/site";
 
 const PODCAST_NS =
@@ -12,11 +13,6 @@ const PODCAST_NS =
   'xmlns:podcast="https://podcastindex.org/namespace/1.0" ' +
   'xmlns:content="http://purl.org/rss/1.0/modules/content/" ' +
   'xmlns:atom="http://www.w3.org/2005/Atom"';
-
-function cdata(value: string | null | undefined): string {
-  // A literal "]]>" would end the section early, so split it across two sections.
-  return `<![CDATA[${(value ?? "").replaceAll("]]>", "]]]]><![CDATA[>")}]]>`;
-}
 
 // OP3 (op3.dev) open, privacy-respecting download analytics. Podcast apps fetch the enclosure
 // through this prefix, which counts the download then redirects to the real file. ONLY the
@@ -36,8 +32,8 @@ function categoriesXml(show: ShowConfig): string {
   return cats
     .map((c) =>
       c.subcategory
-        ? `<itunes:category text="${xmlEscape(c.category)}"><itunes:category text="${xmlEscape(c.subcategory)}"/></itunes:category>`
-        : `<itunes:category text="${xmlEscape(c.category)}"/>`,
+        ? `<itunes:category text="${escapeXml(c.category)}"><itunes:category text="${escapeXml(c.subcategory)}"/></itunes:category>`
+        : `<itunes:category text="${escapeXml(c.category)}"/>`,
     )
     .join("\n  ");
 }
@@ -59,29 +55,29 @@ export function buildPodcastFeed(
     .join("\n");
 
   const funding = show.fundingUrl
-    ? `<podcast:funding url="${xmlEscape(show.fundingUrl)}">${xmlEscape(show.fundingLabel || "Support the show")}</podcast:funding>`
+    ? `<podcast:funding url="${escapeXml(show.fundingUrl)}">${escapeXml(show.fundingLabel || "Support the show")}</podcast:funding>`
     : "";
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" ${PODCAST_NS}>
 <channel>
-  <title>${xmlEscape(show.title)}</title>
+  <title>${escapeXml(show.title)}</title>
   <link>${origin}/</link>
   <atom:link href="${origin}/feed/podcast/" rel="self" type="application/rss+xml"/>
-  <language>${xmlEscape(show.language)}</language>
+  <language>${escapeXml(show.language)}</language>
   <description>${cdata(show.description)}</description>
-  <itunes:author>${xmlEscape(show.author)}</itunes:author>
+  <itunes:author>${escapeXml(show.author)}</itunes:author>
   <itunes:summary>${cdata(show.description)}</itunes:summary>
   <itunes:type>${show.itunesType}</itunes:type>
   <itunes:explicit>${show.explicit ? "true" : "false"}</itunes:explicit>
-  <itunes:image href="${xmlEscape(show.artwork)}"/>
+  <itunes:image href="${escapeXml(show.artwork)}"/>
   ${categoriesXml(show)}
   <itunes:owner>
-    <itunes:name>${xmlEscape(show.author)}</itunes:name>
-    <itunes:email>${xmlEscape(show.ownerEmail)}</itunes:email>
+    <itunes:name>${escapeXml(show.author)}</itunes:name>
+    <itunes:email>${escapeXml(show.ownerEmail)}</itunes:email>
   </itunes:owner>
-  <podcast:person role="host" href="${origin}/">${xmlEscape(show.author)}</podcast:person>
-  <podcast:locked owner="${xmlEscape(show.ownerEmail)}">yes</podcast:locked>
+  <podcast:person role="host" href="${origin}/">${escapeXml(show.author)}</podcast:person>
+  <podcast:locked owner="${escapeXml(show.ownerEmail)}">yes</podcast:locked>
   ${funding}
 ${items}
 </channel>
@@ -91,8 +87,8 @@ ${items}
 /** A <podcast:person> per guest. role defaults to "guest"; img only when a photo URL exists. */
 function personXml(g: GuestView, origin: string): string {
   const href = g.links?.[0]?.url ?? g.link ?? `${origin}/guests/${g.slug}`;
-  const img = g.photo ? ` img="${xmlEscape(g.photo)}"` : "";
-  return `<podcast:person role="${xmlEscape(g.role || "guest")}" href="${xmlEscape(href)}"${img}>${xmlEscape(g.name)}</podcast:person>`;
+  const img = g.photo ? ` img="${escapeXml(g.photo)}"` : "";
+  return `<podcast:person role="${escapeXml(g.role || "guest")}" href="${escapeXml(href)}"${img}>${escapeXml(g.name)}</podcast:person>`;
 }
 
 function itemXml(e: Post, origin: string, guests: GuestView[], soundbites: Soundbite[] = []): string {
@@ -110,24 +106,24 @@ function itemXml(e: Post, origin: string, guests: GuestView[], soundbites: Sound
   const clips = soundbites
     .map(
       (s) =>
-        `\n    <podcast:soundbite startTime="${s.startSeconds}" duration="${s.durationSeconds}">${xmlEscape(s.title || e.title)}</podcast:soundbite>`,
+        `\n    <podcast:soundbite startTime="${s.startSeconds}" duration="${s.durationSeconds}">${escapeXml(s.title || e.title)}</podcast:soundbite>`,
     )
     .join("");
 
   return `  <item>
-    <title>${xmlEscape(e.title)}</title>
+    <title>${escapeXml(e.title)}</title>
     <link>${url}</link>
-    <guid isPermaLink="false">${xmlEscape(e.guid ?? url)}</guid>
+    <guid isPermaLink="false">${escapeXml(e.guid ?? url)}</guid>
     <pubDate>${rfc822(e.publishedAt)}</pubDate>
     <description>${cdata(e.excerpt ?? e.body)}</description>
     <content:encoded>${cdata(e.body)}</content:encoded>
-    <enclosure url="${xmlEscape(op3Enclosure(e.audioUrl!))}" length="${e.audioByteSize ?? 0}" type="${e.audioMimeType ?? "audio/mpeg"}"/>
+    <enclosure url="${escapeXml(op3Enclosure(e.audioUrl!))}" length="${e.audioByteSize ?? 0}" type="${e.audioMimeType ?? "audio/mpeg"}"/>
     <itunes:duration>${formatHMS(e.audioDuration)}</itunes:duration>
     <itunes:explicit>${e.explicit ? "true" : "false"}</itunes:explicit>
     <itunes:episodeType>${e.episodeType ?? "full"}</itunes:episodeType>${
       e.episodeNumber ? `\n    <itunes:episode>${e.episodeNumber}</itunes:episode>` : ""
     }${e.seasonNumber ? `\n    <itunes:season>${e.seasonNumber}</itunes:season>` : ""}${
-      e.episodeArtwork ? `\n    <itunes:image href="${xmlEscape(e.episodeArtwork)}"/>` : ""
+      e.episodeArtwork ? `\n    <itunes:image href="${escapeXml(e.episodeArtwork)}"/>` : ""
     }
     ${people}${transcript}${chapters}${clips}
   </item>`;
@@ -139,9 +135,9 @@ export function buildSiteFeed(show: ShowConfig, articles: Post[], origin: string
   const items = articles
     .map(
       (a) => `  <item>
-    <title>${xmlEscape(a.title)}</title>
+    <title>${escapeXml(a.title)}</title>
     <link>${origin}/${a.slug}</link>
-    ${a.guid ? `<guid isPermaLink="false">${xmlEscape(a.guid)}</guid>` : `<guid>${origin}/${a.slug}</guid>`}
+    ${a.guid ? `<guid isPermaLink="false">${escapeXml(a.guid)}</guid>` : `<guid>${origin}/${a.slug}</guid>`}
     <pubDate>${rfc822(a.publishedAt)}</pubDate>
     <description>${cdata(a.excerpt ?? a.body)}</description>
     <content:encoded>${cdata(a.body)}</content:encoded>
@@ -152,10 +148,10 @@ export function buildSiteFeed(show: ShowConfig, articles: Post[], origin: string
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
 <channel>
-  <title>${xmlEscape(show.title)}: Writing</title>
+  <title>${escapeXml(show.title)}: Writing</title>
   <link>${origin}/writing</link>
   <atom:link href="${origin}/feed/site.xml" rel="self" type="application/rss+xml"/>
-  <language>${xmlEscape(show.language)}</language>
+  <language>${escapeXml(show.language)}</language>
   <description>${cdata("Essays and notes from Germomics.")}</description>
 ${items}
 </channel>

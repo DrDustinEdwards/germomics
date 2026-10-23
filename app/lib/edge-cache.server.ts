@@ -17,6 +17,12 @@ import { withSecurityHeaders } from "./security.server";
 export const FRESH_SECONDS = 60;
 export const SWR_SECONDS = 86_400; // 1 day
 
+// Client-facing Cache-Control a route sets on its own response: the small text files crawlers
+// read (robots.txt, llms.txt, ai.txt, the sitemap), and the feeds with the per-episode files they
+// point at, which change on every publish.
+export const HOURLY_CACHE_CONTROL = "public, max-age=3600";
+export const FEED_CACHE_CONTROL = "public, max-age=300";
+
 const STORED_AT = "x-cache-stored-at"; // ms epoch we wrote the entry; drives the age computation
 const ORIG_CC = "x-edge-orig-cc"; // stashes a route's own Cache-Control across the cache round-trip
 const STATUS = "x-cache"; // HIT | STALE | MISS | BYPASS, for verification
