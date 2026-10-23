@@ -252,7 +252,7 @@ is `docs/research/kill-matrix.json`. Raw chunk reports are on the results branch
 | Unprotected zero-kill candidates | 7 | |
 | Unprotected covered-by-others candidates | 13 | |
 
-Protected means the file or test name matches the keep rules in `scripts/report-mutation.mjs`: security,
+Protected means the file or test name matches the keep rule (`--protected`) in the `report:mutation` script in `package.json`: security,
 auth, access, sanitizing and XSS, CSP, session, admin, backup and restore, secrets, and tests written for a
 fixed bug. The match is a name heuristic that errs toward keeping.
 
@@ -308,5 +308,5 @@ How to read this:
 ```
 npm i --no-save @stryker-mutator/core@9.6.1 @stryker-mutator/vitest-runner@9.6.1
 for c in db carrel content rest; do STRYKER_CHUNK=$c npx stryker run; done
-node scripts/report-mutation.mjs --table --json
+npm run report:mutation -- --table
 ```

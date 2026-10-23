@@ -20,6 +20,7 @@
     "check:postinstall": "devkit-bootstrap --check",
     "nobloat": "react-router typegen && devkit-no-bloat --warn-only",
     "nobloat:weight": "devkit-route-weight",
+    "report:mutation": "devkit-mutation-report --protected \"auth|access|security|sanitiz|xss|csp|session|admin|login|jwt|backup|restore|token|secret|permission|regression|fix|bug\" --json docs/research/kill-matrix.json",
     "nobloat:baseline": "react-router typegen && devkit-no-bloat --write-baseline && npm run build && devkit-route-weight --write-baseline"
   },
   "dependencies": {
