@@ -4,6 +4,7 @@
 // from the same source as the seed), so a missing or draft row never breaks a page.
 //
 // Injected per request via root middleware onto context (getSettings/getSnippets in context.server).
+import { escapeHtml } from "@dustinedwards/site-runtime/html";
 import { eq, sql } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { settings as settingsTable, contentBlocks } from "~/db/schema";
@@ -21,10 +22,8 @@ export async function isPreviewing(env: Env, request: Request): Promise<boolean>
  * from settings, not from the sanitized body, and are injected as HTML (Grok audit 2026-10-21, GE-3).
  */
 export function fillPagePlaceholders(html: string, fill: { email: string; addressLine?: string }): string {
-  const esc = (v: string) =>
-    v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-  const out = html.replaceAll("{{email}}", esc(fill.email));
-  return fill.addressLine === undefined ? out : out.replaceAll("{{address_line}}", esc(fill.addressLine));
+  const out = html.replaceAll("{{email}}", escapeHtml(fill.email));
+  return fill.addressLine === undefined ? out : out.replaceAll("{{address_line}}", escapeHtml(fill.addressLine));
 }
 
 /** Pages served as plain text (llms.txt, ai.txt): their bodies are not HTML, so the sanitizer is not run on them. */
