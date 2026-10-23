@@ -1,18 +1,19 @@
-// Shared chrome for the legal pages (privacy + terms): a clearly-marked "draft, not legal advice"
-// banner and the last-updated date. Keeping these here means both pages stay consistent and the
+// The legal pages (privacy + terms): a clearly-marked "draft, not legal advice" banner and the
+// last-updated date around the page body. Keeping these here means both pages stay consistent and the
 // review status is impossible to miss.
 import { Info } from "lucide-react";
+import { BodyRenderer } from "~/components/content/BodyRenderer";
 
 // Bump this whenever the legal copy changes.
 const LEGAL_LAST_UPDATED = "June 22, 2026";
 
-export function LegalDate() {
+function LegalDate() {
   return (
     <p className="mt-2 font-mono text-xs text-muted">Last updated: {LEGAL_LAST_UPDATED}</p>
   );
 }
 
-export function ReviewBanner() {
+function ReviewBanner() {
   return (
     <aside
       role="note"
@@ -26,5 +27,16 @@ export function ReviewBanner() {
         the site owner (and, where appropriate, a professional) before the public launch.
       </p>
     </aside>
+  );
+}
+
+export function LegalPage({ title, html }: { title: string; html: string }) {
+  return (
+    <article className="prose-legal mx-auto max-w-2xl">
+      <h1 className="font-display text-4xl font-semibold leading-tight">{title}</h1>
+      <LegalDate />
+      <ReviewBanner />
+      <BodyRenderer html={html} />
+    </article>
   );
 }

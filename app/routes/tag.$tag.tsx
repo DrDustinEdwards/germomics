@@ -22,7 +22,7 @@ export default function TagPage({ loaderData }: Route.ComponentProps) {
       <h1 className="mb-6 font-display text-3xl font-semibold">#{tag}</h1>
       <div className="grid gap-3">
         {items.map((post) => (
-          <PostCard key={post.id} post={post} track={tracks.find((t) => t.id === post.id)} queue={tracks} />
+          <PostCard key={post.id} post={post} queue={tracks} />
         ))}
         {items.length === 0 ? <p className="text-muted">No posts tagged “{tag}”.</p> : null}
       </div>

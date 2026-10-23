@@ -135,12 +135,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           {items
             .filter((post) => post.id !== featured?.id)
             .map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                track={tracks.find((t) => t.id === post.id)}
-                queue={tracks}
-              />
+              <PostCard key={post.id} post={post} queue={tracks} />
             ))}
         </div>
       </section>

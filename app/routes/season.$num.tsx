@@ -44,7 +44,7 @@ export default function Season({ loaderData }: Route.ComponentProps) {
       <h1 className="mb-6 font-mono text-sm font-medium uppercase tracking-[0.18em] text-accent">Season {num}</h1>
       <div className="grid gap-3">
         {episodes.map((post) => (
-          <PostCard key={post.id} post={post} track={tracks.find((t) => t.id === post.id)} queue={tracks} />
+          <PostCard key={post.id} post={post} queue={tracks} />
         ))}
       </div>
     </div>

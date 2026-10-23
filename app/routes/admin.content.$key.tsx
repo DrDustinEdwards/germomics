@@ -8,16 +8,7 @@ import { getEnv } from "~/lib/context.server";
 import { loadBlock, TEXT_PAGES, upsertBlock } from "~/lib/content.server";
 import { sanitizeHtml } from "~/lib/sanitize.server";
 import { Card, Field, Button, inputCx } from "~/components/admin/ui";
-
-const PAGE_HREF: Record<string, string> = {
-  "page:about": "/about",
-  "page:dustin-edwards": "/about/dustin-edwards",
-  "page:privacy": "/privacy",
-  "page:terms": "/terms",
-  "page:contact": "/contact",
-  "page:llms": "/llms.txt",
-  "page:ai-txt": "/ai.txt",
-};
+import { PAGE_HREF } from "~/components/content/PageHits";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const block = await loadBlock(getEnv(context), params.key, { includeDrafts: true });

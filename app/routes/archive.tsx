@@ -6,17 +6,7 @@ import { listPosts, searchPosts, toPlayerTrack } from "~/lib/posts.server";
 import { searchPages } from "~/lib/content.server";
 import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
-
-// Maps a content page key to its public URL (for site-search page hits).
-const PAGE_HREF: Record<string, string> = {
-  "page:about": "/about",
-  "page:dustin-edwards": "/about/dustin-edwards",
-  "page:privacy": "/privacy",
-  "page:terms": "/terms",
-  "page:contact": "/contact",
-  "page:llms": "/llms.txt",
-  "page:ai-txt": "/ai.txt",
-};
+import { PageHits } from "~/components/content/PageHits";
 
 const TABS = [
   ["all", "All"],
@@ -95,29 +85,11 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
         </p>
       ) : null}
 
-      {pages.length ? (
-        <div className="mb-4 rounded-xl border border-border bg-surface p-4">
-          <p className="mb-2 font-mono text-[11px] uppercase tracking-wide text-muted">Pages</p>
-          <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-            {pages.map((p) => (
-              <li key={p.key}>
-                <Link to={PAGE_HREF[p.key] ?? "/"} className="text-accent hover:underline">
-                  {p.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <PageHits pages={pages} className="mb-4" />
 
       <div className="grid gap-3">
         {items.map((post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            track={tracks.find((t) => t.id === post.id)}
-            queue={tracks}
-          />
+          <PostCard key={post.id} post={post} queue={tracks} />
         ))}
         {items.length === 0 ? <p className="text-muted">Nothing here yet.</p> : null}
       </div>

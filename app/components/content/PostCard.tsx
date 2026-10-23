@@ -5,17 +5,11 @@ import { PlayButton } from "./PlayButton";
 import type { Post } from "~/db/schema";
 import type { PlayerTrack } from "~/lib/types";
 
-// A single content card for listings. Episodes get a play button; articles get a read icon.
-export function PostCard({
-  post,
-  track,
-  queue,
-}: {
-  post: Post;
-  track?: PlayerTrack;
-  queue?: PlayerTrack[];
-}) {
+// A single content card for listings. Episodes get a play button (their track is the one in
+// `queue` with the post's id); articles get a read icon.
+export function PostCard({ post, queue }: { post: Post; queue?: PlayerTrack[] }) {
   const isEpisode = post.kind === "episode";
+  const track = queue?.find((t) => t.id === post.id);
   return (
     <article className="flex gap-4 rounded-xl border border-border bg-card p-4">
       {isEpisode && track ? (
