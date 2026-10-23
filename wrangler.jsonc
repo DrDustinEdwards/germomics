@@ -2,7 +2,8 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "germomics",
 	"main": "./workers/app.ts",
-	"compatibility_date": "2026-10-23",
+	// No newer than the workerd that @cloudflare/vite-plugin bundles supports, or `npm run dev` refuses to start.
+	"compatibility_date": "2026-10-19",
 	"compatibility_flags": ["nodejs_compat"],
 	// Keep dashboard-set vars/secrets (ADMIN_EMAIL, ACCESS_TEAM_DOMAIN, ACCESS_AUD,
 	// BETTER_AUTH_SECRET for preview tokens) from being wiped on deploy.
