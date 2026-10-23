@@ -24,9 +24,9 @@
     "nobloat:baseline": "npm run nobloat:knip && npm run nobloat:jscpd && npm run build && node scripts/nobloat.mjs baseline"
   },
   "dependencies": {
-    "@dustinedwards/d1-dump": "github:DrDustinEdwards/d1-dump#v0.5.0",
+    "@dustinedwards/d1-dump": "github:DrDustinEdwards/d1-dump#v0.5.1",
     "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.7.2",
-    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.7.0",
+    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.8.0",
     "@googlemaps/js-api-loader": "2.1.1",
     "@tiptap/extension-image": "3.32.0",
     "@tiptap/extension-link": "3.32.0",
@@ -34,7 +34,7 @@
     "@tiptap/pm": "3.32.0",
     "@tiptap/react": "3.32.0",
     "@tiptap/starter-kit": "3.32.0",
-    "capsomer": "github:DrDustinEdwards/capsomer#v0.10.0",
+    "capsomer": "github:DrDustinEdwards/capsomer#v0.10.1",
     "drizzle-orm": "0.45.2",
     "isbot": "5.1.43",
     "lucide-react": "1.21.0",
