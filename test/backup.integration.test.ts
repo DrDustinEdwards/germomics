@@ -91,7 +91,7 @@ describe("nightly backup", () => {
   });
 
   it("leaves an emptied database without a marker, and throws", async () => {
-    await expect(runBackup(env as unknown as Env)).rejects.toThrow(/left incomplete: .*every content table dumped empty/);
+    await expect(runBackup(env as unknown as Env)).rejects.toThrow(/left incomplete: .*every counted table dumped empty/);
     const keys = (await env.BACKUPS.list()).objects.map((o) => o.key);
     expect(keys.some((k) => k.endsWith("/_complete.json"))).toBe(false);
     const health = await backupHealth(env.BACKUPS);

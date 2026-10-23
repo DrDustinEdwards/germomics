@@ -3,20 +3,7 @@
 // fails a check throws BackupIncomplete and keeps its objects without the marker, so the health age
 // keeps growing toward its 26 hour warning. Procedure and restore: CLAUDE.md "Backup".
 import { backupHealth, runCheckedBackup } from "@dustinedwards/d1-dump";
-import { getDb } from "~/db/index.server";
-import { contentBlocks, posts, settings, showConfig } from "~/db/schema";
 import { BACKUP_COUNTED_TABLES, BACKUP_EXCLUDE, presentExcludes, siteProblems } from "~/lib/backup-checks";
-
-async function liveCounts(env: Env): Promise<Record<string, number>> {
-  const db = getDb(env);
-  const [p, c, s, sc] = await Promise.all([
-    db.$count(posts),
-    db.$count(contentBlocks),
-    db.$count(settings),
-    db.$count(showConfig),
-  ]);
-  return { posts: p, content_blocks: c, settings: s, show_config: sc };
-}
 
 // Which of the credential tables exist right now (see BACKUP_EXCLUDE).
 async function liveExcludes(env: Env): Promise<string[]> {
@@ -32,8 +19,8 @@ async function liveExcludes(env: Env): Promise<string[]> {
 export async function runBackup(env: Env): Promise<void> {
   await runCheckedBackup(env.DB, env.BACKUPS, {
     exclude: await liveExcludes(env),
-    required: [...BACKUP_COUNTED_TABLES],
-    check: async (dump) => siteProblems(dump, await liveCounts(env)),
+    counted: [...BACKUP_COUNTED_TABLES],
+    check: siteProblems,
   });
 }
 
