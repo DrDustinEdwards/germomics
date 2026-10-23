@@ -2,10 +2,8 @@
 // {{email}} filled from show_config. DRAFT banner stays as chrome. ?preview shows admin drafts.
 import type { Route } from "./+types/terms";
 import { getEnv } from "~/lib/context.server";
-import { getShowConfig } from "~/lib/show.server";
-import { fillPagePlaceholders, loadPage, isPreviewing } from "~/lib/content.server";
-import { BodyRenderer } from "~/components/content/BodyRenderer";
-import { ReviewBanner, LegalDate } from "~/components/content/Legal";
+import { loadFilledPage } from "~/lib/content.server";
+import { LegalPage } from "~/components/content/Legal";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   return [
@@ -15,23 +13,9 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const env = getEnv(context);
-  const preview = await isPreviewing(env, request);
-  const [page, show] = await Promise.all([
-    loadPage(env, "page:terms", { includeDrafts: preview }),
-    getShowConfig(env),
-  ]);
-  const html = fillPagePlaceholders(page.value, { email: show.ownerEmail });
-  return { title: page.title || "Terms of use", html };
+  return loadFilledPage(getEnv(context), request, "page:terms", "Terms of use");
 }
 
 export default function Terms({ loaderData }: Route.ComponentProps) {
-  return (
-    <article className="prose-legal mx-auto max-w-2xl">
-      <h1 className="font-display text-4xl font-semibold leading-tight">{loaderData.title}</h1>
-      <LegalDate />
-      <ReviewBanner />
-      <BodyRenderer html={loaderData.html} />
-    </article>
-  );
+  return <LegalPage {...loaderData} />;
 }

@@ -64,7 +64,7 @@ export default function GuestPage({ loaderData }: Route.ComponentProps) {
       </div>
       <div className="grid gap-3">
         {episodes.map((post) => (
-          <PostCard key={post.id} post={post} track={tracks.find((t) => t.id === post.id)} queue={tracks} />
+          <PostCard key={post.id} post={post} queue={tracks} />
         ))}
         {episodes.length === 0 ? <p className="text-muted">No episodes with this guest.</p> : null}
       </div>

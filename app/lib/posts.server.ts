@@ -3,6 +3,7 @@
 // express. Tag/guest filters parse the JSON columns in JS (the catalog is small), keeping
 // everything type-safe and camelCase.
 import { and, asc, desc, eq, getTableColumns, inArray, isNull, lte, or, sql, type SQL } from "drizzle-orm";
+import { toMatchExpression } from "@drdustinedwards/site-helpers/search";
 import { getDb } from "~/db/index.server";
 import { posts, type Post } from "~/db/schema";
 import { slugifyGuest, toPlayerTrack } from "~/lib/posts";
@@ -182,15 +183,11 @@ export async function searchPosts(env: Env, rawQuery: string): Promise<Post[]> {
   return asCards(found.sort((a, b) => (order.get(a.id)! - order.get(b.id)!)));
 }
 
-// FTS5 has its own query syntax; strip punctuation that could be interpreted as operators and
-// AND the remaining tokens (with a trailing prefix match on the last one).
-function toFtsMatch(raw: string): string | null {
-  const tokens = raw
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .split(/\s+/)
-    .filter(Boolean);
-  if (!tokens.length) return null;
-  return tokens.map((t, i) => (i === tokens.length - 1 ? `${t}*` : t)).join(" ");
+// FTS5 has its own query syntax. Punctuation becomes a space, then every word is a quoted
+// literal (Prelum's toMatchExpression), all ANDed, the last one also matching as a prefix.
+// Site search over pages (content.server) builds its MATCH here too.
+export function toFtsMatch(raw: string): string | null {
+  const terms = raw.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
+  return toMatchExpression({ terms }, true);
 }
 

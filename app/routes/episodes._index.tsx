@@ -35,7 +35,7 @@ export default function Episodes({ loaderData }: Route.ComponentProps) {
   }
   const seasons = [...bySeason.keys()].sort((a, b) => b - a);
   const card = (post: (typeof episodes)[number]) => (
-    <PostCard key={post.id} post={post} track={tracks.find((t) => t.id === post.id)} queue={tracks} />
+    <PostCard key={post.id} post={post} queue={tracks} />
   );
 
   return (

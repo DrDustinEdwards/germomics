@@ -10,6 +10,8 @@ import { getDb } from "~/db/index.server";
 import { settings as settingsTable, contentBlocks } from "~/db/schema";
 import { SETTING_DEFAULTS, SNIPPET_DEFAULTS, PAGE_DEFAULTS } from "~/lib/content-defaults";
 import { getAdminSession } from "~/lib/access.server";
+import { toFtsMatch } from "~/lib/posts.server";
+import { getShowConfig } from "~/lib/show.server";
 
 /** True only for an admin viewing a page with ?preview (so drafts render in real context). */
 export async function isPreviewing(env: Env, request: Request): Promise<boolean> {
@@ -18,12 +20,24 @@ export async function isPreviewing(env: Env, request: Request): Promise<boolean>
 }
 
 /**
- * Fills a page body's {{email}} and {{address_line}} placeholders. The values are escaped: they come
- * from settings, not from the sanitized body, and are injected as HTML (Grok audit 2026-10-21, GE-3).
+ * A contact or legal page (drafts with ?preview for the admin), its {{email}} filled from show_config
+ * and, when given, its {{address_line}}. The values are escaped: they come from settings, not from
+ * the sanitized body, and are injected as HTML (Grok audit 2026-10-21, GE-3).
  */
-export function fillPagePlaceholders(html: string, fill: { email: string; addressLine?: string }): string {
-  const out = html.replaceAll("{{email}}", escapeHtml(fill.email));
-  return fill.addressLine === undefined ? out : out.replaceAll("{{address_line}}", escapeHtml(fill.addressLine));
+export async function loadFilledPage(
+  env: Env,
+  request: Request,
+  key: string,
+  fallbackTitle: string,
+  addressLine?: string,
+): Promise<{ title: string; html: string }> {
+  const preview = await isPreviewing(env, request);
+  const [page, show] = await Promise.all([loadPage(env, key, { includeDrafts: preview }), getShowConfig(env)]);
+  const html = page.value.replaceAll("{{email}}", escapeHtml(show.ownerEmail));
+  return {
+    title: page.title || fallbackTitle,
+    html: addressLine === undefined ? html : html.replaceAll("{{address_line}}", escapeHtml(addressLine)),
+  };
 }
 
 /** Pages served as plain text (llms.txt, ai.txt): their bodies are not HTML, so the sanitizer is not run on them. */
@@ -171,12 +185,6 @@ export async function listSettings(env: Env): Promise<import("~/db/schema").Sett
   return getDb(env).select().from(settingsTable);
 }
 
-// FTS5 query from a raw search string: strip operators, AND the tokens, prefix-match the last one.
-function toFtsMatch(raw: string): string | null {
-  const tokens = raw.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
-  if (!tokens.length) return null;
-  return tokens.map((t, i) => (i === tokens.length - 1 ? `${t}*` : t)).join(" ");
-}
 
 /** Full-text search across published pages (site search + raw SQL both reach every word). */
 export async function searchPages(env: Env, rawQuery: string): Promise<PageBlock[]> {
