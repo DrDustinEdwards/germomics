@@ -35,7 +35,7 @@
     "@tiptap/pm": "3.32.0",
     "@tiptap/react": "3.32.0",
     "@tiptap/starter-kit": "3.32.0",
-    "capsomer": "github:DrDustinEdwards/capsomer#v0.10.1",
+    "capsomer": "github:DrDustinEdwards/capsomer#v0.11.2",
     "drizzle-orm": "0.45.2",
     "isbot": "5.1.43",
     "lucide-react": "1.21.0",
