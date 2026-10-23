@@ -3,7 +3,7 @@
 //
 //   npm i --no-save @stryker-mutator/core@9.6.1 @stryker-mutator/vitest-runner@9.6.1
 //   for c in db carrel content rest; do STRYKER_CHUNK=$c npx stryker run; done
-//   node scripts/report-mutation.mjs --json
+//   npm run report:mutation
 //
 // Each chunk writes reports/mutation/<chunk>.json and its own incremental file.
 import process from "node:process";
