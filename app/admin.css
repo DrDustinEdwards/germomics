@@ -4,8 +4,11 @@
 @import "capsomer/themes.css" layer(cap.tokens);
 @import "capsomer/site-germomics.css";
 @import "capsomer/base.css";
+@import "capsomer/site-header.css";
+@import "capsomer/theme-switch.css";
 @import "capsomer/admin-shell.css";
 @import "capsomer/dialog.css";
+@import "capsomer/popover.css";
 
 /* Capsomer's UI face, Schibsted Grotesk, self-hosted (files from @fontsource/schibsted-grotesk
    5.3.0, latin and latin-ext, 400 to 700) and loaded only with the admin, so public pages do not
