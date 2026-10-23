@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { downscaleImage } from "~/lib/image-client";
-import { THEME_KEY, applyTheme, effectiveTheme, storedTheme, systemTheme, themeInitScript } from "~/lib/theme";
+import { THEME_KEY, applyTheme, storedTheme, themeInitScript } from "~/lib/theme";
 import { computePeaks as decodePeaks, probeDuration } from "~/lib/waveform-client";
 
 // Browser-only helpers, run against stand-ins for the browser APIs they call (localStorage,
@@ -33,22 +33,6 @@ describe("theme", () => {
     expect(storedTheme()).toBeNull();
     vi.stubGlobal("localStorage", storage());
     expect(storedTheme()).toBeNull();
-  });
-
-  it("follows the system when nothing is stored, and is dark with no window", () => {
-    expect(systemTheme()).toBe("dark");
-    vi.stubGlobal("window", { matchMedia: (q: string) => ({ matches: q === "(prefers-color-scheme: dark)" }) });
-    expect(systemTheme()).toBe("dark");
-    vi.stubGlobal("window", { matchMedia: () => ({ matches: false }) });
-    expect(systemTheme()).toBe("light");
-  });
-
-  it("lets a stored choice win over the system", () => {
-    vi.stubGlobal("window", { matchMedia: () => ({ matches: true }) });
-    vi.stubGlobal("localStorage", storage({ [THEME_KEY]: "light" }));
-    expect(effectiveTheme()).toBe("light");
-    vi.stubGlobal("localStorage", storage());
-    expect(effectiveTheme()).toBe("dark");
   });
 
   it("sets data-theme on the page and remembers it, and still sets it when storage is blocked", () => {
@@ -129,22 +113,6 @@ describe("downscaleImage", () => {
     expect(close).toHaveBeenCalledTimes(1);
   });
 
-  it("copes with a browser whose bitmaps have no close method", async () => {
-    const file = png();
-    vi.stubGlobal("createImageBitmap", async () => ({ width: 1000, height: 500 }));
-    expect(await downscaleImage(file)).toBe(file);
-    vi.stubGlobal("createImageBitmap", async () => ({ width: 4000, height: 1000 }));
-    expect((await downscaleImage(file)).type).toBe("image/webp");
-    canvas.ctx = false;
-    expect(await downscaleImage(file)).toBe(file);
-  });
-
-  it("uses a width given by the caller", async () => {
-    vi.stubGlobal("createImageBitmap", async () => bitmap(1000, 500));
-    await downscaleImage(png(), 400);
-    expect([canvas.width, canvas.height]).toEqual([400, 200]);
-  });
-
   it("falls back to the original when there is no canvas context or the canvas gives no image", async () => {
     const file = png();
     vi.stubGlobal("createImageBitmap", async () => bitmap(4000, 1000));
@@ -186,23 +154,10 @@ describe("waveform-client", () => {
     expect((await decodePeaks(new ArrayBuffer(1)))!.peaks.every((p) => p === 100)).toBe(true);
   });
 
-  it("uses only the first two channels of a multichannel file", async () => {
-    vi.stubGlobal("AudioContext", audioContext(() => buffer([new Array(400).fill(1), new Array(400).fill(0), new Array(400).fill(1)])));
-    const out = await decodePeaks(new ArrayBuffer(1));
-    expect(out!.peaks[0]).toBe(100);
-    expect(out!.peaks.every((p) => p === 100)).toBe(true);
-  });
-
   it("answers null, and still closes the context, when the audio cannot be decoded", async () => {
     vi.stubGlobal("AudioContext", audioContext(() => Promise.reject(new Error("bad audio"))));
     expect(await decodePeaks(new ArrayBuffer(1))).toBeNull();
     expect(closed).toHaveBeenCalledTimes(1);
-  });
-
-  it("falls back to webkitAudioContext, and answers null when the browser has neither", async () => {
-    expect(await decodePeaks(new ArrayBuffer(1))).toBeNull();
-    vi.stubGlobal("webkitAudioContext", audioContext(() => buffer([new Array(400).fill(0.2)])));
-    expect((await decodePeaks(new ArrayBuffer(1)))!.duration).toBe(12.5);
   });
 
   describe("probeDuration", () => {

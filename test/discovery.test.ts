@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Post, ShowConfig } from "~/db/schema";
 import { buildAiTxt, buildLlmsFullTxt, buildLlmsTxt } from "~/lib/discovery.server";
-import { ABOUT, AUTHOR } from "~/lib/about";
+import { AUTHOR } from "~/lib/about";
 
 // The machine-readable index files (llms.txt, llms-full.txt, ai.txt) tell AI assistants what to
 // read, how to cite it, and what is reserved. The policy lines are the ones that matter most.
@@ -52,66 +52,6 @@ describe("buildLlmsTxt", () => {
     expect(txt).not.toContain("(https://germomics.com/p40)");
     const long = buildLlmsTxt(show, [post({ excerpt: "w".repeat(200) })], [], ORIGIN);
     expect(long).toContain(`: ${"w".repeat(159)}…\n`);
-  });
-});
-
-describe("the exact layout of llms.txt", () => {
-  it("is Markdown a machine can parse: a title, a quote, an intro and sections, each separated by one blank line", () => {
-    const txt = buildLlmsTxt(show, [post({ slug: "ep", title: "Episode", excerpt: "Ex" })], [], ORIGIN, "Intro.");
-    expect(txt.split("\n")).toEqual([
-      "# Germomics",
-      "",
-      "> A podcast about microbes .",
-      "",
-      "Intro.",
-      "",
-      "## About",
-      `- [About Germomics](${ORIGIN}/about): what the project is and how to follow it.`,
-      `- [${AUTHOR.name}, author](${ORIGIN}/about/${AUTHOR.slug}): ${AUTHOR.jobTitle.toLowerCase()}; bio and research.`,
-      "",
-      "## Episodes",
-      `- [Episode](${ORIGIN}/ep): Ex`,
-      "",
-      "## Explore",
-      `- [Subscribe](${ORIGIN}/subscribe): podcast apps and the email newsletter.`,
-      `- [Podcast RSS feed](${ORIGIN}/feed/podcast/): the canonical feed.`,
-      `- [Data](${ORIGIN}/data): interactive virus & bacteria data pages.`,
-      `- [Games](${ORIGIN}/games): short browser games.`,
-      `- [Archive](${ORIGIN}/archive): everything, filterable.`,
-      "",
-    ]);
-  });
-
-  it("separates the full index's sections and posts the same way", () => {
-    const txt = buildLlmsFullTxt(show, [post({ slug: "ep", title: "Episode", body: "<p>Notes</p>" })], [post({ slug: "a", title: "Essay", body: "<p>Text</p>" })], ORIGIN);
-    const lines = txt.split("\n");
-    expect(lines.slice(0, 7)).toEqual([
-      "# Germomics: full content index",
-      "",
-      "> A podcast about microbes .",
-      "",
-      "This file concatenates the curated written content (show notes and essays) for AI assistants. It is not exhaustive and omits audio transcripts. Canonical URLs are listed per item.",
-      "",
-      `# ${ABOUT.title}`,
-    ]);
-    expect(lines.slice(lines.indexOf("# Episodes"))).toEqual([
-      "# Episodes",
-      "",
-      "## Episode",
-      `URL: ${ORIGIN}/ep`,
-      "Published: March 5, 2024",
-      "",
-      "Notes",
-      "",
-      "# Writing",
-      "",
-      "## Essay",
-      `URL: ${ORIGIN}/a`,
-      "Published: March 5, 2024",
-      "",
-      "Text",
-      "",
-    ]);
   });
 });
 

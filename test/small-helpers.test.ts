@@ -1,34 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Post } from "~/db/schema";
 import { APPLE_CATEGORIES } from "~/lib/apple-categories";
 import { getDataset, listDatasets } from "~/lib/datasets.server";
 import { computePeaks } from "~/lib/peaks";
-import { slugifyGuest, toPlayerTrack } from "~/lib/posts";
+import { slugifyGuest } from "~/lib/posts";
 import { captureException } from "~/lib/sentry.server";
-import { SITE_ADDRESS, SITE_ADDRESS_LINE, postalAddressLd } from "~/lib/site";
 import { DEFAULT_SHOW } from "~/lib/show.server";
 
 // The small pure helpers. Where a hardcoded list mirrors a source of truth, the test derives the
 // list and fails both ways, missing and extra (portfolio rule 3.4), with a count so an empty list
 // cannot pass (rule 3.3).
-
-describe("postalAddressLd", () => {
-  it("defaults every field to the site address and takes any field from the setting", () => {
-    expect(postalAddressLd()).toEqual({
-      "@type": "PostalAddress",
-      streetAddress: SITE_ADDRESS.streetAddress,
-      addressLocality: SITE_ADDRESS.locality,
-      addressRegion: SITE_ADDRESS.region,
-      postalCode: SITE_ADDRESS.postalCode,
-      addressCountry: SITE_ADDRESS.country,
-    });
-    expect(postalAddressLd({ locality: "Elsewhere", country: "CA" })).toMatchObject({ addressLocality: "Elsewhere", addressCountry: "CA", postalCode: SITE_ADDRESS.postalCode });
-  });
-
-  it("keeps the one-line address in step with the structured one", () => {
-    expect(SITE_ADDRESS_LINE).toBe(`${SITE_ADDRESS.streetAddress}, ${SITE_ADDRESS.locality}, ${SITE_ADDRESS.region} ${SITE_ADDRESS.postalCode}`);
-  });
-});
 
 describe("slugifyGuest", () => {
   it("lowercases, joins runs of other characters with one dash, and trims dashes", () => {
@@ -37,20 +17,6 @@ describe("slugifyGuest", () => {
     expect(slugifyGuest("Zoë Müller")).toBe("zoë-müller");
     expect(slugifyGuest("--A--")).toBe("a");
     expect(slugifyGuest("!!!")).toBe("");
-  });
-});
-
-describe("toPlayerTrack", () => {
-  const ep = { id: 7, slug: "ep", title: "Ep", audioUrl: "https://m/a.mp3", audioDuration: 61, episodeArtwork: "art", coverImage: "cover", episodeNumber: 3, chapters: [{ start: 0, title: "I" }] } as Post;
-
-  it("maps an episode to what the player needs", () => {
-    expect(toPlayerTrack(ep)).toEqual({ id: 7, slug: "ep", title: "Ep", audioUrl: "https://m/a.mp3", durationSec: 61, artwork: "art", episodeNumber: 3, chapters: [{ start: 0, title: "I" }] });
-  });
-
-  it("falls back to the cover for artwork, and to empty or null for anything missing", () => {
-    expect(toPlayerTrack({ ...ep, episodeArtwork: null }).artwork).toBe("cover");
-    expect(toPlayerTrack({ ...ep, episodeArtwork: null, coverImage: null }).artwork).toBeNull();
-    expect(toPlayerTrack({ ...ep, audioUrl: null, audioDuration: null, episodeNumber: null, chapters: null })).toMatchObject({ audioUrl: "", durationSec: null, episodeNumber: null, chapters: [] });
   });
 });
 

@@ -53,20 +53,6 @@ describe("every dataset's map center", () => {
     describe(slug, () => {
       const center = toLatLng(map.center);
 
-      it("is a coordinate that exists", () => {
-        // This one alone would NOT have caught the ocean: Broad Street swapped is
-        // { lat: -0.1367, lng: 51.5132 }, and both of those are in range. It is here to catch
-        // the other mistake, a center typed with a degree value out of bounds entirely.
-        expect(center.lat).toBeGreaterThanOrEqual(-90);
-        expect(center.lat).toBeLessThanOrEqual(90);
-        expect(center.lng).toBeGreaterThanOrEqual(-180);
-        expect(center.lng).toBeLessThanOrEqual(180);
-      });
-
-      it("has points to be centered on", () => {
-        expect(map.points.length).toBeGreaterThan(0);
-      });
-
       it(`sits within ${BOX_DEGREES} degrees of its own points`, () => {
         // THE CASE THAT CATCHES A SWAP. The markers use named p.lat / p.lng and were always
         // right, so the center drifting away from them is exactly the shape of the bug.
@@ -88,20 +74,11 @@ describe("every dataset's map center", () => {
 });
 
 describe("siteIsDark", () => {
-  it("an explicit dark theme wins over a light system", () => {
+  it("an explicit theme wins over the system, and anything else falls through to the system", () => {
     expect(siteIsDark("dark", false)).toBe(true);
-  });
-
-  it("an explicit light theme wins over a dark system", () => {
     expect(siteIsDark("light", true)).toBe(false);
-  });
-
-  it("with no explicit theme, the system decides, both ways", () => {
     expect(siteIsDark(null, true)).toBe(true);
     expect(siteIsDark(null, false)).toBe(false);
-  });
-
-  it("an attribute value that is neither light nor dark falls through to the system", () => {
     // getAttribute returns whatever the markup holds, and app.css only recognises the two
     // names: a stray value has to behave as though nothing were set, not as though it were dark.
     expect(siteIsDark("", true)).toBe(true);

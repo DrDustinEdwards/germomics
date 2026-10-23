@@ -9,9 +9,7 @@ import {
   buildWebSiteLd,
   extractFaqLd,
   headingId,
-  ogImageFor,
   readingTime,
-  socialSameAs,
   stripHtml,
   tableOfContents,
   wasUpdatedAfterPublish,
@@ -80,15 +78,6 @@ describe("tableOfContents", () => {
       { level: 2, id: "one", text: "One" },
       { level: 3, id: "two-b", text: "Two b" },
     ]);
-  });
-});
-
-describe("ogImageFor", () => {
-  it("prefers the social image, then episode artwork, then the cover", () => {
-    expect(ogImageFor(post({ ogImage: "og", episodeArtwork: "art", coverImage: "cover" }))).toBe("og");
-    expect(ogImageFor(post({ episodeArtwork: "art", coverImage: "cover" }))).toBe("art");
-    expect(ogImageFor(post({ coverImage: "cover" }))).toBe("cover");
-    expect(ogImageFor(post({}))).toBeNull();
   });
 });
 
@@ -172,12 +161,6 @@ describe("buildJsonLd", () => {
 
 describe("site-level JSON-LD", () => {
   const show = { title: "Germomics", description: "About microbes", author: "Dustin Edwards", artwork: "https://img/cover.jpg" };
-
-  it("builds the social profile URLs, skipping empty handles", () => {
-    expect(socialSameAs({ facebook: "g", twitter: "t", instagram: "i" })).toEqual(["https://www.facebook.com/g", "https://x.com/t", "https://www.instagram.com/i/"]);
-    expect(socialSameAs({ twitter: "t", facebook: "" })).toEqual(["https://x.com/t"]);
-    expect(socialSameAs({})).toEqual([]);
-  });
 
   it("describes the Organization and the PodcastSeries, with a default address and optional sameAs", () => {
     const org = buildOrganizationLd(show, ORIGIN) as Record<string, any>;

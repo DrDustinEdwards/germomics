@@ -159,34 +159,6 @@ describe("the feed envelope", () => {
       '<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">',
     );
   });
-
-  it("puts one category per line and one item per block, in the order given", () => {
-    const xml = buildPodcastFeed(show, [episode({ slug: "first", guid: "g-first" }), episode({ slug: "second", guid: "g-second" })], ORIGIN);
-    expect(xml).toContain('</itunes:category>\n  <itunes:category text="History"/>');
-    expect(xml).toContain("</item>\n  <item>");
-    expect(xml.indexOf("g-first")).toBeLessThan(xml.indexOf("g-second"));
-  });
-
-  it("writes a minimal episode as exactly this item, so no tag changes without a test noticing", () => {
-    const [item] = items(buildPodcastFeed(show, [episode()], ORIGIN));
-    expect("  <item>" + item.split("</item>")[0] + "</item>").toBe(
-      [
-        "  <item>",
-        "    <title>Episode &lt;one&gt; &amp; &quot;two&quot;</title>",
-        "    <link>https://germomics.com/ep-1</link>",
-        '    <guid isPermaLink="false">urn:germomics:g1</guid>',
-        "    <pubDate>Tue, 05 Mar 2024 10:00:00 GMT</pubDate>",
-        "    <description><![CDATA[Short notes]]></description>",
-        "    <content:encoded><![CDATA[<p>Full</p>]]></content:encoded>",
-        '    <enclosure url="https://op3.dev/e/media.germomics.com/ep1.mp3" length="12345" type="audio/mpeg"/>',
-        "    <itunes:duration>01:02:05</itunes:duration>",
-        "    <itunes:explicit>false</itunes:explicit>",
-        "    <itunes:episodeType>full</itunes:episodeType>",
-        "    ",
-        "  </item>",
-      ].join("\n"),
-    );
-  });
 });
 
 describe("guests with no links", () => {

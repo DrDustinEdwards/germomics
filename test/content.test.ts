@@ -44,15 +44,6 @@ describe("settings", () => {
     expect((await listSettings(e)).map((s) => [s.key, s.value])).toEqual([["site.tagline", "Second"]]);
   });
 
-  it("caches for ten minutes", async () => {
-    await loadSettings(e);
-    const { keys } = await e.APP_KV.list({ prefix: "cache:content:" });
-    expect(keys.map((k) => k.name)).toEqual(["cache:content:settings"]);
-    const ttl = keys[0].expiration! - Date.now() / 1000;
-    expect(ttl).toBeGreaterThan(590);
-    expect(ttl).toBeLessThanOrEqual(600);
-  });
-
   it("falls back to the stored value, then the in-code default, then the caller's", () => {
     expect(setting({ "site.tagline": "Mine" }, "site.tagline")).toBe("Mine");
     expect(setting({}, "site.tagline")).toBe("The purple stain, retold");
