@@ -69,8 +69,8 @@ describe("saving a draft", () => {
   });
 
   it("refuses a source it cannot read, with the parser's reason", async () => {
-    await expect(save("bad", "---\ntitle: nope\n---\n")).rejects.toThrow(RefusedError);
-    await expect(save("bad", "---\ntitle: nope\n---\n")).rejects.toThrow('Front matter "title" is not valid JSON.');
+    await expect(save("bad", '---\ntags: "one"\n---\n')).rejects.toThrow(RefusedError);
+    await expect(save("bad", '---\ntags: "one"\n---\n')).rejects.toThrow("tags must be a list of strings");
     expect(await row("bad")).toBeNull();
   });
 
