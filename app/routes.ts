@@ -48,6 +48,9 @@ export default [
   route(":slug/transcript.vtt", "routes/transcript.ts"),
   route(":slug/chapters.json", "routes/chapters.ts"),
 
+  // the drafting routine fetches a job and posts its draft back (one-time key per job)
+  route("api/ai-drafts/:id", "routes/api.ai-drafts.$id.ts"),
+
 
   // admin: Cloudflare Access signs people in; admin.tsx middleware re-verifies its JWT once for the
   // whole subtree.

@@ -47,8 +47,7 @@ INSERT OR IGNORE INTO settings (key, value, type, "group", label, description) V
 INSERT OR IGNORE INTO settings (key, value, type, "group", label, description) VALUES ('social.facebook', 'Germomics', 'string', 'social', 'Facebook handle', 'Optional. Leave blank to omit.');
 INSERT OR IGNORE INTO settings (key, value, type, "group", label, description) VALUES ('social.twitter', 'Germomics', 'string', 'social', 'X / Twitter handle', 'Optional. Leave blank to omit.');
 INSERT OR IGNORE INTO settings (key, value, type, "group", label, description) VALUES ('social.instagram', 'Germomics', 'string', 'social', 'Instagram handle', 'Optional. Leave blank to omit.');
-INSERT OR IGNORE INTO settings (key, value, type, "group", label, description) VALUES ('ai.model', 'claude-sonnet-4-6', 'string', 'ai', 'AI model', 'Anthropic model id for the authoring assists.');
-INSERT OR IGNORE INTO settings (key, value, type, "group", label, description) VALUES ('ai.daily_cap', '100', 'number', 'ai', 'AI daily cap', 'Max AI generations per day across the admin.');
+INSERT OR IGNORE INTO settings (key, value, type, "group", label, description) VALUES ('ai.daily_cap', '100', 'number', 'ai', 'AI daily cap', 'Max drafting sessions started per day across the admin.');
 INSERT OR IGNORE INTO settings (key, value, type, "group", label, description) VALUES ('ratelimit.ai', '15', 'number', 'ratelimit', 'Rate limit: /admin/ai', 'Requests per minute per IP.');
 INSERT OR IGNORE INTO settings (key, value, type, "group", label, description) VALUES ('ratelimit.auth', '30', 'number', 'ratelimit', 'Rate limit: /api/auth', 'Requests per minute per IP.');
 INSERT OR IGNORE INTO settings (key, value, type, "group", label, description) VALUES ('ratelimit.admin', '150', 'number', 'ratelimit', 'Rate limit: /admin', 'Requests per minute per IP.');
@@ -86,9 +85,8 @@ INSERT OR IGNORE INTO content_blocks (key, kind, title, value, status) VALUES ('
 INSERT OR IGNORE INTO content_blocks (key, kind, title, value, status) VALUES ('snippet:meta.title_template', 'snippet', 'Meta: title template', '{title} · Germomics', 'published');
 INSERT OR IGNORE INTO content_blocks (key, kind, title, value, status) VALUES ('snippet:dataset.cholera-soho-1854', 'snippet', 'Dataset: cholera', 'John Snow''s map of the Broad Street outbreak: deaths clustered around a single pump, the founding case of epidemiology and a Vibrio cholerae story.', 'published');
 INSERT OR IGNORE INTO content_blocks (key, kind, title, value, status) VALUES ('snippet:dataset.influenza-1918', 'snippet', 'Dataset: 1918 flu', 'The three waves of the 1918 H1N1 pandemic: mortality peaked sharply in the deadly autumn wave, a defining example of viral pandemic dynamics.', 'published');
-INSERT OR IGNORE INTO content_blocks (key, kind, title, value, status) VALUES ('snippet:ai.error.not_configured', 'snippet', 'AI error: not configured', 'AI is not configured. Set the ANTHROPIC_API_KEY worker secret.', 'published');
-INSERT OR IGNORE INTO content_blocks (key, kind, title, value, status) VALUES ('snippet:ai.error.rate_limit', 'snippet', 'AI error: rate limit', 'AI rate limit hit. Wait a moment and try again.', 'published');
-INSERT OR IGNORE INTO content_blocks (key, kind, title, value, status) VALUES ('snippet:ai.error.overloaded', 'snippet', 'AI error: overloaded', 'AI service is overloaded. Try again shortly.', 'published');
+INSERT OR IGNORE INTO content_blocks (key, kind, title, value, status) VALUES ('snippet:ai.error.not_configured', 'snippet', 'AI error: not configured', 'AI drafting is not set up. Set the AI_ROUTINE_URL and AI_ROUTINE_TOKEN worker secrets.', 'published');
+INSERT OR IGNORE INTO content_blocks (key, kind, title, value, status) VALUES ('snippet:ai.error.rate_limit', 'snippet', 'AI error: rate limit', 'Too many drafting sessions this hour. Try again later.', 'published');
 INSERT OR IGNORE INTO content_blocks (key, kind, title, value, status) VALUES ('snippet:ai.error.no_transcript', 'snippet', 'AI error: no transcript', 'This episode has no transcript yet. Add one first.', 'published');
 INSERT OR IGNORE INTO content_blocks (key, kind, title, value, status) VALUES ('snippet:ai.error.daily_cap', 'snippet', 'AI error: daily cap', 'Daily AI limit reached. Try again tomorrow.', 'published');
 
