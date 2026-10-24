@@ -12,11 +12,7 @@ const submit = (over: Partial<{ gameSlug: string; name: unknown; score: unknown;
 const stored = async () => (await e.DB.prepare("SELECT game_slug, name, score FROM scores ORDER BY id").all()).results;
 
 beforeAll(() => applyMigrations(e.DB));
-beforeEach(async () => {
-  await e.DB.exec("DELETE FROM scores");
-  const { keys } = await e.APP_KV.list();
-  await Promise.all(keys.map((k) => e.APP_KV.delete(k.name)));
-});
+beforeEach(() => e.DB.exec("DELETE FROM scores"));
 
 describe("submitScore", () => {
   it("stores a valid score, rounded down", async () => {
@@ -30,7 +26,6 @@ describe("submitScore", () => {
     expect(await submit({ score: "lots" })).toEqual({ ok: false, error: "Invalid score." });
     expect(await submit({ score: Infinity })).toEqual({ ok: false, error: "Invalid score." });
     expect(await stored()).toEqual([]);
-    expect((await e.APP_KV.list()).keys).toHaveLength(0);
   });
 
   it("accepts zero and clamps anything over a million", async () => {
@@ -40,14 +35,12 @@ describe("submitScore", () => {
   });
 
   it("allows five submissions a minute per address and game, then refuses", async () => {
-    for (let i = 0; i < 5; i++) expect((await submit()).ok).toBe(true);
-    expect(await submit()).toEqual({ ok: false, error: "Too many submissions, try again in a minute." });
+    // Its own address: the limiter's storage outlives a test.
+    const ip = "203.0.113.50";
+    for (let i = 0; i < 5; i++) expect((await submit({ ip })).ok).toBe(true);
+    expect(await submit({ ip })).toEqual({ ok: false, error: "Too many submissions, try again in a minute." });
     expect(await stored()).toHaveLength(5);
-    expect((await submit({ ip: "203.0.113.2" })).ok).toBe(true);
-    const { keys } = await e.APP_KV.list({ prefix: "score-rl:" });
-    const mine = keys.find((k) => k.name === `score-rl:${GAME}:203.0.113.1`)!;
-    expect(mine.expiration! - Date.now() / 1000).toBeLessThanOrEqual(60);
-    expect(mine.expiration! - Date.now() / 1000).toBeGreaterThan(55);
+    expect((await submit({ ip: "203.0.113.51" })).ok).toBe(true);
   });
 });
 

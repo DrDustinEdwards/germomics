@@ -11,6 +11,7 @@
 // version and two saves in one second cannot collide.
 import { and, desc, eq, like, or } from "drizzle-orm";
 import {
+  contentVersion,
   MediaInUseError,
   NotFoundError,
   RefusedError,
@@ -48,16 +49,8 @@ function statusOf(p: Pick<Post, "status" | "publishAt">): Status {
   return p.publishAt && p.publishAt > new Date().toISOString() ? "scheduled" : "published";
 }
 
-async function sha256Hex(text: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 /** The version of a row as Carrel sees it. */
-async function versionOf(p: Post): Promise<string> {
-  const basis = JSON.stringify([renderSource(p), p.status, p.publishAt ?? null]);
-  return (await sha256Hex(basis)).slice(0, 32);
-}
+const versionOf = (p: Post): Promise<string> => contentVersion([renderSource(p), p.status, p.publishAt ?? null]);
 
 function summaryOf(p: Post): ContentSummary {
   return {

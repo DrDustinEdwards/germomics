@@ -5,13 +5,15 @@
 //      non-React responses (CLAUDE.md: prefer the Worker entry). CSP ships REPORT-ONLY first —
 //      it reports violations without blocking, so TipTap (inline styles) and Google Maps (blob
 //      workers, tiles) keep working while Dustin reviews real violations, then flips to enforce.
-//   2. A best-effort KV sliding-window rate limiter on /admin/*, /admin/ai.
+//   2. Per-IP rate limits on /admin/*, /admin/ai and the signup POST (site-runtime's limiter).
 //   3. A per-day cost cap on the AI endpoint so spend can't run away.
 //
 // Cloudflare's WAF managed ruleset + bot rules are the primary perimeter defense (dashboard,
 // see manual steps); this is the in-Worker layer the audit asked for.
 
 import { buildContentSecurityPolicy, reportingEndpoints } from "@dustinedwards/site-runtime/csp";
+import { applyHeaderSet, buildSecurityHeaders, STANDARD_SECURITY_HEADERS } from "@dustinedwards/site-runtime/headers";
+import { ipKey, limit, limitedResponse, matchRule, mustStop } from "@dustinedwards/site-runtime/rate-limit";
 
 import { IMAGE_ORIGIN, MEDIA_ORIGIN, OP3_ORIGIN } from "~/lib/site";
 
@@ -46,20 +48,39 @@ const CSP = buildContentSecurityPolicy({
   extraDirectives: ["worker-src 'self' blob:", "child-src 'self' blob:", "frame-src 'self'", "manifest-src 'self'", "upgrade-insecure-requests"],
 });
 
-// Static headers added to every response (only if a route hasn't already set them).
-const STATIC_HEADERS: Record<string, string> = {
-  // HSTS: 1 year + subdomains. No `preload` until after the custom-domain cutover (manual step).
-  "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-  "X-Content-Type-Options": "nosniff",
-  "Referrer-Policy": "strict-origin-when-cross-origin",
-  "X-Frame-Options": "DENY",
-  "Permissions-Policy":
-    "camera=(), microphone=(), geolocation=(), browsing-topics=(), payment=(), usb=()",
-  // TDMRep (TDM Reservation Protocol): reserve text-and-data-mining / training rights and point
-  // at the machine-readable policy. robots.txt explicitly ALLOWS citation/search crawlers — the
-  // stronger, well-understood signal — so this only states the training-data preference.
-  "tdm-reservation": "1",
-};
+// The family header set: OWASP's values from site-runtime, with germomics's deviations, each with its
+// reason (buildSecurityHeaders refuses an override without one or one that restates the standard).
+const OWASP_PERMISSIONS = (STANDARD_SECURITY_HEADERS["Permissions-Policy"] ?? "").split(",").map((d) => d.trim()).filter(Boolean);
+const SELF_FEATURES = ["autoplay", "clipboard-write", "web-share"];
+const SECURITY_HEADERS = buildSecurityHeaders({
+  overrides: {
+    "Permissions-Policy": {
+      value: [
+        ...OWASP_PERMISSIONS.filter((d) => !SELF_FEATURES.includes(d.split("=")[0])),
+        ...SELF_FEATURES.map((f) => `${f}=(self)`),
+        // Not in OWASP's list; this site denied it before adopting the set.
+        ...(OWASP_PERMISSIONS.some((d) => d.startsWith("browsing-topics=")) ? [] : ["browsing-topics=()"]),
+      ].join(", "),
+      reason:
+        "OWASP denies autoplay, clipboard-write and web-share; the player starts the next queued episode on `ended` and from lock-screen controls, and Copy link, the transcript quote and the feed-URL copy use the clipboard and the share sheet. Allowed for this origin only.",
+    },
+    "Referrer-Policy": {
+      value: "strict-origin-when-cross-origin",
+      reason:
+        "OWASP's no-referrer strips the origin from the player's episode requests through OP3, which tells web players apart by Referer, and blanks Web Analytics' page-to-page referrers. Cross-origin requests still get the origin only, never the path.",
+    },
+    "Cross-Origin-Resource-Policy": {
+      value: "cross-origin",
+      reason: "Carrel's preview, a sandboxed frame on Carrel's own origin, loads this site's stylesheets and images",
+    },
+  },
+});
+
+// Added to every response (only if a route hasn't already set them). TDMRep (TDM Reservation
+// Protocol): reserve text-and-data-mining / training rights and point at the machine-readable
+// policy. robots.txt explicitly ALLOWS citation/search crawlers — the stronger, well-understood
+// signal — so this only states the training-data preference.
+const STATIC_HEADERS: Record<string, string> = { ...SECURITY_HEADERS, "tdm-reservation": "1" };
 
 /**
  * Return a copy of `response` with the security headers added. Never clobbers headers a route
@@ -68,9 +89,7 @@ const STATIC_HEADERS: Record<string, string> = {
  */
 export function withSecurityHeaders(response: Response, origin: string): Response {
   const headers = new Headers(response.headers);
-  for (const [k, v] of Object.entries(STATIC_HEADERS)) {
-    if (!headers.has(k)) headers.set(k, v);
-  }
+  applyHeaderSet(headers, STATIC_HEADERS, { overwrite: false });
   if (!headers.has("tdm-policy")) headers.set("tdm-policy", `${origin}/ai.txt`);
   // The Reporting API's endpoint for report-to. reportingEndpoints refuses plain http off localhost
   // (a dev server on a LAN address), which a browser would ignore anyway, so that origin gets none.
@@ -86,58 +105,35 @@ export function withSecurityHeaders(response: Response, origin: string): Respons
   });
 }
 
-// ── Rate limiting (KV sliding window, best-effort) ───────────────────────────
+// ── Rate limiting (site-runtime's RateLimiter Durable Object) ────────────────
 
 import { loadSettings, settingNum } from "~/lib/content.server";
 
-type Limit = { limit: number; windowSec: number };
-
-// Per-IP windows. Admin page navigation is generous; auth + AI are tight. (The KV read-modify-
-// write isn't atomic, so counts can slightly undercount under burst — fine for abuse mitigation;
-// the WAF rate-limit ruleset is the hard control.)
+// Per-IP fixed 60-second windows, counted exactly by the RATE_LIMITER Durable Object (the WAF
+// rate-limit ruleset stays the hard control). Admin page navigation is generous; AI is tight.
 // Per-minute limits are tunable live via the settings table (ratelimit.*), falling back to these
-// defaults. Window is fixed at 60s.
-const RULES: Array<{ test: (p: string, method: string) => boolean; bucket: string; settingKey: string; def: number; json: boolean }> = [
-  { test: (p) => p.startsWith("/admin/ai"), bucket: "ai", settingKey: "ratelimit.ai", def: 15, json: true },
-  { test: (p) => p.startsWith("/admin"), bucket: "admin", settingKey: "ratelimit.admin", def: 150, json: false },
+// defaults. A counter that is down lets the request through (logged by site-runtime): /admin sits
+// behind Access, the AI endpoint has its own daily cap, and a signup is one row.
+const RULES: Array<{ path: string; prefix?: boolean; methods?: string[]; bucket: string; settingKey: string; def: number; json: boolean }> = [
+  { path: "/admin/ai", prefix: true, bucket: "ai", settingKey: "ratelimit.ai", def: 15, json: true },
+  { path: "/admin", prefix: true, bucket: "admin", settingKey: "ratelimit.admin", def: 150, json: false },
   // A signup stores an address, so a script could fill the list (Grok audit 2026-10-21, GE-6).
   // Only the POST is metered; reading the page is not. /subscribe.data is the same action.
-  { test: (p, m) => m === "POST" && (p === "/subscribe" || p === "/subscribe.data"), bucket: "subscribe", settingKey: "ratelimit.subscribe", def: 5, json: false },
+  ...["/subscribe", "/subscribe.data"].map((path) => ({ path, methods: ["POST"], bucket: "subscribe", settingKey: "ratelimit.subscribe", def: 5, json: false })),
 ];
-
-async function overLimit(env: Env, key: string, { limit, windowSec }: Limit): Promise<boolean> {
-  const window = Math.floor(Date.now() / 1000 / windowSec);
-  const kvKey = `rl:${key}:${window}`;
-  const current = Number(await env.APP_KV.get(kvKey)) || 0;
-  if (current >= limit) return true;
-  await env.APP_KV.put(kvKey, String(current + 1), { expirationTtl: windowSec + 5 });
-  return false;
-}
-
-function tooMany(retrySec: number, json: boolean): Response {
-  const body = json
-    ? JSON.stringify({ ok: false, error: "Too many requests. Slow down and try again shortly." })
-    : "Too many requests.";
-  return new Response(body, {
-    status: 429,
-    headers: {
-      "Content-Type": json ? "application/json; charset=utf-8" : "text/plain; charset=utf-8",
-      "Retry-After": String(retrySec),
-    },
-  });
-}
 
 /** Returns a 429 Response if this request is rate-limited, otherwise null. */
 export async function enforceRateLimit(env: Env, request: Request): Promise<Response | null> {
-  const pathname = new URL(request.url).pathname;
-  const match = RULES.find((r) => r.test(pathname, request.method));
+  const match = matchRule(request, RULES);
   if (!match) return null;
-  const limit = settingNum(await loadSettings(env), match.settingKey, match.def);
-  const ip = request.headers.get("cf-connecting-ip") || "anon";
-  if (await overLimit(env, `${match.bucket}:${ip}`, { limit, windowSec: 60 })) {
-    return tooMany(60, match.json);
-  }
-  return null;
+  const max = settingNum(await loadSettings(env), match.settingKey, match.def);
+  const verdict = await limit(env.RATE_LIMITER, ipKey(match.bucket, request).key, [{ limit: max, windowSeconds: 60 }], { onUnavailable: "allow" });
+  if (!mustStop(verdict, "allow")) return null;
+  if (!match.json) return limitedResponse(verdict);
+  return new Response(JSON.stringify({ ok: false, error: "Too many requests. Slow down and try again shortly." }), {
+    status: 429,
+    headers: { "Content-Type": "application/json; charset=utf-8", "Retry-After": String(verdict.retryAfterSeconds), "Cache-Control": "no-store" },
+  });
 }
 
 // ── AI per-day cost cap ──────────────────────────────────────────────────────

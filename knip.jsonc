@@ -12,7 +12,9 @@
     // Hand-run maintenance and import scripts (`node scripts/<name>.mjs`).
     "scripts/**/*.{mjs,ts}",
     // Hand-run mutation testing (docs/research/baseline.md); Stryker is installed --no-save.
-    "stryker.config.mjs"
+    "stryker.config.mjs",
+    // The test Worker's main module (vitest.config.ts), for the RATE_LIMITER Durable Object.
+    "test/helpers/entry.ts"
   ],
   // `cloudflare:test` is the workers pool's virtual module, not an npm package; Stryker is not installed.
   "ignoreDependencies": ["cloudflare", "@stryker-mutator/api"]
