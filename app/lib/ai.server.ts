@@ -1,19 +1,27 @@
-// AI authoring assists — server-only. All Anthropic calls happen here,
-// in route actions, via the Workers global `fetch` against the Messages API, through AI Gateway once
-// AI_GATEWAY_BASE_URL is set (site-runtime's anthropicRoute decides; unset, Anthropic directly). ANTHROPIC_API_KEY is
-// a Worker secret and must NEVER reach the client bundle. Every generator is grounded in the
-// episode transcript only: prompts forbid inventing facts/names/dates/citations. Output is a
-// DRAFT — the route returns it, the author accepts/edits/discards (no auto-save, no overwrite).
-import { anthropicRoute } from "@dustinedwards/site-runtime/ai-gateway";
+// AI authoring assists, server-only, on Dustin's Claude subscription. The site never calls a model:
+// Anthropic allows subscription sign-in only in Claude Code and its own apps
+// (code.claude.com/docs/en/legal-and-compliance), so a draft button fires the germomics drafting
+// routine (site-runtime's ./routine) and the routine, a Claude Code session, does the writing.
+//
+// THE ROUND TRIP. startDraft stores a job in APP_KV (kind, title, transcript and the SHA-256 of a
+// one-time key) and fires the routine with only the job's URL and key. The routine GETs the job
+// from /api/ai-drafts/:id with the key, writes the draft from the instructions it is given, and
+// POSTs it back once; the editor polls /admin/ai?job= until it is ready. A job lives a day.
+//
+// Every generator is grounded in the episode transcript only: the prompts forbid inventing
+// facts/names/dates/citations. Output is a DRAFT: the author accepts/edits/discards (no auto-save,
+// no overwrite). Prompts are tunable live from the settings table (ai.prompt.*).
+import { safeEqual } from "@dustinedwards/site-runtime/compare";
+import { fireRoutine, routineConfig, type RoutineConfig } from "@dustinedwards/site-runtime/routine";
 import type { Chapter } from "~/lib/types";
 import { loadSettings, loadSnippets, setting, snippet } from "~/lib/content.server";
+import { SITE_ORIGIN } from "~/lib/site";
 
 // User-facing AI error strings, resolved from the snippet:ai.error.* content blocks (editable in
 // /admin/content) with the in-code fallback via snippet().
 export type AiErrors = {
   notConfigured: string;
   rateLimit: string;
-  overloaded: string;
   noTranscript: string;
   dailyCap: string;
 };
@@ -22,25 +30,19 @@ export async function aiErrors(env: Env): Promise<AiErrors> {
   return {
     notConfigured: snippet(s, "snippet:ai.error.not_configured"),
     rateLimit: snippet(s, "snippet:ai.error.rate_limit"),
-    overloaded: snippet(s, "snippet:ai.error.overloaded"),
     noTranscript: snippet(s, "snippet:ai.error.no_transcript"),
     dailyCap: snippet(s, "snippet:ai.error.daily_cap"),
   };
 }
 
-// Default model is configurable; sonnet-4-6 balances quality/cost for summarization. Haiku is the
-// cheaper/faster option. (Per the Tier 3 spec — these exact model strings.)
-const DEFAULT_MODEL = "claude-sonnet-4-6";
-
-const ANTHROPIC_VERSION = "2023-06-01";
-
-function apiKey(env: Env): string | undefined {
-  return (env as unknown as { ANTHROPIC_API_KEY?: string }).ANTHROPIC_API_KEY || undefined;
+function routine(env: Env): RoutineConfig | null {
+  const config = routineConfig(env.AI_ROUTINE_URL, env.AI_ROUTINE_TOKEN);
+  return "missing" in config ? null : config;
 }
 
-/** Is the AI key configured? Drives graceful UI degradation (buttons disabled + hint). */
+/** Is the drafting routine configured? Drives graceful UI degradation (buttons disabled + hint). */
 export function aiConfigured(env: Env): boolean {
-  return !!apiKey(env);
+  return routine(env) !== null;
 }
 
 // House writing rule (Vault site-config.md): applies to ALL generated text, so it lives in the
@@ -52,84 +54,117 @@ export const STYLE_RULE =
   "it's Y', overwrought three-item lists, and grandiose closing sentences. Write plain, direct, " +
   "varied, human sentences.";
 
-const SYSTEM =
-  "You are an editorial assistant for the Germomics podcast (microbiology and history). " +
-  "You write ONLY from the transcript provided in the user message. Never invent or infer " +
-  "facts, names, dates, numbers, citations, quotes, or links that are not explicitly present " +
-  "in the transcript. If something is not in the transcript, leave it out. Produce exactly what " +
-  "is asked, with no preamble, apologies, or meta-commentary. " +
-  STYLE_RULE;
+export type AiKind = "shownotes" | "chapters" | "seo";
+export const AI_KINDS: readonly AiKind[] = ["shownotes", "chapters", "seo"];
+export type SeoDraft = { seoTitle: string; seoDescription: string; socialBlurb: string };
+export type Draft = string | Chapter[] | SeoDraft;
 
-type CallOpts = { system?: string; user: string; maxTokens: number; model?: string; errors: AiErrors };
+type Job = {
+  kind: AiKind;
+  title: string;
+  transcript: string;
+  keyHash: string;
+  status: "waiting" | "ready" | "failed";
+  draft?: Draft;
+  error?: string;
+};
 
-/** One non-streaming Messages API call. Returns the concatenated text. Throws a friendly Error. */
-async function callClaude(env: Env, opts: CallOpts): Promise<string> {
-  const key = apiKey(env);
-  if (!key) throw new Error(opts.errors.notConfigured);
+const JOB_TTL_SECONDS = 24 * 60 * 60;
+const jobKey = (id: string) => `ai:job:${id}`;
+const JOB_ID = /^[0-9a-f]{32}$/;
+const MAX_DRAFT_CHARS = 100_000;
 
-  const route = anthropicRoute(env as unknown as { AI_GATEWAY_BASE_URL?: string; AI_GATEWAY_TOKEN?: string }, "germomics");
-  let res: Response;
-  try {
-    res = await fetch(`${route.baseURL}/v1/messages`, {
-      method: "POST",
-      headers: {
-        ...route.headers,
-        "x-api-key": key,
-        "anthropic-version": ANTHROPIC_VERSION,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: opts.model || DEFAULT_MODEL,
-        max_tokens: opts.maxTokens,
-        system: opts.system ?? SYSTEM,
-        messages: [{ role: "user", content: opts.user }],
-      }),
-    });
-  } catch {
-    throw new Error("Could not reach the AI service. Check your connection and try again.");
-  }
+const hex = (bytes: ArrayBuffer | Uint8Array) => [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
+const sha256 = async (text: string) => hex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
+const randomHex = (n: number) => hex(crypto.getRandomValues(new Uint8Array(n)));
 
-  if (!res.ok) {
-    let detail = "";
-    try {
-      const body = (await res.json()) as { error?: { message?: string } };
-      detail = body.error?.message ?? "";
-    } catch {
-      /* ignore non-JSON error bodies */
-    }
-    if (res.status === 401) throw new Error("ANTHROPIC_API_KEY is invalid or revoked.");
-    if (res.status === 429) throw new Error(opts.errors.rateLimit);
-    if (res.status === 529) throw new Error(opts.errors.overloaded);
-    throw new Error(`AI request failed (${res.status})${detail ? `: ${detail}` : ""}.`);
-  }
+async function readJob(env: Env, id: string): Promise<Job | null> {
+  if (!JOB_ID.test(id)) return null;
+  return (await env.APP_KV.get<Job>(jobKey(id), "json")) ?? null;
+}
+const writeJob = (env: Env, id: string, job: Job) => env.APP_KV.put(jobKey(id), JSON.stringify(job), { expirationTtl: JOB_TTL_SECONDS });
 
-  const data = (await res.json()) as { content?: Array<{ type: string; text?: string }> };
-  return (data.content ?? [])
-    .filter((b) => b.type === "text" && typeof b.text === "string")
-    .map((b) => b.text)
-    .join("")
-    .trim();
+/** What the routine is told when it fires: where the job is and the key that opens it, nothing else. */
+export function fireText(id: string, key: string): string {
+  return [`job_url: ${SITE_ORIGIN}/api/ai-drafts/${id}`, `job_key: ${key}`].join("\n");
 }
 
-function requireTranscript(transcript: string, message: string): string {
-  const t = (transcript ?? "").trim();
-  if (!t) throw new Error(message);
-  return t;
+/**
+ * Store a drafting job and fire the routine for it. Returns the job id for polling; throws a
+ * readable Error when the transcript is empty, the routine is not set up, or the fire fails.
+ */
+export async function startDraft(env: Env, input: { kind: AiKind; transcript: string; title: string }): Promise<string> {
+  const errors = await aiErrors(env);
+  const config = routine(env);
+  if (!config) throw new Error(errors.notConfigured);
+  const transcript = (input.transcript ?? "").trim();
+  if (!transcript) throw new Error(errors.noTranscript);
+  const id = randomHex(16);
+  const key = randomHex(32);
+  await writeJob(env, id, { kind: input.kind, title: input.title, transcript, keyHash: await sha256(key), status: "waiting" });
+  const fired = await fireRoutine(config, fireText(id, key));
+  if (!fired.ok) {
+    await env.APP_KV.delete(jobKey(id));
+    throw new Error(fired.error.startsWith("429") ? errors.rateLimit : `The drafting routine did not start (${fired.error}).`);
+  }
+  return id;
 }
 
-// Model + prompts are tunable live from the settings table (ai.model, ai.prompt.*). Each read
-// falls back to the generated default (content-defaults.ts) via setting(), so editing a prompt in
-// D1 changes generation with no deploy, and a missing row never breaks it.
-async function aiCfg(env: Env) {
-  const [s, err] = await Promise.all([loadSettings(env), aiErrors(env)]);
+/** The job as the editor sees it while it polls. */
+export async function draftStatus(env: Env, id: string): Promise<{ status: Job["status"] | "gone"; draft?: Draft; error?: string }> {
+  const job = await readJob(env, id);
+  if (!job) return { status: "gone" };
+  return { status: job.status, draft: job.draft, error: job.error };
+}
+
+/** The job for the routine, when the key is the job's own. Null for anything else. */
+export async function jobForRoutine(env: Env, id: string, key: string): Promise<Job | null> {
+  const job = await readJob(env, id);
+  if (!job || !(await safeEqual(await sha256(key), job.keyHash))) return null;
+  return job;
+}
+
+/** The instructions the routine follows for one job: the live prompts from settings, the transcript, and the answer's shape. */
+export async function routineInstructions(env: Env, job: Job): Promise<{ kind: AiKind; system: string; prompt: string; answer: string }> {
+  const s = await loadSettings(env);
+  const system = `${setting(s, "ai.prompt.system")} ${setting(s, "ai.prompt.style")}`.trim();
+  const prompt =
+    job.kind === "seo"
+      ? `Episode working title: "${job.title || "(untitled)"}".\n${setting(s, "ai.prompt.seo")}\n\nTranscript:\n${job.transcript}`
+      : `${setting(s, `ai.prompt.${job.kind}`)}\n\nTranscript:\n${job.transcript}`;
   return {
-    model: setting(s, "ai.model", DEFAULT_MODEL),
-    system: `${setting(s, "ai.prompt.system")} ${setting(s, "ai.prompt.style")}`.trim(),
-    shownotes: setting(s, "ai.prompt.shownotes"),
-    chapters: setting(s, "ai.prompt.chapters"),
-    seo: setting(s, "ai.prompt.seo"),
-    err,
+    kind: job.kind,
+    system,
+    prompt,
+    answer: 'POST {"draft": "<your answer exactly as the prompt asks for it, as one string>"} to this URL with the same key. If you cannot write it, POST {"error": "<one sentence why>"} instead.',
   };
+}
+
+/**
+ * Store the routine's answer for a waiting job: parsed to the kind's shape here, as the API reply
+ * was, so a malformed answer fails the job instead of reaching the editor. Returns a refusal
+ * message, or null when stored.
+ */
+export async function finishDraft(env: Env, id: string, job: Job, answer: { draft?: unknown; error?: unknown }): Promise<string | null> {
+  if (job.status !== "waiting") return `This job is already ${job.status}.`;
+  if (typeof answer.error === "string" && answer.error.trim()) {
+    await writeJob(env, id, { ...job, status: "failed", error: `The drafting session could not write it: ${answer.error.trim().slice(0, 300)}` });
+    return null;
+  }
+  if (typeof answer.draft !== "string" || !answer.draft.trim()) return 'Send {"draft": "..."} as a non-empty string, or {"error": "..."}.';
+  if (answer.draft.length > MAX_DRAFT_CHARS) return `The draft is over ${MAX_DRAFT_CHARS} characters.`;
+  try {
+    await writeJob(env, id, { ...job, status: "ready", draft: parseDraft(job.kind, answer.draft) });
+  } catch (err) {
+    await writeJob(env, id, { ...job, status: "failed", error: err instanceof SyntaxError || !(err instanceof Error) ? "The AI returned an answer that is not valid JSON." : err.message });
+  }
+  return null;
+}
+
+function parseDraft(kind: AiKind, raw: string): Draft {
+  if (kind === "shownotes") return raw.trim();
+  if (kind === "chapters") return parseChapters(raw);
+  return parseSeo(raw);
 }
 
 // Pull the first JSON value out of a model response (tolerates code fences / stray prose).
@@ -147,20 +182,8 @@ function extractJson(text: string): unknown {
   return JSON.parse(s);
 }
 
-/** Show-notes draft as sanitized-friendly HTML, grounded in the transcript. */
-export async function generateShowNotes(env: Env, transcript: string, model?: string): Promise<string> {
-  const cfg = await aiCfg(env);
-  const t = requireTranscript(transcript, cfg.err.noTranscript);
-  const user = `${cfg.shownotes}\n\nTranscript:\n${t}`;
-  return callClaude(env, { system: cfg.system, user, maxTokens: 1800, model: model || cfg.model, errors: cfg.err });
-}
-
-/** Chapter suggestions as Chapter[] (start seconds + title), using real VTT cue timings. */
-export async function generateChapters(env: Env, transcript: string, model?: string): Promise<Chapter[]> {
-  const cfg = await aiCfg(env);
-  const t = requireTranscript(transcript, cfg.err.noTranscript);
-  const user = `${cfg.chapters}\n\nTranscript:\n${t}`;
-  const raw = await callClaude(env, { system: cfg.system, user, maxTokens: 1200, model: model || cfg.model, errors: cfg.err });
+/** Chapter suggestions as Chapter[] (start seconds + title), in order, unusable ones dropped. */
+function parseChapters(raw: string): Chapter[] {
   const parsed = extractJson(raw);
   if (!Array.isArray(parsed)) throw new Error("The AI returned an unexpected chapters format.");
   const chapters: Chapter[] = parsed
@@ -176,20 +199,9 @@ export async function generateChapters(env: Env, transcript: string, model?: str
   return chapters;
 }
 
-export type SeoDraft = { seoTitle: string; seoDescription: string; socialBlurb: string };
-
-/** SEO title + meta description + optional social blurb, grounded in the transcript. */
-export async function generateSeo(
-  env: Env,
-  transcript: string,
-  title: string,
-  model?: string,
-): Promise<SeoDraft> {
-  const cfg = await aiCfg(env);
-  const t = requireTranscript(transcript, cfg.err.noTranscript);
-  const user = `Episode working title: "${title || "(untitled)"}".\n${cfg.seo}\n\nTranscript:\n${t}`;
-  const raw = await callClaude(env, { system: cfg.system, user, maxTokens: 600, model: model || cfg.model, errors: cfg.err });
-  const o = extractJson(raw) as Partial<SeoDraft>;
+/** SEO title + meta description + social blurb, capped in length. */
+function parseSeo(raw: string): SeoDraft {
+  const o = (extractJson(raw) ?? {}) as Partial<SeoDraft>;
   return {
     seoTitle: String(o.seoTitle ?? "").trim().slice(0, 120),
     seoDescription: String(o.seoDescription ?? "").trim().slice(0, 300),

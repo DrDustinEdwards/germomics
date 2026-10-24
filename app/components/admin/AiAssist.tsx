@@ -1,8 +1,9 @@
-// Reusable AI assist control (Tier 3): a "✨ Generate" button → server draft → review panel with
-// Accept / Discard. The generated content is always a DRAFT — Accept applies it to the field
+// Reusable AI assist control (Tier 3): a "✨ Generate" button starts a drafting session on the
+// Claude subscription (app/lib/ai.server.ts), the control polls until the draft is back, then a
+// review panel with Accept / Discard. The generated content is always a DRAFT — Accept applies it to the field
 // (confirming first if the field already has content); it never auto-saves or silently overwrites.
 // Disabled (with a hint) when AI is unconfigured or the episode has no transcript.
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sparkles, Loader2, Check, X, AlertCircle } from "lucide-react";
 
 type Props<T> = {
@@ -17,6 +18,9 @@ type Props<T> = {
   onAccept: (draft: T) => void;
   renderPreview: (draft: T) => React.ReactNode;
 };
+
+const POLL_MS = 10_000;
+const POLL_LIMIT_MS = 20 * 60_000;
 
 export function AiAssist<T>({
   kind,
@@ -33,10 +37,12 @@ export function AiAssist<T>({
   const [status, setStatus] = useState<"idle" | "loading" | "review" | "error">("idle");
   const [draft, setDraft] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const alive = useRef(true);
+  useEffect(() => () => void (alive.current = false), []);
 
   const disabled = !available || !hasTranscript || status === "loading";
   const hint = !available
-    ? "Set the ANTHROPIC_API_KEY worker secret to enable AI assists."
+    ? "Set the AI_ROUTINE_URL and AI_ROUTINE_TOKEN worker secrets to enable AI drafts."
     : !hasTranscript
       ? "Add a transcript first. Generations are grounded in it."
       : "Generate a draft from the transcript (you review before it’s applied).";
@@ -44,23 +50,35 @@ export function AiAssist<T>({
   async function generate() {
     setStatus("loading");
     setError(null);
+    const fail = (message: string) => {
+      if (!alive.current) return;
+      setError(message);
+      setStatus("error");
+    };
     try {
       const body = new FormData();
       body.set("kind", kind);
       body.set("transcript", transcript);
       if (title) body.set("title", title);
       const res = await fetch("/admin/ai", { method: "POST", body });
-      const data = (await res.json()) as { ok: boolean; draft?: T; error?: string };
-      if (!data.ok || data.draft === undefined) {
-        setError(data.error || "Generation failed.");
-        setStatus("error");
-        return;
+      const started = (await res.json()) as { ok: boolean; job?: string; error?: string };
+      if (!started.ok || !started.job) return fail(started.error || "Drafting failed.");
+      // A drafting session takes a few minutes; poll until it answers or the wait runs out.
+      for (let waited = 0; waited < POLL_LIMIT_MS && alive.current; waited += POLL_MS) {
+        await new Promise((r) => setTimeout(r, POLL_MS));
+        const poll = await fetch(`/admin/ai?job=${started.job}`).then((r) => r.json() as Promise<{ status?: string; draft?: T; error?: string }>).catch(() => null);
+        if (!poll || poll.status === "waiting") continue;
+        if (poll.status === "ready" && poll.draft !== undefined) {
+          if (!alive.current) return;
+          setDraft(poll.draft);
+          setStatus("review");
+          return;
+        }
+        return fail(poll.error || "The draft was lost. Try again.");
       }
-      setDraft(data.draft);
-      setStatus("review");
+      fail("The drafting session has not answered after 20 minutes. Try again later.");
     } catch {
-      setError("Could not reach the AI service.");
-      setStatus("error");
+      fail("Could not reach the site.");
     }
   }
 
@@ -87,7 +105,7 @@ export function AiAssist<T>({
           ) : (
             <Sparkles size={14} aria-hidden />
           )}
-          {status === "loading" ? "Generating…" : label}
+          {status === "loading" ? "Drafting, a few minutes…" : label}
         </button>
         <span className="text-[11px] text-muted">AI draft · you review before applying</span>
       </div>

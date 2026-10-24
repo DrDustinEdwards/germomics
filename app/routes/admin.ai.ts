@@ -1,10 +1,18 @@
-// AI generation endpoint for the editor's assist buttons. Resource route (action only) under the
-// admin.* gate (admin.tsx middleware), so the ANTHROPIC_API_KEY-backed calls are never publicly
-// reachable. Returns an editable DRAFT as JSON; it never writes to the database.
+// AI drafting endpoint for the editor's assist buttons. Resource route under the admin.* gate
+// (admin.tsx middleware), so only the admin can start a drafting session on the subscription.
+// POST starts a job and returns its id; GET ?job= is what the editor polls until the draft is
+// ready. It never writes to a post: the author accepts or discards the draft.
 import type { Route } from "./+types/admin.ai";
 import { getEnv } from "~/lib/context.server";
-import { generateShowNotes, generateChapters, generateSeo, aiConfigured, aiErrors } from "~/lib/ai.server";
+import { AI_KINDS, aiConfigured, aiErrors, draftStatus, startDraft, type AiKind } from "~/lib/ai.server";
 import { aiCostCapExceeded, recordAiUse } from "~/lib/security.server";
+
+const noStore = { "Cache-Control": "no-store" };
+
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const id = new URL(request.url).searchParams.get("job") ?? "";
+  return Response.json({ ok: true, ...(await draftStatus(getEnv(context), id)) }, { headers: noStore });
+}
 
 export async function action({ request, context }: Route.ActionArgs) {
   const env = getEnv(context);
@@ -13,36 +21,20 @@ export async function action({ request, context }: Route.ActionArgs) {
     return Response.json({ ok: false, error: errors.notConfigured }, { status: 503 });
   }
 
-  // Per-day cost cap (in addition to the Worker-layer rate limit): friendly 429 when exceeded so
-  // AI spend can't run away. The successful generation below is then recorded against the cap.
+  // Per-day cap (in addition to the Worker-layer rate limit): each fire is a session on the
+  // subscription, so a stuck button cannot start an unbounded number of them.
   if (await aiCostCapExceeded(env)) {
     return Response.json({ ok: false, error: errors.dailyCap }, { status: 429 });
   }
 
   const form = await request.formData();
-  const kind = String(form.get("kind") || "");
-  const transcript = String(form.get("transcript") || "");
-  const title = String(form.get("title") || "");
-
+  const kind = String(form.get("kind") || "") as AiKind;
+  if (!AI_KINDS.includes(kind)) return Response.json({ ok: false, error: "Unknown generation kind." }, { status: 400 });
   try {
-    if (kind === "shownotes") {
-      const draft = await generateShowNotes(env, transcript);
-      await recordAiUse(env);
-      return Response.json({ ok: true, kind, draft });
-    }
-    if (kind === "chapters") {
-      const draft = await generateChapters(env, transcript);
-      await recordAiUse(env);
-      return Response.json({ ok: true, kind, draft });
-    }
-    if (kind === "seo") {
-      const draft = await generateSeo(env, transcript, title);
-      await recordAiUse(env);
-      return Response.json({ ok: true, kind, draft });
-    }
-    return Response.json({ ok: false, error: "Unknown generation kind." }, { status: 400 });
+    const job = await startDraft(env, { kind, transcript: String(form.get("transcript") || ""), title: String(form.get("title") || "") });
+    await recordAiUse(env);
+    return Response.json({ ok: true, kind, job });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Generation failed.";
-    return Response.json({ ok: false, error: message }, { status: 502 });
+    return Response.json({ ok: false, error: err instanceof Error ? err.message : "Drafting failed." }, { status: 502 });
   }
 }

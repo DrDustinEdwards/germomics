@@ -10,7 +10,6 @@ export const SETTING_DEFAULTS: Record<string, string> = {
   "social.facebook": "Germomics",
   "social.twitter": "Germomics",
   "social.instagram": "Germomics",
-  "ai.model": "claude-sonnet-4-6",
   "ai.daily_cap": "100",
   "ratelimit.ai": "15",
   "ratelimit.auth": "30",
@@ -46,9 +45,8 @@ export const SNIPPET_DEFAULTS: Record<string, string> = {
   "snippet:meta.title_template": "{title} · Germomics",
   "snippet:dataset.cholera-soho-1854": "John Snow's map of the Broad Street outbreak: deaths clustered around a single pump, the founding case of epidemiology and a Vibrio cholerae story.",
   "snippet:dataset.influenza-1918": "The three waves of the 1918 H1N1 pandemic: mortality peaked sharply in the deadly autumn wave, a defining example of viral pandemic dynamics.",
-  "snippet:ai.error.not_configured": "AI is not configured. Set the ANTHROPIC_API_KEY worker secret.",
-  "snippet:ai.error.rate_limit": "AI rate limit hit. Wait a moment and try again.",
-  "snippet:ai.error.overloaded": "AI service is overloaded. Try again shortly.",
+  "snippet:ai.error.not_configured": "AI drafting is not set up. Set the AI_ROUTINE_URL and AI_ROUTINE_TOKEN worker secrets.",
+  "snippet:ai.error.rate_limit": "Too many drafting sessions this hour. Try again later.",
   "snippet:ai.error.no_transcript": "This episode has no transcript yet. Add one first.",
   "snippet:ai.error.daily_cap": "Daily AI limit reached. Try again tomorrow."
 };
