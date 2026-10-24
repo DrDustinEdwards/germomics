@@ -11,41 +11,40 @@
 // Cloudflare's WAF managed ruleset + bot rules are the primary perimeter defense (dashboard,
 // see manual steps); this is the in-Worker layer the audit asked for.
 
+import { buildContentSecurityPolicy, reportingEndpoints } from "@dustinedwards/site-runtime/csp";
+
 import { IMAGE_ORIGIN, MEDIA_ORIGIN, OP3_ORIGIN } from "~/lib/site";
 
 // ── Security headers ─────────────────────────────────────────────────────────
 
-// Content-Security-Policy. REPORT-ONLY for now. Allowlist: self + cdnjs, the Maps JS API
-// (maps.googleapis.com serves executable script; maps.gstatic.com its images), the media/images
-// subdomains, and Cloudflare's Web Analytics beacon (which reports to this origin's /cdn-cgi/rum).
-// script-src/style-src keep 'unsafe-inline' because React Router streams inline hydration scripts
-// and the pre-paint theme script is inline (nonces aren't wired through RR8 streaming, and an
-// edge-cached page cannot carry one); revisit at enforce. Violations go to CSP_REPORT_PATH, which
-// logs them through site-runtime's receiver (workers/app.ts), so Workers Logs hold what the policy
-// would block. Before enforcing, add only what those reports show (the Maps API may pull Roboto
-// from Google Fonts on some surfaces); an entry nothing uses is a permission for no reason.
+// Content-Security-Policy, REPORT-ONLY for now, built by site-runtime's buildContentSecurityPolicy.
+// Allowlist: self + cdnjs, the Maps JS API (maps.googleapis.com serves executable script;
+// maps.gstatic.com its images), the media/images subdomains, and Cloudflare's Web Analytics beacon
+// (which reports to this origin's /cdn-cgi/rum). Scripts take inlineScripts: "unsafe-inline" because
+// React Router streams inline hydration scripts and the pre-paint theme script is inline, and an
+// edge-cached page cannot carry a nonce; style-src keeps 'unsafe-inline' for TipTap. Revisit at
+// enforce. Violations go to CSP_REPORT_PATH, which logs them through site-runtime's receiver
+// (workers/app.ts), so Workers Logs hold what the policy would block. Before enforcing, add only what
+// those reports show (the Maps API may pull Roboto from Google Fonts on some surfaces); an entry
+// nothing uses is a permission for no reason.
 export const CSP_REPORT_PATH = "/csp-report";
 const CSP_ENDPOINT = "csp-endpoint";
-const CSP = [
-  "default-src 'self'",
-  "base-uri 'self'",
-  "object-src 'none'",
-  "frame-ancestors 'none'",
-  "form-action 'self'",
-  "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://maps.googleapis.com",
-  "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
-  `img-src 'self' data: blob: ${IMAGE_ORIGIN} ${MEDIA_ORIGIN} https://maps.googleapis.com https://maps.gstatic.com`,
-  `media-src 'self' blob: ${MEDIA_ORIGIN} ${OP3_ORIGIN}`,
-  "font-src 'self' data: https://cdnjs.cloudflare.com",
-  `connect-src 'self' ${IMAGE_ORIGIN} ${MEDIA_ORIGIN} ${OP3_ORIGIN} https://maps.googleapis.com`,
-  "worker-src 'self' blob:",
-  "child-src 'self' blob:",
-  "frame-src 'self'",
-  "manifest-src 'self'",
-  "upgrade-insecure-requests",
-  `report-uri ${CSP_REPORT_PATH}`,
-  `report-to ${CSP_ENDPOINT}`,
-].join("; ");
+const CSP = buildContentSecurityPolicy({
+  inlineScripts: "unsafe-inline",
+  cloudflareWebAnalytics: true,
+  reportOnly: true,
+  reportUri: CSP_REPORT_PATH,
+  reportTo: CSP_ENDPOINT,
+  sources: {
+    script: ["https://cdnjs.cloudflare.com", "https://maps.googleapis.com"],
+    style: ["'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+    img: ["data:", "blob:", IMAGE_ORIGIN, MEDIA_ORIGIN, "https://maps.googleapis.com", "https://maps.gstatic.com"],
+    media: ["blob:", MEDIA_ORIGIN, OP3_ORIGIN],
+    font: ["data:", "https://cdnjs.cloudflare.com"],
+    connect: [IMAGE_ORIGIN, MEDIA_ORIGIN, OP3_ORIGIN, "https://maps.googleapis.com"],
+  },
+  extraDirectives: ["worker-src 'self' blob:", "child-src 'self' blob:", "frame-src 'self'", "manifest-src 'self'", "upgrade-insecure-requests"],
+});
 
 // Static headers added to every response (only if a route hasn't already set them).
 const STATIC_HEADERS: Record<string, string> = {
@@ -73,15 +72,13 @@ export function withSecurityHeaders(response: Response, origin: string): Respons
     if (!headers.has(k)) headers.set(k, v);
   }
   if (!headers.has("tdm-policy")) headers.set("tdm-policy", `${origin}/ai.txt`);
-  // The Reporting API's endpoint for report-to. Absolute: a relative endpoint is ignored.
-  if (!headers.has("Reporting-Endpoints")) headers.set("Reporting-Endpoints", `${CSP_ENDPOINT}="${origin}${CSP_REPORT_PATH}"`);
-  // Only set report-only if no route already declared a (possibly enforced) policy.
-  if (
-    !headers.has("Content-Security-Policy") &&
-    !headers.has("Content-Security-Policy-Report-Only")
-  ) {
-    headers.set("Content-Security-Policy-Report-Only", CSP);
+  // The Reporting API's endpoint for report-to. reportingEndpoints refuses plain http off localhost
+  // (a dev server on a LAN address), which a browser would ignore anyway, so that origin gets none.
+  if (!headers.has("Reporting-Endpoints") && !/^http:\/\/(?!localhost|127\.0\.0\.1|\[::1\])/.test(origin)) {
+    headers.set("Reporting-Endpoints", reportingEndpoints(CSP_ENDPOINT, new URL(CSP_REPORT_PATH, origin)));
   }
+  // Only set report-only if no route already declared a (possibly enforced) policy.
+  if (!headers.has("Content-Security-Policy") && !headers.has(CSP.name)) headers.set(CSP.name, CSP.value);
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
