@@ -1,8 +1,10 @@
 // AI authoring assists — server-only. All Anthropic calls happen here,
-// in route actions, via the Workers global `fetch` against the Messages API. ANTHROPIC_API_KEY is
+// in route actions, via the Workers global `fetch` against the Messages API, through AI Gateway once
+// AI_GATEWAY_BASE_URL is set (site-runtime's anthropicRoute decides; unset, Anthropic directly). ANTHROPIC_API_KEY is
 // a Worker secret and must NEVER reach the client bundle. Every generator is grounded in the
 // episode transcript only: prompts forbid inventing facts/names/dates/citations. Output is a
 // DRAFT — the route returns it, the author accepts/edits/discards (no auto-save, no overwrite).
+import { anthropicRoute } from "@dustinedwards/site-runtime/ai-gateway";
 import type { Chapter } from "~/lib/types";
 import { loadSettings, loadSnippets, setting, snippet } from "~/lib/content.server";
 
@@ -30,7 +32,6 @@ export async function aiErrors(env: Env): Promise<AiErrors> {
 // cheaper/faster option. (Per the Tier 3 spec — these exact model strings.)
 const DEFAULT_MODEL = "claude-sonnet-4-6";
 
-const API_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
 
 function apiKey(env: Env): string | undefined {
@@ -66,11 +67,13 @@ async function callClaude(env: Env, opts: CallOpts): Promise<string> {
   const key = apiKey(env);
   if (!key) throw new Error(opts.errors.notConfigured);
 
+  const route = anthropicRoute(env as unknown as { AI_GATEWAY_BASE_URL?: string; AI_GATEWAY_TOKEN?: string }, "germomics");
   let res: Response;
   try {
-    res = await fetch(API_URL, {
+    res = await fetch(`${route.baseURL}/v1/messages`, {
       method: "POST",
       headers: {
+        ...route.headers,
         "x-api-key": key,
         "anthropic-version": ANTHROPIC_VERSION,
         "content-type": "application/json",
