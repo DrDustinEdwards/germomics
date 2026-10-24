@@ -7,7 +7,7 @@ import { posts, postVersions, type Post } from "~/db/schema";
 
 export async function createDraft(env: Env, kind: "episode" | "article"): Promise<number> {
   const db = getDb(env);
-  const slug = `untitled-${Date.now()}`;
+  const slug = `untitled-${crypto.randomUUID().slice(0, 8)}`;
   const rows = await db
     .insert(posts)
     .values({ kind, title: "Untitled", slug, status: "draft" })

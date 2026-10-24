@@ -33,7 +33,7 @@ describe("drafts and saves", () => {
     const a = await createDraft(e, "episode");
     const b = await createDraft(e, "article");
     expect(await post(a)).toMatchObject({ kind: "episode", title: "Untitled", status: "draft", guid: null });
-    expect((await post(a)).slug).toMatch(/^untitled-\d+$/);
+    expect((await post(a)).slug).toMatch(/^untitled-[0-9a-f]{8}$/);
     expect((await post(b)).kind).toBe("article");
   });
 
