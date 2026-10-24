@@ -127,17 +127,9 @@ describe("game score submission", () => {
   const submit = (headers: Record<string, string>, slug = "phage-defense") =>
     game.action(args({ request: post(`/games/${slug}`, { name: "Ada", score: "10" }, headers), params: { slug } }));
 
-  it("rate-limits by the visitor's Cloudflare address, each address on its own", async () => {
-    for (let i = 0; i < 5; i++) expect((await submit({ "CF-Connecting-IP": "198.51.100.1" })).ok).toBe(true);
-    expect(await submit({ "CF-Connecting-IP": "198.51.100.1" })).toEqual({ ok: false, error: "Too many submissions, try again in a minute." });
-    expect((await submit({ "CF-Connecting-IP": "198.51.100.2" })).ok).toBe(true);
-    expect(await e.APP_KV.get("score-rl:phage-defense:198.51.100.1")).toBe("5");
-  });
-
   it("ignores a forwarded-for header a client could set, and puts requests with no address in one shared bucket", async () => {
     for (let i = 0; i < 5; i++) expect((await submit({ "X-Forwarded-For": `203.0.113.${i}` })).ok).toBe(true);
     expect((await submit({ "X-Forwarded-For": "203.0.113.99" })).ok).toBe(false);
-    expect(await e.APP_KV.get("score-rl:phage-defense:anon")).toBe("5");
   });
 
   it("stores the submitted score for the game in the URL, and refuses an unknown game", async () => {

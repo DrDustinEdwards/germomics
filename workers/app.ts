@@ -11,6 +11,10 @@ import { captureException } from "../app/lib/sentry.server";
 import { carrelApi } from "../app/lib/carrel/handler.server";
 import { runBackup } from "../app/lib/backup.server";
 
+// site-runtime's limiter class, bound as RATE_LIMITER (wrangler.jsonc); enforceRateLimit and the
+// score submit count through it.
+export { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-object";
+
 // Seed React Router v8's request context with the native Cloudflare bindings, so every
 // loader/action/middleware reaches D1/R2/KV through `context` and never over HTTP or a
 // Node API. Read them with getEnv(context) from context.server.
@@ -38,7 +42,7 @@ export default {
         return withSecurityHeaders(await receiveCspReport(request, { allow }), origin);
       }
 
-      // Abuse mitigation before any work: rate-limit auth/admin/AI paths (KV sliding window).
+      // Abuse mitigation before any work: rate-limit admin/AI/signup paths.
       const limited = await enforceRateLimit(env, request);
       if (limited) return withSecurityHeaders(limited, origin);
 

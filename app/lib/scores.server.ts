@@ -1,6 +1,8 @@
 // Leaderboard reads + the GUARDED public write. scores is a public write endpoint, so the
 // submit path validates and clamps the score, sanitizes + caps the name, and rate-limits per
-// IP via APP_KV before touching D1. Built in now, not later (per the leaderboard guard ask).
+// IP (site-runtime's RateLimiter Durable Object) before touching D1. Built in now, not later (per
+// the leaderboard guard ask).
+import { limit as rateLimit, mustStop } from "@dustinedwards/site-runtime/rate-limit";
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { scores, type Score } from "~/db/schema";
@@ -42,13 +44,11 @@ export async function submitScore(
   if (!Number.isFinite(raw) || raw < 0) return { ok: false, error: "Invalid score." };
   const score = Math.min(raw, MAX_SCORE);
 
-  // Rate-limit by IP via KV (fixed window).
-  const rlKey = `score-rl:${input.gameSlug}:${input.ip}`;
-  const count = Number(await env.APP_KV.get(rlKey)) || 0;
-  if (count >= RL_MAX_PER_WINDOW) {
-    return { ok: false, error: "Too many submissions, try again in a minute." };
-  }
-  await env.APP_KV.put(rlKey, String(count + 1), { expirationTtl: RL_WINDOW_SECONDS });
+  // Rate-limit by IP (fixed window). A counter that is down lets the score through (logged): the
+  // name and score are already clamped, so the worst case is a few extra leaderboard rows.
+  const rule = { limit: RL_MAX_PER_WINDOW, windowSeconds: RL_WINDOW_SECONDS };
+  const verdict = await rateLimit(env.RATE_LIMITER, `score:${input.gameSlug}:${input.ip}`, [rule], { onUnavailable: "allow" });
+  if (mustStop(verdict, "allow")) return { ok: false, error: "Too many submissions, try again in a minute." };
 
   await getDb(env).insert(scores).values({
     gameSlug: input.gameSlug,

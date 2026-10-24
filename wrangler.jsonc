@@ -47,6 +47,10 @@
 		// CSP violation reports (/csp-report), per address. Loose, because a page tripping ten rules sends ten.
 		{ "name": "CSP_REPORT_RATE_LIMIT", "namespace_id": "7302", "simple": { "limit": 60, "period": 60 } }
 	],
+	// Per-IP rate limits for /admin, the AI endpoint, the signup POST and game scores: site-runtime's
+	// RateLimiter, exported from workers/app.ts. One SQLite-backed instance per key.
+	"durable_objects": { "bindings": [{ "name": "RATE_LIMITER", "class_name": "RateLimiter" }] },
+	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["RateLimiter"] }],
 	// 03:17 UTC nightly: runBackup() in app/lib/backup.server.ts.
 	"triggers": { "crons": ["17 3 * * *"] },
 	"kv_namespaces": [

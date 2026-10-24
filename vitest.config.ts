@@ -9,6 +9,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   plugins: [
     cloudflareTest({
+      main: "./test/helpers/entry.ts",
       miniflare: {
         compatibilityDate: "2026-06-21",
         compatibilityFlags: ["nodejs_compat"],
@@ -17,6 +18,8 @@ export default defineConfig({
         // never be one typo away from touching them. These are empty local equivalents.
         d1Databases: ["DB"],
         kvNamespaces: ["APP_KV"],
+        // SQLite-backed, as wrangler.jsonc's migration declares it.
+        durableObjects: { RATE_LIMITER: { className: "RateLimiter", useSQLite: true } },
         r2Buckets: ["MEDIA", "BLOG_IMAGES", "GAME_ASSETS", "BACKUPS"],
         bindings: {
           // Fake values only, never a real one.
