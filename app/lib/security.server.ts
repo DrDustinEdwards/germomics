@@ -19,9 +19,13 @@ import { IMAGE_ORIGIN, MEDIA_ORIGIN, OP3_ORIGIN } from "~/lib/site";
 // (maps.googleapis.com serves executable script; maps.gstatic.com its images), the media/images
 // subdomains, and Cloudflare's Web Analytics beacon (which reports to this origin's /cdn-cgi/rum).
 // script-src/style-src keep 'unsafe-inline' because React Router streams inline hydration scripts
-// and the pre-paint theme script is inline (nonces aren't wired through RR8 streaming); revisit at
-// enforce. Before enforcing, add only what the report-only violations show (the Maps API may pull
-// Roboto from Google Fonts on some surfaces); an entry nothing uses is a permission for no reason.
+// and the pre-paint theme script is inline (nonces aren't wired through RR8 streaming, and an
+// edge-cached page cannot carry one); revisit at enforce. Violations go to CSP_REPORT_PATH, which
+// logs them through site-runtime's receiver (workers/app.ts), so Workers Logs hold what the policy
+// would block. Before enforcing, add only what those reports show (the Maps API may pull Roboto
+// from Google Fonts on some surfaces); an entry nothing uses is a permission for no reason.
+export const CSP_REPORT_PATH = "/csp-report";
+const CSP_ENDPOINT = "csp-endpoint";
 const CSP = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -39,6 +43,8 @@ const CSP = [
   "frame-src 'self'",
   "manifest-src 'self'",
   "upgrade-insecure-requests",
+  `report-uri ${CSP_REPORT_PATH}`,
+  `report-to ${CSP_ENDPOINT}`,
 ].join("; ");
 
 // Static headers added to every response (only if a route hasn't already set them).
@@ -67,6 +73,8 @@ export function withSecurityHeaders(response: Response, origin: string): Respons
     if (!headers.has(k)) headers.set(k, v);
   }
   if (!headers.has("tdm-policy")) headers.set("tdm-policy", `${origin}/ai.txt`);
+  // The Reporting API's endpoint for report-to. Absolute: a relative endpoint is ignored.
+  if (!headers.has("Reporting-Endpoints")) headers.set("Reporting-Endpoints", `${CSP_ENDPOINT}="${origin}${CSP_REPORT_PATH}"`);
   // Only set report-only if no route already declared a (possibly enforced) policy.
   if (
     !headers.has("Content-Security-Policy") &&

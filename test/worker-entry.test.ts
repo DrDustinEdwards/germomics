@@ -60,6 +60,39 @@ describe("the Worker entry", () => {
     expect(h.render).toHaveBeenCalledTimes(1);
   });
 
+  it("logs a CSP report the page's policy sends, per address, before the app", async () => {
+    vi.stubEnv("DEV", true);
+    const page = await fetchWith(new Request(fresh()));
+    expect(page.headers.get("Content-Security-Policy-Report-Only")).toContain("report-uri /csp-report");
+    expect(page.headers.get("Reporting-Endpoints")).toBe(`csp-endpoint="${ORIGIN}/csp-report"`);
+    h.render.mockClear();
+
+    const report = () =>
+      new Request(`${ORIGIN}/csp-report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/csp-report", "cf-connecting-ip": "198.51.100.7" },
+        body: JSON.stringify({ "csp-report": { "document-uri": `${ORIGIN}/data/x?q=1`, "effective-directive": "font-src", "blocked-uri": "https://fonts.gstatic.com/s/roboto.woff2" } }),
+      });
+    const keys: string[] = [];
+    let open = true;
+    const limiter = { limit: async ({ key }: { key: string }) => (keys.push(key), { success: open }) };
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    const res = await fetchWith(report(), { CSP_REPORT_RATE_LIMIT: limiter } as never);
+    expect(res.status).toBe(204);
+    expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
+    expect(JSON.parse(log.mock.calls[0][0] as string)).toMatchObject({ event: "csp-violation", directive: "font-src", blocked: "https://fonts.gstatic.com/s/roboto.woff2", page: `${ORIGIN}/data/x` });
+    expect(keys).toEqual(["198.51.100.7"]);
+
+    // Over the limit, or with no limiter bound, the report is dropped and still answered 204.
+    open = false;
+    expect((await fetchWith(report(), { CSP_REPORT_RATE_LIMIT: limiter } as never)).status).toBe(204);
+    expect((await fetchWith(report())).status).toBe(204);
+    expect(log).toHaveBeenCalledTimes(1);
+    expect(h.render).not.toHaveBeenCalled();
+    log.mockRestore();
+  });
+
   it("hands the app a context carrying the bindings", async () => {
     await fetchWith(new Request(fresh()));
     const [request, context] = h.render.mock.calls[0];

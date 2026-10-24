@@ -1,6 +1,8 @@
 import { createRequestHandler, RouterContextProvider } from "react-router";
 import { cloudflareContext } from "../app/lib/context.server";
+import { receiveCspReport } from "@dustinedwards/site-runtime/csp-report";
 import {
+  CSP_REPORT_PATH,
   enforceRateLimit,
   withSecurityHeaders,
 } from "../app/lib/security.server";
@@ -25,6 +27,16 @@ export default {
       // everything under /api/carrel/v1; nothing else is served by it.
       const carrel = carrelApi(env);
       if (carrel.matches(request)) return withSecurityHeaders(await carrel.handle(request), origin);
+
+      // CSP violation reports: site-runtime's receiver logs each one as a trimmed JSON line (origin
+      // and path only, no address or user agent) to Workers Logs and stores nothing. Per address,
+      // through the CSP_REPORT_RATE_LIMIT binding; without the binding a report is dropped (still 204).
+      if (new URL(request.url).pathname === CSP_REPORT_PATH) {
+        const allow = async (r: Request) =>
+          Boolean(env.CSP_REPORT_RATE_LIMIT) &&
+          (await env.CSP_REPORT_RATE_LIMIT.limit({ key: r.headers.get("cf-connecting-ip") || "anon" })).success;
+        return withSecurityHeaders(await receiveCspReport(request, { allow }), origin);
+      }
 
       // Abuse mitigation before any work: rate-limit auth/admin/AI paths (KV sliding window).
       const limited = await enforceRateLimit(env, request);
