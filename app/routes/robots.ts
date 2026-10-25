@@ -4,13 +4,13 @@
 import type { Route } from "./+types/robots";
 import { robotsDocument } from "@drdustinedwards/site-helpers/robots";
 import { HOURLY_CACHE_CONTROL } from "~/lib/edge-cache.server";
-import { SITE_ORIGIN } from "~/lib/site";
+import { ROBOTS_DISALLOW, SITE_ORIGIN } from "~/lib/site";
 
 export function loader({ request }: Route.LoaderArgs) {
   const body = robotsDocument({
     origin: SITE_ORIGIN,
     preview: new URL(request.url).origin !== SITE_ORIGIN,
-    disallow: ["/admin", "/preview/"],
+    disallow: ROBOTS_DISALLOW,
     notes: [`AI usage policy: ${SITE_ORIGIN}/ai.txt`, `LLM index: ${SITE_ORIGIN}/llms.txt`],
   });
   return new Response(body, {

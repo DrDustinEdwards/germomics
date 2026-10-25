@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Post, ShowConfig } from "~/db/schema";
-import { buildAiTxt, buildLlmsFullTxt, buildLlmsTxt } from "~/lib/discovery.server";
+import { buildLlmsFullTxt, buildLlmsTxt } from "~/lib/discovery.server";
 import { AUTHOR } from "~/lib/about";
 
 // The machine-readable index files (llms.txt, llms-full.txt, ai.txt) tell AI assistants what to
@@ -78,26 +78,5 @@ describe("buildLlmsFullTxt", () => {
     const txt = buildLlmsFullTxt(show, [], [], ORIGIN);
     expect(txt).not.toContain("# Episodes");
     expect(txt).not.toContain("# Writing");
-  });
-});
-
-describe("buildAiTxt", () => {
-  it("allows citation and search, reserves training, and points at the other machine files", () => {
-    const txt = buildAiTxt(show, ORIGIN);
-    expect(txt).toContain("# Citation and search (RAG, answer engines): ALLOWED.");
-    expect(txt).toContain("# Training data: rights reserved (opt-out). Contact for licensing in the address below.");
-    expect(txt).toContain("User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /preview/\n");
-    expect(txt).toContain("Training: disallow");
-    expect(txt).toContain("# owner@example.com");
-    expect(txt).toContain(`Sitemap: ${ORIGIN}/sitemap.xml`);
-    expect(txt).toContain(`Content-index: ${ORIGIN}/llms.txt`);
-    expect(txt).toContain(`# Curated index: ${ORIGIN}/llms.txt`);
-  });
-
-  it("uses a custom policy's lines in place of the default ones, keeping the rules after them", () => {
-    const txt = buildAiTxt(show, ORIGIN, "# Custom line one\n# Custom line two");
-    expect(txt).toContain("# Custom line one\n# Custom line two\n# Curated index");
-    expect(txt).not.toContain("ALLOWED");
-    expect(txt).toContain("Training: disallow");
   });
 });

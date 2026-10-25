@@ -99,17 +99,15 @@ describe("withSecurityHeaders", () => {
     // The player, Copy link and the share sheet keep working.
     expect(res.headers.get("Permissions-Policy")).toContain("clipboard-write=(self)");
     expect(res.headers.get("tdm-reservation")).toBe("1");
-    expect(res.headers.get("tdm-policy")).toBe("https://germomics.com/ai.txt");
     expect(res.headers.get("Content-Security-Policy-Report-Only")).toContain("frame-ancestors 'none'");
   });
 
   it("never overwrites a header the route already set", () => {
     const res = withSecurityHeaders(
-      new Response("x", { headers: { "X-Frame-Options": "SAMEORIGIN", "tdm-policy": "https://elsewhere.example/p" } }),
+      new Response("x", { headers: { "X-Frame-Options": "SAMEORIGIN" } }),
       "https://germomics.com",
     );
     expect(res.headers.get("X-Frame-Options")).toBe("SAMEORIGIN");
-    expect(res.headers.get("tdm-policy")).toBe("https://elsewhere.example/p");
   });
 
   it("adds no report-only policy when the route declared a policy of either kind", () => {

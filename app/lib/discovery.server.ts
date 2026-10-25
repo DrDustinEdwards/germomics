@@ -119,34 +119,3 @@ export function buildLlmsFullTxt(
   }
   return out.join("\n");
 }
-
-/** Purpose-based AI access policy, consistent with robots.txt + the TDMRep header. */
-export function buildAiTxt(show: ShowConfig, origin: string, policy?: string): string {
-  const policyBlock = policy
-    ? policy.split("\n")
-    : [
-        "# Citation and search (RAG, answer engines): ALLOWED.",
-        "# Please cite the source and link the canonical URL.",
-        "# Training data: rights reserved (opt-out). Contact for licensing in the address below.",
-      ];
-  return [
-    `# ai.txt: AI usage policy for ${show.title} (${origin})`,
-    "# Forward-looking signals for AI/LLM systems. Consistent with /robots.txt and the",
-    "# TDMRep `tdm-reservation: 1` response header.",
-    "",
-    ...policyBlock,
-    `# Curated index: ${origin}/llms.txt`,
-    "User-agent: *",
-    "Allow: /",
-    "Disallow: /admin",
-    "Disallow: /preview/",
-    "",
-    "# Training data: rights reserved (opt-out). Contact for licensing:",
-    `# ${show.ownerEmail}`,
-    "Training: disallow",
-    "",
-    `Sitemap: ${origin}/sitemap.xml`,
-    `Content-index: ${origin}/llms.txt`,
-    "",
-  ].join("\n");
-}

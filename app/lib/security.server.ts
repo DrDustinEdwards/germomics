@@ -14,6 +14,7 @@
 import { buildContentSecurityPolicy, reportingEndpoints } from "@dustinedwards/site-runtime/csp";
 import { applyHeaderSet, buildSecurityHeaders, STANDARD_SECURITY_HEADERS } from "@dustinedwards/site-runtime/headers";
 import { ipKey, limit, limitedResponse, matchRule, mustStop } from "@dustinedwards/site-runtime/rate-limit";
+import { TDM_RESERVATION_HEADERS } from "@drdustinedwards/site-helpers/robots";
 
 import { IMAGE_ORIGIN, MEDIA_ORIGIN, OP3_ORIGIN } from "~/lib/site";
 
@@ -76,21 +77,18 @@ const SECURITY_HEADERS = buildSecurityHeaders({
   },
 });
 
-// Added to every response (only if a route hasn't already set them). TDMRep (TDM Reservation
-// Protocol): reserve text-and-data-mining / training rights and point at the machine-readable
-// policy. robots.txt explicitly ALLOWS citation/search crawlers — the stronger, well-understood
-// signal — so this only states the training-data preference.
-const STATIC_HEADERS: Record<string, string> = { ...SECURITY_HEADERS, "tdm-reservation": "1" };
+// Added to every response (only if a route hasn't already set them), with Prelum's TDMRep header
+// reserving training rights; robots.txt and /ai.txt carry the rest of the policy.
+const STATIC_HEADERS: Record<string, string> = { ...SECURITY_HEADERS, ...TDM_RESERVATION_HEADERS };
 
 /**
  * Return a copy of `response` with the security headers added. Never clobbers headers a route
  * already set (Content-Type, Cache-Control, Set-Cookie, an enforced CSP, etc.). `origin` is used
- * for the absolute tdm-policy URL.
+ * for the Reporting API endpoint.
  */
 export function withSecurityHeaders(response: Response, origin: string): Response {
   const headers = new Headers(response.headers);
   applyHeaderSet(headers, STATIC_HEADERS, { overwrite: false });
-  if (!headers.has("tdm-policy")) headers.set("tdm-policy", `${origin}/ai.txt`);
   // The Reporting API's endpoint for report-to. reportingEndpoints refuses plain http off localhost
   // (a dev server on a LAN address), which a browser would ignore anyway, so that origin gets none.
   if (!headers.has("Reporting-Endpoints") && !/^http:\/\/(?!localhost|127\.0\.0\.1|\[::1\])/.test(origin)) {

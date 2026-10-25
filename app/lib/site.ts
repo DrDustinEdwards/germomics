@@ -45,3 +45,6 @@ export function postalAddressLd(a: Partial<Address> = {}) {
     addressCountry: a.country ?? SITE_ADDRESS.country,
   };
 }
+
+/** Paths no crawler needs, in /robots.txt and /ai.txt alike. */
+export const ROBOTS_DISALLOW = ["/admin", "/preview/"];
