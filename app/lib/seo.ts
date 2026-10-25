@@ -4,7 +4,9 @@
 // (+ MediaObject + partOfSeries) for episodes.
 import type { Post } from "~/db/schema";
 import type { GuestView, Host } from "~/lib/types";
-import { postalAddressLd, type Address } from "~/lib/site";
+import { type ArticleFacts, articleDates, headTags } from "@drdustinedwards/site-helpers/head";
+import { article, faqPage, thing } from "@drdustinedwards/site-helpers/schema";
+import { DEFAULT_CARD, SITE_ORIGIN, postalAddressLd, type Address } from "~/lib/site";
 
 export function stripHtml(html: string): string {
   return html
@@ -78,7 +80,6 @@ export function ogImageFor(post: Post): string | null {
 
 type JsonLdOpts = {
   post: Post;
-  origin: string;
   author: string;
   seriesTitle: string;
   guests?: GuestView[];
@@ -86,62 +87,55 @@ type JsonLdOpts = {
 };
 
 /** schema.org JSON-LD object for a post — BlogPosting (article) or PodcastEpisode. */
-export function buildJsonLd({ post, origin, author, seriesTitle, guests = [], hosts = [] }: JsonLdOpts) {
-  const url = `${origin}/${post.slug}`;
-  const image = ogImageFor(post);
+export function buildJsonLd({ post, author, seriesTitle, guests = [], hosts = [] }: JsonLdOpts) {
+  const url = `${SITE_ORIGIN}/${post.slug}`;
+  const image = ogImageFor(post) ?? undefined;
   const description = post.seoDescription ?? post.excerpt ?? stripHtml(post.body).slice(0, 200);
   const datePublished = post.publishedAt ?? post.publishAt ?? undefined;
 
   if (post.kind === "episode") {
-    return {
-      "@context": "https://schema.org",
-      "@type": "PodcastEpisode",
+    const { published, modified } = articleDates({ published: datePublished, modified: post.updatedAt });
+    return thing("PodcastEpisode", {
       name: post.title,
       url,
-      datePublished,
+      datePublished: published,
+      dateModified: modified,
       description,
-      ...(image ? { image } : {}),
-      ...(post.episodeNumber ? { episodeNumber: post.episodeNumber } : {}),
+      image,
+      episodeNumber: post.episodeNumber || undefined,
       timeRequired: isoDuration(post.audioDuration),
-      dateModified: post.updatedAt ?? datePublished,
-      ...(post.audioUrl
+      associatedMedia: post.audioUrl
         ? {
-            associatedMedia: {
-              "@type": "MediaObject",
-              contentUrl: post.audioUrl,
-              encodingFormat: post.audioMimeType ?? "audio/mpeg",
-              ...(post.audioByteSize ? { contentSize: String(post.audioByteSize) } : {}),
-              duration: isoDuration(post.audioDuration),
-            },
+            "@type": "MediaObject",
+            contentUrl: post.audioUrl,
+            encodingFormat: post.audioMimeType ?? "audio/mpeg",
+            ...(post.audioByteSize ? { contentSize: String(post.audioByteSize) } : {}),
+            duration: isoDuration(post.audioDuration),
           }
-        : {}),
-      partOfSeries: { "@type": "PodcastSeries", name: seriesTitle, url: `${origin}/` },
+        : undefined,
+      partOfSeries: { "@type": "PodcastSeries", name: seriesTitle, url: `${SITE_ORIGIN}/` },
       // Hosts are the authors/creators of the episode; per-episode guests map to actor.
       author: (hosts.length ? hosts : [{ name: author }]).map((h) => ({
         "@type": "Person",
         name: h.name,
         ...("href" in h && h.href ? { url: h.href } : {}),
       })),
-      ...(guests.length
-        ? { actor: guests.map((g) => ({ "@type": "Person", name: g.name })) }
-        : {}),
-    };
+      actor: guests.map((g) => ({ "@type": "Person", name: g.name })),
+    });
   }
 
-  return {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: post.title,
+  return article({
+    type: "BlogPosting",
     url,
-    mainEntityOfPage: url,
-    datePublished,
-    dateModified: post.updatedAt ?? datePublished,
+    headline: post.title,
     description,
-    ...(image ? { image } : {}),
+    image: image ?? undefined,
+    published: datePublished,
+    modified: post.updatedAt,
+    tags: post.tags ?? [],
     author: { "@type": "Person", name: author },
     publisher: { "@type": "Organization", name: seriesTitle },
-    ...((post.tags ?? []).length ? { keywords: (post.tags ?? []).join(", ") } : {}),
-  };
+  });
 }
 
 // ── Site-level + entity JSON-LD (Organization, PodcastSeries, Person, Breadcrumb, FAQ) ───────
@@ -174,49 +168,30 @@ export function socialSameAs(s: SocialHandles): string[] {
 }
 
 /** Organization node for the publisher (home + About). Address + sameAs are DB-driven. */
-export function buildOrganizationLd(show: ShowLike, origin: string, opts: SiteLdOpts = {}) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Organization",
+export function buildOrganizationLd(show: ShowLike, opts: SiteLdOpts = {}) {
+  return thing("Organization", {
     name: show.title,
-    url: `${origin}/`,
+    url: `${SITE_ORIGIN}/`,
     description: show.description,
     logo: show.artwork,
     founder: { "@type": "Person", name: show.author },
     address: postalAddressLd(opts.address),
-    ...(opts.sameAs && opts.sameAs.length ? { sameAs: [...opts.sameAs] } : {}),
-  };
+    sameAs: opts.sameAs ? [...opts.sameAs] : undefined,
+  });
 }
 
 /** PodcastSeries node tying the show to its immutable feed (home). */
-export function buildPodcastSeriesLd(show: ShowLike, origin: string, opts: SiteLdOpts = {}) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "PodcastSeries",
+export function buildPodcastSeriesLd(show: ShowLike, opts: SiteLdOpts = {}) {
+  return thing("PodcastSeries", {
     name: show.title,
-    url: `${origin}/`,
+    url: `${SITE_ORIGIN}/`,
     description: show.description,
     image: show.artwork,
-    webFeed: `${origin}/feed/podcast/`,
+    webFeed: `${SITE_ORIGIN}/feed/podcast/`,
     author: { "@type": "Person", name: show.author },
     address: postalAddressLd(opts.address),
-    ...(opts.sameAs && opts.sameAs.length ? { sameAs: [...opts.sameAs] } : {}),
-  };
-}
-
-/** WebSite node with a SearchAction pointing at /search (home only). */
-export function buildWebSiteLd(show: ShowLike, origin: string) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: show.title,
-    url: `${origin}/`,
-    potentialAction: {
-      "@type": "SearchAction",
-      target: { "@type": "EntryPoint", urlTemplate: `${origin}/search?q={search_term_string}` },
-      "query-input": "required name=search_term_string",
-    },
-  };
+    sameAs: opts.sameAs ? [...opts.sameAs] : undefined,
+  });
 }
 
 type PersonLd = {
@@ -233,13 +208,11 @@ type PersonLd = {
 };
 
 /** Person node for the credentialed author (author bio page). Fields per Vault site-config.md. */
-export function buildPersonLd(author: PersonLd, origin: string) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Person",
+export function buildPersonLd(author: PersonLd) {
+  return thing("Person", {
     name: author.name,
     honorificPrefix: author.honorific,
-    url: `${origin}/about/${author.slug}`,
+    url: `${SITE_ORIGIN}/about/${author.slug}`,
     jobTitle: author.jobTitle,
     description: author.bio,
     affiliation: { "@type": "Organization", name: author.affiliation },
@@ -247,21 +220,7 @@ export function buildPersonLd(author: PersonLd, origin: string) {
     alumniOf: author.alumniOf.map((name) => ({ "@type": "Organization", name })),
     knowsAbout: [...author.knowsAbout],
     sameAs: [...author.sameAs],
-  };
-}
-
-/** BreadcrumbList from an ordered trail of {name, url}. */
-export function buildBreadcrumbLd(items: Array<{ name: string; url: string }>) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: items.map((it, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      name: it.name,
-      item: it.url,
-    })),
-  };
+  });
 }
 
 /**
@@ -286,15 +245,7 @@ export function extractFaqLd(html: string) {
   }
   if (!qa.length) return null;
 
-  return {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: qa.map(({ q, a }) => ({
-      "@type": "Question",
-      name: q,
-      acceptedAnswer: { "@type": "Answer", text: a },
-    })),
-  };
+  return faqPage(qa.map(({ q, a }) => ({ question: q, answer: a })));
 }
 
 /** True when a post was meaningfully updated after publication (different calendar day). */
@@ -303,4 +254,22 @@ export function wasUpdatedAfterPublish(post: Post): boolean {
   const pub = post.publishedAt ?? post.publishAt;
   if (!pub) return false;
   return post.updatedAt.slice(0, 10) > pub.slice(0, 10);
+}
+
+type PageHead = {
+  path: string;
+  title: string;
+  description: string;
+  image?: string | null;
+  socialTitle?: string;
+  type?: "website" | "article" | "profile";
+  article?: ArticleFacts;
+};
+
+/**
+ * The head of a public page from Prelum's headTags: title, description, canonical, Open Graph and Twitter, always on
+ * SITE_ORIGIN so a workers.dev copy never claims the page. The show cover is the card when the page has none.
+ */
+export function pageHead({ image, ...page }: PageHead) {
+  return headTags({ origin: SITE_ORIGIN, siteName: "Germomics", image: image ?? DEFAULT_CARD, ...page });
 }

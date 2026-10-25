@@ -1,15 +1,13 @@
 import { Link } from "react-router";
 import { Activity, Dna } from "lucide-react";
+import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/data._index";
 import { listDatasets } from "~/lib/datasets.server";
 import { getSnippets } from "~/lib/context.server";
 import { snippet } from "~/lib/content.server";
 
 export function meta() {
-  return [
-    { title: "Data · Germomics" },
-    { name: "description", content: "Interactive maps and charts on viruses and bacteria." },
-  ];
+  return pageHead({ path: "/data", title: "Data · Germomics", description: "Interactive maps and charts on viruses and bacteria." });
 }
 
 export function loader({ context }: Route.LoaderArgs) {

@@ -1,6 +1,7 @@
 import { lazy, useState } from "react";
 import { useFetcher } from "react-router";
 import { Trophy } from "lucide-react";
+import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/games.$slug";
 import { getEnv } from "~/lib/context.server";
 import { getGame } from "~/lib/games.server";
@@ -10,12 +11,13 @@ import { useSnippet } from "~/lib/content";
 
 const PhaserGame = lazy(() => import("~/components/game/PhaserGame.client"));
 
-export function meta({ loaderData }: Route.MetaArgs) {
+export function meta({ loaderData, location }: Route.MetaArgs) {
   if (!loaderData?.game) return [{ title: "Games · Germomics" }];
-  return [
-    { title: `${loaderData.game.title} · Germomics` },
-    { name: "description", content: loaderData.game.tagline },
-  ];
+  return pageHead({
+    path: location.pathname,
+    title: `${loaderData.game.title} · Germomics`,
+    description: loaderData.game.tagline,
+  });
 }
 
 export async function loader({ params, context }: Route.LoaderArgs) {

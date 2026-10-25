@@ -1,5 +1,6 @@
 // /sitemap.xml — every publicly-visible post (respects publiclyVisible()/publish_at via
 // listPosts) plus the key static pages. Resource route returning raw XML.
+import { SITE_ORIGIN } from "~/lib/site";
 import type { Route } from "./+types/sitemap";
 import { getEnv } from "~/lib/context.server";
 import { listPosts, listSeasons } from "~/lib/posts.server";
@@ -23,9 +24,8 @@ const STATIC_PATHS = [
   "txasm",
 ];
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
-  const origin = new URL(request.url).origin;
   const [posts, seasons] = await Promise.all([
     listPosts(env, { limit: 1000 }), // visible only
     listSeasons(env),
@@ -33,10 +33,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   const xml = sitemapDocument(
     [
-      ...STATIC_PATHS.map((p) => ({ loc: `${origin}/${p}` })),
-      ...seasons.map((s) => ({ loc: `${origin}/season/${s}` })),
+      ...STATIC_PATHS.map((p) => ({ loc: `${SITE_ORIGIN}/${p}` })),
+      ...seasons.map((s) => ({ loc: `${SITE_ORIGIN}/season/${s}` })),
       ...posts.map((post) => ({
-        loc: `${origin}/${post.slug}`,
+        loc: `${SITE_ORIGIN}/${post.slug}`,
         lastmod: isoDay(post.updatedAt) ?? isoDay(post.publishedAt),
       })),
     ],

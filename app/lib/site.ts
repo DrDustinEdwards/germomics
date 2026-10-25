@@ -7,6 +7,8 @@ export const SITE_HOST = "germomics.com";
 export const SITE_ORIGIN = `https://${SITE_HOST}`;
 export const MEDIA_ORIGIN = "https://media.germomics.com";
 export const IMAGE_ORIGIN = "https://images.germomics.com";
+/** The show cover: the share card of any page without its own, and the show's artwork until show_config sets one. */
+export const DEFAULT_CARD = `${IMAGE_ORIGIN}/cover.jpg`;
 /** OP3 (op3.dev), the download analytics prefix the podcast feed wraps enclosures in. */
 export const OP3_ORIGIN = "https://op3.dev";
 

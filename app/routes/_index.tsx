@@ -6,7 +6,9 @@ import { listEpisodes, listPosts, toPlayerTrack } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
 import { snippet, setting, settingAddress } from "~/lib/content.server";
 import { formatDate, formatDuration } from "~/lib/format";
-import { buildOrganizationLd, buildPodcastSeriesLd, buildWebSiteLd, socialSameAs } from "~/lib/seo";
+import { jsonLd, website } from "@drdustinedwards/site-helpers/schema";
+import { buildOrganizationLd, buildPodcastSeriesLd, pageHead, socialSameAs } from "~/lib/seo";
+import { SITE_ORIGIN } from "~/lib/site";
 import { SNIPPET_DEFAULTS } from "~/lib/content-defaults";
 import { PostCard } from "~/components/content/PostCard";
 import { PlayButton } from "~/components/content/PlayButton";
@@ -16,21 +18,23 @@ import { HeroBackground } from "~/components/content/HeroBackground";
 import { CoverArt } from "~/components/content/CoverArt";
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  const base = [
-    { title: loaderData?.homeTitle ?? SNIPPET_DEFAULTS["snippet:meta.home_title"] },
-    { name: "description", content: loaderData?.homeDescription ?? SNIPPET_DEFAULTS["snippet:meta.home_description"] },
-  ];
-  if (!loaderData?.show) return base;
-  const { show, origin, address, sameAs } = loaderData;
+  const head = pageHead({
+    path: "/",
+    title: loaderData?.homeTitle ?? SNIPPET_DEFAULTS["snippet:meta.home_title"],
+    description: loaderData?.homeDescription ?? SNIPPET_DEFAULTS["snippet:meta.home_description"],
+    image: loaderData?.show?.artwork,
+  });
+  if (!loaderData?.show) return head;
+  const { show, address, sameAs } = loaderData;
   return [
-    ...base,
-    { "script:ld+json": buildOrganizationLd(show, origin, { address, sameAs }) },
-    { "script:ld+json": buildPodcastSeriesLd(show, origin, { address, sameAs }) },
-    { "script:ld+json": buildWebSiteLd(show, origin) },
+    ...head,
+    jsonLd(buildOrganizationLd(show, { address, sameAs })),
+    jsonLd(buildPodcastSeriesLd(show, { address, sameAs })),
+    jsonLd(website({ origin: SITE_ORIGIN, name: show.title, searchUrl: `${SITE_ORIGIN}/search?q={search_term_string}` })),
   ];
 }
 
-export async function loader({ context, request }: Route.LoaderArgs) {
+export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const [episodes, combined, show] = await Promise.all([
     listEpisodes(env),
@@ -57,7 +61,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     items: combined,
     tracks,
     show,
-    origin: new URL(request.url).origin,
     address: settingAddress(settings),
     sameAs,
     homeTitle: snippet(snippets, "snippet:meta.home_title"),

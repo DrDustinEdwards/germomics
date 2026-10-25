@@ -5,26 +5,24 @@ import { ExternalLink } from "lucide-react";
 import type { Route } from "./+types/txasm";
 import { getEnv } from "~/lib/context.server";
 import { loadPage, isPreviewing } from "~/lib/content.server";
-import { buildBreadcrumbLd, stripHtml } from "~/lib/seo";
+import { breadcrumbs, jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { pageHead, stripHtml } from "~/lib/seo";
+import { SITE_ORIGIN } from "~/lib/site";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 
 const TITLE = "Texas Branch of the American Society for Microbiology";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: TITLE }];
-  const { origin, title, description } = loaderData;
+  const { title, description } = loaderData;
   return [
-    { title },
-    { name: "description", content: description },
-    { property: "og:title", content: title },
-    { property: "og:description", content: description },
-    { property: "og:url", content: `${origin}/txasm` },
-    {
-      "script:ld+json": buildBreadcrumbLd([
-        { name: "Home", url: `${origin}/` },
-        { name: "Texas Branch ASM", url: `${origin}/txasm` },
+    ...pageHead({ path: "/txasm", title, description }),
+    jsonLd(
+      breadcrumbs(SITE_ORIGIN, [
+        { name: "Home", path: "/" },
+        { name: "Texas Branch ASM", path: "/txasm" },
       ]),
-    },
+    ),
   ];
 }
 
@@ -33,7 +31,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const preview = await isPreviewing(env, request);
   const page = await loadPage(env, "page:txasm", { includeDrafts: preview });
   return {
-    origin: new URL(request.url).origin,
     title: page.title || TITLE,
     description: stripHtml(page.value).slice(0, 160),
     html: page.value,

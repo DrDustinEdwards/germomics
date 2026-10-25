@@ -3,36 +3,40 @@
 import type { Route } from "./+types/season.$num";
 import { getEnv } from "~/lib/context.server";
 import { episodesInSeason, toPlayerTrack } from "~/lib/posts.server";
-import { buildBreadcrumbLd } from "~/lib/seo";
+import { breadcrumbs, jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { pageHead } from "~/lib/seo";
+import { SITE_ORIGIN } from "~/lib/site";
 import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "Season · Germomics" }];
-  const { num, origin } = loaderData;
+  const { num } = loaderData;
   return [
-    { title: `Season ${num} · Germomics` },
-    { name: "description", content: `Germomics episodes from Season ${num}.` },
-    { property: "og:title", content: `Germomics Season ${num}` },
-    { property: "og:url", content: `${origin}/season/${num}` },
-    {
-      "script:ld+json": buildBreadcrumbLd([
-        { name: "Home", url: `${origin}/` },
-        { name: "Episodes", url: `${origin}/episodes` },
-        { name: `Season ${num}`, url: `${origin}/season/${num}` },
+    ...pageHead({
+      path: `/season/${num}`,
+      title: `Season ${num} · Germomics`,
+      socialTitle: `Germomics Season ${num}`,
+      description: `Germomics episodes from Season ${num}.`,
+    }),
+    jsonLd(
+      breadcrumbs(SITE_ORIGIN, [
+        { name: "Home", path: "/" },
+        { name: "Episodes", path: "/episodes" },
+        { name: `Season ${num}`, path: `/season/${num}` },
       ]),
-    },
+    ),
   ];
 }
 
-export async function loader({ params, request, context }: Route.LoaderArgs) {
+export async function loader({ params, context }: Route.LoaderArgs) {
   const num = Number(params.num);
   if (!Number.isInteger(num) || num < 1) throw new Response("Not found", { status: 404 });
   // episodesInSeason returns card-only rows (no body/transcript/peaks): light + em-dash-free payload.
   const episodes = await episodesInSeason(getEnv(context), num);
   if (!episodes.length) throw new Response("Not found", { status: 404 });
   const tracks = episodes.map(toPlayerTrack);
-  return { num, episodes, tracks, origin: new URL(request.url).origin };
+  return { num, episodes, tracks };
 }
 
 export default function Season({ loaderData }: Route.ComponentProps) {

@@ -9,50 +9,45 @@ import {
   tableOfContents,
   demoteHeadings,
   buildJsonLd,
-  buildBreadcrumbLd,
   extractFaqLd,
   ogImageFor,
+  pageHead,
+  stripHtml,
 } from "~/lib/seo";
+import { breadcrumbs, jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { SITE_ORIGIN } from "~/lib/site";
 import { PostDetail, type DetailData } from "~/components/content/PostDetail";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData?.post) return [{ title: "Not found · Germomics" }];
-  const { post, origin, author, seriesTitle, guests, hosts, ogImage } = loaderData;
-  const title = `${post.seoTitle ?? post.title} · Germomics`;
-  const desc = post.seoDescription ?? post.excerpt ?? "";
-  const image = ogImage;
-  const jsonLd = buildJsonLd({ post, origin, author, seriesTitle, guests, hosts });
+  const { post, author, seriesTitle, guests, hosts, ogImage } = loaderData;
   const isEpisode = post.kind === "episode";
-  const breadcrumb = buildBreadcrumbLd([
-    { name: "Home", url: `${origin}/` },
-    {
-      name: isEpisode ? "Episodes" : "Writing",
-      url: `${origin}/${isEpisode ? "episodes" : "writing"}`,
-    },
-    { name: post.title, url: `${origin}/${post.slug}` },
-  ]);
   const faq = extractFaqLd(post.body);
   return [
-    { title },
-    { name: "description", content: desc },
-    { property: "og:title", content: post.title },
-    { property: "og:description", content: desc },
     // Episodes are editorial articles with audio on this site, so og:type is article (the prior
-    // music.song regressed the social card). twitter:card is large because og:image is always set.
-    { property: "og:type", content: "article" },
-    { property: "og:url", content: `${origin}/${post.slug}` },
-    ...(image ? [{ property: "og:image", content: image }] : []),
-    { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
-    { name: "twitter:title", content: post.title },
-    { name: "twitter:description", content: desc },
-    ...(image ? [{ name: "twitter:image", content: image }] : []),
-    { "script:ld+json": jsonLd },
-    { "script:ld+json": breadcrumb },
-    ...(faq ? [{ "script:ld+json": faq }] : []),
+    // music.song regressed the social card).
+    ...pageHead({
+      path: `/${post.slug}`,
+      title: `${post.seoTitle ?? post.title} · Germomics`,
+      socialTitle: post.title,
+      description: post.seoDescription ?? post.excerpt ?? stripHtml(post.body).slice(0, 160),
+      image: ogImage,
+      type: "article",
+      article: { published: post.publishedAt ?? post.publishAt, modified: post.updatedAt, author, tags: post.tags ?? [] },
+    }),
+    jsonLd(buildJsonLd({ post, author, seriesTitle, guests, hosts })),
+    jsonLd(
+      breadcrumbs(SITE_ORIGIN, [
+        { name: "Home", path: "/" },
+        isEpisode ? { name: "Episodes", path: "/episodes" } : { name: "Writing", path: "/writing" },
+        { name: post.title, path: `/${post.slug}` },
+      ]),
+    ),
+    ...(faq ? [jsonLd(faq)] : []),
   ];
 }
 
-export async function loader({ params, context, request }: Route.LoaderArgs) {
+export async function loader({ params, context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const post = await getPostBySlug(env, params.slug);
   if (!post) throw new Response("Not found", { status: 404 });
@@ -64,7 +59,6 @@ export async function loader({ params, context, request }: Route.LoaderArgs) {
     adjacentPosts(env, post),
     post.kind === "episode" ? soundbitesForPost(env, post.id) : Promise.resolve([]),
   ]);
-  const origin = new URL(request.url).origin;
   const hosts = show.hosts ?? [];
   // Hero cover uses the item's own artwork; when it has none, the CoverArt component renders the SVG
   // brand default (so no raster default here). The social image still defaults to the show artwork.
@@ -72,7 +66,6 @@ export async function loader({ params, context, request }: Route.LoaderArgs) {
   const ogImage = ogImageFor(post) ?? show.artwork ?? null;
 
   const data: DetailData & {
-    origin: string;
     seriesTitle: string;
     hosts: typeof hosts;
     ogImage: string | null;
@@ -90,7 +83,6 @@ export async function loader({ params, context, request }: Route.LoaderArgs) {
     cover,
     readingMinutes: post.readingTime ?? readingTime(post.body),
     toc: tableOfContents(demoteHeadings(post.body)),
-    origin,
     seriesTitle: show.title,
     ogImage,
   };

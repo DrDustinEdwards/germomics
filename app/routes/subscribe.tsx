@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Form, Link } from "react-router";
 import { Rss, Check, Copy, Mail, Smartphone } from "lucide-react";
 import { ExternalCue } from "~/components/ExternalCue";
+import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/subscribe";
 import { getEnv } from "~/lib/context.server";
 import { getDb } from "~/db/index.server";
@@ -11,10 +12,7 @@ import { SUBSCRIBE_DESTINATIONS, PRIMARY_KEYS, SECONDARY_KEYS } from "~/lib/subs
 import { SITE_HOST } from "~/lib/site";
 
 export function meta() {
-  return [
-    { title: "Subscribe · Germomics" },
-    { name: "description", content: "Follow Germomics in any podcast app, by email, or by RSS." },
-  ];
+  return pageHead({ path: "/subscribe", title: "Subscribe · Germomics", description: "Follow Germomics in any podcast app, by email, or by RSS." });
 }
 
 export async function loader({ context }: Route.LoaderArgs) {

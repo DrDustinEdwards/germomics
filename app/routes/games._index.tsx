@@ -1,13 +1,11 @@
 import { Link } from "react-router";
 import { Gamepad2 } from "lucide-react";
+import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/games._index";
 import { listGames } from "~/lib/games.server";
 
 export function meta() {
-  return [
-    { title: "Games · Germomics" },
-    { name: "description", content: "Arcade browser games tied to the microbiology content." },
-  ];
+  return pageHead({ path: "/games", title: "Games · Germomics", description: "Arcade browser games tied to the microbiology content." });
 }
 
 export function loader(_: Route.LoaderArgs) {
