@@ -16,10 +16,11 @@ const SYSTEM_BASE =
 
 const STYLE_RULE =
   "Writing style (strict): Do NOT use em dashes (the long dash character) anywhere; use commas, " +
-  "periods, parentheses, or colons instead. Avoid AI-writing tells such as: delve, tapestry, " +
-  "spans, landscape, realm, navigate, testament to, boasts, stands as, the phrasing 'not just X, " +
-  "it's Y', overwrought three-item lists, and grandiose closing sentences. Write plain, direct, " +
-  "varied, human sentences.";
+  "periods, parentheses, or colons instead. Do not end on a verdict about the episode's worth or " +
+  "staying power ('stays with you', 'remains one of the most'), and leave out blurb adjectives " +
+  "(unforgettable, haunting, sweeping, poignant, profound). No 'not just X, it's Y' and no " +
+  "'it isn't about X, it's about Y'. A list of three only when there are three real things. " +
+  "Write plain, direct, varied, human sentences.";
 
 const PROMPT_SHOWNOTES =
   "Write show notes for this episode as clean HTML, optimized to be quoted by search engines " +
