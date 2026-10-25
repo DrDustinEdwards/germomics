@@ -24,7 +24,7 @@
     "nobloat:baseline": "react-router typegen && devkit-no-bloat --write-baseline && npm run build && devkit-route-weight --write-baseline"
   },
   "dependencies": {
-    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.7.0",
+    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.8.0",
     "@dustinedwards/d1-dump": "github:DrDustinEdwards/d1-dump#v0.6.0",
     "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.8.1",
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#8c9baaa474028b59d9a3012b366ec25c7f4247c7",
