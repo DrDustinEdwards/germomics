@@ -1,6 +1,6 @@
-// Feed builders. Byte-level control over every tag — no static-generation heuristics. The
-// podcast feed carries episodes only (every item has an enclosure); the site feed carries the
-// writing. Enclosure URLs always point at media.germomics.com (the stored audioUrl), never the
+// The podcast feed, byte for byte: the iTunes and Podcasting 2.0 tags Prelum's blog feeds do not
+// write (the writing feed is Prelum's rssDocument, routes/feed.site.ts). Episodes only (every item
+// has an enclosure). Enclosure URLs always point at media.germomics.com (the stored audioUrl), never the
 // worker origin. guid is permanent + isPermaLink=false. Served from resource routes.
 import type { Post, ShowConfig, Soundbite } from "~/db/schema";
 import type { GuestView } from "~/lib/types";
@@ -127,35 +127,6 @@ function itemXml(e: Post, origin: string, guests: GuestView[], soundbites: Sound
     }
     ${people}${transcript}${chapters}${clips}
   </item>`;
-}
-
-/** The writing feed — articles for regular feed readers. The guid is the one stored at first
- *  publish, so a later slug change does not re-announce the article (Grok audit 2026-10-21, GE-13). */
-export function buildSiteFeed(show: ShowConfig, articles: Post[], origin: string): string {
-  const items = articles
-    .map(
-      (a) => `  <item>
-    <title>${escapeXml(a.title)}</title>
-    <link>${origin}/${a.slug}</link>
-    ${a.guid ? `<guid isPermaLink="false">${escapeXml(a.guid)}</guid>` : `<guid>${origin}/${a.slug}</guid>`}
-    <pubDate>${rfc822(a.publishedAt)}</pubDate>
-    <description>${cdata(a.excerpt ?? a.body)}</description>
-    <content:encoded>${cdata(a.body)}</content:encoded>
-  </item>`,
-    )
-    .join("\n");
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
-<channel>
-  <title>${escapeXml(show.title)}: Writing</title>
-  <link>${origin}/writing</link>
-  <atom:link href="${origin}/feed/site.xml" rel="self" type="application/rss+xml"/>
-  <language>${escapeXml(show.language)}</language>
-  <description>${cdata("Essays and notes from Germomics.")}</description>
-${items}
-</channel>
-</rss>`;
 }
 
 /** Podcasting 2.0 chapters JSON body. */

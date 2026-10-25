@@ -135,7 +135,7 @@ describe("publishing, scheduling and unpublishing", () => {
 });
 
 describe("reading", () => {
-  it("summarises a row: ISO times from SQLite's format, a path only once published", async () => {
+  it("summarizes a row: ISO times from SQLite's format, a path only once published", async () => {
     await insert("INSERT INTO posts (kind, title, slug, body, status, updated_at) VALUES ('article', 'Draft', 'd', '', 'draft', '2026-01-02 03:04:05')");
     const doc = (await content.get("d"))!;
     expect(doc).toMatchObject({ id: "d", kind: "article", title: "Draft", status: "draft", path: null, publishAt: null, publishedAt: null, updatedAt: "2026-01-02T03:04:05.000Z", format: "markdown" });

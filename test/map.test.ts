@@ -34,7 +34,7 @@ describe("toLatLng", () => {
 // much, and never by the tens of degrees a swap produces. Five is loose enough to leave framing
 // alone and tight enough that no swapped pair on Earth survives it: swapping moves a coordinate
 // by |lat - lng|, and a dataset where that is under 5 degrees would have to sit within a few
-// hundred kilometres of where the equator crosses the prime meridian.
+// hundred kilometers of where the equator crosses the prime meridian.
 const BOX_DEGREES = 5;
 
 describe("every dataset's map center", () => {
@@ -79,7 +79,7 @@ describe("siteIsDark", () => {
     expect(siteIsDark("light", true)).toBe(false);
     expect(siteIsDark(null, true)).toBe(true);
     expect(siteIsDark(null, false)).toBe(false);
-    // getAttribute returns whatever the markup holds, and app.css only recognises the two
+    // getAttribute returns whatever the markup holds, and app.css only recognizes the two
     // names: a stray value has to behave as though nothing were set, not as though it were dark.
     expect(siteIsDark("", true)).toBe(true);
     expect(siteIsDark("sepia", false)).toBe(false);

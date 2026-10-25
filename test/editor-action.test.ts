@@ -17,7 +17,7 @@ function run(id: number, fields: Record<string, string>) {
   const form = new FormData();
   for (const [k, v] of Object.entries(fields)) form.set(k, v);
   const context = new RouterContextProvider();
-  context.set(cloudflareContext, { env: e, ctx: {} as ExecutionContext });
+  context.set(cloudflareContext, { env: e, ctx: { waitUntil: () => {} } as unknown as ExecutionContext });
   const request = new Request(`https://germomics.com/admin/posts/${id}`, { method: "POST", body: form });
   return action({ params: { id: String(id) }, request, context } as unknown as Parameters<typeof action>[0]);
 }

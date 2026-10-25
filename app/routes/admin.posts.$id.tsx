@@ -3,7 +3,8 @@
 // every save; scheduling rides on publish_at (publish-on-read gate). guid stays immutable.
 import { redirect } from "react-router";
 import type { Route } from "./+types/admin.posts.$id";
-import { getEnv } from "~/lib/context.server";
+import { cloudflareContext, getEnv } from "~/lib/context.server";
+import { pingIndexNow } from "~/lib/indexnow.server";
 import { getPostById } from "~/lib/posts.server";
 import {
   updatePost,
@@ -158,6 +159,14 @@ export async function action({ params, request, context }: Route.ActionArgs) {
   if (intent !== "autosave") await snapshotVersion(env, post);
 
   await updatePost(env, id, fields);
+
+  // A change a reader can see (a publish, an unpublish, or a save of a published post) tells IndexNow, off the
+  // response's path. A schedule, or a save of a post still scheduled, sends nothing: the page is not live yet.
+  const visible = intent === "publish" || intent === "unpublish" || (intent === "save" && post.status === "published" && !(post.publishAt && Date.parse(post.publishAt) > Date.now()));
+  if (visible) {
+    const paths = slug === post.slug ? [`/${slug}`] : [`/${slug}`, `/${post.slug}`];
+    context.get(cloudflareContext).ctx.waitUntil(pingIndexNow(paths, request));
+  }
 
   if (isEpisode) {
     const people = Array.isArray(payload.people) ? (payload.people as { personId: number; role?: string }[]) : [];

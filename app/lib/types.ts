@@ -21,7 +21,7 @@ export type KeyMoment = { seconds: number; label: string };
 /** A show host (show-level byline). Maps to <podcast:person> in the feed alongside per-episode guests. */
 export type Host = { name: string; role?: string; img?: string; href?: string };
 
-/** A labelled external link on a Person (website, social, etc.). */
+/** A labeled external link on a Person (website, social, etc.). */
 export type PersonLink = { label: string; url: string };
 
 /** An Apple Podcasts category with an optional subcategory (nested in the feed). */

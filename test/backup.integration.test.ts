@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { backupHealth } from "@dustinedwards/d1-dump";
 import { runBackup } from "~/lib/backup.server";
 
-// One integration test per real behaviour, against real D1 and R2 in Miniflare. The schema is a
+// One integration test per real behavior, against real D1 and R2 in Miniflare. The schema is a
 // reduced copy of the production shape: the tables the checks name and an external-content FTS5
 // table (the reason `wrangler d1 export` fails here). CREDENTIAL_SCHEMA adds the Better Auth
 // tables as they stand before drizzle/0010_retire_better_auth.sql; the backup must pass both

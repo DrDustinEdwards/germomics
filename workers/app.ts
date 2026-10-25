@@ -30,7 +30,7 @@ export default {
       // Carrel's site API. Its own guard (prefix, rate limit, key, route) runs first and answers
       // everything under /api/carrel/v1; nothing else is served by it.
       const carrel = carrelApi(env);
-      if (carrel.matches(request)) return withSecurityHeaders(await carrel.handle(request), origin);
+      if (carrel.matches(request)) return withSecurityHeaders(await carrel.handle(request, ctx), origin);
 
       // CSP violation reports: site-runtime's receiver logs each one as a trimmed JSON line (origin
       // and path only, no address or user agent) to Workers Logs and stores nothing. Per address,
