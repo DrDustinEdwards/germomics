@@ -13,7 +13,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const addressLine = setting(getSettings(context), "contact.address_line", SITE_ADDRESS_LINE);
+  const addressLine = getSettings(context).then((s) => setting(s, "contact.address_line", SITE_ADDRESS_LINE));
   return loadFilledPage(getEnv(context), request, "page:privacy", "Privacy policy", addressLine);
 }
 

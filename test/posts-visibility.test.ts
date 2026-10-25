@@ -128,12 +128,12 @@ describe("navigation between posts", () => {
     await add({ slug: "ep", kind: "episode", publishedAt: "2024-02-15T00:00:00.000Z" });
     const midPost = (await getPostBySlug(e, "mid"))!;
     expect(midPost.id).toBe(mid);
-    const { prev, next } = await adjacentPosts(e, midPost);
+    const { prev, next } = adjacentPosts(await listPosts(e), midPost);
     expect([prev?.slug, next?.slug]).toEqual(["old", "new"]);
-    const ends = await adjacentPosts(e, (await getPostBySlug(e, "new"))!);
+    const ends = adjacentPosts(await listPosts(e), (await getPostBySlug(e, "new"))!);
     expect([ends.prev?.slug, ends.next]).toEqual(["mid", null]);
     const hidden = (await getPostBySlug(e, "nope", { includeDrafts: true })) ?? ({ id: -1, kind: "article" } as Post);
-    expect(await adjacentPosts(e, hidden)).toEqual({ prev: null, next: null });
+    expect(adjacentPosts(await listPosts(e), hidden)).toEqual({ prev: null, next: null });
   });
 
   it("ranks related posts by shared tags, never the post itself, up to the limit", async () => {
@@ -143,7 +143,7 @@ describe("navigation between posts", () => {
     await add({ slug: "none", tags: [], publishedAt: "2024-03-01T00:00:00.000Z" });
     await add({ slug: "three", tags: ["a", "b", "c"], publishedAt: "2024-02-01T00:00:00.000Z" });
     const me = (await getPostBySlug(e, "me"))!;
-    expect(slugs(await relatedPosts(e, me))).toEqual(["three", "two", "one"]);
-    expect(slugs(await relatedPosts(e, me, 1))).toEqual(["three"]);
+    expect(slugs(relatedPosts(await listPosts(e), me))).toEqual(["three", "two", "one"]);
+    expect(slugs(relatedPosts(await listPosts(e), me, 1))).toEqual(["three"]);
   });
 });

@@ -1,6 +1,6 @@
 import type { Route } from "./+types/$slug";
 import { getEnv } from "~/lib/context.server";
-import { getPostBySlug, relatedPosts, adjacentPosts, toPlayerTrack } from "~/lib/posts.server";
+import { getPostBySlug, listPosts, relatedPosts, adjacentPosts, toPlayerTrack } from "~/lib/posts.server";
 import { getEpisodeGuests } from "~/lib/people.server";
 import { soundbitesForPost } from "~/lib/soundbites.server";
 import { getShowConfig } from "~/lib/show.server";
@@ -49,16 +49,15 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const env = getEnv(context);
-  const post = await getPostBySlug(env, params.slug);
+  const [post, visible, show] = await Promise.all([getPostBySlug(env, params.slug), listPosts(env), getShowConfig(env)]);
   if (!post) throw new Response("Not found", { status: 404 });
 
-  const [related, show, guests, adj, clips] = await Promise.all([
-    relatedPosts(env, post),
-    getShowConfig(env),
+  const [guests, clips] = await Promise.all([
     getEpisodeGuests(env, post),
-    adjacentPosts(env, post),
     post.kind === "episode" ? soundbitesForPost(env, post.id) : Promise.resolve([]),
   ]);
+  const related = relatedPosts(visible, post);
+  const adj = adjacentPosts(visible, post);
   const hosts = show.hosts ?? [];
   // Hero cover uses the item's own artwork; when it has none, the CoverArt component renders the SVG
   // brand default (so no raster default here). The social image still defaults to the show artwork.

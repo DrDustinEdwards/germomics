@@ -31,14 +31,15 @@ export function meta({ loaderData }: Route.MetaArgs) {
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const preview = await isPreviewing(env, request);
-  const [about, bio, show] = await Promise.all([
+  const [about, bio, show, settings] = await Promise.all([
     loadPage(env, "page:about", { includeDrafts: preview }),
     loadPage(env, "page:dustin-edwards", { includeDrafts: preview }),
     getShowConfig(env),
+    getSettings(context),
   ]);
   return {
     show,
-    address: settingAddress(getSettings(context)),
+    address: settingAddress(settings),
     title: about.title || "About Germomics",
     description: stripHtml(about.value).slice(0, 160),
     aboutHtml: about.value,

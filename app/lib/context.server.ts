@@ -15,18 +15,22 @@ export function getEnv(context: Readonly<RouterContextProvider>): Env {
   return context.get(cloudflareContext).env;
 }
 
-// Per-request site content (settings + snippets), loaded once by the root middleware and read by any
-// loader via getSettings()/getSnippets(). Values are KV-cached in content.server; this just carries
-// the resolved maps so a request hits KV at most once.
-export type SiteContent = {
-  settings: Record<string, string>;
-  snippets: Record<string, string>;
-};
+// Per-request site content (settings + snippets), read from D1 at most once per request and only
+// when a loader asks: the root middleware puts a memoized reader on context, so loaders start it
+// alongside their own queries instead of after it, and the feeds and other resource routes that
+// never ask cost nothing.
+type StrMap = Record<string, string>;
+export type SiteContent = { settings: () => Promise<StrMap>; snippets: () => Promise<StrMap> };
 export const siteContentContext = createContext<SiteContent>();
 
-export function getSettings(context: Readonly<RouterContextProvider>): Record<string, string> {
-  return context.get(siteContentContext).settings;
+export function once<T>(read: () => Promise<T>): () => Promise<T> {
+  let pending: Promise<T> | undefined;
+  return () => (pending ??= read());
 }
-export function getSnippets(context: Readonly<RouterContextProvider>): Record<string, string> {
-  return context.get(siteContentContext).snippets;
+
+export function getSettings(context: Readonly<RouterContextProvider>): Promise<StrMap> {
+  return context.get(siteContentContext).settings();
+}
+export function getSnippets(context: Readonly<RouterContextProvider>): Promise<StrMap> {
+  return context.get(siteContentContext).snippets();
 }

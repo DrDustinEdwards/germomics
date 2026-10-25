@@ -10,7 +10,7 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { getEnv, getSnippets, getSettings, siteContentContext } from "~/lib/context.server";
+import { getEnv, getSnippets, getSettings, once, siteContentContext } from "~/lib/context.server";
 import { loadSettings, loadSnippets, setting } from "~/lib/content.server";
 import { getShowConfig } from "~/lib/show.server";
 import { listSeasons } from "~/lib/posts.server";
@@ -38,13 +38,12 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
-// Load site content (settings + snippets) once per request and put it on context, so any loader
-// reads it without re-hitting KV. Values are KV-cached in content.server with in-code fallbacks.
+// Site content (settings + snippets) for any loader, read once per request on first use. Nothing is
+// awaited here, so the loaders' own D1 queries run in the same round trip (context.server).
 export const middleware: Route.MiddlewareFunction[] = [
-  async ({ context }, next) => {
+  ({ context }, next) => {
     const env = getEnv(context);
-    const [settings, snippets] = await Promise.all([loadSettings(env), loadSnippets(env)]);
-    context.set(siteContentContext, { settings, snippets });
+    context.set(siteContentContext, { settings: once(() => loadSettings(env)), snippets: once(() => loadSnippets(env)) });
     return next();
   },
 ];
@@ -54,8 +53,12 @@ export const middleware: Route.MiddlewareFunction[] = [
 // components can read them via useSnippet().
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
-  const settings = getSettings(context);
-  const [show, seasons] = await Promise.all([getShowConfig(env), listSeasons(env)]);
+  const [settings, snippets, show, seasons] = await Promise.all([
+    getSettings(context),
+    getSnippets(context),
+    getShowConfig(env),
+    listSeasons(env),
+  ]);
   // Social links for the footer, built from the same settings social.* as Organization sameAs, so
   // footer and schema stay consistent. Only handles that are set produce a link.
   const socials = socialLinks({
@@ -64,7 +67,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     instagram: setting(settings, "social.instagram"),
   });
   return {
-    snippets: getSnippets(context),
+    snippets,
     socials,
     subscribeLinks: show.subscribeLinks ?? {},
     // Distinct episode season numbers (newest first) feed the global Header "Episodes" dropdown.

@@ -1,12 +1,12 @@
 import { env } from "cloudflare:test";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { aiCostCapExceeded, enforceRateLimit, recordAiUse, withSecurityHeaders } from "~/lib/security.server";
+import { applyMigrations, setSettings } from "./helpers/d1";
 
 // The in-Worker abuse layer in front of /admin and the AI endpoint, and the header layer every
-// response passes through. Settings come from KV's cached map (content.server), seeded here so the
-// limits are small and known.
+// response passes through. Settings come from D1 (content.server), seeded here so the limits are
+// small and known.
 const e = env as unknown as Env;
-const SETTINGS = "cache:content:settings";
 
 async function clearKv() {
   const { keys } = await e.APP_KV.list();
@@ -16,13 +16,14 @@ async function clearKv() {
 const hit = (path: string, ip: string) =>
   enforceRateLimit(e, new Request(`https://germomics.com${path}`, { headers: { "cf-connecting-ip": ip } }));
 
+beforeAll(() => applyMigrations(e.DB));
 beforeEach(clearKv);
 
 // site-runtime tests the counting once; these pin germomics's own rules: which paths are metered,
 // their buckets and the settings that size them. Each test uses its own addresses, since the
 // limiter's Durable Object storage outlives a test.
 describe("enforceRateLimit", () => {
-  beforeEach(() => e.APP_KV.put(SETTINGS, JSON.stringify({ "ratelimit.admin": "3", "ratelimit.ai": "2" })));
+  beforeEach(() => setSettings(e.DB, { "ratelimit.admin": "3", "ratelimit.ai": "2" }));
 
   it("lets public paths through", async () => {
     for (let i = 0; i < 5; i++) expect(await hit("/episodes/", "203.0.113.1")).toBeNull();
@@ -48,7 +49,7 @@ describe("enforceRateLimit", () => {
   });
 
   it("falls back to the default limit when the setting is missing or not a number", async () => {
-    await e.APP_KV.put(SETTINGS, JSON.stringify({ "ratelimit.ai": "lots" }));
+    await setSettings(e.DB, { "ratelimit.ai": "lots" });
     for (let i = 0; i < 15; i++) expect(await hit("/admin/ai", "203.0.113.4")).toBeNull();
     expect((await hit("/admin/ai", "203.0.113.4"))?.status).toBe(429);
   });
@@ -58,7 +59,7 @@ describe("the AI daily cap", () => {
   const today = () => `ai:cap:${new Date().toISOString().slice(0, 10)}`;
 
   it("is not exceeded until the recorded uses reach the cap", async () => {
-    await e.APP_KV.put(SETTINGS, JSON.stringify({ "ai.daily_cap": "2" }));
+    await setSettings(e.DB, { "ai.daily_cap": "2" });
     expect(await aiCostCapExceeded(e)).toBe(false);
     await recordAiUse(e);
     expect(await aiCostCapExceeded(e)).toBe(false);
@@ -77,7 +78,7 @@ describe("the AI daily cap", () => {
   });
 
   it("uses the default cap of 100 when no setting is stored", async () => {
-    await e.APP_KV.put(SETTINGS, JSON.stringify({}));
+    await setSettings(e.DB, {});
     await e.APP_KV.put(today(), "99");
     expect(await aiCostCapExceeded(e)).toBe(false);
     await e.APP_KV.put(today(), "100");

@@ -142,23 +142,22 @@ export async function postsByGuest(env: Env, guestSlug: string): Promise<Post[]>
   return all.filter((p) => (p.guests ?? []).some((g) => slugifyGuest(g.name) === guestSlug));
 }
 
+// adjacentPosts and relatedPosts work on one listPosts(env) result, so the post page reads the list
+// once, in the same round trip as the post itself.
+
 /** Previous / next published post of the same kind, by publish date (for article/episode nav). */
-export async function adjacentPosts(
-  env: Env,
-  post: Post,
-): Promise<{ prev: Post | null; next: Post | null }> {
-  const all = await listPosts(env, { kind: post.kind as Kind }); // newest-first, visible only
+export function adjacentPosts(visible: Post[], post: Post): { prev: Post | null; next: Post | null } {
+  const all = visible.filter((p) => p.kind === post.kind); // newest-first, visible only
   const i = all.findIndex((p) => p.id === post.id);
   if (i === -1) return { prev: null, next: null };
   return { prev: all[i + 1] ?? null, next: all[i - 1] ?? null }; // older = prev, newer = next
 }
 
 /** Related = same-kind posts sharing the most tags, newest first. */
-export async function relatedPosts(env: Env, post: Post, limit = 3): Promise<Post[]> {
-  const all = await listPosts(env, { kind: post.kind as Kind });
+export function relatedPosts(visible: Post[], post: Post, limit = 3): Post[] {
   const tags = new Set(post.tags ?? []);
-  return all
-    .filter((p) => p.id !== post.id)
+  return visible
+    .filter((p) => p.kind === post.kind && p.id !== post.id)
     .map((p) => ({ p, score: (p.tags ?? []).filter((t) => tags.has(t)).length }))
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
