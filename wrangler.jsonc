@@ -9,6 +9,11 @@
 	// BETTER_AUTH_SECRET for preview tokens) from being wiped on deploy.
 	"keep_vars": true,
 	"observability": { "enabled": true, "traces": { "enabled": true, "head_sampling_rate": 0.1 } },
+	// Run the Worker next to D1 (primary in ENAM, read replication off). A page render waits on D1
+	// round trips, each 1-3 ms from there instead of up to 150 ms from a distant colo, and the edge
+	// cache (caches.default) is then one cache instead of a cold one in every colo. Static assets
+	// are still served from the visitor's colo.
+	"placement": { "region": "aws:us-east-1" },
 	// THE MAPS KEY IS A BUILD-TIME VALUE AND IS DELIBERATELY NOT A `vars` ENTRY HERE.
 	//
 	//   VITE_GOOGLE_MAPS_KEY      the Maps JavaScript API browser key

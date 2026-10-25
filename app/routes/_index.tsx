@@ -36,13 +36,13 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
-  const [episodes, combined, show] = await Promise.all([
+  const [episodes, combined, show, snippets, settings] = await Promise.all([
     listEpisodes(env),
     listPosts(env, { limit: 24 }),
     getShowConfig(env),
+    getSnippets(context),
+    getSettings(context),
   ]);
-  const snippets = getSnippets(context);
-  const settings = getSettings(context);
   const tracks = episodes.map(toPlayerTrack);
   // Org/PodcastSeries sameAs = the real socials (settings social.*) + the podcast-directory
   // subscribe_links (show_config), so it stays DB-driven and never duplicates a show_config fact.

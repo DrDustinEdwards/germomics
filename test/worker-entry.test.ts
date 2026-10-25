@@ -1,6 +1,6 @@
 import { env } from "cloudflare:test";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { applyMigrations } from "./helpers/d1";
+import { applyMigrations, setSettings } from "./helpers/d1";
 
 // The Worker entry (workers/app.ts): the order a request passes through (Carrel's API, then the
 // rate limiter, then the app behind the edge cache), the security headers on every answer, the
@@ -50,7 +50,7 @@ describe("the Worker entry", () => {
   });
 
   it("rate-limits /admin before rendering, with security headers on the 429", async () => {
-    await e.APP_KV.put("cache:content:settings", JSON.stringify({ "ratelimit.admin": "1" }));
+    await setSettings(e.DB, { "ratelimit.admin": "1" });
     const admin = () => new Request(`${ORIGIN}/admin`, { headers: { "cf-connecting-ip": "198.51.100.5" } });
     expect((await fetchWith(admin())).status).toBe(200);
     const limited = await fetchWith(admin());

@@ -45,3 +45,11 @@ function splitSql(sql: string): string[] {
   if (buf.trim()) out.push(buf.trim());
   return out;
 }
+
+/** Replace every setting with `map`, the way an admin's saved settings would read. */
+export async function setSettings(db: D1Database, map: Record<string, string>): Promise<void> {
+  await db.prepare("DELETE FROM settings").run();
+  for (const [key, value] of Object.entries(map)) {
+    await db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").bind(key, value).run();
+  }
+}

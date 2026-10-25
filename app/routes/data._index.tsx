@@ -10,8 +10,8 @@ export function meta() {
   return pageHead({ path: "/data", title: "Data · Germomics", description: "Interactive maps and charts on viruses and bacteria." });
 }
 
-export function loader({ context }: Route.LoaderArgs) {
-  const snippets = getSnippets(context);
+export async function loader({ context }: Route.LoaderArgs) {
+  const snippets = await getSnippets(context);
   const datasets = listDatasets().map((d) => ({
     ...d,
     summary: snippet(snippets, `snippet:dataset.${d.slug}`, d.summary),

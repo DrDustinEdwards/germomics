@@ -4,7 +4,7 @@ import { RouterContextProvider } from "react-router";
 import { cloudflareContext } from "~/lib/context.server";
 import { STYLE_RULE } from "~/lib/ai.server";
 import { SETTING_DEFAULTS } from "~/lib/content-defaults";
-import { applyMigrations } from "./helpers/d1";
+import { applyMigrations, setSettings } from "./helpers/d1";
 
 // AI drafts on the subscription (app/lib/ai.server.ts): the editor's button fires the drafting
 // routine with only a job URL and key, the routine GETs the job and POSTs the draft back, and the
@@ -63,7 +63,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   const { keys } = await e.APP_KV.list();
   await Promise.all(keys.map((k) => e.APP_KV.delete(k.name)));
-  await e.APP_KV.put("cache:content:settings", JSON.stringify({ "ai.daily_cap": "5" }));
+  await setSettings(e.DB, { "ai.daily_cap": "5" });
   fired = [];
   fireReply = () => Response.json({ type: "routine_fire", claude_code_session_url: "https://claude.ai/code/session_01abc" });
   vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
@@ -77,7 +77,7 @@ afterEach(() => vi.restoreAllMocks());
 
 describe("AI drafts on the drafting routine", () => {
   it("fires the routine with only a job URL and key, hands the routine the live prompt and transcript, and gives the editor the draft", async () => {
-    await e.APP_KV.put("cache:content:settings", JSON.stringify({ "ai.daily_cap": "5", "ai.prompt.shownotes": "CUSTOM PROMPT" }));
+    await setSettings(e.DB, { "ai.daily_cap": "5", "ai.prompt.shownotes": "CUSTOM PROMPT" });
     const res = await start({ kind: "shownotes", transcript: TRANSCRIPT });
     const { job } = (await res.json()) as { job: string };
     expect(fired[0]).not.toContain("Cholera");

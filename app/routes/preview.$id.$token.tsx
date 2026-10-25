@@ -3,7 +3,7 @@
 // share a preview. Marked noindex.
 import type { Route } from "./+types/preview.$id.$token";
 import { getEnv } from "~/lib/context.server";
-import { getPostById, relatedPosts, toPlayerTrack } from "~/lib/posts.server";
+import { getPostById, listPosts, relatedPosts, toPlayerTrack } from "~/lib/posts.server";
 import { getEpisodeGuests } from "~/lib/people.server";
 import { getShowConfig } from "~/lib/show.server";
 import { readingTime, tableOfContents, demoteHeadings } from "~/lib/seo";
@@ -23,8 +23,8 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const post = await getPostById(env, id);
   if (!post) throw new Response("Not found", { status: 404 });
 
-  const [related, show, guests] = await Promise.all([
-    relatedPosts(env, post),
+  const [visible, show, guests] = await Promise.all([
+    listPosts(env),
     getShowConfig(env),
     getEpisodeGuests(env, post),
   ]);
@@ -33,7 +33,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     post,
     track: post.kind === "episode" && post.audioUrl ? toPlayerTrack(post) : null,
     guests,
-    related,
+    related: relatedPosts(visible, post),
     prev: null,
     next: null,
     subscribeLinks: show.subscribeLinks ?? {},

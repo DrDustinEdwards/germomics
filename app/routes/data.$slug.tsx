@@ -19,10 +19,10 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
   });
 }
 
-export function loader({ params, context }: Route.LoaderArgs) {
+export async function loader({ params, context }: Route.LoaderArgs) {
   const dataset = getDataset(params.slug);
   if (!dataset) throw new Response("Not found", { status: 404 });
-  const summary = snippet(getSnippets(context), `snippet:dataset.${dataset.slug}`, dataset.summary);
+  const summary = snippet(await getSnippets(context), `snippet:dataset.${dataset.slug}`, dataset.summary);
   return { dataset: { ...dataset, summary } };
 }
 
