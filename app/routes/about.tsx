@@ -7,26 +7,24 @@ import type { Route } from "./+types/about";
 import { getEnv, getSettings } from "~/lib/context.server";
 import { getShowConfig } from "~/lib/show.server";
 import { loadPage, isPreviewing, settingAddress } from "~/lib/content.server";
-import { buildOrganizationLd, buildBreadcrumbLd, stripHtml } from "~/lib/seo";
+import { breadcrumbs, jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { buildOrganizationLd, pageHead, stripHtml } from "~/lib/seo";
+import { SITE_ORIGIN } from "~/lib/site";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { AUTHOR } from "~/lib/about";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "About Germomics" }];
-  const { origin, show, address, title, description } = loaderData;
+  const { show, address, title, description } = loaderData;
   return [
-    { title },
-    { name: "description", content: description },
-    { property: "og:title", content: title },
-    { property: "og:description", content: description },
-    { property: "og:url", content: `${origin}/about` },
-    { "script:ld+json": buildOrganizationLd(show, origin, { address }) },
-    {
-      "script:ld+json": buildBreadcrumbLd([
-        { name: "Home", url: `${origin}/` },
-        { name: "About", url: `${origin}/about` },
+    ...pageHead({ path: "/about", title, description }),
+    jsonLd(buildOrganizationLd(show, { address })),
+    jsonLd(
+      breadcrumbs(SITE_ORIGIN, [
+        { name: "Home", path: "/" },
+        { name: "About", path: "/about" },
       ]),
-    },
+    ),
   ];
 }
 
@@ -39,7 +37,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     getShowConfig(env),
   ]);
   return {
-    origin: new URL(request.url).origin,
     show,
     address: settingAddress(getSettings(context)),
     title: about.title || "About Germomics",

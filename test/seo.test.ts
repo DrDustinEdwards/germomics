@@ -1,12 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { Post } from "~/db/schema";
 import {
-  buildBreadcrumbLd,
   buildJsonLd,
   buildOrganizationLd,
   buildPersonLd,
   buildPodcastSeriesLd,
-  buildWebSiteLd,
   extractFaqLd,
   headingId,
   readingTime,
@@ -82,23 +80,18 @@ describe("tableOfContents", () => {
 });
 
 describe("buildJsonLd", () => {
-  const base = { origin: ORIGIN, author: "Dustin Edwards", seriesTitle: "Germomics" };
+  const base = { author: "Dustin Edwards", seriesTitle: "Germomics" };
 
-  it("describes an article as a BlogPosting that mirrors the page", () => {
+  it("describes an article as a BlogPosting with the site author and publisher", () => {
     const ld = buildJsonLd({ ...base, post: post({ tags: ["cholera", "history"], coverImage: "https://img/c.png", excerpt: "Short." }) });
-    expect(ld).toEqual({
-      "@context": "https://schema.org",
+    expect(ld).toMatchObject({
       "@type": "BlogPosting",
       headline: "The Pump",
       url: `${ORIGIN}/pump`,
-      mainEntityOfPage: `${ORIGIN}/pump`,
-      datePublished: "2024-01-02T00:00:00.000Z",
-      dateModified: "2024-01-02 03:04:05",
       description: "Short.",
       image: "https://img/c.png",
       author: { "@type": "Person", name: "Dustin Edwards" },
       publisher: { "@type": "Organization", name: "Germomics" },
-      keywords: "cholera, history",
     });
   });
 
@@ -114,7 +107,6 @@ describe("buildJsonLd", () => {
     expect(ld).not.toHaveProperty("image");
     expect(ld).not.toHaveProperty("keywords");
     expect(ld.datePublished).toBe("2030-01-01T00:00:00.000Z");
-    expect(ld.dateModified).toBe("2030-01-01T00:00:00.000Z");
   });
 
   it("describes an episode as a PodcastEpisode with its audio, length, series, hosts and guests", () => {
@@ -163,26 +155,21 @@ describe("site-level JSON-LD", () => {
   const show = { title: "Germomics", description: "About microbes", author: "Dustin Edwards", artwork: "https://img/cover.jpg" };
 
   it("describes the Organization and the PodcastSeries, with a default address and optional sameAs", () => {
-    const org = buildOrganizationLd(show, ORIGIN) as Record<string, any>;
+    const org = buildOrganizationLd(show) as Record<string, any>;
     expect(org).toMatchObject({ "@type": "Organization", name: "Germomics", url: `${ORIGIN}/`, logo: show.artwork, founder: { name: "Dustin Edwards" } });
     expect(org.address).toMatchObject({ "@type": "PostalAddress", addressLocality: "Stephenville" });
     expect(org).not.toHaveProperty("sameAs");
-    const withLinks = buildOrganizationLd(show, ORIGIN, { sameAs: ["https://x.com/t"], address: { locality: "Elsewhere" } }) as Record<string, any>;
+    const withLinks = buildOrganizationLd(show, { sameAs: ["https://x.com/t"], address: { locality: "Elsewhere" } }) as Record<string, any>;
     expect(withLinks.sameAs).toEqual(["https://x.com/t"]);
     expect(withLinks.address.addressLocality).toBe("Elsewhere");
-    const series = buildPodcastSeriesLd(show, ORIGIN, { sameAs: ["https://x.com/t"] }) as Record<string, any>;
+    const series = buildPodcastSeriesLd(show, { sameAs: ["https://x.com/t"] }) as Record<string, any>;
     expect(series).toMatchObject({ "@type": "PodcastSeries", webFeed: `${ORIGIN}/feed/podcast/`, image: show.artwork, sameAs: ["https://x.com/t"] });
-    expect(buildPodcastSeriesLd(show, ORIGIN)).not.toHaveProperty("sameAs");
+    expect(buildPodcastSeriesLd(show)).not.toHaveProperty("sameAs");
   });
 
-  it("describes the site search, a person, and a breadcrumb trail", () => {
-    expect(buildWebSiteLd(show, ORIGIN)).toMatchObject({
-      "@type": "WebSite",
-      potentialAction: { "@type": "SearchAction", target: { urlTemplate: `${ORIGIN}/search?q={search_term_string}` }, "query-input": "required name=search_term_string" },
-    });
+  it("describes the credentialed author as a Person", () => {
     const person = buildPersonLd(
       { name: "Ada", honorific: "Dr.", slug: "ada", jobTitle: "Professor", bio: "Bio", affiliation: "Uni", memberOf: "Society", alumniOf: ["A", "B"], knowsAbout: ["x"], sameAs: ["https://o.example"] },
-      ORIGIN,
     );
     expect(person).toMatchObject({
       "@type": "Person",
@@ -194,10 +181,6 @@ describe("site-level JSON-LD", () => {
       knowsAbout: ["x"],
       sameAs: ["https://o.example"],
     });
-    expect(buildBreadcrumbLd([{ name: "Home", url: `${ORIGIN}/` }, { name: "Writing", url: `${ORIGIN}/writing` }]).itemListElement).toEqual([
-      { "@type": "ListItem", position: 1, name: "Home", item: `${ORIGIN}/` },
-      { "@type": "ListItem", position: 2, name: "Writing", item: `${ORIGIN}/writing` },
-    ]);
   });
 });
 

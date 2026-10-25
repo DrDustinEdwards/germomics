@@ -1,4 +1,5 @@
 import { lazy } from "react";
+import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/data.$slug";
 import { getDataset } from "~/lib/datasets.server";
 import { getSnippets } from "~/lib/context.server";
@@ -9,12 +10,13 @@ import { ClientOnly } from "~/components/util/ClientOnly";
 const DataMap = lazy(() => import("~/components/data/DataMap.client"));
 const DataChart = lazy(() => import("~/components/data/DataChart.client"));
 
-export function meta({ loaderData }: Route.MetaArgs) {
+export function meta({ loaderData, location }: Route.MetaArgs) {
   if (!loaderData?.dataset) return [{ title: "Data · Germomics" }];
-  return [
-    { title: `${loaderData.dataset.title} · Germomics` },
-    { name: "description", content: loaderData.dataset.summary },
-  ];
+  return pageHead({
+    path: location.pathname,
+    title: `${loaderData.dataset.title} · Germomics`,
+    description: loaderData.dataset.summary,
+  });
 }
 
 export function loader({ params, context }: Route.LoaderArgs) {

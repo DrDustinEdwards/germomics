@@ -2,6 +2,7 @@
 // page:contact content block (D1, editable); {{email}} and {{address_line}} are filled from
 // show_config + the contact.address_line setting so the details are never duplicated. ?preview
 // shows admin drafts.
+import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/contact";
 import { getEnv, getSettings } from "~/lib/context.server";
 import { loadFilledPage, setting } from "~/lib/content.server";
@@ -9,10 +10,7 @@ import { SITE_ADDRESS_LINE } from "~/lib/site";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return [
-    { title: loaderData?.title ?? "Contact" },
-    { name: "description", content: "How to reach Germomics by email or post." },
-  ];
+  return pageHead({ path: "/contact", title: loaderData?.title ?? "Contact", description: "How to reach Germomics by email or post." });
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {

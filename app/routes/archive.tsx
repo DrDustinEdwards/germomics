@@ -1,5 +1,6 @@
 import { Form, Link } from "react-router";
 import { Search } from "lucide-react";
+import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/archive";
 import { getEnv } from "~/lib/context.server";
 import { listPosts, searchPosts, toPlayerTrack } from "~/lib/posts.server";
@@ -15,7 +16,7 @@ const TABS = [
 ] as const;
 
 export function meta() {
-  return [{ title: "Archive · Germomics" }];
+  return pageHead({ path: "/archive", title: "Archive · Germomics", description: "Every Germomics episode and post, newest first, with search." });
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {

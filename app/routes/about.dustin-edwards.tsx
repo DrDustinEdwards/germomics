@@ -6,7 +6,9 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 import type { Route } from "./+types/about.dustin-edwards";
 import { getEnv } from "~/lib/context.server";
 import { loadPage, isPreviewing } from "~/lib/content.server";
-import { buildPersonLd, buildBreadcrumbLd, stripHtml } from "~/lib/seo";
+import { breadcrumbs, jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { buildPersonLd, pageHead, stripHtml } from "~/lib/seo";
+import { SITE_ORIGIN } from "~/lib/site";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { AUTHOR } from "~/lib/about";
 
@@ -16,24 +18,22 @@ const LINKS = [
 ];
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  const origin = loaderData?.origin ?? "";
   const bioText = loaderData?.bioText ?? AUTHOR.bio;
-  const desc = bioText.slice(0, 200);
   return [
-    { title: `${AUTHOR.honorific} ${AUTHOR.name}` },
-    { name: "description", content: desc },
-    { property: "og:title", content: `${AUTHOR.honorific} ${AUTHOR.name}` },
-    { property: "og:description", content: desc },
-    { property: "og:type", content: "profile" },
-    { property: "og:url", content: `${origin}/about/${AUTHOR.slug}` },
-    { "script:ld+json": buildPersonLd({ ...AUTHOR, bio: bioText }, origin) },
-    {
-      "script:ld+json": buildBreadcrumbLd([
-        { name: "Home", url: `${origin}/` },
-        { name: "About", url: `${origin}/about` },
-        { name: AUTHOR.name, url: `${origin}/about/${AUTHOR.slug}` },
+    ...pageHead({
+      path: `/about/${AUTHOR.slug}`,
+      title: `${AUTHOR.honorific} ${AUTHOR.name}`,
+      description: bioText.slice(0, 200),
+      type: "profile",
+    }),
+    jsonLd(buildPersonLd({ ...AUTHOR, bio: bioText })),
+    jsonLd(
+      breadcrumbs(SITE_ORIGIN, [
+        { name: "Home", path: "/" },
+        { name: "About", path: "/about" },
+        { name: AUTHOR.name, path: `/about/${AUTHOR.slug}` },
       ]),
-    },
+    ),
   ];
 }
 
@@ -41,7 +41,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const preview = await isPreviewing(env, request);
   const bio = await loadPage(env, "page:dustin-edwards", { includeDrafts: preview });
-  return { origin: new URL(request.url).origin, bioHtml: bio.value, bioText: stripHtml(bio.value) };
+  return { bioHtml: bio.value, bioText: stripHtml(bio.value) };
 }
 
 export default function AuthorBio({ loaderData }: Route.ComponentProps) {

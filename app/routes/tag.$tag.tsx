@@ -1,11 +1,16 @@
+import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/tag.$tag";
 import { getEnv } from "~/lib/context.server";
 import { postsByTag, toPlayerTrack } from "~/lib/posts.server";
 import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 
-export function meta({ params }: Route.MetaArgs) {
-  return [{ title: `#${params.tag} · Germomics` }];
+export function meta({ params, location }: Route.MetaArgs) {
+  return pageHead({
+    path: location.pathname,
+    title: `#${params.tag} · Germomics`,
+    description: `Germomics episodes and writing tagged ${params.tag}.`,
+  });
 }
 
 export async function loader({ params, context }: Route.LoaderArgs) {

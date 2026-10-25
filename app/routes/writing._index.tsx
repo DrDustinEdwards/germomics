@@ -1,13 +1,11 @@
+import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/writing._index";
 import { getEnv } from "~/lib/context.server";
 import { listArticles } from "~/lib/posts.server";
 import { ArticleCard } from "~/components/content/ArticleCard";
 
 export function meta() {
-  return [
-    { title: "Writing · Germomics" },
-    { name: "description", content: "Essays and notes on microbiology and history." },
-  ];
+  return pageHead({ path: "/writing", title: "Writing · Germomics", description: "Essays and notes on microbiology and history." });
 }
 
 export async function loader({ context }: Route.LoaderArgs) {

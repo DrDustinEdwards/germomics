@@ -1,3 +1,4 @@
+import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/guests.$guest";
 import { getEnv } from "~/lib/context.server";
 import { postsByGuest, slugifyGuest, toPlayerTrack } from "~/lib/posts.server";
@@ -5,8 +6,14 @@ import { getPersonBySlug, postsByPerson } from "~/lib/people.server";
 import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 
-export function meta({ loaderData }: Route.MetaArgs) {
-  return [{ title: `${loaderData?.name ?? "Guest"} · Germomics` }];
+export function meta({ loaderData, location }: Route.MetaArgs) {
+  const name = loaderData?.name ?? "Guest";
+  return pageHead({
+    path: location.pathname,
+    title: `${name} · Germomics`,
+    description: `Germomics episodes with ${name}.`,
+    image: loaderData?.photo,
+  });
 }
 
 export async function loader({ params, context }: Route.LoaderArgs) {
