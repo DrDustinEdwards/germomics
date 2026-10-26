@@ -163,7 +163,7 @@ export function Footer() {
           </span>
           <span aria-hidden>·</span>
           <a href="/feed/site.xml" className={link}>Writing feed</a>
-          <AppLink to="/admin" className="ml-auto inline-flex items-center gap-1 text-muted/70 hover:text-ink">
+          <AppLink to="/admin" rel="nofollow" prefetch="none" className="ml-auto inline-flex items-center gap-1 text-muted/70 hover:text-ink">
             <Lock size={14} aria-hidden /> Admin
           </AppLink>
         </div>
