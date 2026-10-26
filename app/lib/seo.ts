@@ -4,7 +4,13 @@
 // (+ MediaObject + partOfSeries) for episodes.
 import type { Post } from "~/db/schema";
 import type { GuestView, Host } from "~/lib/types";
-import { type ArticleFacts, articleDates, headTags } from "@drdustinedwards/site-helpers/head";
+import {
+  type ArticleFacts,
+  articleDates,
+  headTags,
+  SERP_DESCRIPTION_LIMIT,
+  truncateForSerp,
+} from "@drdustinedwards/site-helpers/head";
 import { article, faqPage, thing } from "@drdustinedwards/site-helpers/schema";
 import { DEFAULT_CARD, SITE_ORIGIN, postalAddressLd, type Address } from "~/lib/site";
 
@@ -268,8 +274,16 @@ type PageHead = {
 
 /**
  * The head of a public page from Prelum's headTags: title, description, canonical, Open Graph and Twitter, always on
- * SITE_ORIGIN so a workers.dev copy never claims the page. The show cover is the card when the page has none.
+ * SITE_ORIGIN so a workers.dev copy never claims the page. The show cover is the card when the page has none. A
+ * description too long for a search result is cut at a word, so a page whose description is its own text (About,
+ * TXASM) sends one sentence's worth, not the page.
  */
-export function pageHead({ image, ...page }: PageHead) {
-  return headTags({ origin: SITE_ORIGIN, siteName: "Germomics", image: image ?? DEFAULT_CARD, ...page });
+export function pageHead({ image, description, ...page }: PageHead) {
+  return headTags({
+    origin: SITE_ORIGIN,
+    siteName: "Germomics",
+    image: image ?? DEFAULT_CARD,
+    description: truncateForSerp(description, SERP_DESCRIPTION_LIMIT),
+    ...page,
+  });
 }

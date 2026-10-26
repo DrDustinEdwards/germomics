@@ -41,7 +41,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     show,
     address: settingAddress(settings),
     title: about.title || "About Germomics",
-    description: stripHtml(about.value).slice(0, 160),
+    description: stripHtml(about.value),
     aboutHtml: about.value,
     bioHtml: bio.value,
   };
