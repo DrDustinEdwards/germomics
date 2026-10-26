@@ -45,7 +45,7 @@ function sleepSummary(s: SleepMode | null): string {
 }
 
 // ── Accessible popover primitive ─────────────────────────────────────────────
-// A labelled disclosure: an icon/text trigger that toggles a floating panel. On open, focus moves to
+// A labeled disclosure: an icon/text trigger that toggles a floating panel. On open, focus moves to
 // the panel's marked element; Esc and outside pointer/focus close it and return focus to the trigger.
 function Popover({
   label,

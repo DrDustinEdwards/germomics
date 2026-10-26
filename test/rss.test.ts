@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Post, ShowConfig, Soundbite } from "~/db/schema";
 import type { GuestView } from "~/lib/types";
-import { buildChaptersJson, buildPodcastFeed, buildSiteFeed, op3Enclosure } from "~/lib/rss.server";
+import { buildChaptersJson, buildPodcastFeed, op3Enclosure } from "~/lib/rss.server";
 
 // The podcast feed is the one URL every directory polls (hard rule 1): enclosure, guid, duration
 // and type must be exact, and hostile text in a title must not break the XML. The route-level
@@ -80,8 +80,8 @@ describe("buildPodcastFeed", () => {
     expect(xml).not.toContain("Life Sciences");
     expect(xml).toContain("<itunes:explicit>true</itunes:explicit>");
     expect(xml).toContain('<podcast:funding url="https://pay.example/?a=1&amp;b=2">Support the show</podcast:funding>');
-    const labelled = buildPodcastFeed({ ...show, fundingUrl: "https://pay.example", fundingLabel: "Tip jar" } as ShowConfig, [], ORIGIN);
-    expect(labelled).toContain(">Tip jar</podcast:funding>");
+    const labeled = buildPodcastFeed({ ...show, fundingUrl: "https://pay.example", fundingLabel: "Tip jar" } as ShowConfig, [], ORIGIN);
+    expect(labeled).toContain(">Tip jar</podcast:funding>");
   });
 
   it("writes each episode with its permanent guid, the counted enclosure, exact length, type and duration", () => {
@@ -155,9 +155,6 @@ describe("the feed envelope", () => {
     expect(xml.split("\n")[1]).toBe(
       '<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:podcast="https://podcastindex.org/namespace/1.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">',
     );
-    expect(buildSiteFeed(show, [], ORIGIN).split("\n")[1]).toBe(
-      '<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">',
-    );
   });
 });
 
@@ -167,27 +164,6 @@ describe("guests with no links", () => {
     const [item] = items(buildPodcastFeed(show, [episode()], ORIGIN, guests));
     expect(item).toContain('<podcast:person role="guest" href="https://germomics.com/guests/cy">Cy</podcast:person>');
     expect(item).toContain('<podcast:person role="guest" href="https://di.example">Di</podcast:person>');
-  });
-});
-
-describe("buildSiteFeed", () => {
-  it("writes each article with its URL as the guid, and the show's writing feed as the channel", () => {
-    const xml = buildSiteFeed(show, [episode({ slug: "essay", title: "An <essay>", guid: null, excerpt: null })], ORIGIN);
-    expect(xml).toContain("<title>Germ &amp; Co: Writing</title>");
-    expect(xml).toContain("<link>https://germomics.com/writing</link>");
-    expect(xml).toContain('<atom:link href="https://germomics.com/feed/site.xml" rel="self" type="application/rss+xml"/>');
-    const [item] = items(xml);
-    expect(item).toContain("<title>An &lt;essay&gt;</title>");
-    expect(item).toContain("<guid>https://germomics.com/essay</guid>");
-    expect(item).toContain("<pubDate>Tue, 05 Mar 2024 10:00:00 GMT</pubDate>");
-    expect(item).toContain("<description><![CDATA[<p>Full</p>]]></description>");
-    expect(item).not.toContain("enclosure");
-    expect(buildSiteFeed(show, [], ORIGIN)).not.toContain("<item>");
-  });
-
-  it("keeps the stored guid when the slug changes after publish", () => {
-    const xml = buildSiteFeed(show, [episode({ slug: "renamed", guid: "urn:germomics:abc", excerpt: null })], ORIGIN);
-    expect(items(xml)[0]).toContain('<guid isPermaLink="false">urn:germomics:abc</guid>');
   });
 });
 

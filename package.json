@@ -24,10 +24,10 @@
     "nobloat:baseline": "react-router typegen && devkit-no-bloat --write-baseline && npm run build && devkit-route-weight --write-baseline"
   },
   "dependencies": {
-    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.12.1",
+    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.13.0",
     "@dustinedwards/d1-dump": "github:DrDustinEdwards/d1-dump#v0.6.0",
     "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.9.0",
-    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#8c9baaa474028b59d9a3012b366ec25c7f4247c7",
+    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.23.0",
     "@googlemaps/js-api-loader": "2.1.1",
     "@tiptap/extension-image": "3.32.0",
     "@tiptap/extensions": "3.32.0",
@@ -55,7 +55,6 @@
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "audio-decode": "3.11.0",
-    "jose": "6.2.12",
     "knip": "6.39.0",
     "sharp": "0.34.5",
     "tailwindcss": "4.3.1",

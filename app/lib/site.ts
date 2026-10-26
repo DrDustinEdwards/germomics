@@ -9,6 +9,13 @@ export const MEDIA_ORIGIN = "https://media.germomics.com";
 export const IMAGE_ORIGIN = "https://images.germomics.com";
 /** The show cover: the share card of any page without its own, and the show's artwork until show_config sets one. */
 export const DEFAULT_CARD = `${IMAGE_ORIGIN}/cover.jpg`;
+/** The site's IndexNow key, public by the protocol's design: served as /<key>.txt and sent with each changed page. */
+export const INDEXNOW_KEY = "e181c18855ea5175390b4e1124cc23fd";
+
+/** The vulnerability contact /.well-known/security.txt lists, and the date it is next confirmed by (the family check warns first). */
+export const SECURITY_CONTACT = "security@dustinedwards.info";
+export const SECURITY_TXT_EXPIRES = "2027-09-28T00:00:00Z";
+
 /** OP3 (op3.dev), the download analytics prefix the podcast feed wraps enclosures in. */
 export const OP3_ORIGIN = "https://op3.dev";
 

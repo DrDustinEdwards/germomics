@@ -82,7 +82,7 @@ describe("the publish-on-read gate", () => {
 });
 
 describe("listing reads", () => {
-  it("filters by kind, honours the limit, and leaves out the heavy fields", async () => {
+  it("filters by kind, honors the limit, and leaves out the heavy fields", async () => {
     await add({ slug: "ep", kind: "episode", publishedAt: "2024-02-01T00:00:00.000Z" });
     await add({ slug: "a1", publishedAt: "2024-03-01T00:00:00.000Z" });
     await add({ slug: "a2", publishedAt: "2024-01-01T00:00:00.000Z" });

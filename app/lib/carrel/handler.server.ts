@@ -1,6 +1,7 @@
 // Carrel's site API, mounted by workers/app.ts at /api/carrel/v1. One key (CARREL_SITE_KEY, a Worker
 // secret) reaches only that prefix and nothing else on the site.
 import { createSiteApi } from "@dustinedwards/site-api";
+import { pingIndexNow } from "~/lib/indexnow.server";
 import { createCarrelAdapter } from "./adapter.server";
 
 export function carrelApi(env: Env) {
@@ -9,5 +10,7 @@ export function carrelApi(env: Env) {
     key: env.CARREL_SITE_KEY,
     limiter: env.CARREL_RATE_LIMIT,
     log: (entry) => console.log(JSON.stringify(entry)),
+    // A published change tells IndexNow at once, under ctx.waitUntil (workers/app.ts passes ctx).
+    onPageChange: pingIndexNow,
   });
 }

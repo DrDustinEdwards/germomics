@@ -9,7 +9,7 @@ import { sanitizeHtml } from "~/lib/sanitize.server";
 // now nothing tested it: it is built on the Workers `HTMLRewriter` global, so `node --test`
 // could not load it.
 //
-// These tests pin CURRENT behaviour, deliberately. They are the safety net for a dependency
+// These tests pin CURRENT behavior, deliberately. They are the safety net for a dependency
 // bump, not a redesign of the policy: if a bump changes what survives sanitization, one of
 // these goes red and names which rule moved.
 

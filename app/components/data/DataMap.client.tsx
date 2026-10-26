@@ -84,9 +84,9 @@ export default function DataMap({
   useEffect(() => {
     if (!ref.current || !API_KEY) return;
     const container = ref.current;
-    // Cancelled on unmount: the API loads asynchronously and React 18 mounts effects twice in
+    // Canceled on unmount: the API loads asynchronously and React 18 mounts effects twice in
     // development, so a late resolve must not build a second map into a detached node.
-    let cancelled = false;
+    let canceled = false;
     let markers: google.maps.marker.AdvancedMarkerElement[] = [];
 
     void (async () => {
@@ -96,7 +96,7 @@ export default function DataMap({
           importLibrary("maps"),
           importLibrary("marker"),
         ]);
-        if (cancelled) return;
+        if (canceled) return;
 
         // A map rebuilt for a theme change goes into the same node, so clear the old one out.
         container.replaceChildren();
@@ -143,12 +143,12 @@ export default function DataMap({
       } catch {
         // A blocked script, a bad key, or an offline browser. The data table below is the real
         // content, so this degrades to no map rather than to a broken page.
-        if (!cancelled) setFailed(true);
+        if (!canceled) setFailed(true);
       }
     })();
 
     return () => {
-      cancelled = true;
+      canceled = true;
       for (const marker of markers) marker.map = null;
       markers = [];
     };

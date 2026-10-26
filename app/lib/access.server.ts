@@ -27,7 +27,7 @@ export async function getAdminSession(env: Env, request: Request): Promise<Admin
   if (!adminEmail) return null;
 
   try {
-    // The cookie rides every request to the host, which is how an admin is recognised on a public
+    // The cookie rides every request to the host, which is how an admin is recognized on a public
     // page opened with ?preview; Access sets the header only on paths the application covers.
     const verdict = await verifyAccessRequest(request, {
       teamDomain: env.ACCESS_TEAM_DOMAIN,

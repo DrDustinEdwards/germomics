@@ -1,130 +1,49 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { SignJWT, exportJWK, generateKeyPair } from "jose";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { type AccessStub, stubAccess } from "@dustinedwards/devkit/access";
 import { getAdminSession } from "~/lib/access.server";
 
-// Cloudflare Access in front of /admin: the verifier must accept exactly one kind of request, a
-// token signed by the team's key, for this application's audience, issued by this team, not
-// expired, carrying the admin's email. Every other case below must be refused.
+// germomics' part of the /admin check: the one admin email, the localhost dev bypass, and never throwing. The token
+// checks themselves (signature, audience, issuer, expiry, header or cookie) are site-runtime's and tested there.
 const TEAM = "https://test-team.cloudflareaccess.com";
 const AUD = "test-audience-tag";
 const ADMIN = "admin@example.com";
 const env = { ADMIN_EMAIL: ADMIN, ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: AUD } as unknown as Env;
 
-let privateKey: CryptoKey;
-let otherPrivateKey: CryptoKey;
-
+let access: AccessStub;
 beforeAll(async () => {
-  const pair = await generateKeyPair("RS256");
-  const other = await generateKeyPair("RS256");
-  privateKey = pair.privateKey;
-  otherPrivateKey = other.privateKey;
-  const jwk = { ...(await exportJWK(pair.publicKey)), kid: "k1", alg: "RS256", use: "sig" };
-  vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
-    const url = typeof input === "string" ? input : input instanceof URL ? input.href : (input as Request).url;
-    if (url === `${TEAM}/cdn-cgi/access/certs`) {
-      return new Response(JSON.stringify({ keys: [jwk] }), { headers: { "Content-Type": "application/json" } });
-    }
-    return new Response("not found", { status: 404 });
-  });
+  access = await stubAccess({ issuer: TEAM, audience: AUD, email: ADMIN, jwksUrl: `${TEAM}/cdn-cgi/access/certs` });
 });
+afterAll(() => access.restore());
 
-afterEach(() => vi.clearAllMocks());
-
-async function token(over: { aud?: string; iss?: string; email?: string; exp?: string | number; key?: CryptoKey } = {}) {
-  return new SignJWT({ email: over.email ?? ADMIN })
-    .setProtectedHeader({ alg: "RS256", kid: "k1" })
-    .setIssuedAt()
-    .setIssuer(over.iss ?? TEAM)
-    .setAudience(over.aud ?? AUD)
-    .setExpirationTime(over.exp ?? "5m")
-    .sign(over.key ?? privateKey);
-}
-
-const req = (headers: Record<string, string> = {}, url = "https://germomics.com/admin") =>
-  new Request(url, { headers });
+const req = (headers: Record<string, string> = {}, url = "https://germomics.com/admin") => new Request(url, { headers });
 
 describe("getAdminSession", () => {
-  it("accepts a valid assertion header for the admin", async () => {
-    const session = await getAdminSession(env, req({ "Cf-Access-Jwt-Assertion": await token() }));
-    expect(session).toEqual({ email: ADMIN });
+  it("admits the admin, matching the address without regard to case", async () => {
+    expect(await getAdminSession(env, req({ "Cf-Access-Jwt-Assertion": await access.token() }))).toEqual({ email: ADMIN });
+    const shouty = { ...env, ADMIN_EMAIL: "Admin@Example.com" } as unknown as Env;
+    const token = await access.token({ email: "ADMIN@example.COM" });
+    expect(await getAdminSession(shouty, req({ "Cf-Access-Jwt-Assertion": token }))).toEqual({ email: ADMIN });
   });
 
-  it("accepts the same token from the CF_Authorization cookie (public page with ?preview)", async () => {
-    const session = await getAdminSession(env, req({ Cookie: `a=b; CF_Authorization=${await token()}` }));
-    expect(session).toEqual({ email: ADMIN });
+  it("refuses a valid token for anyone else, and everyone when no admin address is set", async () => {
+    const other = await access.token({ email: "someone@example.com" });
+    expect(await getAdminSession(env, req({ "Cf-Access-Jwt-Assertion": other }))).toBeNull();
+    const noAdmin = { ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: AUD } as unknown as Env;
+    expect(await getAdminSession(noAdmin, req({ "Cf-Access-Jwt-Assertion": await access.token() }))).toBeNull();
   });
 
-  it("refuses a request with no assertion", async () => {
-    expect(await getAdminSession(env, req())).toBeNull();
-  });
-
-  it("refuses a token for a different audience", async () => {
-    expect(await getAdminSession(env, req({ "Cf-Access-Jwt-Assertion": await token({ aud: "someone-elses-app" }) }))).toBeNull();
-  });
-
-  it("refuses an expired token", async () => {
-    const expired = await token({ exp: Math.floor(Date.now() / 1000) - 3600 });
-    expect(await getAdminSession(env, req({ "Cf-Access-Jwt-Assertion": expired }))).toBeNull();
-  });
-
-  it("refuses a token from another issuer", async () => {
-    expect(await getAdminSession(env, req({ "Cf-Access-Jwt-Assertion": await token({ iss: "https://evil.cloudflareaccess.com" }) }))).toBeNull();
-  });
-
-  it("refuses a token signed by a key that is not the team's", async () => {
-    expect(await getAdminSession(env, req({ "Cf-Access-Jwt-Assertion": await token({ key: otherPrivateKey }) }))).toBeNull();
-  });
-
-  it("refuses a valid token for an email that is not the admin", async () => {
-    expect(await getAdminSession(env, req({ "Cf-Access-Jwt-Assertion": await token({ email: "someone@example.com" }) }))).toBeNull();
-  });
-
-  it("refuses garbage in the header", async () => {
-    expect(await getAdminSession(env, req({ "Cf-Access-Jwt-Assertion": "not.a.jwt" }))).toBeNull();
-  });
-
-  it("fails closed when the team domain or audience is not configured", async () => {
-    const good = { "Cf-Access-Jwt-Assertion": await token() };
-    expect(await getAdminSession({ ADMIN_EMAIL: ADMIN, ACCESS_AUD: AUD } as unknown as Env, req(good))).toBeNull();
-    expect(await getAdminSession({ ADMIN_EMAIL: ADMIN, ACCESS_TEAM_DOMAIN: TEAM } as unknown as Env, req(good))).toBeNull();
-  });
-
-  it("honours the dev bypass on localhost only", async () => {
+  it("honors the dev bypass on localhost only", async () => {
     const dev = { ADMIN_EMAIL: ADMIN, ACCESS_DEV_BYPASS: "1" } as unknown as Env;
     expect(await getAdminSession(dev, req({}, "http://localhost:5173/admin"))).toEqual({ email: ADMIN });
     expect(await getAdminSession(dev, req({}, "https://germomics.com/admin"))).toBeNull();
     // Any other value, or no admin address, is not the opt-in.
     const loose = { ADMIN_EMAIL: ADMIN, ACCESS_DEV_BYPASS: "true" } as unknown as Env;
     expect(await getAdminSession(loose, req({}, "http://localhost:5173/admin"))).toBeNull();
-    expect(await getAdminSession({ ADMIN_EMAIL: ADMIN } as unknown as Env, req({}, "http://localhost:5173/admin"))).toBeNull();
     expect(await getAdminSession({ ACCESS_DEV_BYPASS: "1" } as unknown as Env, req({}, "http://localhost:5173/admin"))).toBeNull();
   });
 
-  it("refuses everyone when no admin address is configured", async () => {
-    const noAdmin = { ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: AUD } as unknown as Env;
-    expect(await getAdminSession(noAdmin, req({ "Cf-Access-Jwt-Assertion": await token() }))).toBeNull();
-  });
-
-  it("matches the admin address without regard to case, and tolerates a trailing slash on the team domain", async () => {
-    const shouty = { ADMIN_EMAIL: "Admin@Example.com", ACCESS_TEAM_DOMAIN: `${TEAM}//`, ACCESS_AUD: AUD } as unknown as Env;
-    const session = await getAdminSession(shouty, req({ "Cf-Access-Jwt-Assertion": await token({ email: "ADMIN@example.COM" }) }));
-    expect(session).toEqual({ email: ADMIN });
-  });
-
-  it("refuses a token with no email claim", async () => {
-    const bare = await new SignJWT({})
-      .setProtectedHeader({ alg: "RS256", kid: "k1" })
-      .setIssuer(TEAM)
-      .setAudience(AUD)
-      .setExpirationTime("5m")
-      .sign(privateKey);
-    expect(await getAdminSession(env, req({ "Cf-Access-Jwt-Assertion": bare }))).toBeNull();
-  });
-
-  it("reads the cookie wherever it sits, with or without a space, and only under its exact name", async () => {
-    const t = await token();
-    expect(await getAdminSession(env, req({ Cookie: `CF_Authorization=${t}; theme=dark` }))).toEqual({ email: ADMIN });
-    expect(await getAdminSession(env, req({ Cookie: `theme=dark;CF_Authorization=${t}` }))).toEqual({ email: ADMIN });
-    expect(await getAdminSession(env, req({ Cookie: `NOT_CF_Authorization=${t}` }))).toBeNull();
+  it("returns null rather than throwing when the team's keys cannot be fetched", async () => {
+    const elsewhere = { ...env, ACCESS_TEAM_DOMAIN: "https://unreachable.cloudflareaccess.com" } as unknown as Env;
+    expect(await getAdminSession(elsewhere, req({ "Cf-Access-Jwt-Assertion": await access.token() }))).toBeNull();
   });
 });

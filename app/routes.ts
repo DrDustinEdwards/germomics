@@ -1,4 +1,5 @@
 import { type RouteConfig, index, route } from "@react-router/dev/routes";
+import { INDEXNOW_KEY } from "./lib/site";
 
 export default [
   index("routes/_index.tsx"),
@@ -40,6 +41,8 @@ export default [
   route("llms.txt", "routes/llms.ts"),
   route("llms-full.txt", "routes/llms-full.ts"),
   route("ai.txt", "routes/ai-txt.ts"),
+  route(".well-known/security.txt", "routes/security-txt.ts"),
+  route(`${INDEXNOW_KEY}.txt`, "routes/indexnow-key.ts"),
   // Google Search Console ownership proof. The path is Google's and never changes; removing it
   // un-verifies the property. See the route file.
   route("google7e6923f5a0eb8ba9.html", "routes/google-verification.ts"),

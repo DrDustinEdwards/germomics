@@ -4,7 +4,7 @@ import { diffSnapshots, lineDiff } from "~/lib/versions";
 // The version history screen: what changed between two saved snapshots of a post. A wrong or
 // missing line here means an editor restoring from history picks the wrong version.
 describe("diffSnapshots", () => {
-  it("lists only the fields that changed, labelled, in the screen's fixed order", () => {
+  it("lists only the fields that changed, labeled, in the screen's fixed order", () => {
     const a = { title: "Old", slug: "s", status: "draft" as const, body: "<p>a</p>", tags: ["x"] };
     const b = { title: "New", slug: "s", status: "published" as const, body: "<p>b</p>", tags: ["x"] };
     expect(diffSnapshots(a, b)).toEqual([
@@ -36,7 +36,7 @@ describe("diffSnapshots", () => {
     expect(diffSnapshots({ tags: [] }, { tags: ["x"] })).toEqual([{ label: "Tags", before: "", after: "x" }]);
   });
 
-  it("surfaces every labelled field", () => {
+  it("surfaces every labeled field", () => {
     const keys = ["title", "slug", "status", "publishAt", "excerpt", "tags", "coverImage", "coverAlt", "ogImage", "seoTitle", "seoDescription", "episodeNumber", "seasonNumber", "episodeType", "audioUrl", "audioDuration", "transcript", "chapters", "guests", "body"];
     const changed = Object.fromEntries(keys.map((k) => [k, "changed"]));
     expect(diffSnapshots({}, changed)).toHaveLength(keys.length);

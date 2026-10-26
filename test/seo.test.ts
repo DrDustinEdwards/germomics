@@ -14,7 +14,7 @@ import {
 } from "~/lib/seo";
 
 // Search and answer engines read these: the schema.org nodes mirror the page, so a wrong field or a
-// leaked <script> in a description is seen by every crawler. Heading, outline and anchor behaviour
+// leaked <script> in a description is seen by every crawler. Heading, outline and anchor behavior
 // already pinned in post-render.test.ts is not repeated here.
 const ORIGIN = "https://germomics.com";
 const post = (over: Partial<Post>): Post =>
