@@ -32,7 +32,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const page = await loadPage(env, "page:txasm", { includeDrafts: preview });
   return {
     title: page.title || TITLE,
-    description: stripHtml(page.value).slice(0, 160),
+    description: stripHtml(page.value),
     html: page.value,
   };
 }

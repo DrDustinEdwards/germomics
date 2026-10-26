@@ -30,7 +30,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
       path: `/${post.slug}`,
       title: `${post.seoTitle ?? post.title} · Germomics`,
       socialTitle: post.title,
-      description: post.seoDescription ?? post.excerpt ?? stripHtml(post.body).slice(0, 160),
+      description: post.seoDescription ?? post.excerpt ?? stripHtml(post.body),
       image: ogImage,
       type: "article",
       article: { published: post.publishedAt ?? post.publishAt, modified: post.updatedAt, author, tags: post.tags ?? [] },

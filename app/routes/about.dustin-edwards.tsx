@@ -23,7 +23,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
     ...pageHead({
       path: `/about/${AUTHOR.slug}`,
       title: `${AUTHOR.honorific} ${AUTHOR.name}`,
-      description: bioText.slice(0, 200),
+      description: bioText,
       type: "profile",
     }),
     jsonLd(buildPersonLd({ ...AUTHOR, bio: bioText })),
