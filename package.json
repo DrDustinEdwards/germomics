@@ -34,7 +34,7 @@
     "@tiptap/pm": "3.32.0",
     "@tiptap/react": "3.32.0",
     "@tiptap/starter-kit": "3.32.0",
-    "capsomer": "github:DrDustinEdwards/capsomer#v0.28.1",
+    "capsomer": "github:DrDustinEdwards/capsomer#v0.34.1",
     "drizzle-orm": "0.45.2",
     "isbot": "5.1.43",
     "lucide-react": "1.21.0",
@@ -47,7 +47,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.65.0",
     "@cloudflare/vitest-plugin": "1.4.6",
-    "@dustinedwards/devkit": "github:DrDustinEdwards/devkit#v0.13.3",
+    "@dustinedwards/devkit": "github:DrDustinEdwards/devkit#v0.15.0",
     "@react-router/dev": "8.3.1",
     "@tailwindcss/vite": "4.3.1",
     "@types/google.maps": "3.66.2",

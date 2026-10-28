@@ -7,5 +7,10 @@
     "skip": [
       "docs/research/kill-matrix.json"
     ]
+  },
+  "tokens": {
+    "--surface": "germomics.com keeps its own public palette (products on their own domains keep their own looks, Dustin 2026-10-26)",
+    "--muted": "same: germomics.com's own public palette",
+    "--accent": "same: germomics.com's own public palette"
   }
 }
