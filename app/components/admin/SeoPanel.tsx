@@ -3,8 +3,7 @@
 // Optional AI assist (Tier 3) drafts title/description/social blurb from the transcript.
 import { Field, inputCx } from "./ui";
 import { AiAssist } from "./AiAssist";
-
-type SeoDraft = { seoTitle: string; seoDescription: string; socialBlurb: string };
+import type { SeoDraft } from "../../lib/ai.server";
 
 export function SeoPanel({
   slug,
