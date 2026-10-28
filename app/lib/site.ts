@@ -19,7 +19,7 @@ export const SECURITY_TXT_EXPIRES = "2027-09-28T00:00:00Z";
 /** OP3 (op3.dev), the download analytics prefix the podcast feed wraps enclosures in. */
 export const OP3_ORIGIN = "https://op3.dev";
 
-export const SITE_ADDRESS = {
+const SITE_ADDRESS = {
   streetAddress: "Box T-0100",
   locality: "Stephenville",
   region: "TX",

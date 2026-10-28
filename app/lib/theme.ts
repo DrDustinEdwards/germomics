@@ -10,7 +10,7 @@ export function storedTheme(): Theme | null {
   return v === "light" || v === "dark" ? v : null;
 }
 
-export function systemTheme(): Theme {
+function systemTheme(): Theme {
   if (typeof window === "undefined") return "dark"; // dark is canonical for share images
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }

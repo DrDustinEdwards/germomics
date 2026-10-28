@@ -86,7 +86,7 @@ async function readJob(env: Env, id: string): Promise<Job | null> {
 const writeJob = (env: Env, id: string, job: Job) => env.APP_KV.put(jobKey(id), JSON.stringify(job), { expirationTtl: JOB_TTL_SECONDS });
 
 /** What the routine is told when it fires: where the job is and the key that opens it, nothing else. */
-export function fireText(id: string, key: string): string {
+function fireText(id: string, key: string): string {
   return [`job_url: ${SITE_ORIGIN}/api/ai-drafts/${id}`, `job_key: ${key}`].join("\n");
 }
 
