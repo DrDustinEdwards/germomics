@@ -276,3 +276,24 @@ export type Person = typeof people.$inferSelect;
 export type NewPerson = typeof people.$inferInsert;
 export type EpisodePerson = typeof episodePeople.$inferSelect;
 export type Soundbite = typeof soundbites.$inferSelect;
+
+// 0013: an update Carrel scheduled on a live article (site-api v0.10.0). Read and written only through
+// @dustinedwards/site-api/schedules (app/lib/carrel/adapter.server.ts); declared here so the schema test sees it.
+export const scheduledUpdates = sqliteTable(
+  "scheduled_updates",
+  {
+    contentId: text("content_id").primaryKey(),
+    source: text("source").notNull(),
+    publishAt: text("publish_at").notNull(),
+    changeId: text("change_id").notNull(),
+    scheduledAt: text("scheduled_at").notNull(),
+  },
+  (t) => ({ dueIdx: index("scheduled_updates_due").on(t.publishAt) }),
+);
+
+// 0014: the caption Carrel set on an image in BLOG_IMAGES, keyed by its R2 key (app/lib/carrel/adapter.server.ts).
+export const mediaCaptions = sqliteTable("media_captions", {
+  mediaKey: text("media_key").primaryKey(),
+  caption: text("caption").notNull(),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});

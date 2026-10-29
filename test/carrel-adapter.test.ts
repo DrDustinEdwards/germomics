@@ -3,6 +3,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { MediaInUseError, NotFoundError, RefusedError, VersionConflictError } from "@dustinedwards/site-api";
 import { createCarrelAdapter } from "~/lib/carrel/adapter.server";
 import { carrelApi } from "~/lib/carrel/handler.server";
+import { imageSet } from "~/lib/images.server";
 import { applyMigrations } from "./helpers/d1";
 
 // The adapter as site-api calls it: what Carrel reads back (summaries, versions, revisions), what it
@@ -29,6 +30,8 @@ beforeEach(async () => {
   media = adapter.media!;
   await e.DB.exec("DELETE FROM post_versions");
   await e.DB.exec("DELETE FROM posts");
+  await e.DB.exec("DELETE FROM scheduled_updates");
+  await e.DB.exec("DELETE FROM media_captions");
   const listed = await e.BLOG_IMAGES.list();
   if (listed.objects.length) await e.BLOG_IMAGES.delete(listed.objects.map((o) => o.key));
 });
@@ -131,6 +134,50 @@ describe("publishing, scheduling and unpublishing", () => {
     expect(await row("sch")).toMatchObject({ guid: "urn:germomics:kept", publish_at: past, published_at: past, title: "Sched", status: "published" });
     const doc = (await content.get("sch"))!;
     expect(doc).toMatchObject({ status: "published", publishAt: past, publishedAt: past, path: "/sch" });
+  });
+});
+
+describe("an update scheduled on a live article", () => {
+  const live = async (slug: string) => {
+    const d = await save(slug, '---\ntitle: "Live"\n---\n<p>old</p>');
+    return content.publish(slug, { expectedVersion: d.version, changeId: "c_pub" });
+  };
+  const at = "2030-01-01T15:00:00.000Z";
+
+  it("waits while the live version is served, then the cron pass puts it live once", async () => {
+    const pub = await live("upd");
+    const schedules = adapter.schedules!;
+    const s = await schedules.update("upd", { source: '---\ntitle: "New"\n---\n<p>new</p>', publishAt: at, expectedVersion: pub.version, changeId: "c_upd" });
+    expect(s).toMatchObject({ status: "published", scheduledUpdate: { publishAt: at, changeId: "c_upd" } });
+    expect(s.version).not.toBe(pub.version);
+    const doc = (await content.get("upd"))!;
+    expect(doc).toMatchObject({ version: s.version, scheduledUpdate: { publishAt: at, changeId: "c_upd" } });
+    expect((await row("upd"))!.body).toBe("<p>old</p>");
+
+    expect(await schedules.due({ now: new Date("2029-12-31T00:00:00Z"), limit: 50 })).toEqual([]);
+    const now = new Date("2030-01-01T15:00:30Z");
+    const [due] = await schedules.due({ now, limit: 50 });
+    expect(due).toMatchObject({ id: "upd", kind: "update", publishAt: at, changeId: "c_upd" });
+    expect(await schedules.apply("upd", { ...due!, now })).toMatchObject({ status: "published", scheduledUpdate: null });
+    expect((await row("upd"))!).toMatchObject({ title: "New", body: "<p>new</p>", status: "published" });
+    // Applied, so gone: a second pass changes nothing.
+    expect(await schedules.apply("upd", { ...due!, now })).toBeNull();
+    expect(await schedules.due({ now, limit: 50 })).toEqual([]);
+  });
+
+  it("is dropped by a publish now and by a cancel, and the cancel keeps the article live", async () => {
+    const schedules = adapter.schedules!;
+    const pub = await live("drop");
+    const s = await schedules.update("drop", { source: "<p>later</p>", publishAt: at, expectedVersion: pub.version, changeId: "c1" });
+    const now = await content.publish("drop", { expectedVersion: s.version, changeId: "c2" });
+    expect(now.scheduledUpdate).toBeNull();
+    expect(await schedules.get("drop")).toBeNull();
+
+    const again = await schedules.update("drop", { source: "<p>later</p>", publishAt: at, expectedVersion: now.version, changeId: "c3" });
+    const canceled = await schedules.cancel("drop", { expectedVersion: again.version, changeId: "c4" });
+    expect(canceled).toMatchObject({ status: "published", scheduledUpdate: null, version: now.version });
+    expect(await schedules.get("drop")).toBeNull();
+    await expect(schedules.cancel("drop", { expectedVersion: now.version, changeId: "c5" })).rejects.toBeInstanceOf(RefusedError);
   });
 });
 
@@ -267,6 +314,43 @@ describe("media", () => {
     expect(await e.BLOG_IMAGES.head("carrel/x.png")).toBeNull();
     expect(logged).toEqual([{ event: "carrel.media.delete", id: "carrel/x.png", version: "deleted", changeId: "chg_d" }]);
     await expect(media.delete("carrel/x.png", { changeId: "c" })).rejects.toThrow(NotFoundError);
+  });
+});
+
+describe("a file's focal point, caption and replace", () => {
+  const upload = () => media.upload({ bytes: PNG, contentType: "image/png", filename: "f.png", alt: "Alt", changeId: "c" });
+
+  it("keeps a focal point where the crops read it, moving the version, and refuses a stale version", async () => {
+    const item = await upload();
+    const { version } = await media.setFocus!(item.id, { focus: "0.25x0.4", expectedVersion: item.version!, changeId: "c_f" });
+    expect(version).not.toBe(item.version);
+    expect(await media.get(item.id)).toMatchObject({ version, focus: "0.25x0.4", alt: "Alt" });
+    await expect(media.setFocus!(item.id, { focus: null, expectedVersion: item.version!, changeId: "c" })).rejects.toBeInstanceOf(VersionConflictError);
+    // A cover crop is cut around it: the point is in the URL /media checks.
+    await e.BLOG_IMAGES.put(item.id, PNG, { httpMetadata: { contentType: "image/png" }, customMetadata: { width: "1600", height: "900", focus: "0.25x0.4" } });
+    const url = `https://images.germomics.com/${item.id}`;
+    expect(Object.values(await imageSet(e, [["cover", url]]))[0]!.src).toContain("r=2x1&fp=0.25x0.4");
+  });
+
+  it("keeps a caption in the site's own index, and an empty caption removes it", async () => {
+    const item = await upload();
+    const set = await media.setCaption!(item.id, { caption: "Vibrio cholerae", expectedVersion: item.version!, changeId: "c_c" });
+    expect(await media.get(item.id)).toMatchObject({ caption: "Vibrio cholerae", version: set.version });
+    expect((await media.list({ limit: 10 })).items[0]).toMatchObject({ caption: "Vibrio cholerae" });
+    const cleared = await media.setCaption!(item.id, { caption: "", expectedVersion: set.version, changeId: "c" });
+    expect(cleared.version).toBe(item.version);
+    expect(await e.DB.prepare("SELECT count(*) AS n FROM media_captions").first("n")).toBe(0);
+  });
+
+  it("replaces the bytes under the same key, keeping alt and caption and clearing the focal point", async () => {
+    const item = await upload();
+    const f = await media.setFocus!(item.id, { focus: "0.5x0.5", expectedVersion: item.version!, changeId: "c" });
+    const c = await media.setCaption!(item.id, { caption: "Cap", expectedVersion: f.version, changeId: "c" });
+    const bytes = new Uint8Array([...PNG, 0]);
+    const { item: after, sizesNeedPurge } = await media.replace!(item.id, { bytes, contentType: "image/png", filename: "new.png", expectedVersion: c.version, changeId: "c_r" });
+    expect(sizesNeedPurge).toBe(false);
+    expect(after).toMatchObject({ id: item.id, url: item.url, alt: "Alt", caption: "Cap", focus: null, bytes: bytes.length });
+    expect(after.version).not.toBe(c.version);
   });
 });
 

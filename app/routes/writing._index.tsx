@@ -3,13 +3,17 @@ import type { Route } from "./+types/writing._index";
 import { getEnv } from "~/lib/context.server";
 import { listArticles } from "~/lib/posts.server";
 import { ArticleCard } from "~/components/content/ArticleCard";
+import { imageFor } from "~/lib/images";
+import { imageSet } from "~/lib/images.server";
 
 export function meta() {
   return pageHead({ path: "/writing", title: "Writing · Germomics", description: "Essays and notes on microbiology and history." });
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
-  return { articles: await listArticles(getEnv(context)) };
+  const env = getEnv(context);
+  const articles = await listArticles(env);
+  return { articles, images: await imageSet(env, articles.map((a) => ["card", a.coverImage] as const)) };
 }
 
 export default function Writing({ loaderData }: Route.ComponentProps) {
@@ -24,7 +28,7 @@ export default function Writing({ loaderData }: Route.ComponentProps) {
       ) : (
         <div className="grid gap-5 sm:grid-cols-2">
           {loaderData.articles.map((post) => (
-            <ArticleCard key={post.id} post={post} />
+            <ArticleCard key={post.id} post={post} image={imageFor(loaderData.images, "card", post.coverImage)} />
           ))}
         </div>
       )}

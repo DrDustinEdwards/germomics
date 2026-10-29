@@ -7,9 +7,14 @@
 // source cannot represent, so they are not exposed (kind "episode" is never listed or writable).
 //
 // IDS AND VERSIONS. A content id is the article's slug. A version is a hash of everything Carrel can
-// see or change (the source, the status and the schedule), so any change anywhere gives a new
-// version and two saves in one second cannot collide.
-import { and, desc, eq, like, or } from "drizzle-orm";
+// see or change (the source, the status and the schedule, and an update waiting on a live article),
+// so any change anywhere gives a new version and two saves in one second cannot collide.
+//
+// SCHEDULES. An article scheduled before it was ever live is a published row with a future
+// publish_at: every public read hides it until then (publiclyVisible), so it needs no cron. An
+// update scheduled on a LIVE article (site-api v0.10.0) waits in scheduled_updates while the live
+// version stays served, and the one-minute cron (workers/app.ts, api.runSchedules) puts it live.
+import { and, desc, eq, inArray, like, or, sql } from "drizzle-orm";
 import {
   contentVersion,
   MediaInUseError,
@@ -18,13 +23,18 @@ import {
   VersionConflictError,
   type ContentSummary,
   type MediaItem,
+  type ScheduledUpdate,
   type SiteAdapter,
   type WriteResult,
 } from "@dustinedwards/site-api";
+import { d1ScheduledUpdates, utc } from "@dustinedwards/site-api/schedules";
+import { replaceObject, writeFocus, type R2BucketLike } from "@dustinedwards/site-api/r2";
+import { FOCUS_METADATA, focusOf } from "@dustinedwards/site-runtime/image";
 import { getDb } from "~/db/index.server";
-import { posts, postVersions, type Post } from "~/db/schema";
+import { mediaCaptions, posts, postVersions, type Post } from "~/db/schema";
 import { generateGuid, snapshotVersion, updatePost } from "~/lib/admin.server";
 import { buildKey, imageUrl } from "~/lib/r2.server";
+import { imageMetadata } from "~/lib/images.server";
 import { SITE_ORIGIN } from "~/lib/site";
 import { sanitizeHtml } from "~/lib/sanitize.server";
 import { addHeadingIds, demoteHeadings, readingTime } from "~/lib/seo";
@@ -49,11 +59,20 @@ function statusOf(p: Pick<Post, "status" | "publishAt">): Status {
   return p.publishAt && p.publishAt > new Date().toISOString() ? "scheduled" : "published";
 }
 
-/** The version of a row as Carrel sees it. */
-const versionOf = (p: Post): Promise<string> => contentVersion([renderSource(p), p.status, p.publishAt ?? null]);
+type Waiting = Pick<ScheduledUpdate, "publishAt" | "changeId"> | null;
 
-function summaryOf(p: Post): ContentSummary {
+/**
+ * The version of a row as Carrel sees it. The waiting update's time and change id join the parts
+ * only when there is one, so every version made before scheduled updates existed is unchanged.
+ */
+const versionOf = (p: Post, update: Waiting = null): Promise<string> =>
+  contentVersion([renderSource(p), p.status, p.publishAt ?? null, ...(update ? [update.publishAt, update.changeId] : [])]);
+
+const waitingOf = (u: ScheduledUpdate | null): Waiting => (u ? { publishAt: u.publishAt, changeId: u.changeId } : null);
+
+function summaryOf(p: Post, update: Waiting = null): ContentSummary {
   return {
+    scheduledUpdate: update,
     id: p.slug,
     kind: "article",
     title: p.title,
@@ -75,8 +94,8 @@ async function findArticle(env: Env, slug: string): Promise<Post | null> {
 }
 
 /** Every write checks the version first, in one place. */
-async function requireVersion(post: Post | null, expected: string | null): Promise<void> {
-  const current = post ? await versionOf(post) : null;
+async function requireVersion(post: Post | null, update: Waiting, expected: string | null): Promise<void> {
+  const current = post ? await versionOf(post, update) : null;
   if (current !== expected) throw new VersionConflictError(current);
 }
 
@@ -102,21 +121,27 @@ async function fieldsFromSource(source: string): Promise<Partial<Post>> {
 
 export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknown>) => void = console.log): SiteAdapter {
   const db = getDb(env);
+  const updates = d1ScheduledUpdates(env.DB);
+  const waiting = async (slug: string): Promise<Waiting> => waitingOf(await updates.get(slug));
 
   // Carrel's changeId joins its authorship record to this site's history. posts has no column for
   // it, so it is written to the Worker log with the id and the new version, and returned to Carrel.
   const recordChange = (event: string, id: string, version: string, changeId: string) =>
     log({ event: `carrel.${event}`, id, version, changeId });
 
+  // `dropUpdate`: a publish or an unpublish drops an update waiting on the article, so the cron
+  // never brings back what was just published over or taken down.
   async function write(
     event: string,
     slug: string,
     changeId: string,
     expectedVersion: string | null,
     build: (current: Post | null) => Promise<Partial<Post>>,
+    { dropUpdate = false } = {},
   ): Promise<WriteResult> {
     const current = await findArticle(env, slug);
-    await requireVersion(current, expectedVersion);
+    const update = current ? await waiting(slug) : null;
+    await requireVersion(current, update, expectedVersion);
     if (!current) {
       if (!ID_PATTERN.test(slug)) throw new RefusedError("That id cannot be used as a slug.");
       // The slug is unique across every kind; an episode already holds it.
@@ -136,9 +161,11 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
         .returning();
       row = created[0];
     }
-    const version = await versionOf((await findArticle(env, slug)) ?? row);
+    if (update && dropUpdate) await updates.remove(slug).run();
+    const left = dropUpdate ? null : update;
+    const version = await versionOf((await findArticle(env, slug)) ?? row, left);
     recordChange(event, slug, version, changeId);
-    return { id: slug, version, status: statusOf(row), changeId };
+    return { id: slug, version, status: statusOf(row), changeId, scheduledUpdate: left };
   }
 
   return {
@@ -159,13 +186,15 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
         const start = Math.max(0, Number(cursor) || 0);
         const page = matching.slice(start, start + limit);
         const next = start + limit < matching.length ? String(start + limit) : null;
-        return { items: page.map(summaryOf), nextCursor: next };
+        const waits = await Promise.all(page.map((p) => waiting(p.slug)));
+        return { items: page.map((p, i) => summaryOf(p, waits[i])), nextCursor: next };
       },
 
       async get(id) {
         const p = await findArticle(env, id);
         if (!p) return null;
-        return { ...summaryOf(p), format: "markdown" as const, source: renderSource(p), version: await versionOf(p) };
+        const update = await waiting(id);
+        return { ...summaryOf(p, update), format: "markdown" as const, source: renderSource(p), version: await versionOf(p, update) };
       },
 
       saveDraft: (id, input) =>
@@ -185,7 +214,7 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
             publishedAt: current.publishedAt ?? new Date().toISOString(),
             publishAt: null,
           };
-        }),
+        }, { dropUpdate: true }),
 
       schedule: (id, input) =>
         write("schedule", id, input.changeId, input.expectedVersion, async (current) => {
@@ -203,7 +232,7 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
         write("unpublish", id, input.changeId, input.expectedVersion, async (current) => {
           if (!current) throw new NotFoundError();
           return { status: "draft", publishAt: null };
-        }),
+        }, { dropUpdate: true }),
 
       async revisions(id) {
         const p = await findArticle(env, id);
@@ -230,13 +259,74 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
       async revisionSource(id, version) {
         const p = await findArticle(env, id);
         if (!p) return null;
-        if ((await versionOf(p)) === version) return renderSource(p);
+        if ((await versionOf(p, await waiting(id))) === version) return renderSource(p);
         const rows = await db.select().from(postVersions).where(eq(postVersions.postId, p.id)).limit(50);
         for (const r of rows) {
           const snap = r.snapshot as Post;
           if ((await versionOf(snap)) === version) return renderSource(snap);
         }
         return null;
+      },
+    },
+
+    // Updates scheduled on live articles (site-api v0.10.0), kept in scheduled_updates.
+    schedules: {
+      async get(id) {
+        return (await findArticle(env, id)) ? updates.get(id) : null;
+      },
+
+      async update(id, { source, publishAt, expectedVersion, changeId }) {
+        const current = await findArticle(env, id);
+        if (!current) throw new NotFoundError();
+        const before = await waiting(id);
+        await requireVersion(current, before, expectedVersion);
+        if (statusOf(current) !== "published") throw new RefusedError("Only a live article takes a scheduled update.");
+        await fieldsFromSource(source); // refused now, not at the time, when it cannot be read
+        await updates.put(id, { source, publishAt, changeId }).run();
+        const update = { publishAt: utc(publishAt), changeId };
+        const version = await versionOf(current, update);
+        recordChange("schedule.update", id, version, changeId);
+        return { id, version, status: "published", changeId, scheduledUpdate: update };
+      },
+
+      async cancel(id, { expectedVersion, changeId }) {
+        const current = await findArticle(env, id);
+        if (!current) throw new NotFoundError();
+        const update = await waiting(id);
+        await requireVersion(current, update, expectedVersion);
+        if (update) {
+          await updates.remove(id).run();
+          const version = await versionOf(current, null);
+          recordChange("schedule.cancel", id, version, changeId);
+          return { id, version, status: statusOf(current), changeId, scheduledUpdate: null };
+        }
+        if (statusOf(current) !== "scheduled") throw new RefusedError("Nothing is scheduled for this article.");
+        // Never live: back to a draft, as an unpublish would.
+        return write("schedule.cancel", id, changeId, expectedVersion, async () => ({ status: "draft", publishAt: null }));
+      },
+
+      // Only waiting updates: a never-live scheduled article goes live by its publish_at on every read.
+      due: ({ now, limit }) => updates.due(now, limit),
+
+      async apply(id, { kind, publishAt, changeId, now }) {
+        if (kind !== "update" || new Date(publishAt) > now) return null;
+        const update = await updates.get(id);
+        if (!update || update.publishAt !== utc(publishAt) || update.changeId !== changeId) return null;
+        const match = { publishAt: update.publishAt, changeId };
+        const current = await findArticle(env, id);
+        // Deleted, renamed or taken down in the admin editor since: the update has nothing left to replace.
+        if (!current || statusOf(current) !== "published") {
+          await updates.remove(id, match).run();
+          return null;
+        }
+        const fields = await fieldsFromSource(update.source);
+        await snapshotVersion(env, current);
+        await updatePost(env, current.id, fields);
+        await updates.remove(id, match).run();
+        const row = (await findArticle(env, id)) ?? { ...current, ...fields };
+        const version = await versionOf(row, null);
+        recordChange("schedule.apply", id, version, changeId);
+        return { id, version, status: "published", changeId, scheduledUpdate: null };
       },
     },
 
@@ -264,7 +354,8 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
         });
         const matching = listed.objects.filter((o) => !q || o.key.toLowerCase().includes(q.toLowerCase()));
         const page = matching.slice(0, limit);
-        const items = page.map((o) => toMediaItem(o.key, o.size, o.httpMetadata?.contentType, o.customMetadata, o.uploaded));
+        const captions = await captionsOf(env, page.map((o) => o.key));
+        const items = await Promise.all(page.map((o) => toMediaItem(o, captions.get(o.key) ?? "")));
         // A cursor only when the bucket has more; items past `limit` in this batch are listed next time
         // because the cursor is the bucket's own and the next call starts after the whole batch.
         return { items, nextCursor: listed.truncated ? listed.cursor ?? null : null };
@@ -273,20 +364,66 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
       async get(id) {
         const head = await env.BLOG_IMAGES.head(id);
         if (!head) return null;
-        return {
-          ...toMediaItem(id, head.size, head.httpMetadata?.contentType, head.customMetadata, head.uploaded),
-          usedBy: await usesOf(env, id),
-        };
+        const captions = await captionsOf(env, [id]);
+        return { ...(await toMediaItem(head, captions.get(id) ?? "")), usedBy: await usesOf(env, id) };
       },
 
       async upload({ bytes, contentType, filename, alt, changeId }) {
         const key = buildKey("carrel", filename);
+        const size = await imageMetadata(env, bytes);
         const put = await env.BLOG_IMAGES.put(key, bytes, {
           httpMetadata: { contentType },
-          customMetadata: { alt, filename, changeId },
+          customMetadata: { alt, filename, changeId, ...size },
         });
         recordChange("media.upload", key, put.etag, changeId);
-        return toMediaItem(key, put.size, contentType, { alt, filename }, put.uploaded);
+        return toMediaItem(put, "");
+      },
+
+      // Focal point, caption and replace (site-api v0.10.0), each moving the file's version (mediaVersion).
+      async setFocus(id, { focus, expectedVersion, changeId }) {
+        const { caption } = await requireMediaVersion(env, id, expectedVersion);
+        const written = await writeFocus(env.BLOG_IMAGES as unknown as R2BucketLike, id, focus);
+        const version = await mediaVersion(written as { etag: string; customMetadata?: Record<string, string> }, caption);
+        recordChange("media.focus", id, version, changeId);
+        return { version };
+      },
+
+      async setCaption(id, { caption, expectedVersion, changeId }) {
+        const { head } = await requireMediaVersion(env, id, expectedVersion);
+        if (caption) {
+          await db
+            .insert(mediaCaptions)
+            .values({ mediaKey: id, caption })
+            .onConflictDoUpdate({ target: mediaCaptions.mediaKey, set: { caption, updatedAt: sql`(datetime('now'))` } });
+        } else {
+          await db.delete(mediaCaptions).where(eq(mediaCaptions.mediaKey, id));
+        }
+        const version = await mediaVersion(head, caption);
+        recordChange("media.caption", id, version, changeId);
+        return { version };
+      },
+
+      // The same key and address with new bytes: alt, caption and filename kept, the focal point
+      // cleared (replaceObject), and the width and height measured again. /media keys its cached sizes
+      // by the object's etag (site-runtime 0.27), so no old size is served again.
+      async replace(id, { bytes, contentType, expectedVersion, changeId }) {
+        const { caption } = await requireMediaVersion(env, id, expectedVersion);
+        const object = await replaceObject(env.BLOG_IMAGES as unknown as R2BucketLike, id, { bytes, contentType });
+        const size = await imageMetadata(env, bytes);
+        const { width: _w, height: _h, ...kept } = object.customMetadata ?? {};
+        if (object.customMetadata?.width !== size.width || object.customMetadata?.height !== size.height) {
+          const remeasured = await env.BLOG_IMAGES.put(id, bytes, {
+            httpMetadata: object.httpMetadata as R2HTTPMetadata,
+            customMetadata: { ...kept, ...size },
+            onlyIf: { etagMatches: object.etag },
+          });
+          if (!remeasured) throw new RefusedError("The file changed on the site while this was being written. Try again.");
+        }
+        const head = await env.BLOG_IMAGES.head(id);
+        if (!head) throw new NotFoundError();
+        const item = await toMediaItem(head, caption);
+        recordChange("media.replace", id, item.version!, changeId);
+        return { item, sizesNeedPurge: false };
       },
 
       async delete(id, { changeId }) {
@@ -307,25 +444,46 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
   };
 }
 
-function toMediaItem(
-  key: string,
-  size: number,
-  contentType: string | undefined,
-  meta: Record<string, string> | undefined,
-  uploaded: Date | undefined,
-): MediaItem {
+/**
+ * A file's version: its bytes (the object's etag, an MD5 that a metadata-only put leaves alone), the
+ * metadata Carrel edits (alt and focal point) and its caption, which lives in D1.
+ */
+const mediaVersion = (object: { etag: string; customMetadata?: Record<string, string> }, caption: string): Promise<string> =>
+  contentVersion([object.etag, object.customMetadata?.alt ?? "", focusOf(object.customMetadata?.[FOCUS_METADATA]), caption]);
+
+async function toMediaItem(object: R2Object, caption: string): Promise<MediaItem> {
+  const meta = object.customMetadata;
   return {
-    id: key,
-    url: imageUrl(key),
-    filename: meta?.filename ?? key.split("/").pop() ?? null,
-    contentType: contentType ?? "application/octet-stream",
-    bytes: size,
-    width: null,
-    height: null,
+    id: object.key,
+    url: imageUrl(object.key),
+    filename: meta?.filename ?? object.key.split("/").pop() ?? null,
+    contentType: object.httpMetadata?.contentType ?? "application/octet-stream",
+    bytes: object.size,
+    width: Number(meta?.width) || null,
+    height: Number(meta?.height) || null,
     alt: meta?.alt ?? "",
-    uploadedAt: uploaded ? uploaded.toISOString() : null,
+    uploadedAt: object.uploaded ? object.uploaded.toISOString() : null,
     deletable: true,
+    version: await mediaVersion(object, caption),
+    focus: focusOf(meta?.[FOCUS_METADATA]),
+    caption,
   };
+}
+
+async function captionsOf(env: Env, keys: string[]): Promise<Map<string, string>> {
+  if (keys.length === 0) return new Map();
+  const rows = await getDb(env).select().from(mediaCaptions).where(inArray(mediaCaptions.mediaKey, keys));
+  return new Map(rows.map((r) => [r.mediaKey, r.caption]));
+}
+
+/** Every media write checks the file's version first: a missing file is NotFound, a stale version a conflict. */
+async function requireMediaVersion(env: Env, id: string, expected: string): Promise<{ head: R2Object; caption: string }> {
+  const head = await env.BLOG_IMAGES.head(id);
+  if (!head) throw new NotFoundError("No such media.");
+  const caption = (await captionsOf(env, [id])).get(id) ?? "";
+  const current = await mediaVersion(head, caption);
+  if (current !== expected) throw new VersionConflictError(current);
+  return { head, caption };
 }
 
 /** Where a file is used: any post (article or episode) whose body or image fields name its key. */

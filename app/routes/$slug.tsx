@@ -16,6 +16,7 @@ import {
 } from "~/lib/seo";
 import { breadcrumbs, jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { SITE_ORIGIN } from "~/lib/site";
+import { postImages } from "~/lib/images.server";
 import { PostDetail, type DetailData } from "~/components/content/PostDetail";
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -63,13 +64,15 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   // brand default (so no raster default here). The social image still defaults to the show artwork.
   const cover = post.episodeArtwork ?? post.coverImage ?? null;
   const ogImage = ogImageFor(post) ?? show.artwork ?? null;
+  const { body, images } = await postImages(env, post, cover, { guests, hosts });
 
   const data: DetailData & {
     seriesTitle: string;
     hosts: typeof hosts;
     ogImage: string | null;
   } = {
-    post,
+    post: { ...post, body },
+    images,
     track: post.kind === "episode" ? toPlayerTrack(post) : null,
     soundbites: clips.map((c) => ({ id: c.id, start: c.startSeconds, duration: c.durationSeconds, title: c.title })),
     guests,

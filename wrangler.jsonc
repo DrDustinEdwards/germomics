@@ -45,6 +45,9 @@
 		// Nightly D1 dumps (d1-dump). The bucket must exist before this deploys; see CLAUDE.md "Backup".
 		{ "binding": "BACKUPS", "bucket_name": "germomics-backups" }
 	],
+	// Cloudflare Images, for /media's resized copies of BLOG_IMAGES originals (app/routes/media.$.ts).
+	// Each unique source and size bills once a month (5,000 free), which is why the sizes are a closed set.
+	"images": { "binding": "IMAGES" },
 	// Rate limit for Carrel's site API (app/lib/carrel). namespace_id must be unique to this site:
 	// sites in one account that share one share counters.
 	"ratelimits": [
@@ -56,8 +59,9 @@
 	// RateLimiter, exported from workers/app.ts. One SQLite-backed instance per key.
 	"durable_objects": { "bindings": [{ "name": "RATE_LIMITER", "class_name": "RateLimiter" }] },
 	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["RateLimiter"] }],
-	// 03:17 UTC nightly: runBackup() in app/lib/backup.server.ts.
-	"triggers": { "crons": ["17 3 * * *"] },
+	// 03:17 UTC nightly: runBackup() in app/lib/backup.server.ts. Every minute: the updates Carrel
+	// scheduled on live articles (api.runSchedules), so each lands within a minute of its time.
+	"triggers": { "crons": ["17 3 * * *", "* * * * *"] },
 	"kv_namespaces": [
 		{ "binding": "APP_KV", "id": "da89f831723f4ce5802f0c877f4c2209" }
 	]

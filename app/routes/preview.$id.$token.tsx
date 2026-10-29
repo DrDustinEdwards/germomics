@@ -8,6 +8,7 @@ import { getEpisodeGuests } from "~/lib/people.server";
 import { getShowConfig } from "~/lib/show.server";
 import { readingTime, tableOfContents, demoteHeadings } from "~/lib/seo";
 import { verifyPreviewToken } from "~/lib/preview.server";
+import { postImages } from "~/lib/images.server";
 import { PostDetail, type DetailData } from "~/components/content/PostDetail";
 
 export function meta() {
@@ -29,8 +30,12 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     getEpisodeGuests(env, post),
   ]);
 
+  const cover = post.episodeArtwork ?? post.coverImage ?? null;
+  const hosts = show.hosts ?? [];
+  const { body, images } = await postImages(env, post, cover, { guests, hosts });
   const data: DetailData = {
-    post,
+    post: { ...post, body },
+    images,
     track: post.kind === "episode" && post.audioUrl ? toPlayerTrack(post) : null,
     guests,
     related: relatedPosts(visible, post),
@@ -38,8 +43,8 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     next: null,
     subscribeLinks: show.subscribeLinks ?? {},
     author: show.author,
-    hosts: show.hosts ?? [],
-    cover: post.episodeArtwork ?? post.coverImage ?? null,
+    hosts,
+    cover,
     readingMinutes: post.readingTime ?? readingTime(post.body),
     toc: tableOfContents(demoteHeadings(post.body)),
     preview: true,
