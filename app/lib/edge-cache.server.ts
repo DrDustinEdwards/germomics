@@ -10,7 +10,7 @@
 // makes an admin edit visible to anonymous visitors, and every signed-in/admin request is always
 // live via the session-cookie bypass (which is also what gives the admin instant-edit visibility).
 
-import { withSecurityHeaders } from "./security.server";
+import { withSecurityHeaders } from "./security-headers";
 
 // Tunable windows. age < FRESH: serve cached as-is. FRESH..SWR: serve stale and refresh in the
 // background. age >= SWR (or a miss): render live. Kept at the top so they are easy to tune.

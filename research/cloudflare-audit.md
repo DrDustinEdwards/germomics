@@ -109,6 +109,8 @@ I did not make these code changes in this PR: the job asks for one PR per clear 
 
 ## DECIDE points
 
+Status 2026-10-29: A, C, D and E are done (Sentry dropped, site-runtime's headers and limiter in `security-headers.ts` and `security.server.ts`, CSP enforced, traces at 0.1). B waits for the Capsomer move.
+
 - **A. Sentry.** Keep, replace with the vendor SDK, or drop. Recommendation: drop after Workers Logs and traces are on.
 - **B. Feeds, sitemap and charts to Prelum and Enarratio.** Recommendation: only inside the Capsomer move, with the feed diff script as the gate.
 - **C. Shared security-headers and rate-limit packages.** Recommendation: adopt in the Capsomer move.

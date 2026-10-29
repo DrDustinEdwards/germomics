@@ -1,13 +1,8 @@
 import { createRequestHandler, RouterContextProvider } from "react-router";
 import { cloudflareContext } from "../app/lib/context.server";
-import { receiveCspReport } from "@dustinedwards/site-runtime/csp-report";
-import {
-  CSP_REPORT_PATH,
-  enforceRateLimit,
-  withSecurityHeaders,
-} from "../app/lib/security.server";
+import { enforceRateLimit } from "../app/lib/security.server";
+import { CSP_REPORT_PATH, handleCspReport, withSecurityHeaders } from "../app/lib/security-headers";
 import { serveWithEdgeCache } from "../app/lib/edge-cache.server";
-import { captureException } from "../app/lib/sentry.server";
 import { carrelApi } from "../app/lib/carrel/handler.server";
 import { runBackup } from "../app/lib/backup.server";
 
@@ -35,14 +30,9 @@ export default {
       const carrel = carrelApi(env);
       if (carrel.matches(request)) return withSecurityHeaders(await carrel.handle(request, ctx), origin);
 
-      // CSP violation reports: site-runtime's receiver logs each one as a trimmed JSON line (origin
-      // and path only, no address or user agent) to Workers Logs and stores nothing. Per address,
-      // through the CSP_REPORT_RATE_LIMIT binding; without the binding a report is dropped (still 204).
+      // CSP violation reports, logged to Workers Logs (security-headers.ts).
       if (new URL(request.url).pathname === CSP_REPORT_PATH) {
-        const allow = async (r: Request) =>
-          Boolean(env.CSP_REPORT_RATE_LIMIT) &&
-          (await env.CSP_REPORT_RATE_LIMIT.limit({ key: r.headers.get("cf-connecting-ip") || "anon" })).success;
-        return withSecurityHeaders(await receiveCspReport(request, { allow }), origin);
+        return withSecurityHeaders(await handleCspReport(request, env), origin);
       }
 
       // Abuse mitigation before any work: rate-limit admin/AI/signup paths.
@@ -64,10 +54,9 @@ export default {
       if (import.meta.env.DEV) return withSecurityHeaders(await render(), origin);
       return await serveWithEdgeCache({ request, ctx, origin, render });
     } catch (err) {
-      // Prod error hygiene: never leak a stack trace or internal detail to the client. Report to
-      // Sentry (best-effort, server-side only) when SENTRY_DSN is set.
+      // Prod error hygiene: never leak a stack trace or internal detail to the client. The error
+      // goes to Workers Logs.
       console.error("Unhandled worker error:", err);
-      captureException(env, err, request, ctx);
       return withSecurityHeaders(
         new Response("Internal Server Error", {
           status: 500,
