@@ -5,7 +5,7 @@ germomics.com: a podcast and writing site about microbiology and history, with i
 ## Rules that come first
 
 - Tests: keep the minimal set (a few browser tests for flows that must never break, one integration test per real behavior, unit tests only for tricky logic, shared code tested once where it lives), and remove any test that pins design, repeats coverage or has never caught a real mistake, unless it guards a harm that cannot be undone.
-- Read `germomics/core.md` in Capsid with this file. Before writing anything another site might have, read what the family shares: https://github.com/DrDustinEdwards/devkit/blob/shared-list/SHARED.md (CI's family check fails on a copy). Rulings for this site go in `germomics/decisions.md`.
+- Read `germomics/core.md` in Capsid with this file. Before writing anything another site might have, read what the family shares: https://github.com/DrDustinEdwards/devkit/blob/shared-list/SHARED.md (CI's family check fails on a copy).
 - germomics is the best-designed site in the family (Dustin, 2026-10-04). It will move onto Capsomer carefully, in its own design job that starts with a study and baseline screenshots; until then, do not change its look casually, and do not treat it as unchangeable either.
 
 ## Stack
@@ -30,8 +30,13 @@ React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-pl
 
 ## Hard rules
 
+A rule stays here only if it stops a real, costly mistake that nothing else catches. Earlier rulings are in the version history of Capsid `germomics/decisions.md` (retired 2026-10-29).
+
 1. The podcast feed lives at `/feed/podcast/` and that URL never changes. Episode `guid` values never change once published. Feeds are resource routes returning a raw Response with the right Content-Type.
 2. Migrations are hand-written additive SQL in `drizzle/`, kept in sync with `app/db/schema.ts`, applied with wrangler; drizzle-kit is not used. Search uses the FTS5 tables. No hand-written SQL in route code; use the query builder.
 3. The audio player is the highest-risk accessibility component: full keyboard support, seeking without dragging, correct name, role and state on every control. Every episode has a transcript.
 4. Heavy client libraries (maps, charts, Phaser) are lazy-loaded per route and never reach the server bundle or the shared client chunk. Phaser loads only on `/games/:slug`.
-5. The site's writing-style rule is in every generator prompt in `app/lib/ai.server.ts` (`STYLE_RULE`). It also covers the generated robots.txt, llms.txt and ai.txt.
+5. Every public read (lists, detail, search, feed, sitemap) goes through `publiclyVisible()`, or a scheduled post leaks before its publish_at.
+6. AI output is drafts only: the AI endpoint never writes the database and the API key never reaches the client.
+7. The /about bio states only confirmed facts; an unconfirmed item renders as a marked editor note, never as a claim. /privacy and /terms are drafts until a lawyer reviews them.
+8. Content is read straight from D1 with no KV cache in front, so a write shows on the next read; the Worker is placed next to D1 (`placement` in wrangler.jsonc) to keep that fast.
