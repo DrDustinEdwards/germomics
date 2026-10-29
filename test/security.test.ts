@@ -1,6 +1,7 @@
 import { env } from "cloudflare:test";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { aiCostCapExceeded, enforceRateLimit, recordAiUse, withSecurityHeaders } from "~/lib/security.server";
+import { withSecurityHeaders } from "~/lib/security-headers";
+import { aiCostCapExceeded, enforceRateLimit, recordAiUse } from "~/lib/security.server";
 import { applyMigrations, setSettings } from "./helpers/d1";
 
 // The in-Worker abuse layer in front of /admin and the AI endpoint, and the header layer every
@@ -100,7 +101,8 @@ describe("withSecurityHeaders", () => {
     // The player, Copy link and the share sheet keep working.
     expect(res.headers.get("Permissions-Policy")).toContain("clipboard-write=(self)");
     expect(res.headers.get("tdm-reservation")).toBe("1");
-    expect(res.headers.get("Content-Security-Policy-Report-Only")).toContain("frame-ancestors 'none'");
+    expect(res.headers.get("Content-Security-Policy")).toContain("frame-ancestors 'none'");
+    expect(res.headers.has("Content-Security-Policy-Report-Only")).toBe(false);
   });
 
   it("never overwrites a header the route already set", () => {
@@ -111,11 +113,11 @@ describe("withSecurityHeaders", () => {
     expect(res.headers.get("X-Frame-Options")).toBe("SAMEORIGIN");
   });
 
-  it("adds no report-only policy when the route declared a policy of either kind", () => {
+  it("keeps a policy of either kind that the route declared", () => {
     const enforced = withSecurityHeaders(new Response("x", { headers: { "Content-Security-Policy": "default-src 'none'" } }), "https://g.test");
     expect(enforced.headers.get("Content-Security-Policy")).toBe("default-src 'none'");
-    expect(enforced.headers.has("Content-Security-Policy-Report-Only")).toBe(false);
     const reportOnly = withSecurityHeaders(new Response("x", { headers: { "Content-Security-Policy-Report-Only": "img-src 'self'" } }), "https://g.test");
     expect(reportOnly.headers.get("Content-Security-Policy-Report-Only")).toBe("img-src 'self'");
+    expect(reportOnly.headers.has("Content-Security-Policy")).toBe(false);
   });
 });
