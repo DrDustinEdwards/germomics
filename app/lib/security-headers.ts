@@ -36,8 +36,9 @@ const CSP = buildContentSecurityPolicy({
     media: ["blob:", MEDIA_ORIGIN, OP3_ORIGIN],
     font: ["data:", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"],
     connect: [IMAGE_ORIGIN, MEDIA_ORIGIN, OP3_ORIGIN, ...MAPS_DATA, "blob:"],
+    frame: ["https://*.google.com"],
   },
-  extraDirectives: ["worker-src 'self' blob:", "child-src 'self' blob:", "frame-src 'self' https://*.google.com", "manifest-src 'self'", "upgrade-insecure-requests"],
+  extraDirectives: ["worker-src 'self' blob:", "child-src 'self' blob:", "manifest-src 'self'", "upgrade-insecure-requests"],
 });
 
 // The family header set: OWASP's values from site-runtime, with germomics's deviations, each with its
