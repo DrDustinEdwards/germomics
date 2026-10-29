@@ -172,8 +172,8 @@ describe("an update scheduled on a live article", () => {
     expect(await schedules.get("drop")).toBeNull();
 
     const again = await schedules.update("drop", { source: "<p>later</p>", publishAt: at, expectedVersion: now.version, changeId: "c3" });
-    const cancelled = await schedules.cancel("drop", { expectedVersion: again.version, changeId: "c4" });
-    expect(cancelled).toMatchObject({ status: "published", scheduledUpdate: null, version: now.version });
+    const canceled = await schedules.cancel("drop", { expectedVersion: again.version, changeId: "c4" });
+    expect(canceled).toMatchObject({ status: "published", scheduledUpdate: null, version: now.version });
     expect(await schedules.get("drop")).toBeNull();
     await expect(schedules.cancel("drop", { expectedVersion: now.version, changeId: "c5" })).rejects.toBeInstanceOf(RefusedError);
   });
