@@ -290,3 +290,10 @@ export const scheduledUpdates = sqliteTable(
   },
   (t) => ({ dueIdx: index("scheduled_updates_due").on(t.publishAt) }),
 );
+
+// 0014: the caption Carrel set on an image in BLOG_IMAGES, keyed by its R2 key (app/lib/carrel/adapter.server.ts).
+export const mediaCaptions = sqliteTable("media_captions", {
+  mediaKey: text("media_key").primaryKey(),
+  caption: text("caption").notNull(),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});

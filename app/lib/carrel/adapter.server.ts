@@ -14,7 +14,7 @@
 // publish_at: every public read hides it until then (publiclyVisible), so it needs no cron. An
 // update scheduled on a LIVE article (site-api v0.10.0) waits in scheduled_updates while the live
 // version stays served, and the one-minute cron (workers/app.ts, api.runSchedules) puts it live.
-import { and, desc, eq, like, or } from "drizzle-orm";
+import { and, desc, eq, inArray, like, or, sql } from "drizzle-orm";
 import {
   contentVersion,
   MediaInUseError,
@@ -28,8 +28,10 @@ import {
   type WriteResult,
 } from "@dustinedwards/site-api";
 import { d1ScheduledUpdates, utc } from "@dustinedwards/site-api/schedules";
+import { replaceObject, writeFocus, type R2BucketLike } from "@dustinedwards/site-api/r2";
+import { FOCUS_METADATA, focusOf } from "@dustinedwards/site-runtime/image";
 import { getDb } from "~/db/index.server";
-import { posts, postVersions, type Post } from "~/db/schema";
+import { mediaCaptions, posts, postVersions, type Post } from "~/db/schema";
 import { generateGuid, snapshotVersion, updatePost } from "~/lib/admin.server";
 import { buildKey, imageUrl } from "~/lib/r2.server";
 import { imageMetadata } from "~/lib/images.server";
@@ -352,7 +354,8 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
         });
         const matching = listed.objects.filter((o) => !q || o.key.toLowerCase().includes(q.toLowerCase()));
         const page = matching.slice(0, limit);
-        const items = page.map((o) => toMediaItem(o.key, o.size, o.httpMetadata?.contentType, o.customMetadata, o.uploaded));
+        const captions = await captionsOf(env, page.map((o) => o.key));
+        const items = await Promise.all(page.map((o) => toMediaItem(o, captions.get(o.key) ?? "")));
         // A cursor only when the bucket has more; items past `limit` in this batch are listed next time
         // because the cursor is the bucket's own and the next call starts after the whole batch.
         return { items, nextCursor: listed.truncated ? listed.cursor ?? null : null };
@@ -361,10 +364,8 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
       async get(id) {
         const head = await env.BLOG_IMAGES.head(id);
         if (!head) return null;
-        return {
-          ...toMediaItem(id, head.size, head.httpMetadata?.contentType, head.customMetadata, head.uploaded),
-          usedBy: await usesOf(env, id),
-        };
+        const captions = await captionsOf(env, [id]);
+        return { ...(await toMediaItem(head, captions.get(id) ?? "")), usedBy: await usesOf(env, id) };
       },
 
       async upload({ bytes, contentType, filename, alt, changeId }) {
@@ -375,7 +376,54 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
           customMetadata: { alt, filename, changeId, ...size },
         });
         recordChange("media.upload", key, put.etag, changeId);
-        return toMediaItem(key, put.size, contentType, { alt, filename, ...size }, put.uploaded);
+        return toMediaItem(put, "");
+      },
+
+      // Focal point, caption and replace (site-api v0.10.0), each moving the file's version (mediaVersion).
+      async setFocus(id, { focus, expectedVersion, changeId }) {
+        const { caption } = await requireMediaVersion(env, id, expectedVersion);
+        const written = await writeFocus(env.BLOG_IMAGES as unknown as R2BucketLike, id, focus);
+        const version = await mediaVersion(written as { etag: string; customMetadata?: Record<string, string> }, caption);
+        recordChange("media.focus", id, version, changeId);
+        return { version };
+      },
+
+      async setCaption(id, { caption, expectedVersion, changeId }) {
+        const { head } = await requireMediaVersion(env, id, expectedVersion);
+        if (caption) {
+          await db
+            .insert(mediaCaptions)
+            .values({ mediaKey: id, caption })
+            .onConflictDoUpdate({ target: mediaCaptions.mediaKey, set: { caption, updatedAt: sql`(datetime('now'))` } });
+        } else {
+          await db.delete(mediaCaptions).where(eq(mediaCaptions.mediaKey, id));
+        }
+        const version = await mediaVersion(head, caption);
+        recordChange("media.caption", id, version, changeId);
+        return { version };
+      },
+
+      // The same key and address with new bytes: alt, caption and filename kept, the focal point
+      // cleared (replaceObject), and the width and height measured again. /media keys its cached sizes
+      // by the object's etag (site-runtime 0.27), so no old size is served again.
+      async replace(id, { bytes, contentType, expectedVersion, changeId }) {
+        const { caption } = await requireMediaVersion(env, id, expectedVersion);
+        const object = await replaceObject(env.BLOG_IMAGES as unknown as R2BucketLike, id, { bytes, contentType });
+        const size = await imageMetadata(env, bytes);
+        const { width: _w, height: _h, ...kept } = object.customMetadata ?? {};
+        if (object.customMetadata?.width !== size.width || object.customMetadata?.height !== size.height) {
+          const remeasured = await env.BLOG_IMAGES.put(id, bytes, {
+            httpMetadata: object.httpMetadata as R2HTTPMetadata,
+            customMetadata: { ...kept, ...size },
+            onlyIf: { etagMatches: object.etag },
+          });
+          if (!remeasured) throw new RefusedError("The file changed on the site while this was being written. Try again.");
+        }
+        const head = await env.BLOG_IMAGES.head(id);
+        if (!head) throw new NotFoundError();
+        const item = await toMediaItem(head, caption);
+        recordChange("media.replace", id, item.version!, changeId);
+        return { item, sizesNeedPurge: false };
       },
 
       async delete(id, { changeId }) {
@@ -396,25 +444,46 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
   };
 }
 
-function toMediaItem(
-  key: string,
-  size: number,
-  contentType: string | undefined,
-  meta: Record<string, string> | undefined,
-  uploaded: Date | undefined,
-): MediaItem {
+/**
+ * A file's version: its bytes (the object's etag, an MD5 that a metadata-only put leaves alone), the
+ * metadata Carrel edits (alt and focal point) and its caption, which lives in D1.
+ */
+const mediaVersion = (object: { etag: string; customMetadata?: Record<string, string> }, caption: string): Promise<string> =>
+  contentVersion([object.etag, object.customMetadata?.alt ?? "", focusOf(object.customMetadata?.[FOCUS_METADATA]), caption]);
+
+async function toMediaItem(object: R2Object, caption: string): Promise<MediaItem> {
+  const meta = object.customMetadata;
   return {
-    id: key,
-    url: imageUrl(key),
-    filename: meta?.filename ?? key.split("/").pop() ?? null,
-    contentType: contentType ?? "application/octet-stream",
-    bytes: size,
+    id: object.key,
+    url: imageUrl(object.key),
+    filename: meta?.filename ?? object.key.split("/").pop() ?? null,
+    contentType: object.httpMetadata?.contentType ?? "application/octet-stream",
+    bytes: object.size,
     width: Number(meta?.width) || null,
     height: Number(meta?.height) || null,
     alt: meta?.alt ?? "",
-    uploadedAt: uploaded ? uploaded.toISOString() : null,
+    uploadedAt: object.uploaded ? object.uploaded.toISOString() : null,
     deletable: true,
+    version: await mediaVersion(object, caption),
+    focus: focusOf(meta?.[FOCUS_METADATA]),
+    caption,
   };
+}
+
+async function captionsOf(env: Env, keys: string[]): Promise<Map<string, string>> {
+  if (keys.length === 0) return new Map();
+  const rows = await getDb(env).select().from(mediaCaptions).where(inArray(mediaCaptions.mediaKey, keys));
+  return new Map(rows.map((r) => [r.mediaKey, r.caption]));
+}
+
+/** Every media write checks the file's version first: a missing file is NotFound, a stale version a conflict. */
+async function requireMediaVersion(env: Env, id: string, expected: string): Promise<{ head: R2Object; caption: string }> {
+  const head = await env.BLOG_IMAGES.head(id);
+  if (!head) throw new NotFoundError("No such media.");
+  const caption = (await captionsOf(env, [id])).get(id) ?? "";
+  const current = await mediaVersion(head, caption);
+  if (current !== expected) throw new VersionConflictError(current);
+  return { head, caption };
 }
 
 /** Where a file is used: any post (article or episode) whose body or image fields name its key. */
