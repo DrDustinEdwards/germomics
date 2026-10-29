@@ -62,7 +62,7 @@ describe("the Worker entry", () => {
   it("logs a CSP report the page's policy sends, per address, before the app", async () => {
     vi.stubEnv("DEV", true);
     const page = await fetchWith(new Request(fresh()));
-    expect(page.headers.get("Content-Security-Policy-Report-Only")).toContain("report-uri /csp-report");
+    expect(page.headers.get("Content-Security-Policy")).toContain("report-uri /csp-report");
     expect(page.headers.get("Reporting-Endpoints")).toBe(`csp-endpoint="${ORIGIN}/csp-report"`);
     h.render.mockClear();
 
