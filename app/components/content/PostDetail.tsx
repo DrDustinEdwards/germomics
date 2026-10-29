@@ -9,6 +9,8 @@ import { AppLink } from "~/components/AppLink";
 import type { Post } from "~/db/schema";
 import type { GuestView, Host, PlayerTrack, SoundbiteView } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
+import { imageFor, type ImageSet } from "~/lib/images";
+import { Picture } from "./Picture";
 import { wasUpdatedAfterPublish } from "~/lib/seo";
 import { formatDate, formatDuration } from "~/lib/format";
 import { BodyRenderer } from "./BodyRenderer";
@@ -48,6 +50,8 @@ export type DetailData = {
   toc: TocItem[];
   soundbites?: SoundbiteView[];
   preview?: boolean;
+  /** Sizes from /media for the cover, artwork and people photos the loader could size (app/lib/images.server.ts). */
+  images?: ImageSet;
 };
 
 // Lightweight "save for later": a slug set in localStorage, no server. Toggles aria-pressed.
@@ -141,7 +145,7 @@ export function PostDetail({ data }: { data: DetailData }) {
         {guests.map((g) => (
           <div key={g.slug} className="flex gap-3 rounded-xl border border-border bg-card p-4">
             {g.photo ? (
-              <img src={g.photo} alt={g.photoAlt ?? g.name} loading="lazy" decoding="async" width={48} height={48} className="h-12 w-12 shrink-0 rounded-full border border-border object-cover" />
+              <Picture src={g.photo} image={imageFor(data.images, "avatar", g.photo)} alt={g.photoAlt ?? g.name} loading="lazy" decoding="async" width={48} height={48} className="h-12 w-12 shrink-0 rounded-full border border-border object-cover" />
             ) : null}
             <div className="min-w-0">
               <AppLink to={`/guests/${g.slug}`} className="font-display font-medium text-ink hover:text-brand">{g.name}</AppLink>
@@ -228,7 +232,7 @@ export function PostDetail({ data }: { data: DetailData }) {
               {post.excerpt ? <p className="mt-4 max-w-2xl font-serif text-lg leading-relaxed text-muted">{post.excerpt}</p> : null}
             </div>
             <div className="order-first w-40 sm:order-none sm:w-auto">
-              <CoverArt src={cover} alt={post.coverAlt ?? "Germomics cover art"} eager className="border border-border" />
+              <CoverArt src={cover} image={imageFor(data.images, "artwork", cover)} alt={post.coverAlt ?? "Germomics cover art"} eager className="border border-border" />
             </div>
           </header>
 
@@ -264,7 +268,7 @@ export function PostDetail({ data }: { data: DetailData }) {
 
           {/* Everything below the body returns to a single readable measure. */}
           <div className="mx-auto max-w-3xl">
-            <Hosts hosts={hosts} />
+            <Hosts hosts={hosts} images={data.images} />
             {track ? <SoundbiteClips track={track} clips={soundbites} /> : null}
             {track && chapters.length ? <ChapterList chapters={chapters} track={track} /> : null}
 
@@ -302,7 +306,7 @@ export function PostDetail({ data }: { data: DetailData }) {
       {post.coverImage ? (
         // Cover is the article LCP element — load it eagerly with high priority; the fixed aspect
         // ratio reserves space so it doesn't shift layout (CLS).
-        <img src={post.coverImage} alt={post.coverAlt ?? ""} loading="eager" fetchPriority="high" decoding="async" className="mb-6 aspect-[2/1] w-full rounded-2xl border border-border object-cover" />
+        <Picture src={post.coverImage} image={imageFor(data.images, "cover", post.coverImage)} alt={post.coverAlt ?? ""} loading="eager" fetchPriority="high" decoding="async" className="mb-6 aspect-[2/1] w-full rounded-2xl border border-border object-cover" />
       ) : null}
       <p className="flex items-center gap-1 font-mono text-xs uppercase tracking-wide text-accent">
         <FileText size={12} aria-hidden /> Article

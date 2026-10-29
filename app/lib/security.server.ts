@@ -46,7 +46,9 @@ const CSP = buildContentSecurityPolicy({
     font: ["data:", "https://cdnjs.cloudflare.com"],
     connect: [IMAGE_ORIGIN, MEDIA_ORIGIN, OP3_ORIGIN, "https://maps.googleapis.com"],
   },
-  extraDirectives: ["worker-src 'self' blob:", "child-src 'self' blob:", "frame-src 'self'", "manifest-src 'self'", "upgrade-insecure-requests"],
+  // No frame-src: site-runtime 0.26 writes it only from sources.frame and refuses it as an extra directive. The site
+  // frames nothing from another origin, so frames fall back to child-src.
+  extraDirectives: ["worker-src 'self' blob:", "child-src 'self' blob:", "manifest-src 'self'", "upgrade-insecure-requests"],
 });
 
 // The family header set: OWASP's values from site-runtime, with germomics's deviations, each with its

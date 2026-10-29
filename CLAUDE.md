@@ -10,7 +10,7 @@ germomics.com: a podcast and writing site about microbiology and history, with i
 
 ## Stack
 
-React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-plugin; D1 with Drizzle; R2 for audio and images; KV for the AI cap and the AI draft jobs; Cloudflare Access (application germomics-login) in front of /admin, verified by `@dustinedwards/site-runtime/access`; Tailwind v4 with the germomics palette as tokens (until the Capsomer move); lucide-react; Tiptap for the editor; Google Maps on the data pages; Recharts for charts (moving to Enarratio in the Capsomer move); Phaser 4 for games.
+React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-plugin; D1 with Drizzle; R2 for audio and images, with resized AVIF and WebP copies made on request by the Images binding at germomics.com/media (`app/lib/images.ts`; stored URLs stay the originals at images.germomics.com); KV for the AI cap and the AI draft jobs; Cloudflare Access (application germomics-login) in front of /admin, verified by `@dustinedwards/site-runtime/access`; Tailwind v4 with the germomics palette as tokens (until the Capsomer move); lucide-react; Tiptap for the editor; Google Maps on the data pages; Recharts for charts (moving to Enarratio in the Capsomer move); Phaser 4 for games.
 
 ## Commands
 

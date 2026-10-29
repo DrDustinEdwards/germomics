@@ -1,4 +1,6 @@
 import { useState } from "react";
+import type { ImageAttributes } from "~/lib/images";
+import { Picture } from "./Picture";
 import wordmarkRaw from "~/components/brand/germomics-wordmark.svg?raw";
 
 // Single shared cover. If the item has its own artwork, render that raster; otherwise render the
@@ -25,6 +27,7 @@ export function CoverArt({
   alt,
   className = "",
   eager = false,
+  image,
 }: {
   /** The item's own artwork. When absent (the default cover), the SVG-on-violet square renders. */
   src?: string | null;
@@ -32,6 +35,8 @@ export function CoverArt({
   /** Border / ring / shadow for the frame, so each site keeps its current treatment. */
   className?: string;
   eager?: boolean;
+  /** The artwork's sizes from /media, when the loader could size it. */
+  image?: ImageAttributes;
 }) {
   const [failed, setFailed] = useState(false);
   const frame = "aspect-square w-full rounded-2xl";
@@ -39,8 +44,9 @@ export function CoverArt({
   // Per-item raster wins; fall through to the SVG square if it 404s or fails to decode.
   if (src && !failed) {
     return (
-      <img
+      <Picture
         src={src}
+        image={image}
         alt={alt}
         width={1400}
         height={1400}

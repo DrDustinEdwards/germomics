@@ -2,7 +2,10 @@
 // schema.org PostalAddress, and any future newsletter email footer all read the same address.
 // Mirrors the Vault's site-config.md. Postal address is provisional (per Dustin, 2026-06-21).
 
-/** The site and the two R2 subdomains it serves media from. Feed enclosures always point at MEDIA_ORIGIN. */
+/**
+ * The site and the two R2 subdomains it serves media from. Feed enclosures always point at MEDIA_ORIGIN. Stored image
+ * URLs are originals at IMAGE_ORIGIN; the resized copies pages show come from SITE_ORIGIN/media (app/lib/images.ts).
+ */
 export const SITE_HOST = "germomics.com";
 export const SITE_ORIGIN = `https://${SITE_HOST}`;
 export const MEDIA_ORIGIN = "https://media.germomics.com";

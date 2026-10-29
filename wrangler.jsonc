@@ -45,6 +45,9 @@
 		// Nightly D1 dumps (d1-dump). The bucket must exist before this deploys; see CLAUDE.md "Backup".
 		{ "binding": "BACKUPS", "bucket_name": "germomics-backups" }
 	],
+	// Cloudflare Images, for /media's resized copies of BLOG_IMAGES originals (app/routes/media.$.ts).
+	// Each unique source and size bills once a month (5,000 free), which is why the sizes are a closed set.
+	"images": { "binding": "IMAGES" },
 	// Rate limit for Carrel's site API (app/lib/carrel). namespace_id must be unique to this site:
 	// sites in one account that share one share counters.
 	"ratelimits": [

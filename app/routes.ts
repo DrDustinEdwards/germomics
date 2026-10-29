@@ -14,6 +14,8 @@ export default [
   route("data/:slug", "routes/data.$slug.tsx"),
   route("games", "routes/games._index.tsx"),
   route("games/assets/*", "routes/games.assets.$.ts"),
+  // resized images from BLOG_IMAGES (app/lib/images.ts)
+  route("media/*", "routes/media.$.ts"),
   route("games/:slug", "routes/games.$slug.tsx"),
   route("tag/:tag", "routes/tag.$tag.tsx"),
   route("guests/:guest", "routes/guests.$guest.tsx"),

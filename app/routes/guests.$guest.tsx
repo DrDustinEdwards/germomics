@@ -5,6 +5,9 @@ import { postsByGuest, slugifyGuest, toPlayerTrack } from "~/lib/posts.server";
 import { getPersonBySlug, postsByPerson } from "~/lib/people.server";
 import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
+import { Picture } from "~/components/content/Picture";
+import { imageFor } from "~/lib/images";
+import { imageSet } from "~/lib/images.server";
 
 export function meta({ loaderData, location }: Route.MetaArgs) {
   const name = loaderData?.name ?? "Guest";
@@ -43,18 +46,19 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     links: person?.links ?? (legacy?.link ? [{ label: "Website", url: legacy.link }] : []),
     episodes,
     tracks: episodes.map(toPlayerTrack),
+    images: await imageSet(env, [["portrait", person?.photo]]),
   };
 }
 
 export default function GuestPage({ loaderData }: Route.ComponentProps) {
-  const { name, role, bio, photo, photoAlt, links, episodes, tracks } = loaderData;
+  const { name, role, bio, photo, photoAlt, links, episodes, tracks, images } = loaderData;
   return (
     <div>
       <QueueSeeder tracks={tracks} />
       <p className="font-mono text-xs uppercase tracking-wide text-accent">Guest</p>
       <div className="mb-6 mt-2 flex items-start gap-4">
         {photo ? (
-          <img src={photo} alt={photoAlt ?? name} className="h-16 w-16 rounded-full border border-border object-cover" />
+          <Picture src={photo} image={imageFor(images, "portrait", photo)} alt={photoAlt ?? name} className="h-16 w-16 rounded-full border border-border object-cover" />
         ) : null}
         <div>
           <h1 className="font-display text-3xl font-semibold">{name}</h1>

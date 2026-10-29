@@ -25,6 +25,7 @@ import { getDb } from "~/db/index.server";
 import { posts, postVersions, type Post } from "~/db/schema";
 import { generateGuid, snapshotVersion, updatePost } from "~/lib/admin.server";
 import { buildKey, imageUrl } from "~/lib/r2.server";
+import { imageMetadata } from "~/lib/images.server";
 import { SITE_ORIGIN } from "~/lib/site";
 import { sanitizeHtml } from "~/lib/sanitize.server";
 import { addHeadingIds, demoteHeadings, readingTime } from "~/lib/seo";
@@ -281,12 +282,13 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
 
       async upload({ bytes, contentType, filename, alt, changeId }) {
         const key = buildKey("carrel", filename);
+        const size = await imageMetadata(env, bytes);
         const put = await env.BLOG_IMAGES.put(key, bytes, {
           httpMetadata: { contentType },
-          customMetadata: { alt, filename, changeId },
+          customMetadata: { alt, filename, changeId, ...size },
         });
         recordChange("media.upload", key, put.etag, changeId);
-        return toMediaItem(key, put.size, contentType, { alt, filename }, put.uploaded);
+        return toMediaItem(key, put.size, contentType, { alt, filename, ...size }, put.uploaded);
       },
 
       async delete(id, { changeId }) {
@@ -320,8 +322,8 @@ function toMediaItem(
     filename: meta?.filename ?? key.split("/").pop() ?? null,
     contentType: contentType ?? "application/octet-stream",
     bytes: size,
-    width: null,
-    height: null,
+    width: Number(meta?.width) || null,
+    height: Number(meta?.height) || null,
     alt: meta?.alt ?? "",
     uploadedAt: uploaded ? uploaded.toISOString() : null,
     deletable: true,

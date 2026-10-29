@@ -2,15 +2,20 @@ import { AppLink } from "~/components/AppLink";
 import { Calendar } from "lucide-react";
 import { formatDate } from "~/lib/format";
 import type { Post } from "~/db/schema";
+import type { ImageAttributes } from "~/lib/images";
+import { Picture } from "./Picture";
 
 // Editorial card for the writing index: cover image, title, excerpt, date, reading time, tags.
-export function ArticleCard({ post }: { post: Post }) {
+export function ArticleCard({ post, image }: { post: Post; image?: ImageAttributes }) {
   return (
     <article className="group overflow-hidden rounded-2xl border border-border bg-card transition hover:border-brand">
       <AppLink to={`/${post.slug}`} className="block">
         {post.coverImage ? (
-          <img
+          <Picture
             src={post.coverImage}
+            image={image}
+            loading="lazy"
+            decoding="async"
             alt={post.coverAlt ?? ""}
             className="aspect-[2/1] w-full border-b border-border object-cover"
           />

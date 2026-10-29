@@ -35,7 +35,7 @@ const HTML_CLIENT_CC = "public, max-age=0, must-revalidate";
 // Paths that must always be live. /admin + /api (incl. /api/auth) are gated/mutating; /search is
 // query-driven and low-repeat; /preview shows tokenized drafts; /unsubscribe renders a
 // per-token email; /health is an ops probe (no-store); /games/assets are immutable R2
-// binaries that already cache on their own.
+// binaries that already cache on their own, and /media keeps each resized image in the cache itself.
 function bypassPath(pathname: string): boolean {
   return (
     pathname === "/health" ||
@@ -44,7 +44,8 @@ function bypassPath(pathname: string): boolean {
     pathname.startsWith("/search") ||
     pathname.startsWith("/preview/") ||
     pathname.startsWith("/unsubscribe") ||
-    pathname.startsWith("/games/assets/")
+    pathname.startsWith("/games/assets/") ||
+    pathname.startsWith("/media/")
   );
 }
 

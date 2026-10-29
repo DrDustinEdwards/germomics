@@ -1,11 +1,13 @@
 // Admin upload endpoint — drag-drop / file-picker target for the editor's dual-input fields.
 // Resource route (action only) under the admin.* gate (admin.tsx middleware runs first), so it
 // is never publicly writable. Streams the file straight into R2 via the native binding and
-// returns JSON the client uses to fill the field. Images → images.germomics.com (BLOG_IMAGES);
+// returns JSON the client uses to fill the field. Images → images.germomics.com (BLOG_IMAGES), with
+// their width and height as custom metadata so pages can offer resized copies from /media;
 // audio → media.germomics.com (germomics-audio).
 import type { Route } from "./+types/admin.upload";
 import { getEnv } from "~/lib/context.server";
 import { uploadAudio, uploadImage, buildKey } from "~/lib/r2.server";
+import { imageMetadata } from "~/lib/images.server";
 
 const MAX_IMAGE = 25 * 1024 * 1024; // 25 MB
 // Cloudflare refuses a request body over 100 MB on the Free and Pro plans before the Worker sees it,
@@ -32,7 +34,8 @@ export async function action({ request, context }: Route.ActionArgs) {
       return Response.json({ ok: false, error: "Not an image file." }, { status: 415 });
     }
     const key = buildKey(`posts/${postId}`, file.name);
-    const url = await uploadImage(env, key, await file.arrayBuffer(), file.type);
+    const bytes = await file.arrayBuffer();
+    const url = await uploadImage(env, key, bytes, file.type, await imageMetadata(env, bytes));
     return Response.json({ ok: true, url, contentType: file.type, name: file.name, size: file.size });
   }
 
