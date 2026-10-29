@@ -15,6 +15,9 @@ import { runBackup } from "../app/lib/backup.server";
 // score submit count through it.
 export { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-object";
 
+// The one-minute cron in wrangler.jsonc; any other cron is the nightly backup.
+const SCHEDULES_CRON = "* * * * *";
+
 // Seed React Router v8's request context with the native Cloudflare bindings, so every
 // loader/action/middleware reaches D1/R2/KV through `context` and never over HTTP or a
 // Node API. Read them with getEnv(context) from context.server.
@@ -75,11 +78,17 @@ export default {
     }
   },
 
-  // Nightly D1 backup (wrangler.jsonc triggers.crons). Errors are logged and rethrown, never
-  // swallowed: a failed run must show as a failed invocation and age /health's backup reading.
-  // Awaited rather than handed to waitUntil, whose rejection is only logged while the invocation
-  // still counts as a success (Grok audit 2026-10-21, GE-11).
-  async scheduled(_controller, env) {
+  // Two crons (wrangler.jsonc triggers.crons). Every minute: the updates Carrel scheduled on live
+  // articles go live (site-api's runSchedules; each one that fails is logged and tried again next
+  // minute). Nightly: the D1 backup. Its errors are logged and rethrown, never swallowed: a failed
+  // run must show as a failed invocation and age /health's backup reading. Awaited rather than
+  // handed to waitUntil, whose rejection is only logged while the invocation still counts as a
+  // success (Grok audit 2026-10-21, GE-11).
+  async scheduled(controller, env) {
+    if (controller.cron === SCHEDULES_CRON) {
+      await carrelApi(env).runSchedules({ now: new Date(controller.scheduledTime) });
+      return;
+    }
     try {
       await runBackup(env);
     } catch (err) {

@@ -29,6 +29,7 @@ beforeEach(async () => {
   media = adapter.media!;
   await e.DB.exec("DELETE FROM post_versions");
   await e.DB.exec("DELETE FROM posts");
+  await e.DB.exec("DELETE FROM scheduled_updates");
   const listed = await e.BLOG_IMAGES.list();
   if (listed.objects.length) await e.BLOG_IMAGES.delete(listed.objects.map((o) => o.key));
 });
@@ -131,6 +132,50 @@ describe("publishing, scheduling and unpublishing", () => {
     expect(await row("sch")).toMatchObject({ guid: "urn:germomics:kept", publish_at: past, published_at: past, title: "Sched", status: "published" });
     const doc = (await content.get("sch"))!;
     expect(doc).toMatchObject({ status: "published", publishAt: past, publishedAt: past, path: "/sch" });
+  });
+});
+
+describe("an update scheduled on a live article", () => {
+  const live = async (slug: string) => {
+    const d = await save(slug, '---\ntitle: "Live"\n---\n<p>old</p>');
+    return content.publish(slug, { expectedVersion: d.version, changeId: "c_pub" });
+  };
+  const at = "2030-01-01T15:00:00.000Z";
+
+  it("waits while the live version is served, then the cron pass puts it live once", async () => {
+    const pub = await live("upd");
+    const schedules = adapter.schedules!;
+    const s = await schedules.update("upd", { source: '---\ntitle: "New"\n---\n<p>new</p>', publishAt: at, expectedVersion: pub.version, changeId: "c_upd" });
+    expect(s).toMatchObject({ status: "published", scheduledUpdate: { publishAt: at, changeId: "c_upd" } });
+    expect(s.version).not.toBe(pub.version);
+    const doc = (await content.get("upd"))!;
+    expect(doc).toMatchObject({ version: s.version, scheduledUpdate: { publishAt: at, changeId: "c_upd" } });
+    expect((await row("upd"))!.body).toBe("<p>old</p>");
+
+    expect(await schedules.due({ now: new Date("2029-12-31T00:00:00Z"), limit: 50 })).toEqual([]);
+    const now = new Date("2030-01-01T15:00:30Z");
+    const [due] = await schedules.due({ now, limit: 50 });
+    expect(due).toMatchObject({ id: "upd", kind: "update", publishAt: at, changeId: "c_upd" });
+    expect(await schedules.apply("upd", { ...due!, now })).toMatchObject({ status: "published", scheduledUpdate: null });
+    expect((await row("upd"))!).toMatchObject({ title: "New", body: "<p>new</p>", status: "published" });
+    // Applied, so gone: a second pass changes nothing.
+    expect(await schedules.apply("upd", { ...due!, now })).toBeNull();
+    expect(await schedules.due({ now, limit: 50 })).toEqual([]);
+  });
+
+  it("is dropped by a publish now and by a cancel, and the cancel keeps the article live", async () => {
+    const schedules = adapter.schedules!;
+    const pub = await live("drop");
+    const s = await schedules.update("drop", { source: "<p>later</p>", publishAt: at, expectedVersion: pub.version, changeId: "c1" });
+    const now = await content.publish("drop", { expectedVersion: s.version, changeId: "c2" });
+    expect(now.scheduledUpdate).toBeNull();
+    expect(await schedules.get("drop")).toBeNull();
+
+    const again = await schedules.update("drop", { source: "<p>later</p>", publishAt: at, expectedVersion: now.version, changeId: "c3" });
+    const cancelled = await schedules.cancel("drop", { expectedVersion: again.version, changeId: "c4" });
+    expect(cancelled).toMatchObject({ status: "published", scheduledUpdate: null, version: now.version });
+    expect(await schedules.get("drop")).toBeNull();
+    await expect(schedules.cancel("drop", { expectedVersion: now.version, changeId: "c5" })).rejects.toBeInstanceOf(RefusedError);
   });
 });
 

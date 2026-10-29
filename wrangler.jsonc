@@ -59,8 +59,9 @@
 	// RateLimiter, exported from workers/app.ts. One SQLite-backed instance per key.
 	"durable_objects": { "bindings": [{ "name": "RATE_LIMITER", "class_name": "RateLimiter" }] },
 	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["RateLimiter"] }],
-	// 03:17 UTC nightly: runBackup() in app/lib/backup.server.ts.
-	"triggers": { "crons": ["17 3 * * *"] },
+	// 03:17 UTC nightly: runBackup() in app/lib/backup.server.ts. Every minute: the updates Carrel
+	// scheduled on live articles (api.runSchedules), so each lands within a minute of its time.
+	"triggers": { "crons": ["17 3 * * *", "* * * * *"] },
 	"kv_namespaces": [
 		{ "binding": "APP_KV", "id": "da89f831723f4ce5802f0c877f4c2209" }
 	]

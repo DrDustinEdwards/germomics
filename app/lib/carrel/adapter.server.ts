@@ -7,8 +7,13 @@
 // source cannot represent, so they are not exposed (kind "episode" is never listed or writable).
 //
 // IDS AND VERSIONS. A content id is the article's slug. A version is a hash of everything Carrel can
-// see or change (the source, the status and the schedule), so any change anywhere gives a new
-// version and two saves in one second cannot collide.
+// see or change (the source, the status and the schedule, and an update waiting on a live article),
+// so any change anywhere gives a new version and two saves in one second cannot collide.
+//
+// SCHEDULES. An article scheduled before it was ever live is a published row with a future
+// publish_at: every public read hides it until then (publiclyVisible), so it needs no cron. An
+// update scheduled on a LIVE article (site-api v0.10.0) waits in scheduled_updates while the live
+// version stays served, and the one-minute cron (workers/app.ts, api.runSchedules) puts it live.
 import { and, desc, eq, like, or } from "drizzle-orm";
 import {
   contentVersion,
@@ -18,9 +23,11 @@ import {
   VersionConflictError,
   type ContentSummary,
   type MediaItem,
+  type ScheduledUpdate,
   type SiteAdapter,
   type WriteResult,
 } from "@dustinedwards/site-api";
+import { d1ScheduledUpdates, utc } from "@dustinedwards/site-api/schedules";
 import { getDb } from "~/db/index.server";
 import { posts, postVersions, type Post } from "~/db/schema";
 import { generateGuid, snapshotVersion, updatePost } from "~/lib/admin.server";
@@ -50,11 +57,20 @@ function statusOf(p: Pick<Post, "status" | "publishAt">): Status {
   return p.publishAt && p.publishAt > new Date().toISOString() ? "scheduled" : "published";
 }
 
-/** The version of a row as Carrel sees it. */
-const versionOf = (p: Post): Promise<string> => contentVersion([renderSource(p), p.status, p.publishAt ?? null]);
+type Waiting = Pick<ScheduledUpdate, "publishAt" | "changeId"> | null;
 
-function summaryOf(p: Post): ContentSummary {
+/**
+ * The version of a row as Carrel sees it. The waiting update's time and change id join the parts
+ * only when there is one, so every version made before scheduled updates existed is unchanged.
+ */
+const versionOf = (p: Post, update: Waiting = null): Promise<string> =>
+  contentVersion([renderSource(p), p.status, p.publishAt ?? null, ...(update ? [update.publishAt, update.changeId] : [])]);
+
+const waitingOf = (u: ScheduledUpdate | null): Waiting => (u ? { publishAt: u.publishAt, changeId: u.changeId } : null);
+
+function summaryOf(p: Post, update: Waiting = null): ContentSummary {
   return {
+    scheduledUpdate: update,
     id: p.slug,
     kind: "article",
     title: p.title,
@@ -76,8 +92,8 @@ async function findArticle(env: Env, slug: string): Promise<Post | null> {
 }
 
 /** Every write checks the version first, in one place. */
-async function requireVersion(post: Post | null, expected: string | null): Promise<void> {
-  const current = post ? await versionOf(post) : null;
+async function requireVersion(post: Post | null, update: Waiting, expected: string | null): Promise<void> {
+  const current = post ? await versionOf(post, update) : null;
   if (current !== expected) throw new VersionConflictError(current);
 }
 
@@ -103,21 +119,27 @@ async function fieldsFromSource(source: string): Promise<Partial<Post>> {
 
 export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknown>) => void = console.log): SiteAdapter {
   const db = getDb(env);
+  const updates = d1ScheduledUpdates(env.DB);
+  const waiting = async (slug: string): Promise<Waiting> => waitingOf(await updates.get(slug));
 
   // Carrel's changeId joins its authorship record to this site's history. posts has no column for
   // it, so it is written to the Worker log with the id and the new version, and returned to Carrel.
   const recordChange = (event: string, id: string, version: string, changeId: string) =>
     log({ event: `carrel.${event}`, id, version, changeId });
 
+  // `dropUpdate`: a publish or an unpublish drops an update waiting on the article, so the cron
+  // never brings back what was just published over or taken down.
   async function write(
     event: string,
     slug: string,
     changeId: string,
     expectedVersion: string | null,
     build: (current: Post | null) => Promise<Partial<Post>>,
+    { dropUpdate = false } = {},
   ): Promise<WriteResult> {
     const current = await findArticle(env, slug);
-    await requireVersion(current, expectedVersion);
+    const update = current ? await waiting(slug) : null;
+    await requireVersion(current, update, expectedVersion);
     if (!current) {
       if (!ID_PATTERN.test(slug)) throw new RefusedError("That id cannot be used as a slug.");
       // The slug is unique across every kind; an episode already holds it.
@@ -137,9 +159,11 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
         .returning();
       row = created[0];
     }
-    const version = await versionOf((await findArticle(env, slug)) ?? row);
+    if (update && dropUpdate) await updates.remove(slug).run();
+    const left = dropUpdate ? null : update;
+    const version = await versionOf((await findArticle(env, slug)) ?? row, left);
     recordChange(event, slug, version, changeId);
-    return { id: slug, version, status: statusOf(row), changeId };
+    return { id: slug, version, status: statusOf(row), changeId, scheduledUpdate: left };
   }
 
   return {
@@ -160,13 +184,15 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
         const start = Math.max(0, Number(cursor) || 0);
         const page = matching.slice(start, start + limit);
         const next = start + limit < matching.length ? String(start + limit) : null;
-        return { items: page.map(summaryOf), nextCursor: next };
+        const waits = await Promise.all(page.map((p) => waiting(p.slug)));
+        return { items: page.map((p, i) => summaryOf(p, waits[i])), nextCursor: next };
       },
 
       async get(id) {
         const p = await findArticle(env, id);
         if (!p) return null;
-        return { ...summaryOf(p), format: "markdown" as const, source: renderSource(p), version: await versionOf(p) };
+        const update = await waiting(id);
+        return { ...summaryOf(p, update), format: "markdown" as const, source: renderSource(p), version: await versionOf(p, update) };
       },
 
       saveDraft: (id, input) =>
@@ -186,7 +212,7 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
             publishedAt: current.publishedAt ?? new Date().toISOString(),
             publishAt: null,
           };
-        }),
+        }, { dropUpdate: true }),
 
       schedule: (id, input) =>
         write("schedule", id, input.changeId, input.expectedVersion, async (current) => {
@@ -204,7 +230,7 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
         write("unpublish", id, input.changeId, input.expectedVersion, async (current) => {
           if (!current) throw new NotFoundError();
           return { status: "draft", publishAt: null };
-        }),
+        }, { dropUpdate: true }),
 
       async revisions(id) {
         const p = await findArticle(env, id);
@@ -231,13 +257,74 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
       async revisionSource(id, version) {
         const p = await findArticle(env, id);
         if (!p) return null;
-        if ((await versionOf(p)) === version) return renderSource(p);
+        if ((await versionOf(p, await waiting(id))) === version) return renderSource(p);
         const rows = await db.select().from(postVersions).where(eq(postVersions.postId, p.id)).limit(50);
         for (const r of rows) {
           const snap = r.snapshot as Post;
           if ((await versionOf(snap)) === version) return renderSource(snap);
         }
         return null;
+      },
+    },
+
+    // Updates scheduled on live articles (site-api v0.10.0), kept in scheduled_updates.
+    schedules: {
+      async get(id) {
+        return (await findArticle(env, id)) ? updates.get(id) : null;
+      },
+
+      async update(id, { source, publishAt, expectedVersion, changeId }) {
+        const current = await findArticle(env, id);
+        if (!current) throw new NotFoundError();
+        const before = await waiting(id);
+        await requireVersion(current, before, expectedVersion);
+        if (statusOf(current) !== "published") throw new RefusedError("Only a live article takes a scheduled update.");
+        await fieldsFromSource(source); // refused now, not at the time, when it cannot be read
+        await updates.put(id, { source, publishAt, changeId }).run();
+        const update = { publishAt: utc(publishAt), changeId };
+        const version = await versionOf(current, update);
+        recordChange("schedule.update", id, version, changeId);
+        return { id, version, status: "published", changeId, scheduledUpdate: update };
+      },
+
+      async cancel(id, { expectedVersion, changeId }) {
+        const current = await findArticle(env, id);
+        if (!current) throw new NotFoundError();
+        const update = await waiting(id);
+        await requireVersion(current, update, expectedVersion);
+        if (update) {
+          await updates.remove(id).run();
+          const version = await versionOf(current, null);
+          recordChange("schedule.cancel", id, version, changeId);
+          return { id, version, status: statusOf(current), changeId, scheduledUpdate: null };
+        }
+        if (statusOf(current) !== "scheduled") throw new RefusedError("Nothing is scheduled for this article.");
+        // Never live: back to a draft, as an unpublish would.
+        return write("schedule.cancel", id, changeId, expectedVersion, async () => ({ status: "draft", publishAt: null }));
+      },
+
+      // Only waiting updates: a never-live scheduled article goes live by its publish_at on every read.
+      due: ({ now, limit }) => updates.due(now, limit),
+
+      async apply(id, { kind, publishAt, changeId, now }) {
+        if (kind !== "update" || new Date(publishAt) > now) return null;
+        const update = await updates.get(id);
+        if (!update || update.publishAt !== utc(publishAt) || update.changeId !== changeId) return null;
+        const match = { publishAt: update.publishAt, changeId };
+        const current = await findArticle(env, id);
+        // Deleted, renamed or taken down in the admin editor since: the update has nothing left to replace.
+        if (!current || statusOf(current) !== "published") {
+          await updates.remove(id, match).run();
+          return null;
+        }
+        const fields = await fieldsFromSource(update.source);
+        await snapshotVersion(env, current);
+        await updatePost(env, current.id, fields);
+        await updates.remove(id, match).run();
+        const row = (await findArticle(env, id)) ?? { ...current, ...fields };
+        const version = await versionOf(row, null);
+        recordChange("schedule.apply", id, version, changeId);
+        return { id, version, status: "published", changeId, scheduledUpdate: null };
       },
     },
 
