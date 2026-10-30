@@ -4,7 +4,6 @@
 import type { Route } from "./+types/transcript";
 import { getEnv } from "~/lib/context.server";
 import { getPostBySlug } from "~/lib/posts.server";
-import { FEED_CACHE_CONTROL } from "~/lib/edge-cache.server";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const post = await getPostBySlug(getEnv(context), params.slug);
@@ -12,7 +11,6 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   return new Response(post.transcript, {
     headers: {
       "Content-Type": "text/vtt; charset=utf-8",
-      "Cache-Control": FEED_CACHE_CONTROL,
     },
   });
 }

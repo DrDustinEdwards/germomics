@@ -1,7 +1,7 @@
-# Cloudflare Workers Static Assets headers. Self-hosted fonts never change at a given URL
-# (re-fetched into new files by scripts/fetch-fonts.mjs), so cache them hard.
+# Cloudflare Workers Static Assets headers. Self-hosted fonts sit at unhashed paths, and scripts/fetch-fonts.mjs
+# rewrites the same names, so a day, then revalidated by the asset server's ETag: a replaced font reaches every reader.
 /fonts/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=86400
 
 # Built files: Vite names each one by its content hash, so the URL changes whenever the bytes do and a year is
 # safe. Without this rule Workers Assets serves them with `max-age=0, must-revalidate`, and every page load

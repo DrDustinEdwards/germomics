@@ -1,6 +1,6 @@
 // Every security header germomics sends, in one file: site-runtime's standard set (the OWASP Secure
 // Headers Project's values) with this site's deviations, each beside its reason, and the
-// Content-Security-Policy built from what the site really loads. workers/app.ts and the edge cache
+// Content-Security-Policy built from what the site really loads. workers/app.ts (gateway and Renderer)
 // apply withSecurityHeaders to every response (pages, feeds, resource routes, redirects, errors).
 // Server-only.
 
