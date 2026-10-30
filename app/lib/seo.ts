@@ -278,12 +278,22 @@ type PageHead = {
  * description too long for a search result is cut at a word, so a page whose description is its own text (About,
  * TXASM) sends one sentence's worth, not the page.
  */
-export function pageHead({ image, description, ...page }: PageHead) {
+export function pageHead({ image, description, path, ...page }: PageHead) {
   return headTags({
     origin: SITE_ORIGIN,
     siteName: "Germomics",
     image: image ?? DEFAULT_CARD,
     description: truncateForSerp(description, SERP_DESCRIPTION_LIMIT),
+    path: canonicalPath(path),
     ...page,
   });
+}
+
+/**
+ * One canonical path per page: routes pass location.pathname, which keeps a trailing slash a visitor typed, so it is
+ * dropped (except on "/"). The podcast feed's /feed/podcast/ keeps its slash: that URL never changes (CLAUDE.md rule 1).
+ */
+function canonicalPath(path: string): string {
+  if (path === "/feed/podcast/") return path;
+  return path.replace(/\/+$/, "") || "/";
 }

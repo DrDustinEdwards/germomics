@@ -1,5 +1,6 @@
 // Client-safe theme helper. data-theme on <html> drives light/dark; the choice is remembered
 // in localStorage. The no-flash script below runs before paint so there is no theme flicker.
+import { themeScript } from "capsomer/theme-server";
 import type { Theme } from "./types";
 
 export const THEME_KEY = "germomics-theme";
@@ -28,5 +29,5 @@ export function applyTheme(theme: Theme) {
   }
 }
 
-// Inlined into <head> by root.tsx so the attribute is set before first paint.
-export const themeInitScript = `(function(){try{var t=localStorage.getItem("${THEME_KEY}");if(t==="light"||t==="dark"){document.documentElement.setAttribute("data-theme",t);}}catch(e){}})();`;
+// Inlined into <head> by root.tsx so the attribute is set before first paint: Capsomer's pre-paint script.
+export const themeInitScript = themeScript(THEME_KEY);
