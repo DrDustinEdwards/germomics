@@ -15,6 +15,7 @@ import { loadSettings, loadSnippets, setting } from "~/lib/content.server";
 import { getShowConfig } from "~/lib/show.server";
 import { listSeasons } from "~/lib/posts.server";
 import { themeInitScript } from "~/lib/theme";
+import { PRELOADS } from "~/lib/preloads";
 import { socialLinks } from "~/lib/seo";
 import { PlayerProvider } from "~/components/player/player-context";
 import { PlayerDock } from "~/components/player/PlayerDock";
@@ -27,15 +28,8 @@ export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
   { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
   { rel: "manifest", href: "/site.webmanifest" },
-  // Fonts are self-hosted (app/fonts.css, served from /fonts). Preload the display weight used in the
-  // hero/h1 (the LCP text) so it paints without a swap flash; the rest load with font-display: swap.
-  {
-    rel: "preload",
-    as: "font",
-    type: "font/woff2",
-    href: "/fonts/space-grotesk-600-latin.woff2",
-    crossOrigin: "anonymous",
-  },
+  // The LCP font, also sent as the Early Hints `Link` header (lib/preloads.ts).
+  ...PRELOADS.links,
 ];
 
 // Site content (settings + snippets) for any loader, read once per request on first use. Nothing is
