@@ -28,6 +28,9 @@ export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
   { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
   { rel: "manifest", href: "/site.webmanifest" },
+  // Feed autodiscovery: the writing feed and the podcast feed (whose URL never changes, CLAUDE.md rule 1).
+  { rel: "alternate", type: "application/rss+xml", title: "Germomics: Writing", href: "/feed/site.xml" },
+  { rel: "alternate", type: "application/rss+xml", title: "Germomics podcast", href: "/feed/podcast/" },
   // The LCP font, also sent as the Early Hints `Link` header (lib/preloads.ts).
   ...PRELOADS.links,
 ];
