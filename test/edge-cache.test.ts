@@ -19,7 +19,7 @@ function harness() {
     },
     settle: () => Promise.all(pending),
     serve: (request: Request, make: () => Response = () => new Response(`render ${renders}`, { headers: { "Content-Type": "text/html" } })) =>
-      serveWithEdgeCache({ request, ctx, origin: ORIGIN, render: async () => { const r = make(); renders++; return r; } }),
+      serveWithEdgeCache({ request, ctx, render: async () => { const r = make(); renders++; return r; } }),
   };
 }
 

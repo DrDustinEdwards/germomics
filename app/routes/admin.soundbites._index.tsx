@@ -11,6 +11,7 @@ import { listSoundbites, upsertSoundbite, deleteSoundbite } from "~/lib/soundbit
 import { formatDuration } from "~/lib/format";
 import { Card, Field, Button, inputCx, EmptyState } from "~/components/admin/ui";
 import { useSnippet } from "~/lib/content";
+import { ADMIN_FORM, readForm } from "~/lib/body.server";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
@@ -23,7 +24,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 
 export async function action({ request, context }: Route.ActionArgs) {
   const env = getEnv(context);
-  const form = await request.formData();
+  const form = await readForm(request, ADMIN_FORM);
   if (String(form.get("intent")) === "delete") {
     await deleteSoundbite(env, Number(form.get("id")));
     return { ok: true as const, message: "Deleted." };

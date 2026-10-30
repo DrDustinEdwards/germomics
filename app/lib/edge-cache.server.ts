@@ -138,10 +138,9 @@ type RenderFn = () => Promise<Response>;
 export async function serveWithEdgeCache(opts: {
   request: Request;
   ctx: ExecutionContext;
-  origin: string;
   render: RenderFn;
 }): Promise<Response> {
-  const { request, ctx, origin, render } = opts;
+  const { request, ctx, render } = opts;
   const url = new URL(request.url);
   const method = request.method;
   const readable = method === "GET" || method === "HEAD";
@@ -149,7 +148,7 @@ export async function serveWithEdgeCache(opts: {
   // Bypass: any non-readable method, an authenticated request, or a non-public path goes straight
   // to a live render and never touches the cache.
   if (!readable || hasSessionCookie(request) || bypassPath(url.pathname)) {
-    return liveServed(withSecurityHeaders(await render(), origin), "BYPASS");
+    return liveServed(withSecurityHeaders(await render(), request.url), "BYPASS");
   }
 
   // caches.default is the Cloudflare cache (worker-configuration.d.ts), but this app also pulls in
@@ -164,7 +163,7 @@ export async function serveWithEdgeCache(opts: {
     if (age !== null && age < SWR_SECONDS) {
       if (age >= FRESH_SECONDS) {
         // Stale: serve immediately, refresh in the background.
-        ctx.waitUntil(revalidate(cache, key, origin, render));
+        ctx.waitUntil(revalidate(cache, key, request.url, render));
         return fromCache(cached, "STALE", method);
       }
       return fromCache(cached, "HIT", method);
@@ -173,7 +172,7 @@ export async function serveWithEdgeCache(opts: {
   }
 
   // Miss / expired: render live, then store only a GET response that passes every invariant.
-  const secured = withSecurityHeaders(await render(), origin);
+  const secured = withSecurityHeaders(await render(), request.url);
   if (method === "GET" && responseIsCacheable(secured)) {
     ctx.waitUntil(cache.put(key, forStorage(secured.clone())));
     return liveServed(secured, "MISS");
@@ -183,9 +182,9 @@ export async function serveWithEdgeCache(opts: {
 
 // Background refresh of a stale entry. Best-effort: a failed render just leaves the existing entry
 // to age out and be re-rendered on a later request.
-async function revalidate(cache: Cache, key: Request, origin: string, render: RenderFn): Promise<void> {
+async function revalidate(cache: Cache, key: Request, url: string, render: RenderFn): Promise<void> {
   try {
-    const secured = withSecurityHeaders(await render(), origin);
+    const secured = withSecurityHeaders(await render(), url);
     if (responseIsCacheable(secured)) await cache.put(key, forStorage(secured));
   } catch {
     /* keep the old entry */

@@ -9,6 +9,7 @@ import { loadBlock, TEXT_PAGES, upsertBlock } from "~/lib/content.server";
 import { sanitizeHtml } from "~/lib/sanitize.server";
 import { Card, Field, Button, inputCx } from "~/components/admin/ui";
 import { PAGE_HREF } from "~/components/content/PageHits";
+import { ADMIN_FORM, readForm } from "~/lib/body.server";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const block = await loadBlock(getEnv(context), params.key, { includeDrafts: true });
@@ -19,7 +20,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 }
 
 export async function action({ params, request, context }: Route.ActionArgs) {
-  const form = await request.formData();
+  const form = await readForm(request, ADMIN_FORM);
   const kind = params.key.startsWith("page:") ? "page" : "snippet";
   const raw = String(form.get("value") ?? "");
   // A page body is injected as HTML, so it goes through the same sanitizer as a post body

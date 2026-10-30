@@ -6,7 +6,7 @@
     "node": ">=22.22.0"
   },
   "scripts": {
-    "build": "react-router build",
+    "build": "node scripts/gen-headers.mjs && react-router build",
     "dev": "react-router dev",
     "test": "vitest run",
     "typecheck": "devkit-bootstrap --types-only && react-router typegen && tsc -b",

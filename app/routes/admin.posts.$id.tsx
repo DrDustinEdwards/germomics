@@ -23,6 +23,7 @@ import { previewToken } from "~/lib/preview.server";
 import { aiConfigured } from "~/lib/ai.server";
 import { PostEditor, type EditorData } from "~/components/admin/PostEditor";
 import type { Post, Chapter, Guest, KeyMoment, Source } from "~/db/schema";
+import { ADMIN_FORM, readForm } from "~/lib/body.server";
 
 const orNull = (v: unknown): string | null => {
   const s = String(v ?? "").trim();
@@ -65,7 +66,7 @@ export async function action({ params, request, context }: Route.ActionArgs) {
   const id = Number(params.id);
   const post = await getPostById(env, id);
   if (!post) throw new Response("Not found", { status: 404 });
-  const form = await request.formData();
+  const form = await readForm(request, ADMIN_FORM);
   const intent = String(form.get("intent"));
 
   if (intent === "delete") {
