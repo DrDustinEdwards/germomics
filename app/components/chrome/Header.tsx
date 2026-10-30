@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { NavLink, useRouteLoaderData, useLocation } from "react-router";
+import { useRouteLoaderData, useLocation } from "react-router";
+import { Link, NavLink } from "capsomer/react/link";
 import { ChevronDown, Menu, Search, X } from "lucide-react";
-import { AppLink } from "../AppLink";
 import { GMark } from "../brand/GMark";
 import { ThemeToggle } from "./ThemeToggle";
 import { useSnippet } from "~/lib/content";
@@ -87,7 +87,7 @@ function EpisodesMenu({ seasons }: { seasons: number[] }) {
         <ul role="menu" aria-label={label} className="absolute left-0 top-full z-40 mt-1 min-w-48 rounded-lg border border-border bg-card p-1 shadow-lg">
           {items.map((it, i) => (
             <li key={it.to} role="none">
-              <AppLink
+              <Link
                 role="menuitem"
                 to={it.to}
                 ref={(el) => { itemRefs.current[i] = el; }}
@@ -102,7 +102,7 @@ function EpisodesMenu({ seasons }: { seasons: number[] }) {
                 className="block rounded px-3 py-2 text-sm text-muted hover:bg-surface hover:text-ink"
               >
                 {it.label}
-              </AppLink>
+              </Link>
             </li>
           ))}
         </ul>
@@ -124,29 +124,29 @@ export function Header() {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-bg/85 backdrop-blur">
       <div className="mx-auto flex h-15 max-w-5xl items-center justify-between gap-4 px-4 py-3 max-[374px]:gap-1">
-        <AppLink to="/" className="flex items-center gap-2 font-display text-xl font-semibold tracking-tight text-ink">
+        <Link to="/" className="flex items-center gap-2 font-display text-xl font-semibold tracking-tight text-ink">
           {/* Hexagon G brand mark (themes via currentColor: brand purple light / lavender dark). Sized
               near the wordmark cap height and a touch under the old mic since the hexagon reads heavier. */}
           <GMark className="h-5 w-auto" />
           <span>germ<span className="text-brand">omics</span></span>
-        </AppLink>
+        </Link>
 
         {/* Desktop nav */}
         <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
           <EpisodesMenu seasons={seasons} />
           {NAV.map((item) => (
-            <NavLink key={item.to} to={item.to} prefetch="intent" className={navCx}>
+            <NavLink key={item.to} to={item.to} className={navCx}>
               <NavLabel snippetKey={item.key} fallback={item.fallback} />
             </NavLink>
           ))}
-          <AppLink to="/subscribe" className={subscribeCta}>{subscribeLabel}</AppLink>
-          <AppLink
+          <Link to="/subscribe" className={subscribeCta}>{subscribeLabel}</Link>
+          <Link
             to="/search"
             aria-label="Search"
             className="tap-target grid place-items-center rounded-full border border-border bg-surface p-2 text-muted hover:border-brand hover:text-ink"
           >
             <Search size={16} aria-hidden />
-          </AppLink>
+          </Link>
           <ThemeToggle />
         </nav>
 
@@ -156,14 +156,14 @@ export function Header() {
             Subscribe pill. All of it is restored above 374px, so 375px and up are unchanged. */}
         <div className="flex items-center gap-1 md:hidden max-[374px]:gap-0">
           <ThemeToggle className="max-[374px]:p-1" />
-          <AppLink
+          <Link
             to="/search"
             aria-label="Search"
             className="tap-target grid place-items-center rounded-full border border-border bg-surface p-2 text-muted hover:border-brand hover:text-ink max-[374px]:p-1"
           >
             <Search size={16} aria-hidden />
-          </AppLink>
-          <AppLink to="/subscribe" className={`${subscribeCta} max-[374px]:px-1.5 max-[374px]:text-xs`}>{subscribeLabel}</AppLink>
+          </Link>
+          <Link to="/subscribe" className={`${subscribeCta} max-[374px]:px-1.5 max-[374px]:text-xs`}>{subscribeLabel}</Link>
           <button
             type="button"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -181,15 +181,15 @@ export function Header() {
       {mobileOpen && (
         <nav id="mobile-menu" aria-label="Mobile" className="border-t border-border bg-bg px-4 py-3 md:hidden">
           <ul className="space-y-1">
-            <li><AppLink to="/episodes" className="block rounded px-2 py-2 font-display text-sm text-ink">All Episodes</AppLink></li>
+            <li><Link to="/episodes" className="block rounded px-2 py-2 font-display text-sm text-ink">All Episodes</Link></li>
             {seasons.map((s) => (
-              <li key={s}><AppLink to={`/season/${s}`} className="block rounded px-2 py-2 pl-5 text-sm text-muted hover:text-ink">Season {s}</AppLink></li>
+              <li key={s}><Link to={`/season/${s}`} className="block rounded px-2 py-2 pl-5 text-sm text-muted hover:text-ink">Season {s}</Link></li>
             ))}
             {NAV.map((item) => (
               <li key={item.to}>
-                <AppLink to={item.to} className="block rounded px-2 py-2 font-display text-sm text-muted hover:text-ink">
+                <Link to={item.to} className="block rounded px-2 py-2 font-display text-sm text-muted hover:text-ink">
                   <NavLabel snippetKey={item.key} fallback={item.fallback} />
-                </AppLink>
+                </Link>
               </li>
             ))}
           </ul>

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Form, Link, redirect, useFetcher } from "react-router";
+import { Form, redirect, useFetcher } from "react-router";
+import { Link } from "capsomer/react/link";
 import { Headphones, FileText, Plus, Copy, ExternalLink, Search, Pencil } from "lucide-react";
 import type { Route } from "./+types/admin.posts._index";
 import { getEnv } from "~/lib/context.server";

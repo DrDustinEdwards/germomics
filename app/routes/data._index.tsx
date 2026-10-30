@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { Activity, Dna } from "lucide-react";
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/data._index";

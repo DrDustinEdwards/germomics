@@ -8,7 +8,7 @@
 // padding-bottom (app.css) so the footer always clears the fixed dock. Popovers open upward and the
 // sheet is a separate overlay, so neither changes the measured dock height.
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { ChevronUp, X, AlertCircle, Loader2, ListTree } from "lucide-react";
 import { usePlayer, activeChapterIndex } from "./player-context";
 import { formatDuration } from "~/lib/format";

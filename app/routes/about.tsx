@@ -1,7 +1,7 @@
 // /about - what germomics is, who makes it, how to follow it. Prose comes from the page:about and
 // page:dustin-edwards content blocks (D1, editable); Organization + BreadcrumbList JSON-LD carry
 // entity clarity. Public, WCAG AA. ?preview shows drafts to a signed-in admin.
-import { AppLink } from "~/components/AppLink";
+import { Link } from "capsomer/react/link";
 import { Rss, Mic, FileText, Database, Gamepad2, User } from "lucide-react";
 import type { Route } from "./+types/about";
 import { getEnv, getSettings } from "~/lib/context.server";
@@ -71,12 +71,12 @@ export default function About({ loaderData }: Route.ComponentProps) {
         <div className="prose-legal mt-2">
           <BodyRenderer html={bioHtml} />
         </div>
-        <AppLink
+        <Link
           to={`/about/${AUTHOR.slug}`}
           className="mt-3 inline-flex items-center gap-1 font-mono text-sm text-accent hover:underline"
         >
           More about {AUTHOR.name} →
-        </AppLink>
+        </Link>
       </section>
 
       <section className="mt-10">
@@ -84,7 +84,7 @@ export default function About({ loaderData }: Route.ComponentProps) {
         <ul className="grid gap-3 sm:grid-cols-2">
           {EXPLORE.map(({ to, icon: Icon, label, note }) => (
             <li key={to}>
-              <AppLink
+              <Link
                 to={to}
                 className="flex h-full flex-col rounded-xl border border-border bg-card p-4 hover:border-brand"
               >
@@ -92,7 +92,7 @@ export default function About({ loaderData }: Route.ComponentProps) {
                   <Icon size={16} aria-hidden /> {label}
                 </span>
                 <span className="mt-1 text-sm text-muted">{note}</span>
-              </AppLink>
+              </Link>
             </li>
           ))}
         </ul>
