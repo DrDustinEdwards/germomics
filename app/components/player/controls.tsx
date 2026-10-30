@@ -13,7 +13,7 @@
 // moves in, Esc and outside-click close, focus returns to the trigger). Transitions are motion-safe
 // only (suppressed under prefers-reduced-motion).
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import {
   Play, Pause, RotateCcw, RotateCw, SkipForward, Gauge, Volume2, VolumeX,
   Timer, ListTree, Captions, Check,

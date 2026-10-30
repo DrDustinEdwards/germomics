@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Form, Link } from "react-router";
+import { Form } from "react-router";
+import { Link } from "capsomer/react/link";
 import { Rss, Check, Copy, Mail, Smartphone } from "lucide-react";
 import { ExternalCue } from "~/components/ExternalCue";
 import { pageHead } from "~/lib/seo";

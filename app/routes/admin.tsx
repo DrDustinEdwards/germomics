@@ -4,7 +4,8 @@
 // here; this re-verifies its JWT (app/lib/access.server.ts) and answers 403 to anything else, so
 // a request that bypassed Access, or an Access setup that is wrong, never reaches an admin route.
 import { useEffect, useState } from "react";
-import { Outlet, Link, useLocation } from "react-router";
+import { Outlet, useLocation } from "react-router";
+import { Link } from "capsomer/react/link";
 import { LayoutDashboard, FileAudio, Users, Settings, Mail, Scissors } from "lucide-react";
 import { AdminShell, type AdminEntry } from "capsomer/react/admin-shell";
 import "~/admin.css";

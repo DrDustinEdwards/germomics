@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 
 /** A content page's key to its public URL: site-search page hits and the admin Preview link. */
 export const PAGE_HREF: Record<string, string> = {

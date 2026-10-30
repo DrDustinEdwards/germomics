@@ -2,7 +2,8 @@
 // funding). Categories + funding are the Tier 2 additions; the channel fields round out a real
 // settings page. On the germomics design system, WCAG AA (labels, focus, error states).
 import { useState } from "react";
-import { useFetcher, Link } from "react-router";
+import { useFetcher } from "react-router";
+import { Link } from "capsomer/react/link";
 import { Settings, Megaphone, ListTree, Check, SlidersHorizontal, FileText, Users } from "lucide-react";
 import type { Route } from "./+types/admin.settings._index";
 import { getEnv } from "~/lib/context.server";

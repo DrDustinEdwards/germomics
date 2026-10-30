@@ -3,7 +3,8 @@
 // changed data would unsubscribe people who never asked. The change happens on POST, from that
 // button or from an RFC 8058 List-Unsubscribe-Post one-click request, and is idempotent. No login,
 // no PII beyond the email the token resolves to. noindex.
-import { Form, Link } from "react-router";
+import { Form } from "react-router";
+import { Link } from "capsomer/react/link";
 import { and, eq, isNull } from "drizzle-orm";
 import type { Route } from "./+types/unsubscribe";
 import { getEnv } from "~/lib/context.server";

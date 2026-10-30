@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { Calendar, Clock, ArrowLeft, ArrowRight, FileText, Rss, Bookmark, BookmarkCheck } from "lucide-react";
-import { AppLink } from "~/components/AppLink";
+import { Link } from "capsomer/react/link";
 import type { Post } from "~/db/schema";
 import type { GuestView, Host, PlayerTrack, SoundbiteView } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
@@ -110,9 +110,9 @@ function SubscribeRow({ links }: { links: Record<string, string> }) {
           <Rss size={14} aria-hidden /> RSS
           <ExternalCue />
         </a>
-        <AppLink to="/subscribe" className="inline-flex items-center rounded-full px-3 py-1.5 text-sm text-muted hover:text-ink">
+        <Link to="/subscribe" className="inline-flex items-center rounded-full px-3 py-1.5 text-sm text-muted hover:text-ink">
           More ways to listen →
-        </AppLink>
+        </Link>
       </div>
     </section>
   );
@@ -148,7 +148,7 @@ export function PostDetail({ data }: { data: DetailData }) {
               <Picture src={g.photo} image={imageFor(data.images, "avatar", g.photo)} alt={g.photoAlt ?? g.name} loading="lazy" decoding="async" width={48} height={48} className="h-12 w-12 shrink-0 rounded-full border border-border object-cover" />
             ) : null}
             <div className="min-w-0">
-              <AppLink to={`/guests/${g.slug}`} className="font-display font-medium text-ink hover:text-brand">{g.name}</AppLink>
+              <Link to={`/guests/${g.slug}`} className="font-display font-medium text-ink hover:text-brand">{g.name}</Link>
               {g.role ? <p className="font-mono text-xs text-muted">{g.role}</p> : null}
               {g.bio ? <p className="mt-1 text-sm text-muted">{g.bio}</p> : null}
               {(g.links ?? []).length ? (
@@ -179,16 +179,16 @@ export function PostDetail({ data }: { data: DetailData }) {
   const PrevNext = (prev || next) ? (
     <nav className="mt-10 flex items-stretch justify-between gap-3 border-t border-border pt-6" aria-label="More posts">
       {prev ? (
-        <AppLink to={`/${prev.slug}`} className="group flex max-w-[48%] flex-col rounded-xl border border-border bg-card p-3 hover:border-brand">
+        <Link to={`/${prev.slug}`} className="group flex max-w-[48%] flex-col rounded-xl border border-border bg-card p-3 hover:border-brand">
           <span className="flex items-center gap-1 font-mono text-[11px] text-muted"><ArrowLeft size={12} aria-hidden /> Previous</span>
           <span className="mt-1 line-clamp-2 font-display text-sm text-ink group-hover:text-brand">{prev.title}</span>
-        </AppLink>
+        </Link>
       ) : <span />}
       {next ? (
-        <AppLink to={`/${next.slug}`} className="group flex max-w-[48%] flex-col rounded-xl border border-border bg-card p-3 text-right hover:border-brand">
+        <Link to={`/${next.slug}`} className="group flex max-w-[48%] flex-col rounded-xl border border-border bg-card p-3 text-right hover:border-brand">
           <span className="flex items-center justify-end gap-1 font-mono text-[11px] text-muted">Next <ArrowRight size={12} aria-hidden /></span>
           <span className="mt-1 line-clamp-2 font-display text-sm text-ink group-hover:text-brand">{next.title}</span>
-        </AppLink>
+        </Link>
       ) : <span />}
     </nav>
   ) : null;
@@ -321,7 +321,7 @@ export function PostDetail({ data }: { data: DetailData }) {
       {(post.tags ?? []).length ? (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {(post.tags ?? []).map((t) => (
-            <AppLink key={t} to={`/tag/${encodeURIComponent(t)}`} className="rounded-full border border-border px-2 py-0.5 font-mono text-[11px] text-muted hover:border-brand hover:text-brand">{t}</AppLink>
+            <Link key={t} to={`/tag/${encodeURIComponent(t)}`} className="rounded-full border border-border px-2 py-0.5 font-mono text-[11px] text-muted hover:border-brand hover:text-brand">{t}</Link>
           ))}
         </div>
       ) : null}

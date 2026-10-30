@@ -1,4 +1,4 @@
-import { AppLink } from "~/components/AppLink";
+import { Link } from "capsomer/react/link";
 import { Headphones } from "lucide-react";
 import type { Route } from "./+types/_index";
 import { getEnv, getSettings, getSnippets } from "~/lib/context.server";
@@ -104,9 +104,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       <section>
         <div className="mb-4 flex items-baseline justify-between">
           <h2 className="font-display text-2xl font-semibold">Latest</h2>
-          <AppLink to="/archive" className="font-mono text-xs text-accent hover:underline">
+          <Link to="/archive" className="font-mono text-xs text-accent hover:underline">
             view all →
-          </AppLink>
+          </Link>
         </div>
         <div className="grid gap-3">
           {/* Latest episode, promoted to the elevated first row of the list (same teal play chip). */}
@@ -124,9 +124,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   ) : null}
                 </div>
                 <h3 className="mt-1 font-display text-xl font-medium">
-                  <AppLink to={`/${featured.slug}`} className="text-ink hover:text-brand">
+                  <Link to={`/${featured.slug}`} className="text-ink hover:text-brand">
                     {featured.title}
-                  </AppLink>
+                  </Link>
                 </h3>
                 {featured.excerpt ? (
                   <p className="mt-1 line-clamp-2 text-sm text-muted">{featured.excerpt}</p>

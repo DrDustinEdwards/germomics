@@ -1,4 +1,5 @@
-import { Form, Link } from "react-router";
+import { Form } from "react-router";
+import { Link } from "capsomer/react/link";
 import { Search } from "lucide-react";
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/archive";
