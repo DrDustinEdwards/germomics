@@ -73,3 +73,17 @@ export async function backfillMedia(env: Env, { cursor, limit = 50 }: { cursor?:
   const next = listed.truncated ? (listed.cursor ?? null) : null;
   return { scanned: listed.objects.length, added, cursor: next, done: next === null };
 }
+
+const BACKFILL_KEY = "media:backfill";
+
+/**
+ * The every-minute cron's share of the move, so nobody has to start it by hand: one batch a minute from where the last
+ * one stopped, until the bucket has been walked once. Where it stopped (the list cursor, or "done") is kept in APP_KV.
+ */
+export async function continueMediaBackfill(env: Env): Promise<void> {
+  const state = await env.APP_KV.get(BACKFILL_KEY);
+  if (state === "done") return;
+  const batch = await backfillMedia(env, { cursor: state });
+  await env.APP_KV.put(BACKFILL_KEY, batch.cursor ?? "done");
+  if (batch.added.length > 0) console.log(`Media backfill: ${batch.added.length} added${batch.done ? ", done" : ""}`);
+}

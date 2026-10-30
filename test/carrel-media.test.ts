@@ -3,7 +3,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { MediaInUseError, NotFoundError, RefusedError, VersionConflictError, type MediaAdapter } from "@dustinedwards/site-api";
 import { createCarrelAdapter } from "~/lib/carrel/adapter.server";
 import { imageSet } from "~/lib/images.server";
-import { backfillMedia } from "~/lib/media/backfill.server";
+import { backfillMedia, continueMediaBackfill } from "~/lib/media/backfill.server";
 import { applyMigrations } from "./helpers/d1";
 
 // The media group (app/lib/carrel/media.server.ts) as site-api calls it, over the real migrations, the BLOG_IMAGES and
@@ -250,5 +250,11 @@ describe("the backfill", () => {
     expect(await media.get("ep-1/vibrio-400.webp")).toMatchObject({ alt: "Old alt", filename: "vibrio.webp", focus: "0.5x0.5", width: 400, height: 300, contentType: "image/webp", version: "r0" });
     expect(await media.get("posts/1/pump.png")).toMatchObject({ caption: "The pump", width: 1200, height: 800 });
     expect((await e.BLOG_IMAGES.head("ep-1/vibrio-400.webp"))!.etag).toBe(before);
+
+    // The cron walks the bucket once on its own, then stops.
+    await e.BLOG_IMAGES.put("posts/2/late.png", png(5, 5, {}, 2));
+    await continueMediaBackfill({ ...e, IMAGES: images } as unknown as Env);
+    expect(await media.get("posts/2/late.png")).toMatchObject({ width: 5, height: 5 });
+    expect(await e.APP_KV.get("media:backfill")).toBe("done");
   });
 });

@@ -5,6 +5,7 @@ import { CSP_REPORT_PATH, handleCspReport, withSecurityHeaders } from "../app/li
 import { serveWithEdgeCache } from "../app/lib/edge-cache.server";
 import { carrelApi } from "../app/lib/carrel/handler.server";
 import { runBackup } from "../app/lib/backup.server";
+import { continueMediaBackfill } from "../app/lib/media/backfill.server";
 
 // site-runtime's limiter class, bound as RATE_LIMITER (wrangler.jsonc); enforceRateLimit and the
 // score submit count through it.
@@ -69,13 +70,14 @@ export default {
 
   // Two crons (wrangler.jsonc triggers.crons). Every minute: the updates Carrel scheduled on live
   // articles go live (site-api's runSchedules; each one that fails is logged and tried again next
-  // minute). Nightly: the D1 backup. Its errors are logged and rethrown, never swallowed: a failed
+  // minute), then, until it has finished once, a batch of the media backfill. Nightly: the D1 backup. Its errors are logged and rethrown, never swallowed: a failed
   // run must show as a failed invocation and age /health's backup reading. Awaited rather than
   // handed to waitUntil, whose rejection is only logged while the invocation still counts as a
   // success (Grok audit 2026-10-21, GE-11).
   async scheduled(controller, env) {
     if (controller.cron === SCHEDULES_CRON) {
       await carrelApi(env).runSchedules({ now: new Date(controller.scheduledTime) });
+      await continueMediaBackfill(env);
       return;
     }
     try {
