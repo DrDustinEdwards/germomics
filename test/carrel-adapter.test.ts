@@ -1,20 +1,18 @@
 import { env } from "cloudflare:test";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { MediaInUseError, NotFoundError, RefusedError, VersionConflictError } from "@dustinedwards/site-api";
+import { RefusedError, VersionConflictError } from "@dustinedwards/site-api";
 import { createCarrelAdapter } from "~/lib/carrel/adapter.server";
 import { carrelApi } from "~/lib/carrel/handler.server";
-import { imageSet } from "~/lib/images.server";
 import { applyMigrations } from "./helpers/d1";
 
 // The adapter as site-api calls it: what Carrel reads back (summaries, versions, revisions), what it
 // stores (fields, status, guid, snapshots), what it refuses, and the change log. carrel.test.ts covers
-// the HTTP guard and the round trip; this file covers the adapter's own rules.
+// the HTTP guard and the round trip, carrel-media.test.ts the media group; this file covers the adapter's own rules.
 const e = env as unknown as Env;
 let logged: Record<string, unknown>[] = [];
 // Built per test, not at import, so a mutation run sees each test exercise the adapter it builds.
 let adapter: ReturnType<typeof createCarrelAdapter>;
 let content: typeof adapter.content;
-let media: NonNullable<typeof adapter.media>;
 
 const save = (id: string, source: string, expectedVersion: string | null = null, changeId = "chg_s") =>
   content.saveDraft(id, { source, expectedVersion, changeId });
@@ -27,13 +25,9 @@ beforeEach(async () => {
   logged = [];
   adapter = createCarrelAdapter(e, (entry) => logged.push(entry));
   content = adapter.content;
-  media = adapter.media!;
   await e.DB.exec("DELETE FROM post_versions");
   await e.DB.exec("DELETE FROM posts");
   await e.DB.exec("DELETE FROM scheduled_updates");
-  await e.DB.exec("DELETE FROM media_captions");
-  const listed = await e.BLOG_IMAGES.list();
-  if (listed.objects.length) await e.BLOG_IMAGES.delete(listed.objects.map((o) => o.key));
 });
 
 describe("saving a draft", () => {
@@ -256,101 +250,6 @@ describe("preview", () => {
     expect(html).toContain("<h1>&#60;b&#62;&#38;&#34;x&#34;</h1>");
     expect(html).toContain('<meta name="robots" content="noindex">');
     expect(await adapter.preview!.render({ source: "<p>b</p>" })).toContain("<h1>Untitled</h1>");
-  });
-});
-
-const PNG = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-
-describe("media", () => {
-  it("stores an upload with its alt, filename and change id, and logs it", async () => {
-    const item = await media.upload({ bytes: PNG, contentType: "image/png", filename: "Pic One.png", alt: "A pixel", changeId: "chg_u" });
-    expect(item).toMatchObject({ contentType: "image/png", alt: "A pixel", filename: "Pic One.png", bytes: PNG.length, deletable: true, width: null });
-    expect(item.id.startsWith("carrel/")).toBe(true);
-    expect(item.uploadedAt).toMatch(/Z$/);
-    const head = (await e.BLOG_IMAGES.head(item.id))!;
-    expect(head.httpMetadata?.contentType).toBe("image/png");
-    expect(head.customMetadata).toEqual({ alt: "A pixel", filename: "Pic One.png", changeId: "chg_u" });
-    expect(logged).toEqual([{ event: "carrel.media.upload", id: item.id, version: head.etag, changeId: "chg_u" }]);
-  });
-
-  it("lists a file with the type, alt and filename it was uploaded with", async () => {
-    const item = await media.upload({ bytes: PNG, contentType: "image/png", filename: "Pump.png", alt: "The Broad Street pump", changeId: "c" });
-    const [listed] = (await media.list({ limit: 10 })).items;
-    expect(listed).toMatchObject({ id: item.id, contentType: "image/png", alt: "The Broad Street pump", filename: "Pump.png" });
-  });
-
-  it("describes a file with no metadata from its key", async () => {
-    await e.BLOG_IMAGES.put("posts/1/raw.jpg", PNG);
-    const got = (await media.get("posts/1/raw.jpg"))!;
-    expect(got).toMatchObject({ id: "posts/1/raw.jpg", filename: "raw.jpg", alt: "", contentType: "application/octet-stream", usedBy: [] });
-    expect(await media.get("posts/1/none.jpg")).toBeNull();
-  });
-
-  it("lists files matching the text without regard to case, a page at a time", async () => {
-    for (const k of ["a/Cholera.png", "a/plague.png", "a/cholera-2.png"]) await e.BLOG_IMAGES.put(k, PNG, { httpMetadata: { contentType: "image/png" } });
-    const hits = await media.list({ q: "CHOLERA", limit: 10 });
-    expect(hits.items.map((i) => i.id).sort()).toEqual(["a/Cholera.png", "a/cholera-2.png"]);
-    expect(hits.items.map((i) => i.contentType)).toEqual(["image/png", "image/png"]);
-    expect(hits.nextCursor).toBeNull();
-    expect((await media.list({ limit: 2 })).items).toHaveLength(2);
-  });
-
-  it("names every place a post uses a file, and skips a LIKE wildcard match", async () => {
-    const key = "carrel/a_b.png";
-    await e.BLOG_IMAGES.put(key, PNG);
-    const url = `https://images.germomics.com/${key}`;
-    await insert("INSERT INTO posts (kind, title, slug, body, status, cover_image, og_image, episode_artwork) VALUES ('episode', 'All of them', 'all', ?, 'draft', ?, ?, ?)", `<img src="${url}">`, url, url, url);
-    await insert("INSERT INTO posts (kind, title, slug, body, status) VALUES ('article', 'Lookalike', 'lookalike', '<img src=\"carrel/aXb.png\">', 'draft')");
-    const got = (await media.get(key))!;
-    expect(got.usedBy).toEqual([{ type: "post", id: "all", title: "All of them", detail: "cover image, social image, episode artwork, body" }]);
-    await expect(media.delete(key, { changeId: "c" })).rejects.toThrow(MediaInUseError);
-    expect(await e.BLOG_IMAGES.head(key)).not.toBeNull();
-  });
-
-  it("deletes an unused file and logs it, and refuses a file that is not there", async () => {
-    await e.BLOG_IMAGES.put("carrel/x.png", PNG);
-    await insert("INSERT INTO posts (kind, title, slug, body, status) VALUES ('article', 'Lookalike', 'l', '<img src=\"carrel/xypng\">', 'draft')");
-    await media.delete("carrel/x.png", { changeId: "chg_d" });
-    expect(await e.BLOG_IMAGES.head("carrel/x.png")).toBeNull();
-    expect(logged).toEqual([{ event: "carrel.media.delete", id: "carrel/x.png", version: "deleted", changeId: "chg_d" }]);
-    await expect(media.delete("carrel/x.png", { changeId: "c" })).rejects.toThrow(NotFoundError);
-  });
-});
-
-describe("a file's focal point, caption and replace", () => {
-  const upload = () => media.upload({ bytes: PNG, contentType: "image/png", filename: "f.png", alt: "Alt", changeId: "c" });
-
-  it("keeps a focal point where the crops read it, moving the version, and refuses a stale version", async () => {
-    const item = await upload();
-    const { version } = await media.setFocus!(item.id, { focus: "0.25x0.4", expectedVersion: item.version!, changeId: "c_f" });
-    expect(version).not.toBe(item.version);
-    expect(await media.get(item.id)).toMatchObject({ version, focus: "0.25x0.4", alt: "Alt" });
-    await expect(media.setFocus!(item.id, { focus: null, expectedVersion: item.version!, changeId: "c" })).rejects.toBeInstanceOf(VersionConflictError);
-    // A cover crop is cut around it: the point is in the URL /media checks.
-    await e.BLOG_IMAGES.put(item.id, PNG, { httpMetadata: { contentType: "image/png" }, customMetadata: { width: "1600", height: "900", focus: "0.25x0.4" } });
-    const url = `https://images.germomics.com/${item.id}`;
-    expect(Object.values(await imageSet(e, [["cover", url]]))[0]!.src).toContain("r=2x1&fp=0.25x0.4");
-  });
-
-  it("keeps a caption in the site's own index, and an empty caption removes it", async () => {
-    const item = await upload();
-    const set = await media.setCaption!(item.id, { caption: "Vibrio cholerae", expectedVersion: item.version!, changeId: "c_c" });
-    expect(await media.get(item.id)).toMatchObject({ caption: "Vibrio cholerae", version: set.version });
-    expect((await media.list({ limit: 10 })).items[0]).toMatchObject({ caption: "Vibrio cholerae" });
-    const cleared = await media.setCaption!(item.id, { caption: "", expectedVersion: set.version, changeId: "c" });
-    expect(cleared.version).toBe(item.version);
-    expect(await e.DB.prepare("SELECT count(*) AS n FROM media_captions").first("n")).toBe(0);
-  });
-
-  it("replaces the bytes under the same key, keeping alt and caption and clearing the focal point", async () => {
-    const item = await upload();
-    const f = await media.setFocus!(item.id, { focus: "0.5x0.5", expectedVersion: item.version!, changeId: "c" });
-    const c = await media.setCaption!(item.id, { caption: "Cap", expectedVersion: f.version, changeId: "c" });
-    const bytes = new Uint8Array([...PNG, 0]);
-    const { item: after, sizesNeedPurge } = await media.replace!(item.id, { bytes, contentType: "image/png", filename: "new.png", expectedVersion: c.version, changeId: "c_r" });
-    expect(sizesNeedPurge).toBe(false);
-    expect(after).toMatchObject({ id: item.id, url: item.url, alt: "Alt", caption: "Cap", focus: null, bytes: bytes.length });
-    expect(after.version).not.toBe(c.version);
   });
 });
 

@@ -70,6 +70,7 @@ export default [
     route("content/:key", "routes/admin.content.$key.tsx"),
     route("ai", "routes/admin.ai.ts"),
     route("upload", "routes/admin.upload.ts"),
+    route("media/backfill", "routes/admin.media-backfill.ts"),
     route("version/:vid", "routes/admin.version.$vid.ts"),
   ]),
 

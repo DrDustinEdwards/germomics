@@ -36,6 +36,7 @@ beforeAll(() => applyMigrations(e.DB));
 beforeEach(async () => {
   await e.DB.exec("DELETE FROM post_versions");
   await e.DB.exec("DELETE FROM posts");
+  await e.DB.exec("DELETE FROM media");
   const listed = await e.BLOG_IMAGES.list();
   if (listed.objects.length) await e.BLOG_IMAGES.delete(listed.objects.map((o) => o.key));
 });
@@ -158,6 +159,14 @@ describe("media", () => {
     const body = await json(del);
     expect(body.usedBy[0]).toMatchObject({ type: "post", id: "uses-it" });
     expect(await e.BLOG_IMAGES.head(made.id)).not.toBeNull();
+  });
+
+  it("answers bytes it already holds with that file, storing nothing new", async () => {
+    const made = await json(await upload());
+    const again = await upload("other-name.png");
+    expect(again.status).toBe(200);
+    expect(await json(again)).toMatchObject({ id: made.id, duplicateOf: made.id });
+    expect((await e.BLOG_IMAGES.list()).objects).toHaveLength(1);
   });
 
   it("refuses a type the site did not declare and bytes that are not the declared type", async () => {

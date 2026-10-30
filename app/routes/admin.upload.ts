@@ -2,12 +2,14 @@
 // Resource route (action only) under the admin.* gate (admin.tsx middleware runs first), so it
 // is never publicly writable. Streams the file straight into R2 via the native binding and
 // returns JSON the client uses to fill the field. Images → images.germomics.com (BLOG_IMAGES), with
-// their width and height as custom metadata so pages can offer resized copies from /media;
+// their width and height as custom metadata so pages can offer resized copies from /media, and a row
+// in the media library;
 // audio → media.germomics.com (germomics-audio).
 import type { Route } from "./+types/admin.upload";
 import { getEnv } from "~/lib/context.server";
 import { uploadAudio, uploadImage, buildKey } from "~/lib/r2.server";
 import { imageMetadata } from "~/lib/images.server";
+import { recordUpload } from "~/lib/media/store.server";
 
 const MAX_IMAGE = 25 * 1024 * 1024; // 25 MB
 // Cloudflare refuses a request body over 100 MB on the Free and Pro plans before the Worker sees it,
@@ -35,7 +37,13 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
     const key = buildKey(`posts/${postId}`, file.name);
     const bytes = await file.arrayBuffer();
-    const url = await uploadImage(env, key, bytes, file.type, await imageMetadata(env, bytes));
+    const size = await imageMetadata(env, bytes);
+    const url = await uploadImage(env, key, bytes, file.type, size);
+    // Into the media library too (Carrel's media page). The image is stored and its address works either way; a row
+    // that could not be written is made by the next backfill (POST /admin/media/backfill).
+    await recordUpload(env, { key, bytes, contentType: file.type, filename: file.name, ...size }).catch((error) =>
+      console.error(JSON.stringify({ event: "media.record_failed", key, error: String(error) })),
+    );
     return Response.json({ ok: true, url, contentType: file.type, name: file.name, size: file.size });
   }
 

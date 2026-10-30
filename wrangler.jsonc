@@ -48,6 +48,10 @@
 	// Cloudflare Images, for /media's resized copies of BLOG_IMAGES originals (app/routes/media.$.ts).
 	// Each unique source and size bills once a month (5,000 free), which is why the sizes are a closed set.
 	"images": { "binding": "IMAGES" },
+	// Workers AI, for the tags and alt text the media library suggests (app/lib/media/suggest.server.ts), never applied
+	// until a person accepts one. Through AI Gateway when AI_GATEWAY_BASE_URL (a dashboard var, kept by keep_vars) names
+	// one. Each call counts against the ai.daily_cap setting.
+	"ai": { "binding": "AI" },
 	// Rate limit for Carrel's site API (app/lib/carrel). namespace_id must be unique to this site:
 	// sites in one account that share one share counters.
 	"ratelimits": [
