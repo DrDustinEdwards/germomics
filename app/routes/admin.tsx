@@ -1,8 +1,11 @@
-// Admin layout: the SINGLE gate for the whole admin.* subtree. RR v8 middleware runs once
-// per request before any admin loader/action, so the auth check is not repeated per route
-// (per the v8_middleware instruction). Cloudflare Access signs people in before a request gets
-// here; this re-verifies its JWT (app/lib/access.server.ts) and answers 403 to anything else, so
-// a request that bypassed Access, or an Access setup that is wrong, never reaches an admin route.
+// Admin layout: the SINGLE gate for the whole admin.* subtree, resource routes included. RR v8
+// middleware runs once per request before any admin loader/action, so the checks are not repeated
+// per route (per the v8_middleware instruction). Cloudflare Access signs people in before a request
+// gets here; this re-verifies its JWT and the one admin email (site-runtime's accessAdmin) and
+// answers 403 to anything else, so a request that bypassed Access, or an Access setup that is wrong,
+// never reaches an admin route. A cross-origin write is refused first (site-runtime's
+// refuseCrossOrigin), since the framework's own Origin check never sees a resource route, and every
+// admin answer is private, no-store and noindex.
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { Link } from "capsomer/react/link";
@@ -11,20 +14,28 @@ import { AdminShell, type AdminEntry } from "capsomer/react/admin-shell";
 import "~/admin.css";
 import type { Route } from "./+types/admin";
 import { getEnv } from "~/lib/context.server";
-import { getAdminSession } from "~/lib/access.server";
+import { accessAdmin } from "@dustinedwards/site-runtime/access";
+import { refuseCrossOrigin } from "@dustinedwards/site-runtime/origin";
 import { applyTheme, effectiveTheme } from "~/lib/theme";
 import type { Theme } from "~/lib/types";
 
+const PRIVATE = { "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex, nofollow" };
+
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ request, context }, next) => {
-    const session = await getAdminSession(getEnv(context), request);
-    if (!session) throw new Response("Forbidden", { status: 403 });
-    return next();
+    const refused = refuseCrossOrigin(request, PRIVATE);
+    if (refused) throw refused;
+    if (!(await accessAdmin(request, getEnv(context)))) throw new Response("Forbidden", { status: 403, headers: PRIVATE });
+    // A copy: a redirect's headers are immutable.
+    const response = await next();
+    const headers = new Headers(response.headers);
+    for (const [name, value] of Object.entries(PRIVATE)) headers.set(name, value);
+    return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
   },
 ];
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const session = await getAdminSession(getEnv(context), request);
+  const session = await accessAdmin(request, getEnv(context));
   return { email: session?.email ?? "" };
 }
 
