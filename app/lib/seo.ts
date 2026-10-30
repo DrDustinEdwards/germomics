@@ -7,9 +7,7 @@ import type { GuestView, Host } from "~/lib/types";
 import {
   type ArticleFacts,
   articleDates,
-  headTags,
-  SERP_DESCRIPTION_LIMIT,
-  truncateForSerp,
+  defineHead,
 } from "@drdustinedwards/site-helpers/head";
 import { article, faqPage, thing } from "@drdustinedwards/site-helpers/schema";
 import { DEFAULT_CARD, SITE_ORIGIN, postalAddressLd, type Address } from "~/lib/site";
@@ -272,28 +270,16 @@ type PageHead = {
   article?: ArticleFacts;
 };
 
-/**
- * The head of a public page from Prelum's headTags: title, description, canonical, Open Graph and Twitter, always on
- * SITE_ORIGIN so a workers.dev copy never claims the page. The show cover is the card when the page has none. A
- * description too long for a search result is cut at a word, so a page whose description is its own text (About,
- * TXASM) sends one sentence's worth, not the page.
- */
-export function pageHead({ image, description, path, ...page }: PageHead) {
-  return headTags({
-    origin: SITE_ORIGIN,
-    siteName: "Germomics",
-    image: image ?? DEFAULT_CARD,
-    description: truncateForSerp(description, SERP_DESCRIPTION_LIMIT),
-    path: canonicalPath(path),
-    ...page,
-  });
-}
+const head = defineHead({ origin: SITE_ORIGIN, siteName: "Germomics", image: DEFAULT_CARD });
 
 /**
- * One canonical path per page: routes pass location.pathname, which keeps a trailing slash a visitor typed, so it is
- * dropped (except on "/"). The podcast feed's /feed/podcast/ keeps its slash: that URL never changes (CLAUDE.md rule 1).
+ * The head of a public page from Prelum's defineHead: title, description, canonical, Open Graph and Twitter, always on
+ * SITE_ORIGIN so a workers.dev copy never claims the page. The show cover is the card when the page has none. A
+ * description too long for a search result is cut at a word (the share card keeps it whole), so a page whose
+ * description is its own text (About, TXASM) sends one sentence's worth, not the page. The title is passed whole.
+ * One canonical path per page: Prelum drops a trailing slash a visitor typed (except on "/"), but the podcast feed's
+ * /feed/podcast/ keeps its slash: that URL never changes (CLAUDE.md rule 1).
  */
-function canonicalPath(path: string): string {
-  if (path === "/feed/podcast/") return path;
-  return path.replace(/\/+$/, "") || "/";
+export function pageHead({ path, ...page }: PageHead) {
+  return head({ ...page, path, fullTitle: true, keepTrailingSlash: path === "/feed/podcast/" });
 }
