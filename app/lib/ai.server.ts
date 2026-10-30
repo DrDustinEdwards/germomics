@@ -1,7 +1,9 @@
-// AI authoring assists, server-only, on Dustin's Claude subscription. The site never calls a model:
+// AI authoring assists, server-only, on Dustin's Claude subscription. The site never calls Claude:
 // Anthropic allows subscription sign-in only in Claude Code and its own apps
 // (code.claude.com/docs/en/legal-and-compliance), so a draft button fires the germomics drafting
 // routine (site-runtime's ./routine) and the routine, a Claude Code session, does the writing.
+// (The media library's suggested alt text and tags come from Workers AI instead:
+// app/lib/media/suggest.server.ts, under the same daily cap.)
 //
 // THE ROUND TRIP. startDraft stores a job in APP_KV (kind, title, transcript and the SHA-256 of a
 // one-time key) and fires the routine with only the job's URL and key. The routine GETs the job

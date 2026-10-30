@@ -2,9 +2,10 @@ import { env } from "cloudflare:test";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { RouterContextProvider } from "react-router";
 import { cloudflareContext } from "~/lib/context.server";
+import { applyMigrations } from "./helpers/d1";
 
 // The editor's upload endpoint (app/routes/admin.upload.ts): images go to BLOG_IMAGES, audio to
-// MEDIA, under a folder named for the post; anything else is refused with the right status.
+// MEDIA, under a folder named for the post, an image with its media library row; anything else is refused with the right status.
 const e = env as unknown as Env;
 let action: typeof import("~/routes/admin.upload").action;
 
@@ -19,6 +20,7 @@ function upload(fields: Record<string, string | File>) {
 const file = (name: string, type: string, size = 4) => new File([new Uint8Array(size)], name, { type });
 
 beforeAll(async () => {
+  await applyMigrations(e.DB);
   ({ action } = await import("~/routes/admin.upload"));
 }, 120_000);
 
@@ -38,6 +40,8 @@ describe("admin upload", () => {
     expect(body.url).toMatch(/^https:\/\/images\.germomics\.com\/posts\/12\/\d+-My_Pic\.png$/);
     const key = body.url.replace("https://images.germomics.com/", "");
     expect((await e.BLOG_IMAGES.head(key))?.httpMetadata?.contentType).toBe("image/png");
+    // And into the media library, where Carrel's media page lists it.
+    expect(await e.DB.prepare("SELECT filename, content_type, bytes FROM media WHERE key = ?").bind(key).first()).toEqual({ filename: "My Pic.png", content_type: "image/png", bytes: 4 });
   });
 
   it("stores audio in the media bucket with its type, and cleans the post id", async () => {

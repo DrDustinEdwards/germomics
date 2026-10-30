@@ -291,9 +291,68 @@ export const scheduledUpdates = sqliteTable(
   (t) => ({ dueIdx: index("scheduled_updates_due").on(t.publishAt) }),
 );
 
-// 0014: the caption Carrel set on an image in BLOG_IMAGES, keyed by its R2 key (app/lib/carrel/adapter.server.ts).
+// 0014: the caption Carrel set on an image in BLOG_IMAGES, keyed by its R2 key. Since 0015 a caption lives on its
+// `media` row; this table is read only by the backfill that made those rows (app/lib/media/backfill.server.ts).
 export const mediaCaptions = sqliteTable("media_captions", {
   mediaKey: text("media_key").primaryKey(),
   caption: text("caption").notNull(),
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
+
+// 0015: the media library (site-api v0.13.1): one row per image in BLOG_IMAGES, its byte history and a change log
+// (filled by triggers in the migration). Read and written through app/lib/media/store.server.ts.
+export const media = sqliteTable(
+  "media",
+  {
+    key: text("key").primaryKey(),
+    filename: text("filename"),
+    contentType: text("content_type").notNull(),
+    bytes: integer("bytes").notNull().default(0),
+    width: integer("width"),
+    height: integer("height"),
+    alt: text("alt").notNull().default(""),
+    caption: text("caption").notNull().default(""),
+    tags: text("tags", { mode: "json" }).$type<string[]>().notNull().default(sql`'[]'`),
+    focus: text("focus"),
+    credit: text("credit").notNull().default(""),
+    license: text("license").notNull().default(""),
+    sourceUrl: text("source_url"),
+    licenseExpires: text("license_expires"),
+    takenAt: text("taken_at"),
+    sha256: text("sha256"),
+    trashedAt: text("trashed_at"),
+    rev: integer("rev").notNull().default(0),
+    uploadedAt: text("uploaded_at").notNull(),
+    updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+  },
+  (t) => ({ shaIdx: index("media_sha256_idx").on(t.sha256) }),
+);
+
+export const mediaRevisions = sqliteTable(
+  "media_revisions",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    mediaKey: text("media_key").notNull(),
+    at: text("at").notNull(),
+    bytes: integer("bytes").notNull(),
+    width: integer("width"),
+    height: integer("height"),
+    reason: text("reason", { enum: ["upload", "import", "replace", "transform", "resize", "revert"] }).notNull(),
+    sha256: text("sha256"),
+    backupKey: text("backup_key"),
+  },
+  (t) => ({ keyIdx: index("media_revisions_key_idx").on(t.mediaKey, t.id) }),
+);
+
+export const mediaChanges = sqliteTable(
+  "media_changes",
+  {
+    seq: integer("seq").primaryKey({ autoIncrement: true }),
+    mediaKey: text("media_key").notNull(),
+    at: text("at").notNull().default(sql`(datetime('now'))`),
+  },
+  (t) => ({ keyIdx: index("media_changes_key_idx").on(t.mediaKey, t.seq) }),
+);
+
+export type MediaRow = typeof media.$inferSelect;
+export type MediaRevisionRow = typeof mediaRevisions.$inferSelect;
