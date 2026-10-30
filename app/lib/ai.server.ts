@@ -14,6 +14,7 @@
 // facts/names/dates/citations. Output is a DRAFT: the author accepts/edits/discards (no auto-save,
 // no overwrite). Prompts are tunable live from the settings table (ai.prompt.*).
 import { safeEqual } from "@dustinedwards/site-runtime/compare";
+import { sha256Hex, toHex } from "@dustinedwards/site-runtime/encoding";
 import { fireRoutine, routineConfig, type RoutineConfig } from "@dustinedwards/site-runtime/routine";
 import type { Chapter } from "~/lib/types";
 import { loadSettings, loadSnippets, setting, snippet } from "~/lib/content.server";
@@ -77,9 +78,7 @@ const jobKey = (id: string) => `ai:job:${id}`;
 const JOB_ID = /^[0-9a-f]{32}$/;
 const MAX_DRAFT_CHARS = 100_000;
 
-const hex = (bytes: ArrayBuffer | Uint8Array) => [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
-const sha256 = async (text: string) => hex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
-const randomHex = (n: number) => hex(crypto.getRandomValues(new Uint8Array(n)));
+const randomHex = (n: number) => toHex(crypto.getRandomValues(new Uint8Array(n)));
 
 async function readJob(env: Env, id: string): Promise<Job | null> {
   if (!JOB_ID.test(id)) return null;
@@ -104,7 +103,7 @@ export async function startDraft(env: Env, input: { kind: AiKind; transcript: st
   if (!transcript) throw new Error(errors.noTranscript);
   const id = randomHex(16);
   const key = randomHex(32);
-  await writeJob(env, id, { kind: input.kind, title: input.title, transcript, keyHash: await sha256(key), status: "waiting" });
+  await writeJob(env, id, { kind: input.kind, title: input.title, transcript, keyHash: await sha256Hex(key), status: "waiting" });
   const fired = await fireRoutine(config, fireText(id, key));
   if (!fired.ok) {
     await env.APP_KV.delete(jobKey(id));
@@ -123,7 +122,7 @@ export async function draftStatus(env: Env, id: string): Promise<{ status: Job["
 /** The job for the routine, when the key is the job's own. Null for anything else. */
 export async function jobForRoutine(env: Env, id: string, key: string): Promise<Job | null> {
   const job = await readJob(env, id);
-  if (!job || !(await safeEqual(await sha256(key), job.keyHash))) return null;
+  if (!job || !(await safeEqual(await sha256Hex(key), job.keyHash))) return null;
   return job;
 }
 
