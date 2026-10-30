@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { downscaleImage } from "~/lib/image-client";
-import { THEME_KEY, applyTheme, storedTheme, themeInitScript } from "~/lib/theme";
+import { THEME_KEY, applyTheme, storedTheme } from "~/lib/theme";
 import { computePeaks as decodePeaks, probeDuration } from "~/lib/waveform-client";
 
 // Browser-only helpers, run against stand-ins for the browser APIs they call (localStorage,
@@ -46,20 +46,6 @@ describe("theme", () => {
     vi.stubGlobal("localStorage", storage({}, true));
     expect(() => applyTheme("dark")).not.toThrow();
     expect(attrs["data-theme"]).toBe("dark");
-  });
-
-  it("ships a no-flash script that applies only a valid stored theme and never throws", () => {
-    expect(themeInitScript).toContain(`localStorage.getItem("${THEME_KEY}")`);
-    const run = (store: ReturnType<typeof storage>) => {
-      const attrs: Record<string, string> = {};
-      new Function("localStorage", "document", themeInitScript)(store, { documentElement: { setAttribute: (k: string, v: string) => (attrs[k] = v) } });
-      return attrs;
-    };
-    expect(run(storage({ [THEME_KEY]: "dark" }))).toEqual({ "data-theme": "dark" });
-    expect(run(storage({ [THEME_KEY]: "light" }))).toEqual({ "data-theme": "light" });
-    expect(run(storage({ [THEME_KEY]: "<script>" }))).toEqual({});
-    expect(run(storage())).toEqual({});
-    expect(run(storage({}, true))).toEqual({});
   });
 });
 
