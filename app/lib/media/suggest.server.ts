@@ -6,6 +6,7 @@
 import { anthropicRoute } from "@dustinedwards/site-runtime/ai-gateway";
 import { editImage } from "@dustinedwards/site-runtime/image";
 import { toBase64 } from "@dustinedwards/site-runtime/encoding";
+import { readSuggestion } from "@dustinedwards/site-api";
 import { aiCostCapExceeded, recordAiUse } from "~/lib/security.server";
 
 /** The vision model: natively multimodal, Cloudflare-hosted, with no license prompt to accept first. */
@@ -44,24 +45,6 @@ function suggestGateway(env: { AI_GATEWAY_BASE_URL?: string }): GatewayOptions |
 async function viewOf(env: SuggestEnv, object: R2ObjectBody): Promise<string> {
   const response = await editImage(env.IMAGES, object.body, { maxEdge: VIEW_EDGE, format: "image/jpeg", quality: 80 });
   return `data:image/jpeg;base64,${toBase64(await response.arrayBuffer())}`;
-}
-
-/** The model's answer as tags and alt, from its JSON, wherever in the text it put it. */
-function readSuggestion(answer: unknown): { tags: string[]; alt: string | null } {
-  const body = typeof answer === "object" && answer !== null && "response" in answer ? (answer as { response: unknown }).response : answer;
-  let parsed: unknown = body;
-  if (typeof body === "string") {
-    const found = /\{[\s\S]*\}/.exec(body)?.[0];
-    try {
-      parsed = found ? JSON.parse(found) : null;
-    } catch {
-      parsed = null;
-    }
-  }
-  const record = (parsed ?? {}) as { alt?: unknown; tags?: unknown };
-  const alt = typeof record.alt === "string" && record.alt.trim() ? record.alt.trim() : null;
-  const tags = Array.isArray(record.tags) ? record.tags.filter((t): t is string => typeof t === "string") : [];
-  return { tags, alt };
 }
 
 /** What the model suggests for one stored picture. Throws when the site has no AI binding or the day's cap is reached. */
