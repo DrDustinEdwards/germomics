@@ -1,4 +1,4 @@
-import { AppLink } from "~/components/AppLink";
+import { Link } from "capsomer/react/link";
 import { Calendar } from "lucide-react";
 import { formatDate } from "~/lib/format";
 import type { Post } from "~/db/schema";
@@ -9,7 +9,7 @@ import { Picture } from "./Picture";
 export function ArticleCard({ post, image }: { post: Post; image?: ImageAttributes }) {
   return (
     <article className="group overflow-hidden rounded-2xl border border-border bg-card transition hover:border-brand">
-      <AppLink to={`/${post.slug}`} className="block">
+      <Link to={`/${post.slug}`} className="block">
         {post.coverImage ? (
           <Picture
             src={post.coverImage}
@@ -32,17 +32,17 @@ export function ArticleCard({ post, image }: { post: Post; image?: ImageAttribut
           <h3 className="mt-1.5 font-display text-xl font-semibold text-ink group-hover:text-brand">{post.title}</h3>
           {post.excerpt ? <p className="mt-1.5 line-clamp-2 text-sm text-muted">{post.excerpt}</p> : null}
         </div>
-      </AppLink>
+      </Link>
       {(post.tags ?? []).length ? (
         <div className="flex flex-wrap gap-1.5 px-4 pb-4">
           {(post.tags ?? []).slice(0, 4).map((t) => (
-            <AppLink
+            <Link
               key={t}
               to={`/tag/${encodeURIComponent(t)}`}
               className="rounded-full border border-border px-2 py-0.5 font-mono text-[11px] text-muted hover:border-brand hover:text-brand"
             >
               {t}
-            </AppLink>
+            </Link>
           ))}
         </div>
       ) : null}

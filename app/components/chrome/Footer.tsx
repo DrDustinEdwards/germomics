@@ -1,6 +1,6 @@
 import { useRouteLoaderData } from "react-router";
 import { Rss, Lock } from "lucide-react";
-import { AppLink } from "../AppLink";
+import { Link } from "capsomer/react/link";
 import { Wordmark } from "../brand/Wordmark";
 import { ExternalCue } from "../ExternalCue";
 import { useSnippet } from "~/lib/content";
@@ -74,9 +74,9 @@ export function Footer() {
             is unchanged, so at sm it is still the full-width top row and at lg still the first/left column. */}
         <div className="col-span-3 max-sm:order-last sm:col-span-2 lg:col-span-1">
           {/* Rectangular germomics lockup as a modest mark (~80px tall) above the tagline. */}
-          <AppLink to="/" aria-label="Germomics home" className="inline-flex">
+          <Link to="/" aria-label="Germomics home" className="inline-flex">
             <Wordmark className="h-20 w-auto" />
-          </AppLink>
+          </Link>
           <p className="mt-3 max-w-xs font-mono text-xs leading-relaxed text-muted">{tagline}</p>
           {socials.length ? (
             <ul className="mt-4 flex items-center gap-3">
@@ -127,7 +127,7 @@ export function Footer() {
                 <ExternalCue />
               </a>
             </li>
-            <li><AppLink to="/subscribe" className={`${link} ${tap}`}>More ways to listen →</AppLink></li>
+            <li><Link to="/subscribe" className={`${link} ${tap}`}>More ways to listen →</Link></li>
           </ul>
         </nav>
 
@@ -136,7 +136,7 @@ export function Footer() {
           <h3 id="footer-explore" className="font-display text-sm font-semibold text-ink">Explore</h3>
           <ul className="mt-3 space-y-2 max-sm:space-y-0 text-sm">
             {explore.map(([to, label]) => (
-              <li key={to}><AppLink to={to} className={`${link} ${tap}`}>{label}</AppLink></li>
+              <li key={to}><Link to={to} className={`${link} ${tap}`}>{label}</Link></li>
             ))}
           </ul>
         </nav>
@@ -146,7 +146,7 @@ export function Footer() {
           <h3 id="footer-about" className="font-display text-sm font-semibold text-ink">About</h3>
           <ul className="mt-3 space-y-2 max-sm:space-y-0 text-sm">
             {about.map(([to, label]) => (
-              <li key={to}><AppLink to={to} className={`${link} ${tap}`}>{label}</AppLink></li>
+              <li key={to}><Link to={to} className={`${link} ${tap}`}>{label}</Link></li>
             ))}
           </ul>
         </nav>
@@ -163,9 +163,9 @@ export function Footer() {
           </span>
           <span aria-hidden>·</span>
           <a href="/feed/site.xml" className={link}>Writing feed</a>
-          <AppLink to="/admin" rel="nofollow" prefetch="none" className="ml-auto inline-flex items-center gap-1 text-muted/70 hover:text-ink">
+          <Link to="/admin" rel="nofollow" prefetch="none" className="ml-auto inline-flex items-center gap-1 text-muted/70 hover:text-ink">
             <Lock size={14} aria-hidden /> Admin
-          </AppLink>
+          </Link>
         </div>
       </div>
     </footer>

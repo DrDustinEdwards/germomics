@@ -9,7 +9,7 @@ import { aiCostCapExceeded, recordAiUse } from "~/lib/security.server";
 export const suggestFor = mediaSuggester<Env>({
   app: "germomics",
   describe: "on a microbiology and history podcast's website",
-  rules: ["Do not guess at species that are not written in the picture."],
+  rules: ["Do not guess at species that are not written in the picture.", "Do not use em dashes."],
   beforeCall: async (env) => {
     if (await aiCostCapExceeded(env)) throw new Error("today's AI cap (the ai.daily_cap setting) is reached");
   },

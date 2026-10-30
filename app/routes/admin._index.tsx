@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { FilePlus2, Headphones, FileText, PencilLine } from "lucide-react";
 import type { Route } from "./+types/admin._index";
 import { getEnv } from "~/lib/context.server";

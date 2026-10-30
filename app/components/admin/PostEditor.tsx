@@ -3,7 +3,8 @@
 // kind=episode. Sticky action bar shows save state. Autosaves (debounced) and guards unsaved
 // navigation. State is serialized to a single JSON `payload` the route action parses.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useBlocker, useFetcher } from "react-router";
+import { useBlocker, useFetcher } from "react-router";
+import { Link } from "capsomer/react/link";
 import {
   Save, UploadCloud, CalendarClock, Eye, Trash2, ExternalLink, Megaphone,
   Image as ImageIcon, Headphones, Search, History, FileText, RefreshCw, Check, Loader2, AlertCircle,
