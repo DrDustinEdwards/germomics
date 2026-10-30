@@ -6,6 +6,7 @@ import { serveWithEdgeCache } from "../app/lib/edge-cache.server";
 import { carrelApi } from "../app/lib/carrel/handler.server";
 import { runBackup } from "../app/lib/backup.server";
 import { continueMediaBackfill } from "../app/lib/media/backfill.server";
+import { PRELOADS } from "../app/lib/preloads";
 
 // site-runtime's limiter class, bound as RATE_LIMITER (wrangler.jsonc); enforceRateLimit and the
 // score submit count through it.
@@ -21,6 +22,15 @@ const requestHandler = createRequestHandler(
   () => import("virtual:react-router/server-build"),
   import.meta.env.MODE,
 );
+
+// The preloads root.tsx links, on every rendered HTML page as the `Link` header Cloudflare Early Hints
+// reads. In the render, so a cached entry carries it too. Appended, so a route's own Link stays.
+function withPreloads(response: Response): Response {
+  if (!(response.headers.get("Content-Type") ?? "").startsWith("text/html")) return response;
+  const headers = new Headers(response.headers);
+  headers.append("Link", PRELOADS.header);
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
 
 export default {
   async fetch(request, env, ctx) {
@@ -48,7 +58,7 @@ export default {
       const render = () => {
         const context = new RouterContextProvider();
         context.set(cloudflareContext, { env, ctx });
-        return requestHandler(request, context);
+        return requestHandler(request, context).then(withPreloads);
       };
       // Skip the edge cache during `npm run dev` so local edits are always live; the SWR cache is
       // a production concern and would only make local iteration serve stale anonymous HTML.
