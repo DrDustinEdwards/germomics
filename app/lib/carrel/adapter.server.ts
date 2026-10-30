@@ -96,7 +96,7 @@ async function requireVersion(post: Post | null, update: Waiting, expected: stri
  * The row is still the one whose version was checked. updated_at has one-second steps, so the
  * fields the version is made of are compared too: a save landing in the same second still differs
  * in them. Used in the UPDATE itself, so of two saves from one version only the first can write
- * (EmDash 1.4.0 fixed the same race, emdash-cms/emdash#4286).
+ * (EmDash 1.4.0 fixed the same race, emdash-cms/emdash PR 4286).
  */
 function unchangedSince(p: Post) {
   const same = <T,>(column: Parameters<typeof eq>[0], value: T | null) => (value === null ? isNull(column) : eq(column, value));
