@@ -14,7 +14,7 @@
 // publish_at: every public read hides it until then (publiclyVisible), so it needs no cron. An
 // update scheduled on a LIVE article (site-api v0.10.0) waits in scheduled_updates while the live
 // version stays served, and the one-minute cron (workers/app.ts, api.runSchedules) puts it live.
-import { and, desc, eq, like, or } from "drizzle-orm";
+import { and, desc, eq, isNull, like, or, sql } from "drizzle-orm";
 import {
   contentVersion,
   NotFoundError,
@@ -92,6 +92,25 @@ async function requireVersion(post: Post | null, update: Waiting, expected: stri
   if (current !== expected) throw new VersionConflictError(current);
 }
 
+/**
+ * The row is still the one whose version was checked. updated_at has one-second steps, so the
+ * fields the version is made of are compared too: a save landing in the same second still differs
+ * in them. Used in the UPDATE itself, so of two saves from one version only the first can write
+ * (EmDash 1.4.0 fixed the same race, emdash-cms/emdash#4286).
+ */
+function unchangedSince(p: Post) {
+  const same = <T,>(column: Parameters<typeof eq>[0], value: T | null) => (value === null ? isNull(column) : eq(column, value));
+  return and(
+    eq(posts.id, p.id),
+    eq(posts.updatedAt, p.updatedAt),
+    eq(posts.status, p.status),
+    eq(posts.title, p.title),
+    eq(posts.body, p.body),
+    same(posts.excerpt, p.excerpt),
+    same(posts.publishAt, p.publishAt),
+  );
+}
+
 /** The editor's save rules applied to a Carrel source: sanitize, reading time, only fields it names. */
 async function fieldsFromSource(source: string): Promise<Partial<Post>> {
   let parsed;
@@ -144,8 +163,16 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
     const fields = await build(current);
     let row: Post;
     if (current) {
+      const written = await db
+        .update(posts)
+        .set({ ...fields, updatedAt: sql`(datetime('now'))` })
+        .where(unchangedSince(current))
+        .returning({ id: posts.id });
+      if (written.length === 0) {
+        const now = await findArticle(env, slug);
+        throw new VersionConflictError(now ? await versionOf(now, await waiting(slug)) : null);
+      }
       await snapshotVersion(env, current);
-      await updatePost(env, current.id, fields);
       row = { ...current, ...fields };
     } else {
       const created = await db
