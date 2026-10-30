@@ -7,19 +7,19 @@
 // its misses a KV cache in front of D1 was cold too, adding a KV read and write to the round trips
 // before the first byte. Settings and snippets are started once per request by the root middleware
 // (getSettings/getSnippets in context.server).
+import { accessAdmin } from "@dustinedwards/site-runtime/access";
 import { escapeHtml } from "@dustinedwards/site-runtime/html";
 import { eq, sql } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { settings as settingsTable, contentBlocks } from "~/db/schema";
 import { SETTING_DEFAULTS, SNIPPET_DEFAULTS, PAGE_DEFAULTS } from "~/lib/content-defaults";
-import { getAdminSession } from "~/lib/access.server";
 import { toFtsMatch } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
 
 /** True only for an admin viewing a page with ?preview (so drafts render in real context). */
 export async function isPreviewing(env: Env, request: Request): Promise<boolean> {
   if (!new URL(request.url).searchParams.has("preview")) return false;
-  return !!(await getAdminSession(env, request));
+  return !!(await accessAdmin(request, env));
 }
 
 /**

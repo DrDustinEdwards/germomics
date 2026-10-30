@@ -56,14 +56,15 @@ beforeEach(async () => {
 });
 
 describe("the admin gate", () => {
-  const run = (url: string, over: Partial<Env>) => {
+  const run = (url: string, over: Partial<Env>, init?: RequestInit) => {
     let reached = false;
     const next = async () => {
       reached = true;
       return new Response("admin page");
     };
-    return { reached: () => reached, result: gate.middleware[0](args(new Request(url), {}, over), next) };
+    return { reached: () => reached, result: gate.middleware[0](args(new Request(url, init), {}, over), next) };
   };
+  const admin = { ADMIN_EMAIL: "admin@example.com", ACCESS_DEV_BYPASS: "1" };
 
   it("answers 403 and never reaches the admin route without a verified session", async () => {
     const { reached, result } = run("https://germomics.com/admin", { ACCESS_TEAM_DOMAIN: undefined, ACCESS_AUD: undefined, ACCESS_DEV_BYPASS: undefined });
@@ -72,10 +73,19 @@ describe("the admin gate", () => {
     expect(reached()).toBe(false);
   });
 
-  it("passes the admin through to the route", async () => {
-    const { reached, result } = run("http://localhost/admin", { ADMIN_EMAIL: "admin@example.com", ACCESS_DEV_BYPASS: "1" });
-    expect(await (await result).text()).toBe("admin page");
+  it("passes the admin through to the route, the answer private, no-store and noindex", async () => {
+    const { reached, result } = run("http://localhost/admin", admin);
+    const res = await result;
+    expect(await res.text()).toBe("admin page");
     expect(reached()).toBe(true);
+    expect(res.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(res.headers.get("X-Robots-Tag")).toBe("noindex, nofollow");
+  });
+
+  it("refuses a cross-origin write, even from the admin, before any admin route runs", async () => {
+    const { reached, result } = run("http://localhost/admin/upload", admin, { method: "POST", headers: { Origin: "https://evil.example" } });
+    expect((await thrown(result)).status).toBe(403);
+    expect(reached()).toBe(false);
   });
 });
 

@@ -9,7 +9,7 @@ import { applyMigrations } from "./helpers/d1";
 
 // The post editor's action (app/routes/admin.posts.$id.tsx): what a save, autosave, publish,
 // schedule, unpublish, restore and delete store, and what each one refuses. The admin gate in front
-// of it is app/routes/admin.tsx plus access.server (test/access.test.ts).
+// of it is app/routes/admin.tsx with site-runtime's accessAdmin (test/admin-routes.test.ts).
 const e = env as unknown as Env;
 let action: typeof import("~/routes/admin.posts.$id").action;
 
