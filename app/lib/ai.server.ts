@@ -15,6 +15,8 @@
 // no overwrite). Prompts are tunable live from the settings table (ai.prompt.*).
 import { safeEqual } from "@dustinedwards/site-runtime/compare";
 import { sha256Hex, toHex } from "@dustinedwards/site-runtime/encoding";
+import { UNTRUSTED_DATA_RULE, untrusted } from "@dustinedwards/site-runtime/anthropic";
+import { WRITING_RULES } from "@dustinedwards/site-runtime/prose";
 import { fireRoutine, routineConfig, type RoutineConfig } from "@dustinedwards/site-runtime/routine";
 import type { Chapter } from "~/lib/types";
 import { loadSettings, loadSnippets, setting, snippet } from "~/lib/content.server";
@@ -47,16 +49,6 @@ function routine(env: Env): RoutineConfig | null {
 export function aiConfigured(env: Env): boolean {
   return routine(env) !== null;
 }
-
-// House writing rule (Vault site-config.md): applies to ALL generated text, so it lives in the
-// shared system prompt that every generator (show notes, chapters, SEO) runs through.
-export const STYLE_RULE =
-  "Writing style (strict): Do NOT use em dashes (the long dash character) anywhere; use commas, " +
-  "periods, parentheses, or colons instead. Do not end on a verdict about the episode's worth or " +
-  "staying power ('stays with you', 'remains one of the most'), and leave out blurb adjectives " +
-  "(unforgettable, haunting, sweeping, poignant, profound). No 'not just X, it's Y' and no " +
-  "'it isn't about X, it's about Y'. A list of three only when there are three real things. " +
-  "Write plain, direct, varied, human sentences.";
 
 export type AiKind = "shownotes" | "chapters" | "seo";
 export const AI_KINDS: readonly AiKind[] = ["shownotes", "chapters", "seo"];
@@ -105,9 +97,10 @@ export async function startDraft(env: Env, input: { kind: AiKind; transcript: st
   const key = randomHex(32);
   await writeJob(env, id, { kind: input.kind, title: input.title, transcript, keyHash: await sha256Hex(key), status: "waiting" });
   const fired = await fireRoutine(config, fireText(id, key));
-  if (!fired.ok) {
+  // An unknown outcome may have started a session, so its job stays; a session that never started leaves it waiting until it expires.
+  if (!fired.ok && fired.outcome !== "unknown") {
     await env.APP_KV.delete(jobKey(id));
-    throw new Error(fired.error.startsWith("429") ? errors.rateLimit : `The drafting routine did not start (${fired.error}).`);
+    throw new Error(fired.outcome === "rate_limited" ? errors.rateLimit : `The drafting routine did not start (${fired.error}).`);
   }
   return id;
 }
@@ -126,14 +119,18 @@ export async function jobForRoutine(env: Env, id: string, key: string): Promise<
   return job;
 }
 
-/** The instructions the routine follows for one job: the live prompts from settings, the transcript, and the answer's shape. */
+/**
+ * The instructions the routine follows for one job: the live prompts from settings around the family's WRITING_RULES
+ * (ai.prompt.style holds only germomics' own additions), the transcript as untrusted data, and the answer's shape.
+ */
 export async function routineInstructions(env: Env, job: Job): Promise<{ kind: AiKind; system: string; prompt: string; answer: string }> {
   const s = await loadSettings(env);
-  const system = `${setting(s, "ai.prompt.system")} ${setting(s, "ai.prompt.style")}`.trim();
+  const system = [setting(s, "ai.prompt.system"), WRITING_RULES, setting(s, "ai.prompt.style"), UNTRUSTED_DATA_RULE].filter((part) => part.trim()).join("\n\n");
+  const transcript = untrusted("transcript", job.transcript);
   const prompt =
     job.kind === "seo"
-      ? `Episode working title: "${job.title || "(untitled)"}".\n${setting(s, "ai.prompt.seo")}\n\nTranscript:\n${job.transcript}`
-      : `${setting(s, `ai.prompt.${job.kind}`)}\n\nTranscript:\n${job.transcript}`;
+      ? `Episode working title: "${job.title || "(untitled)"}".\n${setting(s, "ai.prompt.seo")}\n\nTranscript:\n${transcript}`
+      : `${setting(s, `ai.prompt.${job.kind}`)}\n\nTranscript:\n${transcript}`;
   return {
     kind: job.kind,
     system,
