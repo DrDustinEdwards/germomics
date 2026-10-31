@@ -1,6 +1,6 @@
 // Writes public/_headers, the headers Cloudflare's asset server puts on the static files (which never run the
-// Worker), from the set the Worker applies (app/lib/header-set.ts). `npm run build` runs it first; the file is not
-// committed.
+// Worker), from the set the Worker applies (app/lib/header-set.ts). `npm run build` runs it first, so a deploy always
+// carries the current set; the file is committed too, for the family check to read.
 import { writeFileSync } from "node:fs";
 import { headersFile } from "@dustinedwards/site-runtime/headers";
 import { SECURITY_HEADERS } from "../app/lib/header-set.ts";
