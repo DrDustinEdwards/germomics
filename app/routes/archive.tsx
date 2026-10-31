@@ -17,7 +17,7 @@ const TABS = [
 ] as const;
 
 export function meta() {
-  return pageHead({ path: "/archive", title: "Archive · Germomics", description: "Every Germomics episode and post, newest first, with search." });
+  return pageHead({ path: "/archive", title: "Archive · Germomics", description: "Every Germomics episode and post, newest first, with search.", pageType: "CollectionPage" });
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -91,7 +91,7 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
 
       <div className="grid gap-3">
         {items.map((post) => (
-          <PostCard key={post.id} post={post} queue={tracks} />
+          <PostCard key={post.id} post={post} queue={tracks} heading="h2" />
         ))}
         {items.length === 0 ? <p className="text-muted">Nothing here yet.</p> : null}
       </div>

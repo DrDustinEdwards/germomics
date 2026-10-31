@@ -41,14 +41,14 @@ describe("saving", () => {
     expect((thrown as Response).status).toBe(404);
   });
 
-  it("sanitizes the body, computes reading time, trims fields, and snapshots the previous row", async () => {
+  it("trims fields, snapshots the previous row, and never writes the body, which Carrel writes", async () => {
     const id = await createDraft(e, "article");
-    const words = Array.from({ length: 600 }, () => "word").join(" ");
+    await updatePost(e, id, { body: "Carrel's *words*", readingTime: 4 });
     const res = await save(id, "save", {
       title: "  Title  ",
       slug: " my-slug ",
       excerpt: "  ",
-      body: `<p>${words}</p><script>alert(1)</script><img src="x" onerror="alert(2)">`,
+      body: "<p>an old editor's body</p>",
       tags: ["a", "b"],
       sources: "not a list",
       featured: 1,
@@ -56,9 +56,7 @@ describe("saving", () => {
     });
     expect(res).toEqual({ ok: true, message: "Saved." });
     const p = await post(id);
-    expect(p).toMatchObject({ title: "Title", slug: "my-slug", excerpt: null, tags: ["a", "b"], sources: [], featured: true, seoTitle: "SEO", status: "draft", readingTime: 3 });
-    expect(p.body).not.toContain("<script");
-    expect(p.body).not.toContain("onerror");
+    expect(p).toMatchObject({ title: "Title", slug: "my-slug", excerpt: null, tags: ["a", "b"], sources: [], featured: true, seoTitle: "SEO", status: "draft", readingTime: 4, body: "Carrel's *words*" });
     expect(await versionCount(id)).toBe(1);
   });
 

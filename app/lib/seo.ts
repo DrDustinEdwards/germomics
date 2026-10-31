@@ -1,4 +1,4 @@
-// Client-safe SEO helpers: reading time, heading anchors + table of contents, and schema.org
+// Client-safe SEO helpers: plain text from a rendered body, the body's heading demotion, and schema.org
 // JSON-LD builders. Pure functions (no server imports) so routes can use them in meta() and
 // components alike. JSON-LD mirrors on-page content: BlogPosting for articles, PodcastEpisode
 // (+ MediaObject + partOfSeries) for episodes.
@@ -10,65 +10,34 @@ import {
   articleDates,
   defineHead,
 } from "@drdustinedwards/site-helpers/head";
-import { article, faqPage, thing } from "@drdustinedwards/site-helpers/schema";
+import { article, thing } from "@drdustinedwards/site-helpers/schema";
 import { DEFAULT_CARD, SITE_ORIGIN, postalAddressLd, type Address } from "~/lib/site";
 
 export function stripHtml(html: string): string {
   return html
     .replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ")
+    // Prelum's "#" link after each heading is navigation, not text.
+    .replace(/<a [^>]*class="heading-anchor"[^>]*>[\s\S]*?<\/a>/g, " ")
     .replace(/<[^>]+>/g, " ")
-    .replace(/&[a-z]+;|&#\d+;/gi, " ")
+    .replace(/&[a-z]+;|&#\d+;|&#x[0-9a-f]+;/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
 
-/** Minutes to read, ~200 wpm, floor 1. */
-export function readingTime(html: string): number {
-  const words = stripHtml(html).split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.round(words / 200));
-}
-
-/** Stable id from heading text (matches addHeadingIds + tableOfContents). */
-export function headingId(text: string): string {
-  return stripHtml(text)
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 64);
-}
-
 /**
- * Demote body headings one level (h1->h2, h2->h3, h3->h4) so the page keeps a single h1 (the post
- * title) and body sections become h2, matching the semantic outline. Render-time only; the stored
- * (migrated) body is never modified. Heading ids are derived from text, so they stay stable across
- * the shift and the TOC anchors still resolve.
+ * Demote a rendered body's headings one level (h1->h2 ... h5->h6) so the page keeps a single h1 (the post
+ * title) and its own h2 sections (Hosts, Transcript, Listen), with the body's sections under them as before.
+ * Render-time only: the stored HTML keeps Prelum's levels, which the feeds print. Prelum's heading ids are
+ * attributes, so they and the table of contents' anchors are untouched.
  */
 export function demoteHeadings(html: string): string {
   return html.replace(
-    /<(\/?)h([1-3])(\b[^>]*)?>/gi,
+    /<(\/?)h([1-5])(\b[^>]*)?>/gi,
     (_m, slash: string, n: string, attrs = "") => `<${slash}h${Number(n) + 1}${attrs}>`,
   );
 }
 
-/** Inject id attributes into h2/h3 so the TOC can anchor-link to them. */
-export function addHeadingIds(html: string): string {
-  return html.replace(/<(h[23])(\s[^>]*)?>([\s\S]*?)<\/\1>/gi, (m, tag, attrs = "", inner) => {
-    if (/\sid=/.test(attrs)) return m;
-    return `<${tag}${attrs} id="${headingId(inner)}">${inner}</${tag}>`;
-  });
-}
-
 export type TocItem = { level: 2 | 3; id: string; text: string };
-
-/** Extract an h2/h3 outline for the article table of contents. */
-export function tableOfContents(html: string): TocItem[] {
-  const out: TocItem[] = [];
-  for (const m of html.matchAll(/<(h[23])(?:\s[^>]*)?>([\s\S]*?)<\/\1>/gi)) {
-    const text = stripHtml(m[2]);
-    if (text) out.push({ level: m[1].toLowerCase() === "h2" ? 2 : 3, id: headingId(m[2]), text });
-  }
-  return out;
-}
 
 /** ISO-8601 duration (PT#M#S) for schema.org. */
 function isoDuration(totalSeconds?: number | null): string | undefined {
@@ -99,7 +68,7 @@ type JsonLdOpts = {
 export function buildJsonLd({ post, author, seriesTitle, guests = [], hosts = [] }: JsonLdOpts) {
   const url = `${SITE_ORIGIN}/${post.slug}`;
   const image = ogImageFor(post)?.src;
-  const description = post.seoDescription ?? post.excerpt ?? stripHtml(post.body).slice(0, 200);
+  const description = post.seoDescription ?? post.excerpt ?? stripHtml(post.bodyHtml ?? "").slice(0, 200);
   const datePublished = post.publishedAt ?? post.publishAt ?? undefined;
 
   if (post.kind === "episode") {
@@ -147,7 +116,7 @@ export function buildJsonLd({ post, author, seriesTitle, guests = [], hosts = []
   });
 }
 
-// ── Site-level + entity JSON-LD (Organization, PodcastSeries, Person, Breadcrumb, FAQ) ───────
+// ── Site-level + entity JSON-LD (Organization, PodcastSeries, Person, FAQ) ───────
 
 type ShowLike = {
   title: string;
@@ -232,31 +201,6 @@ export function buildPersonLd(author: PersonLd) {
   });
 }
 
-/**
- * FAQPage JSON-LD extracted from a post body that contains an FAQ section — an <h2> reading
- * "FAQ" / "Frequently asked questions" followed by <h3>question</h3> + answer pairs (the shape
- * the AI show-notes generator emits). Returns null when no usable Q&A is found.
- */
-export function extractFaqLd(html: string) {
-  const heading = html.match(/<h2[^>]*>\s*(?:faq|frequently asked questions?)\s*<\/h2>/i);
-  if (!heading || heading.index == null) return null;
-  let scope = html.slice(heading.index + heading[0].length);
-  const nextH2 = scope.search(/<h2[\s>]/i);
-  if (nextH2 !== -1) scope = scope.slice(0, nextH2);
-
-  const qa: Array<{ q: string; a: string }> = [];
-  const re = /<h3[^>]*>([\s\S]*?)<\/h3>([\s\S]*?)(?=<h3[\s>]|$)/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(scope))) {
-    const q = stripHtml(m[1]);
-    const a = stripHtml(m[2]);
-    if (q && a) qa.push({ q, a });
-  }
-  if (!qa.length) return null;
-
-  return faqPage(qa.map(({ q, a }) => ({ question: q, answer: a })));
-}
-
 /** True when a post was meaningfully updated after publication (different calendar day). */
 export function wasUpdatedAfterPublish(post: Post): boolean {
   if (!post.updatedAt) return false;
@@ -273,9 +217,19 @@ type PageHead = {
   socialTitle?: string;
   type?: "website" | "article" | "profile";
   article?: ArticleFacts;
+  pageType?: "CollectionPage";
+  breadcrumbs?: Array<{ name: string; path: string }>;
 };
 
-const head = defineHead({ origin: SITE_ORIGIN, siteName: "Germomics", image: DEFAULT_CARD });
+// Prelum builds each page's WebPage and BreadcrumbList from these sections; a page whose trail is not its URL (a season,
+// an episode under its season) passes its own.
+const head = defineHead({
+  origin: SITE_ORIGIN,
+  siteName: "Germomics",
+  suffix: " · Germomics",
+  image: DEFAULT_CARD,
+  sections: { "/about": "About", "/episodes": "Episodes", "/writing": "Writing", "/data": "Data", "/games": "Games" },
+});
 
 /**
  * The head of a public page from Prelum's defineHead: title, description, canonical, Open Graph and Twitter, always on

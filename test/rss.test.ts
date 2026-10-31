@@ -33,7 +33,7 @@ const episode = (over: Partial<Post> = {}): Post =>
     audioDuration: 3725,
     publishedAt: "2024-03-05T10:00:00.000Z",
     excerpt: "Short notes",
-    body: "<p>Full</p>",
+    bodyHtml: "<p>Full</p>",
     explicit: false,
     episodeType: "full",
     episodeNumber: null,

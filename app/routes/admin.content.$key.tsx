@@ -1,42 +1,51 @@
 // Admin → edit one content block (page or snippet). Behind the admin gate (admin.tsx middleware).
 // Pages have a draft/publish status and a Preview link (renders the draft in real context via
-// ?preview); snippets are instant. Saving busts the content cache.
+// ?preview); snippets are instant. A Markdown page's text is written in Carrel, so here it is shown as the
+// site renders it, with a link to edit it there, and only its title and status are saved; the plain-text pages
+// (TEXT_PAGES) and the snippets are edited here.
 import { useFetcher } from "react-router";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import type { Route } from "./+types/admin.content.$key";
 import { getEnv } from "~/lib/context.server";
-import { loadBlock, TEXT_PAGES, upsertBlock } from "~/lib/content.server";
-import { sanitizeHtml } from "~/lib/sanitize.server";
+import { loadBlock, TEXT_PAGES, updatePageSettings, upsertBlock } from "~/lib/content.server";
+import { BodyRenderer } from "~/components/content/BodyRenderer";
+import { carrelEditUrl } from "~/lib/site";
 import { Card, Field, Button, inputCx } from "~/components/admin/ui";
 import { PAGE_HREF } from "~/components/content/PageHits";
+import { ADMIN_FORM, readForm } from "~/lib/body.server";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const block = await loadBlock(getEnv(context), params.key, { includeDrafts: true });
   if (!block) throw new Response("Not found", { status: 404 });
   // loadBlock omits kind/description; fetch them is unnecessary here, infer kind from the key.
   const kind = params.key.startsWith("page:") ? "page" : "snippet";
-  return { block, kind, previewHref: PAGE_HREF[params.key] ?? null };
+  const markdown = kind === "page" && !TEXT_PAGES.has(params.key);
+  return { block, kind, markdown, previewHref: PAGE_HREF[params.key] ?? null, carrelUrl: markdown ? carrelEditUrl(params.key.replace(/^page:/, "page.")) : null };
 }
 
 export async function action({ params, request, context }: Route.ActionArgs) {
-  const form = await request.formData();
+  const form = await readForm(request, ADMIN_FORM);
   const kind = params.key.startsWith("page:") ? "page" : "snippet";
-  const raw = String(form.get("value") ?? "");
-  // A page body is injected as HTML, so it goes through the same sanitizer as a post body
-  // (Grok audit 2026-10-21, GE-3). The plain-text pages are served as text and keep their bytes.
-  const value = kind === "page" && !TEXT_PAGES.has(params.key) ? await sanitizeHtml(raw) : raw;
+  const title = String(form.get("title") ?? "") || null;
+  const status = form.get("status") === "published" ? "published" : "draft";
+  if (kind === "page" && !TEXT_PAGES.has(params.key)) {
+    await updatePageSettings(getEnv(context), params.key, { title, status });
+    return { ok: true as const, message: "Saved." };
+  }
+  // The plain-text pages are served as text and keep their bytes; a snippet is text in the page's markup.
+  const value = String(form.get("value") ?? "");
   await upsertBlock(getEnv(context), {
     key: params.key,
     kind,
-    title: String(form.get("title") ?? "") || null,
+    title,
     value,
-    status: kind === "page" ? (form.get("status") === "published" ? "published" : "draft") : "published",
+    status: kind === "page" ? status : "published",
   });
   return { ok: true as const, message: "Saved." };
 }
 
 export default function EditBlock({ loaderData }: Route.ComponentProps) {
-  const { block, kind, previewHref } = loaderData;
+  const { block, kind, markdown, previewHref, carrelUrl } = loaderData;
   const fetcher = useFetcher<{ ok: boolean; message?: string }>();
   const isPage = kind === "page";
 
@@ -57,11 +66,25 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
             <Field label="Title">
               {({ id }) => <input id={id} name="title" defaultValue={block.title} className={inputCx} />}
             </Field>
-            <Field label={isPage ? "Body (HTML)" : "Value"} hint={isPage ? "Rendered as sanitized HTML. {{email}} and {{address_line}} are filled in on legal pages." : undefined}>
-              {({ id }) => (
-                <textarea id={id} name="value" defaultValue={block.value} rows={isPage ? 18 : 4} className={`${inputCx} font-mono text-xs`} />
-              )}
-            </Field>
+            {markdown && carrelUrl ? (
+              <div className="space-y-2">
+                <p className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted">
+                  <span>Written in Carrel. {"{{email}}"} and {"{{address_line}}"} are filled in on the legal and contact pages.</span>
+                  <a href={carrelUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-mono text-xs text-accent hover:underline">
+                    <ExternalLink size={13} aria-hidden /> Edit in Carrel
+                  </a>
+                </p>
+                <div className="max-h-[32rem] overflow-y-auto rounded-xl border border-border bg-card p-4">
+                  <BodyRenderer html={block.html} />
+                </div>
+              </div>
+            ) : (
+              <Field label={isPage ? "Body (plain text)" : "Value"} hint={isPage ? "Served as plain text, as written." : undefined}>
+                {({ id }) => (
+                  <textarea id={id} name="value" defaultValue={block.value} rows={isPage ? 18 : 4} className={`${inputCx} font-mono text-xs`} />
+                )}
+              </Field>
+            )}
             {isPage ? (
               <Field label="Status" hint="Only published pages render publicly. Drafts are visible via Preview.">
                 {({ id }) => (

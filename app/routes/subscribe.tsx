@@ -11,6 +11,7 @@ import { subscribers } from "~/db/schema";
 import { getShowConfig } from "~/lib/show.server";
 import { SUBSCRIBE_DESTINATIONS, PRIMARY_KEYS, SECONDARY_KEYS } from "~/lib/subscribe";
 import { SITE_HOST } from "~/lib/site";
+import { PUBLIC_FORM, readForm } from "~/lib/body.server";
 
 export function meta() {
   return pageHead({ path: "/subscribe", title: "Subscribe · Germomics", description: "Follow Germomics in any podcast app, by email, or by RSS." });
@@ -24,7 +25,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function action({ request, context }: Route.ActionArgs) {
-  const form = await request.formData();
+  const form = await readForm(request, PUBLIC_FORM);
   const email = String(form.get("email") ?? "").trim().toLowerCase();
   const consent = form.get("consent");
 

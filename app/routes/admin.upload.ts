@@ -10,6 +10,7 @@ import { uploadAudio, uploadImage, buildKey } from "~/lib/r2.server";
 import { RefusedError, prepareUpload } from "@dustinedwards/site-api";
 import { LIMITS, RESIZE } from "~/lib/carrel/media.server";
 import { recordUpload, sizeMetadata } from "~/lib/media/store.server";
+import { readForm } from "~/lib/body.server";
 
 const MAX_IMAGE = 25 * 1024 * 1024; // 25 MB
 // Cloudflare refuses a request body over 100 MB on the Free and Pro plans before the Worker sees it,
@@ -19,7 +20,8 @@ const MAX_AUDIO = 100 * 1024 * 1024; // 100 MB
 
 export async function action({ request, context }: Route.ActionArgs) {
   const env = getEnv(context);
-  const form = await request.formData();
+  // The largest file plus room for the form around it.
+  const form = await readForm(request, MAX_AUDIO + 1024 * 1024);
   const file = form.get("file");
   const kind = String(form.get("kind") || "");
   const postId = String(form.get("postId") || "misc").replace(/[^\w-]/g, "") || "misc";
