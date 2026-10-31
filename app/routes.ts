@@ -40,6 +40,7 @@ export default [
   // discovery
   route("sitemap.xml", "routes/sitemap.ts"),
   route("robots.txt", "routes/robots.ts"),
+  route("site.webmanifest", "routes/site-webmanifest.ts"),
   // GEO / agentic-web discovery files (dynamic from D1, served noindex)
   route("llms.txt", "routes/llms.ts"),
   route("llms-full.txt", "routes/llms-full.ts"),
