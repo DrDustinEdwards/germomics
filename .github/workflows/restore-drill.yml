@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   drill:
-    uses: DrDustinEdwards/devkit/.github/workflows/restore-drill.yml@65782d2c45431055672a315f0d126b62d0dd3aff # v0.20.14
+    uses: DrDustinEdwards/devkit/.github/workflows/restore-drill.yml@fbf3824ab08f76af5befd7471677778e8b132c9b # v0.20.18
     with:
       bucket: germomics-backups
       d1-dump-ref: v0.8.0

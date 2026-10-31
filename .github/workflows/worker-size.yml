@@ -17,6 +17,6 @@ concurrency:
 
 jobs:
   worker-size:
-    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@65782d2c45431055672a315f0d126b62d0dd3aff # v0.20.14
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@fbf3824ab08f76af5befd7471677778e8b132c9b # v0.20.18
     with:
       prepare: npm run build
