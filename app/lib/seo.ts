@@ -277,6 +277,7 @@ type PageHead = {
 const head = defineHead({
   origin: SITE_ORIGIN,
   siteName: "Germomics",
+  suffix: " · Germomics",
   image: DEFAULT_CARD,
   sections: { "/about": "About", "/episodes": "Episodes", "/writing": "Writing", "/data": "Data", "/games": "Games" },
 });
