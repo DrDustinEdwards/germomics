@@ -159,6 +159,16 @@ describe("serveWithEdgeCache", () => {
     expect(head.body).toBeNull();
   });
 
+  it("does not refresh a stale entry from a HEAD, whose render has no body", async () => {
+    const h = harness();
+    const url = fresh();
+    await storedAgo(url, FRESH_SECONDS + 1);
+    const head = await h.serve(new Request(url, { method: "HEAD" }), () => new Response(null, { headers: { "Content-Type": "text/html" } }));
+    expect(head.headers.get("x-cache")).toBe("STALE");
+    await h.settle();
+    expect(await (await cache().match(new Request(url)))!.text()).toBe("old");
+  });
+
   it("ignores tracking parameters and parameter order in the cache key", async () => {
     const h = harness();
     const base = fresh("/page?b=2&a=1");
