@@ -28,8 +28,8 @@
 	//   VITE_GOOGLE_MAPS_MAP_ID   the Map ID Advanced Markers require
 	//
 	// Vite inlines every VITE_* value into the CLIENT bundle when `react-router build` runs, so
-	// both have to exist as BUILD environment variables (Workers Builds settings, or .env
-	// locally). A Worker runtime var is invisible to a browser bundle and would not feed them.
+	// both have to exist as BUILD environment variables (GitHub repo variables, read by CI's deploy,
+	// or .env locally). A Worker runtime var is invisible to a browser bundle and would not feed them.
 	//
 	// Writing them into `vars` would also be actively harmful: `keep_vars` protects only vars
 	// that are ABSENT from this file, so listing them with placeholder values would overwrite

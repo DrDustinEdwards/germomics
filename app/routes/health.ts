@@ -1,7 +1,7 @@
 // /health: site-runtime's healthResponse, 503 only when D1 does not answer. Warnings, never a 503: the newest complete
 // nightly dump or either file pass (audio, images) older than 26 hours (all under `backup`), a bucket or APP_KV not
-// answering, and a scheduled job that failed or stopped (`cron_runs`). `sha` is the deployed commit, which vite.config.ts
-// writes from the Workers Builds build (a local build has none). No keys, table names or counts.
+// answering, and a scheduled job that failed or stopped (`cron_runs`). `sha` is the deployed commit, which CI's deploy
+// passes as DEPLOY_SHA (a local build has none). No keys, table names or counts.
 import { cronCheck } from "@dustinedwards/site-runtime/cron";
 import { healthResponse, kvCheck, r2Check } from "@dustinedwards/site-runtime/health";
 import type { Route } from "./+types/health";
