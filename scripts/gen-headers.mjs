@@ -5,9 +5,11 @@ import { writeFileSync } from "node:fs";
 import { corpFor, headersFile } from "@dustinedwards/site-runtime/headers";
 import { SECURITY_HEADERS } from "../app/lib/header-set.ts";
 
-// A year for files whose URL changes with their bytes: Vite's content-hashed build output, and the fonts
-// (scripts/fetch-fonts.mjs writes new files rather than new bytes). Files at stable paths keep the default revalidation.
+// A year for Vite's content-hashed build output, whose URL changes with its bytes. The fonts sit at stable names that
+// scripts/fetch-fonts.mjs rewrites in place, so a day, then revalidated by the asset server's ETag: a replaced font
+// reaches every reader. Other files at stable paths keep the default revalidation.
 const IMMUTABLE = { "Cache-Control": "public, max-age=31536000, immutable" };
+const A_DAY = { "Cache-Control": "public, max-age=86400" };
 // Cross-Origin-Resource-Policy by what a directory holds (corpFor: scripts, styles, fonts and images are cross-origin);
 // Carrel's preview, a sandboxed frame with an opaque origin, loads the stylesheets, fonts and brand images.
 const corp = (type) => ({ "Cross-Origin-Resource-Policy": corpFor(type) });
@@ -19,7 +21,7 @@ writeFileSync(
     charset: true,
     paths: {
       "/assets/*": { ...IMMUTABLE, ...corp("text/css") },
-      "/fonts/*": { ...IMMUTABLE, ...corp("font/woff2") },
+      "/fonts/*": { ...A_DAY, ...corp("font/woff2") },
       "/brand/*": corp("image/svg+xml"),
     },
   }),

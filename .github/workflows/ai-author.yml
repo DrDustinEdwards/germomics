@@ -13,6 +13,11 @@ on:
 permissions:
   contents: read
 
+# A newer push to a pull request cancels its older run; a push to the default branch never does.
+concurrency:
+  group: ai-author-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   ai-author:
-    uses: DrDustinEdwards/devkit/.github/workflows/ai-author.yml@f55d2caadaa7a18a73397fb8defffb2e3123967b # v0.20.3
+    uses: DrDustinEdwards/devkit/.github/workflows/ai-author.yml@d992f82350f7143b026597f89359bad90580ebfc # v0.20.9

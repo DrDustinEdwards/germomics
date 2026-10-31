@@ -41,9 +41,10 @@ describe("the bundled datasets", () => {
     expect(getDataset("no-such-dataset")).toBeNull();
   });
 
-  it("has a table whose rows match its columns, for every dataset", () => {
+  it("has a table whose rows match its columns, for every dataset with one", () => {
     for (const { slug } of listDatasets()) {
       const { table } = getDataset(slug)!;
+      if (!table) continue;
       expect(table.rows.length, slug).toBeGreaterThan(0);
       for (const row of table.rows) expect(row, slug).toHaveLength(table.columns.length);
     }

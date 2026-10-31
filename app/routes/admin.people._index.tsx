@@ -1,5 +1,5 @@
-// People admin (§E): CRUD for reusable guest entities. The same action serves the editor's
-// inline "quick-create" (returns JSON) used by the episode guests picker.
+// People admin (§E): CRUD for reusable guest entities. An episode names its people by slug in Carrel
+// (app/lib/carrel/source.ts), so a person is added here first.
 import { useState } from "react";
 import { useFetcher } from "react-router";
 import { UserPlus, Trash2, Plus, X, Users } from "lucide-react";
@@ -20,15 +20,6 @@ export async function action({ request, context }: Route.ActionArgs) {
   const env = getEnv(context);
   const form = await readForm(request, ADMIN_FORM);
   const intent = String(form.get("intent") || "upsert");
-
-  if (intent === "quick-create") {
-    const id = await upsertPerson(env, { name: String(form.get("name") || "").trim() || "Unnamed" });
-    const person = (await listPeople(env)).find((p) => p.id === id);
-    return Response.json({
-      ok: true,
-      person: person ? { id: person.id, name: person.name, slug: person.slug, role: person.role } : null,
-    });
-  }
 
   if (intent === "delete") {
     await deletePerson(env, Number(form.get("id")));

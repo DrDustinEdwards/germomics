@@ -5,7 +5,7 @@ import { readCappedBytes } from "@dustinedwards/site-runtime/body";
 const KIB = 1024;
 /** A public form: an email, a token, a name and a score. */
 export const PUBLIC_FORM = 16 * KIB;
-/** An admin form: a post body, settings, a transcript sent for drafting. */
+/** An admin form: settings, an episode's transcript and waveform. */
 export const ADMIN_FORM = 4 * KIB * KIB;
 
 const tooLarge = () => new Response("Payload Too Large", { status: 413, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
@@ -20,14 +20,4 @@ async function readBytes(request: Request, max: number): Promise<Uint8Array> {
 export async function readForm(request: Request, max: number): Promise<FormData> {
   const bytes = await readBytes(request, max);
   return new Response(bytes as Uint8Array<ArrayBuffer>, { headers: { "Content-Type": request.headers.get("Content-Type") ?? "" } }).formData();
-}
-
-/** The request's JSON, parsed from at most `max` bytes; null when it is not JSON. */
-export async function readJson(request: Request, max: number): Promise<unknown> {
-  const text = new TextDecoder().decode(await readBytes(request, max));
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
-  }
 }

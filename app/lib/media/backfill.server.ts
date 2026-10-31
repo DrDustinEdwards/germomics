@@ -5,6 +5,7 @@
 // changes an object and never overwrites a row, so it is safe to run again: a second run adds only what is missing.
 import { sha256Hex } from "@dustinedwards/site-api";
 import { FOCUS_METADATA, focusOf } from "@dustinedwards/site-runtime/image";
+import { logEvent } from "@dustinedwards/site-runtime/log";
 import { inArray } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { mediaCaptions } from "~/db/schema";
@@ -85,5 +86,5 @@ export async function continueMediaBackfill(env: Env): Promise<void> {
   if (state === "done") return;
   const batch = await backfillMedia(env, { cursor: state });
   await env.APP_KV.put(BACKFILL_KEY, batch.cursor ?? "done");
-  if (batch.added.length > 0) console.log(`Media backfill: ${batch.added.length} added${batch.done ? ", done" : ""}`);
+  if (batch.added.length > 0) logEvent("media_backfill_batch", { added: batch.added.length, done: batch.done });
 }

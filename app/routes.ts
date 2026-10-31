@@ -12,6 +12,7 @@ export default [
   route("search", "routes/search.tsx"),
   route("data", "routes/data._index.tsx"),
   route("data/:slug", "routes/data.$slug.tsx"),
+  route("charts.css", "routes/charts-css.ts"),
   route("games", "routes/games._index.tsx"),
   route("games/assets/*", "routes/games.assets.$.ts"),
   // resized images from BLOG_IMAGES (app/lib/images.ts)
@@ -39,6 +40,7 @@ export default [
   // discovery
   route("sitemap.xml", "routes/sitemap.ts"),
   route("robots.txt", "routes/robots.ts"),
+  route("site.webmanifest", "routes/site-webmanifest.ts"),
   // GEO / agentic-web discovery files (dynamic from D1, served noindex)
   route("llms.txt", "routes/llms.ts"),
   route("llms-full.txt", "routes/llms-full.ts"),
@@ -53,29 +55,22 @@ export default [
   route(":slug/transcript.vtt", "routes/transcript.ts"),
   route(":slug/chapters.json", "routes/chapters.ts"),
 
-  // the drafting routine fetches a job and posts its draft back (one-time key per job)
-  route("api/ai-drafts/:id", "routes/api.ai-drafts.$id.ts"),
-
-
   // admin: Cloudflare Access signs people in; admin.tsx middleware re-verifies its JWT once for the
   // whole subtree.
   route("admin", "routes/admin.tsx", [
     index("routes/admin._index.tsx"),
-    route("posts", "routes/admin.posts._index.tsx"),
-    route("posts/:id", "routes/admin.posts.$id.tsx"),
+    route("episodes", "routes/admin.episodes._index.tsx"),
+    route("episodes/:id", "routes/admin.episodes.$id.tsx"),
     route("people", "routes/admin.people._index.tsx"),
     route("subscribers", "routes/admin.subscribers._index.tsx"),
     route("soundbites", "routes/admin.soundbites._index.tsx"),
     route("settings", "routes/admin.settings._index.tsx"),
     route("content/:key", "routes/admin.content.$key.tsx"),
-    route("ai", "routes/admin.ai.ts"),
     route("upload", "routes/admin.upload.ts"),
     route("media/backfill", "routes/admin.media-backfill.ts"),
-    route("version/:vid", "routes/admin.version.$vid.ts"),
   ]),
 
-  // tokenized "preview as published" — public but unguessable, noindex.
-  route("preview/:id/:token", "routes/preview.$id.$token.tsx"),
+  // Carrel's preview links (/preview/<token>) are answered by the Worker before the app (workers/app.ts).
 
   // episode/article detail — single dynamic segment, ranked below every static route above.
   route(":slug", "routes/$slug.tsx"),

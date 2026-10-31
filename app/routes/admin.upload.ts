@@ -8,6 +8,7 @@ import type { Route } from "./+types/admin.upload";
 import { getEnv } from "~/lib/context.server";
 import { uploadAudio, uploadImage, buildKey } from "~/lib/r2.server";
 import { RefusedError, prepareUpload } from "@dustinedwards/site-api";
+import { logEvent } from "@dustinedwards/site-runtime/log";
 import { LIMITS, RESIZE } from "~/lib/carrel/media.server";
 import { recordUpload, sizeMetadata } from "~/lib/media/store.server";
 import { readForm } from "~/lib/body.server";
@@ -50,7 +51,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     // Into the media library too (Carrel's media page). The image is stored and its address works either way; a row
     // that could not be written is made by the next backfill (POST /admin/media/backfill).
     await recordUpload(env, key, prepared).catch((error) =>
-      console.error(JSON.stringify({ event: "media.record_failed", key, error: String(error) })),
+      logEvent("media_record_failed", { key, error }, { level: "error" }),
     );
     return Response.json({ ok: true, url, contentType: prepared.contentType, name: prepared.filename, size: prepared.bytes.byteLength });
   }

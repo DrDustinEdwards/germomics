@@ -9,6 +9,7 @@ import {
   useLocation,
 } from "react-router";
 import { useContext } from "react";
+import { iconLinks } from "@drdustinedwards/site-helpers/icons";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -22,14 +23,11 @@ import { socialLinks } from "~/lib/seo";
 import { PlayerProvider } from "~/components/player/player-context";
 import { PlayerDock } from "~/components/player/PlayerDock";
 import { Header } from "~/components/chrome/Header";
+import { LinkPrefetch } from "capsomer/react/link";
 import { Footer } from "~/components/chrome/Footer";
 
 export const links: Route.LinksFunction = () => [
-  // Modern SVG favicon (scales, theme-agnostic) with raster fallbacks for older agents.
-  { rel: "icon", type: "image/svg+xml", href: "/brand/germomics-g.svg" },
-  { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
-  { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
-  { rel: "manifest", href: "/site.webmanifest" },
+  ...iconLinks(),
   // Feed autodiscovery: the writing feed and the podcast feed (whose URL never changes, CLAUDE.md rule 1).
   { rel: "alternate", type: "application/rss+xml", title: "Germomics: Writing", href: "/feed/site.xml" },
   { rel: "alternate", type: "application/rss+xml", title: "Germomics podcast", href: "/feed/podcast/" },
@@ -74,6 +72,10 @@ export async function loader({ context }: Route.LoaderArgs) {
   };
 }
 
+// Never prefetched on hover, beyond the family's NEVER_PREFETCH (/admin, /api and the rest): /unsubscribe, a per-reader
+// token page reached from email whose action unsubscribes, and the tokenized draft previews.
+const NO_PREFETCH = ["/unsubscribe", "/preview"];
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -89,7 +91,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script nonce={useContext(UNSAFE_FrameworkContext)?.nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>
-        {children}
+        <LinkPrefetch exclude={NO_PREFETCH}>{children}</LinkPrefetch>
         <ScrollRestoration />
         <Scripts />
       </body>

@@ -1,12 +1,14 @@
 import { Link } from "capsomer/react/link";
-import { FilePlus2, Headphones, FileText, PencilLine } from "lucide-react";
+import { ExternalLink, Headphones, FileText, PencilLine } from "lucide-react";
 import type { Route } from "./+types/admin._index";
 import { getEnv } from "~/lib/context.server";
 import { listAllPosts } from "~/lib/admin.server";
 import { formatDate } from "~/lib/format";
+import { carrelEditUrl } from "~/lib/site";
 
 export async function loader({ context }: Route.LoaderArgs) {
-  const all = await listAllPosts(getEnv(context));
+  // Carrel's trash is left out: a trashed post is on its way to being deleted.
+  const all = (await listAllPosts(getEnv(context))).filter((p) => !p.trashedAt);
   return {
     counts: {
       episodes: all.filter((p) => p.kind === "episode").length,
@@ -24,10 +26,10 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-semibold">Dashboard</h1>
         <Link
-          to="/admin/posts"
+          to="/admin/episodes"
           className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 font-display text-sm text-white hover:bg-brand-strong"
         >
-          <FilePlus2 size={15} aria-hidden /> Manage posts
+          <Headphones size={15} aria-hidden /> Episode audio
         </Link>
       </div>
 
@@ -47,17 +49,18 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
       </div>
 
       <h2 className="mb-2 mt-8 font-display text-lg font-semibold">Recent</h2>
+      <p className="mb-2 text-sm text-muted">Posts are written in Carrel; each opens there.</p>
       <ul className="divide-y divide-border rounded-xl border border-border bg-card">
         {recent.map((p) => (
           <li key={p.id}>
-            <Link to={`/admin/posts/${p.id}`} className="flex items-center justify-between px-4 py-2.5 hover:bg-surface">
-              <span className="truncate font-display">{p.title}</span>
+            <a href={carrelEditUrl(p.slug)} className="flex items-center justify-between px-4 py-2.5 hover:bg-surface">
+              <span className="flex min-w-0 items-center gap-1.5 truncate font-display">{p.title} <ExternalLink size={12} aria-hidden /></span>
               <span className="ml-3 flex shrink-0 items-center gap-2 font-mono text-[11px] uppercase text-muted">
                 <span>{p.kind}</span>
                 <span className={p.status === "published" ? "text-accent" : "text-brand"}>{p.status}</span>
                 {p.publishedAt ? <span>{formatDate(p.publishedAt)}</span> : null}
               </span>
-            </Link>
+            </a>
           </li>
         ))}
       </ul>

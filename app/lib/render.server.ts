@@ -21,7 +21,7 @@ import { IMAGE_ORIGIN } from "~/lib/site";
 import type { BodyMeta } from "~/lib/types";
 
 /** Prelum's RENDER_VERSION, kept here so a read can compare without loading the pipeline. */
-export const RENDER_VERSION = "7";
+export const RENDER_VERSION = "9";
 // A Prelum upgrade that moves its version fails the typecheck here until this constant moves with it.
 RENDER_VERSION satisfies typeof Prelum.RENDER_VERSION;
 
@@ -115,17 +115,19 @@ type Stored = { body: string; bodyHtml: string | null; bodyMeta?: BodyMeta | nul
 
 /**
  * The HTML a public read shows: the stored render while it is current, else a render in memory (the cron stores it
- * that night). A body that no longer renders keeps its last stored HTML, so a page never fails on its own text.
+ * that night). A body that no longer renders keeps its last stored HTML, so a page never fails on its own text. The
+ * HTML is wrapped in the version it was rendered at, which prelum-content reads to see a page left behind.
  */
 export async function storedBody(env: Env, row: Stored): Promise<{ html: string; meta: BodyMeta }> {
   if (row.renderVersion === null) return { html: row.body, meta: EMPTY_META };
-  if (row.renderVersion === RENDER_VERSION && row.bodyHtml !== null) return { html: row.bodyHtml, meta: row.bodyMeta ?? EMPTY_META };
+  const shown = (html: string, version: string, meta: BodyMeta) => ({ html: html && `<div data-render-version="${version}">${html}</div>`, meta });
+  if (row.renderVersion === RENDER_VERSION && row.bodyHtml !== null) return shown(row.bodyHtml, RENDER_VERSION, row.bodyMeta ?? EMPTY_META);
   try {
     const r = await renderMarkdown(row.body, libraryMedia(env));
-    return { html: r.html, meta: r.meta };
+    return shown(r.html, r.renderVersion, r.meta);
   } catch (err) {
     console.error(JSON.stringify({ event: "render.failed", error: err instanceof Error ? err.message : String(err) }));
-    return { html: row.bodyHtml ?? "", meta: row.bodyMeta ?? EMPTY_META };
+    return shown(row.bodyHtml ?? "", row.renderVersion, row.bodyMeta ?? EMPTY_META);
   }
 }
 

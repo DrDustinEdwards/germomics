@@ -12,7 +12,7 @@ export const MEDIA_ORIGIN = "https://media.germomics.com";
 export const IMAGE_ORIGIN = "https://images.germomics.com";
 /** The show's square cover art: its artwork in the feed until show_config sets one. */
 export const DEFAULT_ARTWORK = `${IMAGE_ORIGIN}/brand/germomics-artwork-1400.jpg`;
-/** The share card of any page without its own image: the wordmark at 1200x630 (scripts/gen-icons.mjs). */
+/** The share card of any page without its own image: the wordmark at 1200x630 (public/brand/germomics-card.jpg). */
 export const DEFAULT_CARD = {
   url: `${SITE_ORIGIN}/brand/germomics-card.jpg`,
   width: 1200,
@@ -66,7 +66,7 @@ export function postalAddressLd(a: Partial<Address> = {}) {
 /** Paths no crawler needs, in /robots.txt and /ai.txt alike. */
 export const ROBOTS_DISALLOW = ["/admin", "/preview/"];
 
-/** Carrel, the family's writing editor, where this site's posts and pages are written (app/lib/carrel/adapter.server.ts). */
-const CARREL_ORIGIN = "https://carrel.dustinedwards.info";
+/** Carrel's Desk, the family's writing editor, where this site's posts and pages are written (app/lib/carrel/adapter.server.ts). */
+const CARREL_ORIGIN = "https://desk.dustinedwards.info";
 /** The Carrel editor for one of this site's items, by its Carrel id (a post's slug, `page.<name>` for a page). */
 export const carrelEditUrl = (id: string) => `${CARREL_ORIGIN}/p/germomics/e/${encodeURIComponent(id)}`;

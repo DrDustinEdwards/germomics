@@ -3,7 +3,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { aiCostCapExceeded, enforceRateLimit, recordAiUse } from "~/lib/security.server";
 import { applyMigrations, setSettings } from "./helpers/d1";
 
-// The in-Worker abuse layer in front of /admin and the AI endpoint. Settings come from D1 (content.server), seeded here so the limits are
+// The in-Worker abuse layer in front of /admin and the media library's AI suggestions. Settings come from D1 (content.server), seeded here so the limits are
 // small and known.
 const e = env as unknown as Env;
 
@@ -22,35 +22,18 @@ beforeEach(clearKv);
 // their buckets and the settings that size them. Each test uses its own addresses, since the
 // limiter's Durable Object storage outlives a test.
 describe("enforceRateLimit", () => {
-  beforeEach(() => setSettings(e.DB, { "ratelimit.admin": "3", "ratelimit.ai": "2" }));
+  beforeEach(() => setSettings(e.DB, { "ratelimit.admin": "3" }));
 
   it("lets public paths through", async () => {
     for (let i = 0; i < 5; i++) expect(await hit("/episodes/", "203.0.113.1")).toBeNull();
   });
 
   it("allows the admin limit, then answers 429 in plain text", async () => {
-    for (let i = 0; i < 3; i++) expect(await hit("/admin/posts", "203.0.113.2")).toBeNull();
-    const refused = await hit("/admin/posts", "203.0.113.2");
+    for (let i = 0; i < 3; i++) expect(await hit("/admin/episodes", "203.0.113.2")).toBeNull();
+    const refused = await hit("/admin/episodes", "203.0.113.2");
     expect(refused?.status).toBe(429);
     expect(Number(refused?.headers.get("Retry-After"))).toBeGreaterThan(0);
     expect(refused?.headers.get("Content-Type")).toBe("text/plain; charset=utf-8");
-  });
-
-  it("gives the AI endpoint its own tighter bucket and a JSON refusal", async () => {
-    expect(await hit("/admin/ai", "203.0.113.3")).toBeNull();
-    expect(await hit("/admin/ai/x", "203.0.113.3")).toBeNull();
-    const refused = await hit("/admin/ai", "203.0.113.3");
-    expect(refused?.status).toBe(429);
-    expect(refused?.headers.get("Content-Type")).toBe("application/json; charset=utf-8");
-    expect(await refused?.json()).toMatchObject({ ok: false });
-    // The AI requests did not use up the admin bucket.
-    expect(await hit("/admin/posts", "203.0.113.3")).toBeNull();
-  });
-
-  it("falls back to the default limit when the setting is missing or not a number", async () => {
-    await setSettings(e.DB, { "ratelimit.ai": "lots" });
-    for (let i = 0; i < 15; i++) expect(await hit("/admin/ai", "203.0.113.4")).toBeNull();
-    expect((await hit("/admin/ai", "203.0.113.4"))?.status).toBe(429);
   });
 });
 
