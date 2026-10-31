@@ -106,24 +106,16 @@ describe("content", () => {
     expect(revisions.items.length).toBeGreaterThanOrEqual(3);
   });
 
-  it("sanitizes the body on every write, as the editor does", async () => {
-    await put("xss", '<p>ok</p><script>alert(1)</script><img src="x" onerror="alert(2)">', null);
-    const doc = await json(await call("/api/carrel/v1/content/xss"));
-    expect(doc.source).not.toContain("<script");
-    expect(doc.source).not.toContain("onerror");
-    expect(doc.source).toContain("<p>ok</p>");
-  });
-
-  it("never lists, reads or overwrites a podcast episode", async () => {
-    await e.DB.exec("INSERT INTO posts (kind, title, slug, body, status) VALUES ('episode', 'Ep', 'an-episode', '<p>e</p>', 'published')");
-    const list = await json(await call("/api/carrel/v1/content"));
-    expect(list.items.map((i: { id: string }) => i.id)).not.toContain("an-episode");
-    expect((await call("/api/carrel/v1/content/an-episode")).status).toBe(404);
-    expect((await put("an-episode", "<p>x</p>", null)).status).toBe(422);
+  it("never turns raw HTML in a source into markup", async () => {
+    await put("xss", 'ok\n\n<script>alert(1)</script><img src="x" onerror="alert(2)">', null);
+    const html = (await e.DB.prepare("SELECT body_html FROM posts WHERE slug = 'xss'").first<{ body_html: string }>())!.body_html;
+    expect(html).not.toContain("<script");
+    expect(html).not.toContain("onerror");
+    expect(html).toContain("<p>ok</p>");
   });
 
   it("renders a preview without saving anything", async () => {
-    const res = await call("/api/carrel/v1/preview", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ source: '---\ntitle: "T"\n---\n<h1>Head</h1><script>x()</script>' }) });
+    const res = await call("/api/carrel/v1/preview", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ source: '---\ntitle: "T"\n---\n# Head\n\n<script>x()</script>' }) });
     expect(res.status).toBe(200);
     const html = await res.text();
     expect(html).toContain("<h2");

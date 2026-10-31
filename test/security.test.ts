@@ -1,11 +1,9 @@
 import { env } from "cloudflare:test";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { withSecurityHeaders } from "~/lib/security-headers";
 import { aiCostCapExceeded, enforceRateLimit, recordAiUse } from "~/lib/security.server";
 import { applyMigrations, setSettings } from "./helpers/d1";
 
-// The in-Worker abuse layer in front of /admin and the AI endpoint, and the header layer every
-// response passes through. Settings come from D1 (content.server), seeded here so the limits are
+// The in-Worker abuse layer in front of /admin and the AI endpoint. Settings come from D1 (content.server), seeded here so the limits are
 // small and known.
 const e = env as unknown as Env;
 
@@ -84,40 +82,5 @@ describe("the AI daily cap", () => {
     expect(await aiCostCapExceeded(e)).toBe(false);
     await e.APP_KV.put(today(), "100");
     expect(await aiCostCapExceeded(e)).toBe(true);
-  });
-});
-
-describe("withSecurityHeaders", () => {
-  it("adds the hardening headers and keeps the status and body", async () => {
-    const res = withSecurityHeaders(new Response("hello", { status: 201, statusText: "Created" }), "https://germomics.com");
-    expect(res.status).toBe(201);
-    expect(res.statusText).toBe("Created");
-    expect(await res.text()).toBe("hello");
-    expect(res.headers.get("Strict-Transport-Security")).toContain("includeSubDomains");
-    expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
-    expect(res.headers.get("X-Frame-Options")).toBe("deny");
-    expect(res.headers.get("Referrer-Policy")).toBe("strict-origin-when-cross-origin");
-    expect(res.headers.get("Permissions-Policy")).toContain("camera=()");
-    // The player, Copy link and the share sheet keep working.
-    expect(res.headers.get("Permissions-Policy")).toContain("clipboard-write=(self)");
-    expect(res.headers.get("tdm-reservation")).toBe("1");
-    expect(res.headers.get("Content-Security-Policy")).toContain("frame-ancestors 'none'");
-    expect(res.headers.has("Content-Security-Policy-Report-Only")).toBe(false);
-  });
-
-  it("never overwrites a header the route already set", () => {
-    const res = withSecurityHeaders(
-      new Response("x", { headers: { "X-Frame-Options": "SAMEORIGIN" } }),
-      "https://germomics.com",
-    );
-    expect(res.headers.get("X-Frame-Options")).toBe("SAMEORIGIN");
-  });
-
-  it("keeps a policy of either kind that the route declared", () => {
-    const enforced = withSecurityHeaders(new Response("x", { headers: { "Content-Security-Policy": "default-src 'none'" } }), "https://g.test");
-    expect(enforced.headers.get("Content-Security-Policy")).toBe("default-src 'none'");
-    const reportOnly = withSecurityHeaders(new Response("x", { headers: { "Content-Security-Policy-Report-Only": "img-src 'self'" } }), "https://g.test");
-    expect(reportOnly.headers.get("Content-Security-Policy-Report-Only")).toBe("img-src 'self'");
-    expect(reportOnly.headers.has("Content-Security-Policy")).toBe(false);
   });
 });

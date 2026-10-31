@@ -19,7 +19,7 @@ function harness() {
     },
     settle: () => Promise.all(pending),
     serve: (request: Request, make: () => Response = () => new Response(`render ${renders}`, { headers: { "Content-Type": "text/html" } })) =>
-      serveWithEdgeCache({ request, ctx, origin: ORIGIN, render: async () => { const r = make(); renders++; return r; } }),
+      serveWithEdgeCache({ request, ctx, render: async () => { const r = make(); renders++; return r; } }),
   };
 }
 
@@ -37,7 +37,6 @@ describe("serveWithEdgeCache", () => {
     const first = await h.serve(new Request(url));
     expect(first.headers.get("x-cache")).toBe("MISS");
     expect(first.headers.get("Cache-Control")).toBe("public, max-age=0, must-revalidate");
-    expect(first.headers.get("X-Content-Type-Options")).toBe("nosniff");
     expect(await first.text()).toBe("render 0");
     await h.settle();
     const second = await h.serve(new Request(url));

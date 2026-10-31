@@ -8,6 +8,7 @@ import { getGame } from "~/lib/games.server";
 import { getLeaderboard, submitScore } from "~/lib/scores.server";
 import { ClientOnly } from "~/components/util/ClientOnly";
 import { useSnippet } from "~/lib/content";
+import { PUBLIC_FORM, readForm } from "~/lib/body.server";
 
 const PhaserGame = lazy(() => import("~/components/game/PhaserGame.client"));
 
@@ -29,7 +30,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
 export async function action({ params, request, context }: Route.ActionArgs) {
   const env = getEnv(context);
-  const form = await request.formData();
+  const form = await readForm(request, PUBLIC_FORM);
   const ip = request.headers.get("CF-Connecting-IP") ?? "anon";
   return submitScore(env, {
     gameSlug: params.slug,

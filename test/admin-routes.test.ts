@@ -6,7 +6,7 @@ import { getPostById } from "~/lib/posts.server";
 import { createDraft, listVersions, snapshotVersion, updatePost } from "~/lib/admin.server";
 import { getPerson, listPeople, upsertPerson } from "~/lib/people.server";
 import { getShowConfig } from "~/lib/show.server";
-import { loadBlock, loadSettings } from "~/lib/content.server";
+import { loadBlock, loadSettings, upsertBlock } from "~/lib/content.server";
 import { soundbitesForPost } from "~/lib/soundbites.server";
 import { applyMigrations } from "./helpers/d1";
 
@@ -175,12 +175,13 @@ describe("settings actions", () => {
 });
 
 describe("content block action", () => {
-  it("saves a page as draft unless published is chosen, and a snippet always published", async () => {
+  it("saves a Markdown page's title and status but never its text, which Carrel writes, and a snippet always published", async () => {
+    await upsertBlock(e, { key: "page:about", kind: "page", title: "Old", value: "Carrel's *text*", status: "draft" });
+    const before = "Carrel's *text*";
     await content.action(args(form("/admin/content/page:about", { title: "About", value: "<p>v</p>" }), { key: "page:about" }));
-    expect(await loadBlock(e, "page:about", { includeDrafts: true })).toMatchObject({ title: "About", status: "draft" });
-    // A page body is injected as HTML, so a script in it is dropped on save (GE-3).
-    await content.action(args(form("/admin/content/page:about", { value: '<p onclick="x()">v2</p><script>alert(1)</script>', status: "published" }), { key: "page:about" }));
-    expect(await loadBlock(e, "page:about")).toMatchObject({ value: "<p>v2</p>", status: "published", title: "" });
+    expect(await loadBlock(e, "page:about", { includeDrafts: true })).toMatchObject({ title: "About", status: "draft", value: before });
+    await content.action(args(form("/admin/content/page:about", { status: "published" }), { key: "page:about" }));
+    expect(await loadBlock(e, "page:about")).toMatchObject({ status: "published", title: "", value: before });
     await content.action(args(form("/admin/content/snippet:x", { value: "Hi", status: "draft" }), { key: "snippet:x" }));
     expect(await loadBlock(e, "snippet:x")).toMatchObject({ status: "published" });
   });

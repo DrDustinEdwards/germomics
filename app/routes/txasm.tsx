@@ -22,8 +22,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const page = await loadPage(env, "page:txasm", { includeDrafts: preview });
   return {
     title: page.title || TITLE,
-    description: stripHtml(page.value),
-    html: page.value,
+    description: stripHtml(page.html),
+    html: page.html,
   };
 }
 
@@ -34,7 +34,7 @@ export default function Txasm({ loaderData }: Route.ComponentProps) {
       <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent">Texas Branch ASM</p>
       <h1 className="mt-3 font-display text-4xl font-semibold leading-tight">{title}</h1>
       <div className="prose-legal mt-4">
-        <BodyRenderer html={html} />
+        <BodyRenderer html={html} page />
       </div>
 
       <a
