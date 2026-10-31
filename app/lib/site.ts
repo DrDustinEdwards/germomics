@@ -12,7 +12,7 @@ export const MEDIA_ORIGIN = "https://media.germomics.com";
 export const IMAGE_ORIGIN = "https://images.germomics.com";
 /** The show's square cover art: its artwork in the feed until show_config sets one. */
 export const DEFAULT_ARTWORK = `${IMAGE_ORIGIN}/brand/germomics-artwork-1400.jpg`;
-/** The share card of any page without its own image: the wordmark at 1200x630 (scripts/gen-icons.mjs). */
+/** The share card of any page without its own image: the wordmark at 1200x630 (public/brand/germomics-card.jpg). */
 export const DEFAULT_CARD = {
   url: `${SITE_ORIGIN}/brand/germomics-card.jpg`,
   width: 1200,
