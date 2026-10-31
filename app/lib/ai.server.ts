@@ -105,9 +105,11 @@ export async function startDraft(env: Env, input: { kind: AiKind; transcript: st
   const key = randomHex(32);
   await writeJob(env, id, { kind: input.kind, title: input.title, transcript, keyHash: await sha256Hex(key), status: "waiting" });
   const fired = await fireRoutine(config, fireText(id, key));
-  if (!fired.ok) {
+  // No answer may still mean a session started (the fire has no idempotency key), so the job stays for it and the
+  // editor polls as usual, giving up after its own limit. Every other failure certainly started nothing.
+  if (!fired.ok && fired.outcome !== "unknown") {
     await env.APP_KV.delete(jobKey(id));
-    throw new Error(fired.error.startsWith("429") ? errors.rateLimit : `The drafting routine did not start (${fired.error}).`);
+    throw new Error(fired.outcome === "rate_limited" ? errors.rateLimit : `The drafting routine did not start (${fired.error}).`);
   }
   return id;
 }
