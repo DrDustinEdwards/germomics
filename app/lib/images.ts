@@ -18,6 +18,8 @@ export const images = defineImages({
     // Round guest and host photos: 48px in a post, 64px on a guest page.
     avatar: { layout: "fixed", width: 48, ratio: "1x1" },
     portrait: { layout: "fixed", width: 64, ratio: "1x1" },
+    // A page's share card (og:image): its own image cut to 1200x630 around the focal point.
+    share: { layout: "fixed", width: 1200, ratio: "40x21" },
   },
 });
 

@@ -50,9 +50,7 @@ export function CoverArt({
         alt={alt}
         width={1400}
         height={1400}
-        loading={eager ? "eager" : "lazy"}
-        fetchPriority={eager ? "high" : undefined}
-        decoding="async"
+        priority={eager}
         onError={() => setFailed(true)}
         className={`${frame} object-cover ${className}`}
       />

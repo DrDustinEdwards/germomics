@@ -254,7 +254,7 @@ export function Hosts({ hosts, images }: { hosts: Host[]; images?: ImageSet }) {
         {hosts.map((h) => (
           <div key={h.name} className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
             {h.img ? (
-              <Picture src={h.img} image={imageFor(images, "avatar", h.img)} alt={h.name} width={48} height={48} loading="lazy" decoding="async" className="h-12 w-12 shrink-0 rounded-full border border-border object-cover" />
+              <Picture src={h.img} image={imageFor(images, "avatar", h.img)} alt={h.name} width={48} height={48} className="h-12 w-12 shrink-0 rounded-full border border-border object-cover" />
             ) : (
               <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-border bg-surface">
                 <GMark className="h-6 w-auto" />

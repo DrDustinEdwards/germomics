@@ -2,12 +2,14 @@
 // artwork and people photos a page shows. A body's figures are sized when it is rendered, from the media library
 // (app/lib/render.server.ts).
 //
-// THE SIZE OF AN ORIGINAL. An upload records its width and height as R2 custom metadata
-// (`imageMetadata`, from the Images binding). The season 1 figures were uploaded before that, as
-// pre-made `<slug>-<width>.webp` files, so for those the width is read from the name and the shape
-// from the figure's own width and height. An image with neither is left as it is: the original,
+// THE SIZE OF AN ORIGINAL. An upload records its width and height as R2 custom metadata (measured
+// by site-api's prepareUpload). The season 1 figures were uploaded before that, as pre-made
+// `<slug>-<width>.webp` files, so for those the width is read from the name and the shape from the
+// figure's own width and height. An image with neither is left as it is: the original,
 // unsized, is better than a guess (site-runtime's rule).
 import { FOCUS_METADATA, type StoredImage } from "@dustinedwards/site-runtime/image";
+import type { HeadImage } from "@drdustinedwards/site-helpers/head";
+import { DEFAULT_CARD, SITE_ORIGIN } from "~/lib/site";
 import { imageKey, imageKeyOf, images, mediaPath, type ImageSet, type ImageUseName } from "~/lib/images";
 
 const NAMED_WIDTH = /-(\d{2,4})\.(?:webp|jpe?g|png|avif|gif)$/i;
@@ -50,19 +52,22 @@ export async function imageSet(env: Env, wanted: Array<[ImageUseName, string | n
   return set;
 }
 
+// The narrowest picture cut to the card's 1.9:1 without losing much: 3:2.
+const WIDE = 1.5;
+
 /**
- * The width and height an upload records as custom metadata, read by the Images binding. Empty when
- * the binding is missing or the file is not a raster it can read (an SVG, say), so the upload still
- * goes through and the image is shown unsized.
+ * A page's share card: its own image as /media serves it cut to 1200x630 around its focal point, with that size. A
+ * square or tall image (the show art, a portrait) would lose its subject in that strip, so it and no image share the
+ * site's wordmark card; an image the site cannot size or crop (not in BLOG_IMAGES) is sent as it is.
  */
-export async function imageMetadata(env: Env, bytes: ArrayBuffer | Uint8Array): Promise<Record<string, string>> {
-  if (!env.IMAGES) return {};
-  try {
-    const info = await env.IMAGES.info(new Blob([bytes as BlobPart]).stream());
-    return "width" in info && info.width && info.height ? { width: String(info.width), height: String(info.height) } : {};
-  } catch {
-    return {};
-  }
+export async function shareImage(env: Env, own: { src: string; alt: string | null } | null | undefined): Promise<HeadImage> {
+  if (!own?.src) return DEFAULT_CARD;
+  const alt = own.alt ?? undefined;
+  const stored = await storedImage(env, own.src, 1);
+  if (stored?.width && stored.height && stored.width / stored.height < WIDE) return DEFAULT_CARD;
+  const card = stored ? images.attributes(stored, "share") : null;
+  if (!card?.sources.length) return { url: own.src, alt };
+  return { url: `${SITE_ORIGIN}${card.src}`, width: card.width, height: card.height, alt };
 }
 
 /** What the post page (and its preview) shows besides the body: the cover, artwork and people photos. */

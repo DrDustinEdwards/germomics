@@ -1,11 +1,10 @@
-// Dual-input image field (§C): "Upload" (drag-drop → images.germomics.com, auto-downscale,
-// thumbnail preview) OR "URL / Paste". Alt text is required whenever an image is set — we retire
+// Dual-input image field (§C): "Upload" (drag-drop → images.germomics.com, shrunk on the server
+// past 4096px, thumbnail preview) OR "URL / Paste". Alt text is required whenever an image is set — we retire
 // URL-only fields here. Emits { url, alt } upward.
 import { useState } from "react";
 import { ImageUp, Link2, X } from "lucide-react";
 import { Tabs, Field, inputCx, Button } from "./ui";
 import { UploadDropzone } from "./UploadDropzone";
-import { downscaleImage } from "~/lib/image-client";
 
 export function ImageField({
   label,
@@ -64,7 +63,6 @@ export function ImageField({
           postId={postId}
           accept="image/*"
           label="Upload image"
-          transform={(f) => downscaleImage(f)}
           onUploaded={(r) => r.url && onChange({ url: r.url, alt })}
         />
       ) : (

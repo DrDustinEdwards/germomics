@@ -2,7 +2,7 @@
 // mirror or a shrink can be taken back. The current bytes are the object in BLOG_IMAGES, the one copy of an image; each
 // earlier set is copied to BACKUPS under media/revisions/<time>/<key> before it is overwritten, and nothing deletes that
 // copy (d1-dump prunes only backups/json/). A revert puts one named copy back as a new revision.
-import { NotFoundError, RefusedError, sha256Hex } from "@dustinedwards/site-api";
+import { NotFoundError, RefusedError, placeholderAndColor, sha256Hex } from "@dustinedwards/site-api";
 import { replaceObject, type R2BucketLike } from "@dustinedwards/site-api/r2";
 import { FOCUS_METADATA } from "@dustinedwards/site-runtime/image";
 import {
@@ -119,5 +119,7 @@ export async function swapBytes(
     reason: next.reason,
     sha256,
   });
-  await followMedia(env, row.key, { bytes: next.bytes.byteLength, width: next.width, height: next.height, sha256, focus: next.focus, ...columns });
+  // New bytes, new placeholder: two billed transforms, skipped for a file the binding could not measure.
+  const { placeholder, color } = next.width ? await placeholderAndColor(env.IMAGES, next.bytes) : { placeholder: null, color: null };
+  await followMedia(env, row.key, { bytes: next.bytes.byteLength, width: next.width, height: next.height, sha256, focus: next.focus, placeholder, color, ...columns });
 }

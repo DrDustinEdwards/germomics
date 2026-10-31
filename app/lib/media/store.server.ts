@@ -3,7 +3,7 @@
 // file carries is here. Every write that moves a file's version goes through writeAtRev, which checks and bumps `rev`
 // in one statement, so a stale write is refused rather than lost and two writes in one second still differ.
 import { and, desc, eq, gt, inArray, lte, max, or, sql } from "drizzle-orm";
-import { sha256Hex } from "@dustinedwards/site-api";
+import type { PreparedUpload } from "@dustinedwards/site-api";
 import { getDb } from "~/db/index.server";
 import { media, mediaChanges, mediaRevisions, type MediaRevisionRow, type MediaRow } from "~/db/schema";
 
@@ -31,20 +31,38 @@ export async function insertMediaRow(env: Env, row: typeof media.$inferInsert, {
   return written.length > 0;
 }
 
-/** A row for an image the admin editor just stored in BLOG_IMAGES (app/routes/admin.upload.ts). */
+/** The width and height an upload records on its object, where every page sizes the image by (images.server.ts). */
+export const sizeMetadata = (file: PreparedUpload): Record<string, string> =>
+  file.width && file.height ? { width: String(file.width), height: String(file.height) } : {};
+
+/**
+ * The row for an upload just stored in BLOG_IMAGES (Carrel's media group, and the admin editor's app/routes/admin.upload.ts),
+ * its caption, credit, license and date from what the picture says about itself.
+ */
 export async function recordUpload(
   env: Env,
-  file: { key: string; bytes: ArrayBuffer; contentType: string; filename: string; width?: string; height?: string },
+  key: string,
+  file: PreparedUpload,
+  { alt = "", sourceUrl = null, uploadedAt = new Date().toISOString() }: { alt?: string; sourceUrl?: string | null; uploadedAt?: string } = {},
 ): Promise<void> {
+  const { caption = "", credit = "", license = "", takenAt = null } = file.embedded;
   await insertMediaRow(env, {
-    key: file.key,
+    key,
     filename: file.filename,
     contentType: file.contentType,
     bytes: file.bytes.byteLength,
-    width: Number(file.width) || null,
-    height: Number(file.height) || null,
-    sha256: await sha256Hex(new Uint8Array(file.bytes)),
-    uploadedAt: new Date().toISOString(),
+    width: file.width,
+    height: file.height,
+    caption,
+    credit,
+    license,
+    takenAt,
+    alt,
+    sourceUrl,
+    sha256: file.sha256,
+    placeholder: file.placeholder,
+    color: file.color,
+    uploadedAt,
   });
 }
 

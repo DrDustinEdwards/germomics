@@ -6,8 +6,9 @@ import { soundbitesForPost } from "~/lib/soundbites.server";
 import { getShowConfig } from "~/lib/show.server";
 import { buildJsonLd, ogImageFor, pageHead, stripHtml } from "~/lib/seo";
 import { faqPage, jsonLd } from "@drdustinedwards/site-helpers/schema";
+import type { HeadImage } from "@drdustinedwards/site-helpers/head";
 import { pageToc, storedBody } from "~/lib/render.server";
-import { postImages } from "~/lib/images.server";
+import { postImages, shareImage } from "~/lib/images.server";
 import { PostDetail, type DetailData } from "~/components/content/PostDetail";
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -57,15 +58,18 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const adj = adjacentPosts(visible, post);
   const hosts = show.hosts ?? [];
   // Hero cover uses the item's own artwork; when it has none, the CoverArt component renders the SVG
-  // brand default (so no raster default here). The social image still defaults to the show artwork.
+  // brand default (so no raster default here). The social image defaults to the wordmark card.
   const cover = post.episodeArtwork ?? post.coverImage ?? null;
-  const ogImage = ogImageFor(post) ?? show.artwork ?? null;
-  const [{ html, meta }, images] = await Promise.all([storedBody(env, post), postImages(env, post, cover, { guests, hosts })]);
+  const [{ html, meta }, images, ogImage] = await Promise.all([
+    storedBody(env, post),
+    postImages(env, post, cover, { guests, hosts }),
+    shareImage(env, ogImageFor(post)),
+  ]);
 
   const data: DetailData & {
     seriesTitle: string;
     hosts: typeof hosts;
-    ogImage: string | null;
+    ogImage: HeadImage;
   } = {
     // The page shows the rendered HTML; the Markdown stays on the server.
     post: { ...post, body: "", bodyHtml: html, bodyMeta: meta },
