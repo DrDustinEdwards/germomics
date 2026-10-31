@@ -13,6 +13,7 @@
 //
 // Prelum is imported on first use, so the public routes that only read stored HTML never load the pipeline.
 import type * as Prelum from "@drdustinedwards/site-helpers/render/nomath";
+import { logEvent } from "@dustinedwards/site-runtime/log";
 import { and, eq, inArray, isNotNull, like, ne, sql } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { contentBlocks, media, posts, type Post } from "~/db/schema";
@@ -167,7 +168,7 @@ export async function rerenderUsing(env: Env, key: string): Promise<number> {
       await db.update(posts).set({ bodyHtml: r.html, bodyMeta: r.meta, renderVersion: r.renderVersion, readingTime: r.readingMinutes }).where(eq(posts.id, p.id));
       done += 1;
     } catch (err) {
-      console.error(JSON.stringify({ event: "render.media-failed", what: `post ${p.id}`, key, error: err instanceof Error ? err.message : String(err) }));
+      logEvent("render.media-failed", { what: `post ${p.id}`, key, error: err instanceof Error ? err.message : String(err) }, { level: "error" });
     }
   }
   for (const b of pageRows) {
@@ -176,7 +177,7 @@ export async function rerenderUsing(env: Env, key: string): Promise<number> {
       await db.update(contentBlocks).set({ bodyHtml: r.html, renderVersion: r.renderVersion }).where(eq(contentBlocks.key, b.key));
       done += 1;
     } catch (err) {
-      console.error(JSON.stringify({ event: "render.media-failed", what: b.key, key, error: err instanceof Error ? err.message : String(err) }));
+      logEvent("render.media-failed", { what: b.key, key, error: err instanceof Error ? err.message : String(err) }, { level: "error" });
     }
   }
   return done;
