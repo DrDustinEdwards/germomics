@@ -4,17 +4,19 @@ import { applyMigrations, setSettings } from "./helpers/d1";
 
 // The Worker entry (workers/app.ts): the order a request passes through (Carrel's API, then the
 // rate limiter, then the app behind the edge cache), the signed-in admin kept out of the stored pages, the
-// plain 500 that never leaks an error, and the nightly backup whose failure must not be swallowed.
-// React Router's request handler and the backup run are replaced so only the entry is under test.
+// plain 500 that never leaks an error, and the nightly jobs, one failure of which must neither stop the
+// others nor be swallowed. React Router's request handler and the backup runs are replaced so only the
+// entry is under test.
 const h = vi.hoisted(() => ({
   render: vi.fn(async (_req: Request, _ctx: unknown) => new Response("<p>page</p>", { headers: { "Content-Type": "text/html" } })),
   backup: vi.fn(async (_env: unknown) => {}),
+  audio: vi.fn(async (_env: unknown) => {}),
 }));
 vi.mock("react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react-router")>()),
   createRequestHandler: () => h.render,
 }));
-vi.mock("~/lib/backup.server", () => ({ runBackup: h.backup }));
+vi.mock("~/lib/backup.server", () => ({ runBackup: h.backup, runAudioBackup: h.audio, runImagesBackup: async () => {} }));
 
 const e = env as unknown as Env;
 const ORIGIN = "https://germomics.com";
@@ -36,6 +38,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   h.render.mockClear();
   h.backup.mockClear();
+  h.audio.mockClear();
   const { keys } = await e.APP_KV.list();
   await Promise.all(keys.map((k) => e.APP_KV.delete(k.name)));
 });
@@ -122,6 +125,17 @@ describe("the Worker entry", () => {
     expect(purges).toEqual(["admin POST /admin/posts/1"]);
   });
 
+  it("counts a 404 with its referring host, but never a preview link's, whose path carries its token", async () => {
+    const notFound = async () => new Response("<p>gone</p>", { status: 404, headers: { "Content-Type": "text/html" } });
+    h.render.mockImplementationOnce(notFound).mockImplementationOnce(notFound);
+    const c = ctx();
+    await fetchWith(new Request(`${ORIGIN}/moved-page`, { headers: { Referer: "https://example.com/links?x=1" } }), {}, c);
+    await fetchWith(new Request(`${ORIGIN}/preview/7/secret-token`), {}, c);
+    await Promise.all(c.pending);
+    const rows = await e.DB.prepare("SELECT path, referrer_host, hit_count FROM page_404_daily").all();
+    expect(rows.results).toEqual([{ path: "/moved-page", referrer_host: "example.com", hit_count: 1 }]);
+  });
+
   it("answers a plain 500 with no detail when rendering throws", async () => {
     h.render.mockImplementationOnce(async () => {
       throw new Error("secret stack detail");
@@ -136,19 +150,22 @@ describe("the Worker entry", () => {
   });
 });
 
-describe("the nightly backup", () => {
-  it("runs the backup before the invocation returns", async () => {
+describe("the nightly jobs", () => {
+  it("runs each before the invocation returns and records it for /health", async () => {
     await worker.scheduled!({} as ScheduledController, e);
     expect(h.backup).toHaveBeenCalledWith(e);
+    expect(h.audio).toHaveBeenCalledWith(e);
+    const ok = await e.DB.prepare("SELECT name FROM cron_runs WHERE last_ok_at IS NOT NULL ORDER BY name").all<{ name: string }>();
+    expect(ok.results.map((r) => r.name)).toEqual(["audio-backup", "backup", "images-backup", "prune-404", "rerender-stale"]);
   });
 
-  it("rethrows a failed backup so the invocation shows as failed", async () => {
+  it("runs the rest after a failed backup, then fails the invocation", async () => {
     h.backup.mockImplementationOnce(async () => {
       throw new Error("dump failed");
     });
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-    await expect(worker.scheduled!({} as ScheduledController, e)).rejects.toThrow("dump failed");
-    expect(spy).toHaveBeenCalledWith("Nightly backup failed:", expect.any(Error));
+    await expect(worker.scheduled!({} as ScheduledController, e)).rejects.toThrow("cron jobs failed: backup");
+    expect(h.audio).toHaveBeenCalledWith(e);
     spy.mockRestore();
   });
 });

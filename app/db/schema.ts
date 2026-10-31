@@ -365,3 +365,28 @@ export const mediaChanges = sqliteTable(
 
 export type MediaRow = typeof media.$inferSelect;
 export type MediaRevisionRow = typeof mediaRevisions.$inferSelect;
+
+// site-runtime's operations tables (drizzle/0017_ops.sql), written and read only through ./cron and ./not-found; here so
+// the schema test holds them in step with the migration.
+export const cronRuns = sqliteTable("cron_runs", {
+  name: text("name").primaryKey(),
+  everyMinutes: integer("every_minutes").notNull(),
+  firstStartedAt: integer("first_started_at"),
+  lastStartedAt: integer("last_started_at"),
+  lastOkAt: integer("last_ok_at"),
+  lastFailedAt: integer("last_failed_at"),
+  lastError: text("last_error"),
+});
+
+export const page404Daily = sqliteTable(
+  "page_404_daily",
+  {
+    id: text("id").primaryKey(),
+    day: integer("day").notNull(),
+    path: text("path").notNull(),
+    referrerHost: text("referrer_host").notNull().default(""),
+    kind: text("kind").notNull().default("page"),
+    hitCount: integer("hit_count").notNull().default(0),
+  },
+  (t) => ({ dayPathReferrerIdx: uniqueIndex("page_404_daily_day_path_referrer_uq").on(t.day, t.path, t.referrerHost) }),
+);

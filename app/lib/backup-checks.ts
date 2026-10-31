@@ -1,6 +1,6 @@
-// What germomics' nightly dump must leave out and carry, for d1-dump's runCheckedBackup, which runs the
-// standard checks (not empty, nothing excluded present, every counted table there with its live count,
-// and not every counted table empty) and the one here.
+// What germomics' nightly dump must leave out and carry, for d1-dump's runCheckedBackup, whose standard
+// checks (not empty, nothing excluded present, every counted table there with its live count, and not
+// every counted table empty) are the whole check.
 // NEVER IN A DUMP, because they held live credentials or one-time tokens. A backup copy is one
 // more place a credential could leak from, and restoring a session revives old sign-ins:
 //   session       Better Auth sessions: a bearer `token` per row, plus IP and user agent.
@@ -8,8 +8,8 @@
 //   account       the Google OAuth access, refresh and id tokens (and a password column).
 // drizzle/0010_retire_better_auth.sql drops them (with user). d1-dump fails a run on an excluded
 // name that is not a table, so runBackup passes it only the names that exist at run time
-// (presentExcludes), and siteProblems fails any dump that carries one of them anyway. That
-// holds whether the deploy or the migration lands first, and after both.
+// (presentExcludes); one that exists is excluded, and the standard check fails a dump that carries
+// it. That holds whether the deploy or the migration lands first, and after both.
 export const BACKUP_EXCLUDE = ["session", "verification", "account"] as const;
 
 /** The credential tables to hand d1-dump as `exclude`: those in BACKUP_EXCLUDE that exist. */
@@ -22,9 +22,3 @@ export function presentExcludes(liveTables: Iterable<string>): string[] {
 // dump (d1-dump's `counted`), and a run where all of them dumped empty fails: the site always has
 // settings and a show_config row.
 export const BACKUP_COUNTED_TABLES = ["posts", "content_blocks", "settings", "show_config"] as const;
-
-/** germomics' own check after the standard ones: no credential table in the dump, excluded or not. */
-export function siteProblems(dump: { tables: Array<{ name: string }> }): string[] {
-  const dumped = new Set(dump.tables.map((t) => t.name));
-  return BACKUP_EXCLUDE.filter((name) => dumped.has(name)).map((name) => `${name} is in the dump but must be excluded`);
-}
