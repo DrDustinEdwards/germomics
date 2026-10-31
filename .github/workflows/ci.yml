@@ -70,21 +70,18 @@ jobs:
         run: npm test
 
       # NO-BLOAT REPORTS (capsid/decisions.md "no bloat, as a standing plan", 2026-10-01).
-      # WARN-ONLY BY RULING: they report against .no-bloat.json's baseline (devkit-no-bloat
-      # --warn-only, Knip and jscpd) and page weight against .route-weight.json (devkit-route-weight),
-      # and never block a merge. Every step is continue-on-error and devkit-no-bloat --warn-only
-      # always exits 0; a number above the baseline is a warning annotation and a line in the job summary. They run
-      # after the gate steps so they cannot change its result, and `!cancelled()` keeps them
-      # reporting when a gate step failed. Together they add about 10 seconds: they reuse this
-      # job's install and build rather than a job of their own.
+      # Knip and jscpd stay warn-only: devkit-no-bloat --warn-only reports against .no-bloat.json's baseline and
+      # always exits 0. Page weight is a gate (area 7, D5: every React app fails CI over its route budget):
+      # devkit-route-weight fails the job when a route passes .route-weight.json's budget_bytes or grows past its
+      # baseline. `!cancelled()` keeps both reporting when an earlier step failed. Together they add about 10
+      # seconds: they reuse this job's install and build rather than a job of their own.
       - name: Knip and jscpd (warn-only)
         if: ${{ !cancelled() }}
         continue-on-error: true
         run: npm run --silent nobloat
 
-      - name: Page weight (warn-only)
+      - name: Page weight
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        continue-on-error: true
         run: npm run --silent nobloat:weight
 
   audit:
