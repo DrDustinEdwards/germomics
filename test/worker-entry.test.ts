@@ -72,16 +72,19 @@ describe("the Worker entry", () => {
     const limiter = { limit: async ({ key }: { key: string }) => (keys.push(key), { success: open }) };
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
 
+    // Every request also writes its `request` line (site-runtime withRequestLog); only the reports are counted here.
+    const reports = () => log.mock.calls.map(([line]) => JSON.parse(line as string)).filter((line) => line.event === "csp-violation");
+
     const res = await fetchWith(report(), { CSP_REPORT_RATE_LIMIT: limiter } as never);
     expect(res.status).toBe(204);
-    expect(JSON.parse(log.mock.calls[0][0] as string)).toMatchObject({ event: "csp-violation", directive: "font-src", blocked: "https://fonts.gstatic.com/s/roboto.woff2", page: `${ORIGIN}/data/x` });
+    expect(reports()[0]).toMatchObject({ event: "csp-violation", directive: "font-src", blocked: "https://fonts.gstatic.com/s/roboto.woff2", page: `${ORIGIN}/data/x` });
     expect(keys).toEqual(["198.51.100.7"]);
 
     // Over the limit, or with no limiter bound, the report is dropped and still answered 204.
     open = false;
     expect((await fetchWith(report(), { CSP_REPORT_RATE_LIMIT: limiter } as never)).status).toBe(204);
     expect((await fetchWith(report())).status).toBe(204);
-    expect(log).toHaveBeenCalledTimes(1);
+    expect(reports()).toHaveLength(1);
     expect(h.render).not.toHaveBeenCalled();
     log.mockRestore();
   });
@@ -152,9 +155,11 @@ describe("the Worker entry", () => {
   });
 });
 
+const nightly = { cron: "17 3 * * *", scheduledTime: Date.now() } as ScheduledController;
+
 describe("the nightly jobs", () => {
   it("runs each before the invocation returns and records it for /health", async () => {
-    await worker.scheduled!({} as ScheduledController, e);
+    await worker.scheduled!(nightly, e);
     expect(h.backup).toHaveBeenCalledWith(e);
     expect(h.audio).toHaveBeenCalledWith(e);
     const ok = await e.DB.prepare("SELECT name FROM cron_runs WHERE last_ok_at IS NOT NULL ORDER BY name").all<{ name: string }>();
@@ -166,7 +171,7 @@ describe("the nightly jobs", () => {
       throw new Error("dump failed");
     });
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-    await expect(worker.scheduled!({} as ScheduledController, e)).rejects.toThrow("cron jobs failed: backup");
+    await expect(worker.scheduled!(nightly, e)).rejects.toThrow("cron jobs failed: backup");
     expect(h.audio).toHaveBeenCalledWith(e);
     spy.mockRestore();
   });

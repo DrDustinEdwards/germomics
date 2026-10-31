@@ -4,6 +4,7 @@
 // defense; this is the in-Worker layer. Security headers are security-headers.ts.
 
 import { ipKey, limit, limitedResponse, matchRule, mustStop } from "@dustinedwards/site-runtime/rate-limit";
+import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runtime/log";
 import { loadSettings, settingNum } from "~/lib/content.server";
 
 // Per-IP fixed 60-second windows, counted exactly by the RATE_LIMITER Durable Object (the WAF
@@ -18,13 +19,15 @@ const RULES: Array<{ path: string; prefix?: boolean; methods?: string[]; bucket:
   ...["/subscribe", "/subscribe.data"].map((path) => ({ path, methods: ["POST"], bucket: "subscribe", settingKey: "ratelimit.subscribe", def: 5 })),
 ];
 
-/** Returns a 429 Response if this request is rate-limited, otherwise null. */
+/** Returns a 429 Response if this request is rate-limited, otherwise null. A refusal writes one OWASP `excess_rate_limit_exceeded` line. */
 export async function enforceRateLimit(env: Env, request: Request): Promise<Response | null> {
   const match = matchRule(request, RULES);
   if (!match) return null;
   const max = settingNum(await loadSettings(env), match.settingKey, match.def);
   const verdict = await limit(env.RATE_LIMITER, ipKey(match.bucket, request).key, [{ limit: max, windowSeconds: 60 }], { onUnavailable: "allow" });
-  return mustStop(verdict, "allow") ? limitedResponse(verdict) : null;
+  if (!mustStop(verdict, "allow")) return null;
+  logEvent(OWASP_EVENTS.rateLimitExceeded, { ...requestFields(request, { status: 429 }), bucket: match.bucket }, { level: "warn" });
+  return limitedResponse(verdict);
 }
 
 // ── AI per-day cost cap ──────────────────────────────────────────────────────
