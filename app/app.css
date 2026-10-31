@@ -156,3 +156,25 @@
     text-decoration: underline;
   }
 }
+
+/* The theme button's two icons (components/chrome/ThemeToggle.tsx): the sun while the theme is dark, the moon while
+   it is light, from the first paint, with no script. data-theme is the stored choice; without one the system's. */
+@layer components {
+  .theme-icon-moon {
+    display: none;
+  }
+  :root[data-theme="light"] .theme-icon-sun {
+    display: none;
+  }
+  :root[data-theme="light"] .theme-icon-moon {
+    display: block;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) .theme-icon-sun {
+      display: none;
+    }
+    :root:not([data-theme="dark"]) .theme-icon-moon {
+      display: block;
+    }
+  }
+}

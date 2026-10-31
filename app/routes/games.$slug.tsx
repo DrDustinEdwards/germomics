@@ -12,6 +12,9 @@ import { PUBLIC_FORM, readForm } from "~/lib/body.server";
 
 const PhaserGame = lazy(() => import("~/components/game/PhaserGame.client"));
 
+// A game is an app from its first paint (Phaser, the leaderboard), so it hydrates on load (lib/hydration.ts).
+export const handle = { hydrate: true };
+
 export function meta({ loaderData, location }: Route.MetaArgs) {
   if (!loaderData?.game) return [{ title: "Games · Germomics" }];
   return pageHead({

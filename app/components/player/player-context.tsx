@@ -160,6 +160,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       if (isPlayingRef.current) void audio.play().catch(() => setIsPlaying(false));
       updatePositionState();
     };
+    // The source may already be loading: the press that hydrated the page set it to unlock the element
+    // (app/site/hydrate.ts), and its metadata may have arrived before this effect.
+    if (audio.readyState >= HTMLMediaElement.HAVE_METADATA) {
+      onMeta();
+      return;
+    }
     audio.addEventListener("loadedmetadata", onMeta, { once: true });
     return () => audio.removeEventListener("loadedmetadata", onMeta);
     // eslint-disable-next-line react-hooks/exhaustive-deps

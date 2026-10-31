@@ -13,6 +13,8 @@
     "scripts/**/*.{mjs,ts}",
     // Hand-run mutation testing (docs/research/baseline.md); Stryker is installed --no-save.
     "stryker.config.mjs",
+    // /site.js, which devkit's siteScript (vite.config.ts) bundles by path.
+    "app/site.ts",
     // The test Worker's main module (vitest.config.ts), for the RATE_LIMITER Durable Object.
     "test/helpers/entry.ts"
   ],

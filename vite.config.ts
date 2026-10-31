@@ -1,6 +1,7 @@
 import { reactRouter } from "@react-router/dev/vite";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
+import { siteScript } from "@dustinedwards/devkit/vite/site-script";
 import { defineConfig } from "vite";
 
 export default defineConfig({
@@ -13,6 +14,9 @@ export default defineConfig({
     }),
     tailwindcss(),
     reactRouter(),
+    // /site.js (app/site.ts): the theme button, the header menus, the share buttons and the player's hydrate-on-intent,
+    // with no framework, on every page. A public page sends no React until a reader presses play (app/root.tsx).
+    siteScript(),
   ],
   resolve: {
     tsconfigPaths: true,
