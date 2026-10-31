@@ -18,4 +18,6 @@ interface Env {
   ACCESS_AUD?: string;
   /** "1" in .dev.vars only: treats a localhost request as the admin. Ignored on any other host. */
   ACCESS_DEV_BYPASS?: string;
+  /** The deployed commit, written into the built config by vite.config.ts; empty for a local build. */
+  DEPLOY_SHA?: string;
 }
