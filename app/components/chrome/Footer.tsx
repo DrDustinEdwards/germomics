@@ -84,9 +84,8 @@ export function Footer() {
                 <li key={s.platform}>
                   <a
                     href={s.url}
-                    target="_blank"
-                    rel="me noopener"
-                    aria-label={`${s.label} (opens in a new tab)`}
+                    rel="me"
+                    aria-label={s.label}
                     className="grid h-9 w-9 place-items-center rounded-full border border-border text-muted hover:border-accent hover:text-accent"
                   >
                     <SocialIcon platform={s.platform} />
@@ -106,8 +105,6 @@ export function Footer() {
                 <li key={k}>
                   <a
                     href={subscribeLinks[k]}
-                    target="_blank"
-                    rel="noopener"
                     className={`inline-flex items-center gap-1 ${link} ${tap}`}
                   >
                     {SUBSCRIBE_DESTINATIONS[k].label}
@@ -119,12 +116,9 @@ export function Footer() {
             <li>
               <a
                 href="/feed/podcast/"
-                target="_blank"
-                rel="noopener"
                 className={`inline-flex items-center gap-1 ${link} ${tap}`}
               >
                 <Rss size={14} aria-hidden /> Podcast RSS
-                <ExternalCue />
               </a>
             </li>
             <li><Link to="/subscribe" className={`${link} ${tap}`}>More ways to listen →</Link></li>
@@ -157,7 +151,7 @@ export function Footer() {
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-4 font-mono text-xs text-muted">
           <span>
             © {year} Germomics and{" "}
-            <a href="https://dustinedwards.info" target="_blank" rel="me noopener" className={link}>
+            <a href="https://dustinedwards.info" rel="me" className={link}>
               Dr. Dustin Edwards
             </a>
           </span>
