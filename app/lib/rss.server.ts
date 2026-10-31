@@ -4,7 +4,7 @@
 // worker origin. guid is permanent + isPermaLink=false. Served from resource routes.
 import type { Post, ShowConfig, Soundbite } from "~/db/schema";
 import type { GuestView } from "~/lib/types";
-import { cdata, escapeXml, rfc822 } from "@drdustinedwards/site-helpers/xml";
+import { absolutizeUrls, cdata, escapeXml, rfc822 } from "@drdustinedwards/site-helpers/xml";
 import { formatHMS } from "~/lib/format";
 import { OP3_ORIGIN } from "~/lib/site";
 
@@ -93,6 +93,8 @@ function personXml(g: GuestView, origin: string): string {
 
 function itemXml(e: Post, origin: string, guests: GuestView[], soundbites: Soundbite[] = []): string {
   const url = `${origin}/${e.slug}`;
+  // The rendered body (listFullPosts), its /media sizes made absolute: a feed item is read on another origin.
+  const body = absolutizeUrls(e.bodyHtml ?? "", origin);
   const people = guests.map((g) => personXml(g, origin)).join("");
   const transcript = e.transcript
     ? `<podcast:transcript url="${url}/transcript.vtt" type="text/vtt"/>`
@@ -115,8 +117,8 @@ function itemXml(e: Post, origin: string, guests: GuestView[], soundbites: Sound
     <link>${url}</link>
     <guid isPermaLink="false">${escapeXml(e.guid ?? url)}</guid>
     <pubDate>${rfc822(e.publishedAt)}</pubDate>
-    <description>${cdata(e.excerpt ?? e.body)}</description>
-    <content:encoded>${cdata(e.body)}</content:encoded>
+    <description>${cdata(e.excerpt ?? body)}</description>
+    <content:encoded>${cdata(body)}</content:encoded>
     <enclosure url="${escapeXml(op3Enclosure(e.audioUrl!))}" length="${e.audioByteSize ?? 0}" type="${e.audioMimeType ?? "audio/mpeg"}"/>
     <itunes:duration>${formatHMS(e.audioDuration)}</itunes:duration>
     <itunes:explicit>${e.explicit ? "true" : "false"}</itunes:explicit>

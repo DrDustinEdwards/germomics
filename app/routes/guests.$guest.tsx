@@ -15,6 +15,7 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
     path: location.pathname,
     title: `${name} · Germomics`,
     description: `Germomics episodes with ${name}.`,
+    pageType: "CollectionPage",
     image: loaderData?.share,
   });
 }
@@ -78,7 +79,7 @@ export default function GuestPage({ loaderData }: Route.ComponentProps) {
       </div>
       <div className="grid gap-3">
         {episodes.map((post) => (
-          <PostCard key={post.id} post={post} queue={tracks} />
+          <PostCard key={post.id} post={post} queue={tracks} heading="h2" />
         ))}
         {episodes.length === 0 ? <p className="text-muted">No episodes with this guest.</p> : null}
       </div>

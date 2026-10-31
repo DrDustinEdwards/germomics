@@ -24,7 +24,7 @@ function oneLine(value: string | null | undefined, max = 160): string {
 }
 
 function summaryFor(p: Post): string {
-  return oneLine(p.excerpt ?? p.seoDescription ?? p.body);
+  return oneLine(p.excerpt ?? p.seoDescription ?? p.bodyHtml);
 }
 
 /** A post marked noindex (site-api's search field) stays out of llms.txt and llms-full.txt. */
@@ -69,7 +69,7 @@ export function buildLlmsTxt(
 }
 
 function fullSection(p: Post, origin: string): string {
-  const body = oneLine(p.body, FULL_BODY_CHARS);
+  const body = oneLine(p.bodyHtml, FULL_BODY_CHARS);
   const date = formatDate(p.publishedAt);
   return [
     `## ${p.title}`,

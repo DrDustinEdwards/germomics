@@ -342,7 +342,7 @@ export function FigureLightbox({
 }) {
   const [open, setOpen] = useState<{ src: string; alt: string } | null>(null);
   const [shown, setShown] = useState(false);
-  const triggerRef = useRef<HTMLImageElement | null>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
 
   // Turn each figure image into a keyboard- and pointer-activatable "enlarge" trigger.
@@ -351,7 +351,8 @@ export function FigureLightbox({
     if (!root) return;
     const imgs = Array.from(root.querySelectorAll<HTMLImageElement>("figure img"));
     const openFrom = (img: HTMLImageElement) => {
-      triggerRef.current = img;
+      // Focus goes back to what took it: the link around the picture, or the picture itself.
+      triggerRef.current = img.closest<HTMLElement>("a.image-link") ?? img;
       setOpen({ src: largestSrc(img), alt: img.getAttribute("alt") || "" });
     };
     const onClick = (e: Event) => openFrom(e.currentTarget as HTMLImageElement);
@@ -361,15 +362,32 @@ export function FigureLightbox({
         openFrom(e.currentTarget as HTMLImageElement);
       }
     };
+    // Prelum wraps a picture in a link to its original (a.image-link), which already takes focus and Enter: that
+    // link opens the lightbox instead, and keeps its href for a reader without script.
+    const onLink = (e: Event) => {
+      const img = (e.currentTarget as HTMLElement).querySelector("img");
+      if (!img) return;
+      e.preventDefault();
+      openFrom(img);
+    };
+    const links: HTMLAnchorElement[] = [];
     for (const img of imgs) {
+      const link = img.closest<HTMLAnchorElement>("a.image-link");
+      img.style.cursor = "zoom-in";
+      if (link) {
+        link.setAttribute("aria-label", `Enlarge image: ${img.getAttribute("alt") || "image"}`);
+        link.addEventListener("click", onLink);
+        links.push(link);
+        continue;
+      }
       img.setAttribute("role", "button");
       img.setAttribute("tabindex", "0");
       img.setAttribute("aria-label", `Enlarge image: ${img.getAttribute("alt") || "image"}`);
-      img.style.cursor = "zoom-in";
       img.addEventListener("click", onClick);
       img.addEventListener("keydown", onKey as EventListener);
     }
     return () => {
+      for (const link of links) link.removeEventListener("click", onLink);
       for (const img of imgs) {
         img.removeEventListener("click", onClick);
         img.removeEventListener("keydown", onKey as EventListener);

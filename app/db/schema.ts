@@ -21,8 +21,8 @@ import {
 import { sql, relations } from "drizzle-orm";
 // JSON shapes (stored as TEXT, typed at the edge). Defined client-safe in lib/types and
 // re-exported here so loaders and components share one source of truth.
-import type { Chapter, Guest, Host, KeyMoment, PersonLink, PodcastCategory, Source } from "~/lib/types";
-export type { Chapter, Guest, Host, KeyMoment, PersonLink, PodcastCategory, Source };
+import type { BodyMeta, Chapter, Guest, Host, KeyMoment, PersonLink, PodcastCategory, Source } from "~/lib/types";
+export type { BodyMeta, Chapter, Guest, Host, KeyMoment, PersonLink, PodcastCategory, Source };
 
 // ============================================================
 // 1. Content (live)
@@ -56,7 +56,7 @@ export const posts = sqliteTable(
     coverAlt: text("cover_alt"),
     ogImage: text("og_image"),
     ogImageAlt: text("og_image_alt"),
-    // site-api's canonical and noindex search fields (0017).
+    // site-api's canonical and noindex search fields (0018).
     canonical: text("canonical"),
     noindex: integer("noindex", { mode: "boolean" }).notNull().default(false),
     createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
@@ -85,6 +85,12 @@ export const posts = sqliteTable(
     sources: text("sources", { mode: "json" }).$type<Source[]>(), // references/credits + image credits
     keyMoments: text("key_moments", { mode: "json" }).$type<KeyMoment[]>(), // "In this episode"
     readingTime: integer("reading_time"), // minutes, computed from body at save
+
+    // 0016: body is Markdown; beside it, Prelum's render of it and the RENDER_VERSION it was rendered with
+    // (app/lib/render.server.ts). A NULL renderVersion is a row not converted yet, whose body is still HTML.
+    bodyHtml: text("body_html"),
+    bodyMeta: text("body_meta", { mode: "json" }).$type<BodyMeta>(),
+    renderVersion: text("render_version"),
   },
   (t) => ({
     slugIdx: uniqueIndex("posts_slug_idx").on(t.slug),
@@ -205,6 +211,9 @@ export const contentBlocks = sqliteTable(
     description: text("description"),
     status: text("status", { enum: ["draft", "published"] }).notNull().default("draft"),
     updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+    // 0016: a page's value is Markdown, rendered as posts' bodies are (NULL renderVersion: still HTML).
+    bodyHtml: text("body_html"),
+    renderVersion: text("render_version"),
   },
   (t) => ({ kindIdx: index("content_blocks_kind_idx").on(t.kind, t.status) }),
 );

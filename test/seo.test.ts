@@ -5,24 +5,22 @@ import {
   buildOrganizationLd,
   buildPersonLd,
   buildPodcastSeriesLd,
-  extractFaqLd,
-  headingId,
-  readingTime,
   stripHtml,
-  tableOfContents,
   wasUpdatedAfterPublish,
 } from "~/lib/seo";
 
 // Search and answer engines read these: the schema.org nodes mirror the page, so a wrong field or a
 // leaked <script> in a description is seen by every crawler. Heading, outline and anchor behavior
-// already pinned in post-render.test.ts is not repeated here.
+// already pinned in post-render.test.ts is not repeated here; the reading time, ids, outline and FAQ pairs are
+// Prelum's and tested there.
 const ORIGIN = "https://germomics.com";
 const post = (over: Partial<Post>): Post =>
   ({
     kind: "article",
     slug: "pump",
     title: "The Pump",
-    body: "<p>Body text</p>",
+    body: "Body text",
+    bodyHtml: "<p>Body text</p>",
     excerpt: null,
     seoDescription: null,
     publishedAt: "2024-01-02T00:00:00.000Z",
@@ -45,37 +43,8 @@ describe("stripHtml", () => {
     expect(stripHtml("<p>One   <b>two</b></p>\n<p>three &amp; four &#39;x&#39;</p>")).toBe("One two three four x");
     expect(stripHtml("a<script>alert(1)\nx</script>b<STYLE>p{}</STYLE>c")).toBe("a b c");
     expect(stripHtml("")).toBe("");
-  });
-});
-
-describe("readingTime", () => {
-  it("is about 200 words a minute, never under one minute", () => {
-    const words = (n: number) => `<p>${Array.from({ length: n }, () => "w").join(" ")}</p>`;
-    expect(readingTime("")).toBe(1);
-    expect(readingTime(words(50))).toBe(1);
-    expect(readingTime(words(299))).toBe(1);
-    expect(readingTime(words(300))).toBe(2);
-    expect(readingTime(words(1000))).toBe(5);
-    expect(readingTime("<p>" + "w ".repeat(400) + "</p><script>" + "x ".repeat(5000) + "</script>")).toBe(2);
-  });
-});
-
-describe("headingId", () => {
-  it("lowercases, joins words with single dashes, trims them, and caps at 64 characters", () => {
-    expect(headingId("The <em>Broad</em> Street Pump!")).toBe("the-broad-street-pump");
-    expect(headingId("  --Hello,   World--  ")).toBe("hello-world");
-    expect(headingId("Über straße 1854")).toBe("über-straße-1854");
-    expect(headingId("a".repeat(100))).toHaveLength(64);
-    expect(headingId("!!!")).toBe("");
-  });
-});
-
-describe("tableOfContents", () => {
-  it("skips empty headings and stamps each entry with its level and the same id the anchors use", () => {
-    expect(tableOfContents("<H2>One</H2><h3 class='x'>Two <b>b</b></h3><h2> </h2><h4>No</h4>")).toEqual([
-      { level: 2, id: "one", text: "One" },
-      { level: 3, id: "two-b", text: "Two b" },
-    ]);
+    // Prelum's output: the heading's "#" link is not text, and a hex entity goes like the others.
+    expect(stripHtml('<h2 id="a">A &#x26; B<a class="heading-anchor" aria-label="Link to section: A" href="#a">#</a></h2><p>c</p>')).toBe("A B c");
   });
 });
 
@@ -99,7 +68,7 @@ describe("buildJsonLd", () => {
     const d = (over: Partial<Post>) => (buildJsonLd({ ...base, post: post(over) }) as { description: string }).description;
     expect(d({ seoDescription: "SEO", excerpt: "Ex" })).toBe("SEO");
     expect(d({ excerpt: "Ex" })).toBe("Ex");
-    expect(d({ body: `<p>${"x".repeat(300)}</p><script>bad()</script>` })).toBe("x".repeat(200));
+    expect(d({ bodyHtml: `<p>${"x".repeat(300)}</p><script>bad()</script>` })).toBe("x".repeat(200));
   });
 
   it("leaves out the image and keywords when there are none, and falls back to the schedule date", () => {
@@ -181,33 +150,6 @@ describe("site-level JSON-LD", () => {
       knowsAbout: ["x"],
       sameAs: ["https://o.example"],
     });
-  });
-});
-
-describe("extractFaqLd", () => {
-  const html = (faq: string) => `<h2>Intro</h2><p>x</p>${faq}<h2>After</h2><h3>Not a question</h3><p>nope</p>`;
-
-  it("reads question and answer pairs from the FAQ section only", () => {
-    const ld = extractFaqLd(html("<h2>Frequently asked questions</h2><h3>What is it?</h3><p>A <b>pump</b>.</p><h3>Why?</h3><p>Cholera.</p><p>More.</p>"));
-    expect(ld).toEqual({
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: [
-        { "@type": "Question", name: "What is it?", acceptedAnswer: { "@type": "Answer", text: "A pump ." } },
-        { "@type": "Question", name: "Why?", acceptedAnswer: { "@type": "Answer", text: "Cholera. More." } },
-      ],
-    });
-  });
-
-  it("accepts the short heading, a section running to the end of the body, and skips pairs missing either half", () => {
-    const ld = extractFaqLd("<H2 class='x'> FAQ </H2><h3>Q1</h3><p>A1</p><h3>Empty answer</h3><h3>Q3</h3><p>A3</p>") as { mainEntity: { name: string }[] };
-    expect(ld.mainEntity.map((q) => q.name)).toEqual(["Q1", "Q3"]);
-  });
-
-  it("returns null with no FAQ heading or no usable pairs", () => {
-    expect(extractFaqLd("<h2>Questions</h2><h3>Q</h3><p>A</p>")).toBeNull();
-    expect(extractFaqLd("<h2>FAQ</h2><p>No questions here</p>")).toBeNull();
-    expect(extractFaqLd("<h2>FAQ</h2><h3>Q only</h3>")).toBeNull();
   });
 });
 

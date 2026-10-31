@@ -1,7 +1,7 @@
-// The text Carrel edits for one article: a small front matter block, then the body. The body is
-// the site's own sanitized HTML, which is valid markdown, so Carrel's markdown source is a faithful
-// copy of what the site stores. Front matter values are JSON, so any title or excerpt round-trips.
-// The reader and writer are site-api's jsonSource, given this field list.
+// The text Carrel edits for one article or episode: a small front matter block, then the body, the Markdown the
+// site stores and renders with Prelum (app/lib/render.server.ts). Front matter values are JSON, so any title or
+// excerpt round-trips. The reader and writer are site-api's jsonSource, given this field list. A page's source is
+// the same with its title alone.
 //
 //   ---
 //   title: "Notes on the Broad Street Pump"
@@ -10,7 +10,7 @@
 //   coverImage: "https://images.germomics.com/..."
 //   searchTitle: "..."
 //   ---
-//   <p>Body HTML...</p>
+//   The body, in Markdown...
 //
 // The search fields carry site-api's shared names (searchTitle, description, image, imageAlt, canonical, noindex)
 // over the posts columns seo_title, seo_description, og_image, og_image_alt, canonical and noindex. A source written
@@ -99,4 +99,17 @@ export function parseSource(source: string): ArticleSource {
     fields.noindex ??= false;
   }
   return { ...fields, body };
+}
+
+const PAGE_SOURCE = jsonSource({ title: "text" });
+
+/** A page's source: its title, then its Markdown. */
+export function renderPageSource(page: { title: string | null; value: string }): string {
+  return PAGE_SOURCE.write({ title: page.title || undefined }, page.value);
+}
+
+/** A page's title (null when the source leaves it out) and Markdown. */
+export function parsePageSource(source: string): { title: string | null; body: string } {
+  const { values, body } = PAGE_SOURCE.read(source);
+  return { title: values.title ?? null, body };
 }

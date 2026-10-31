@@ -1,32 +1,27 @@
 // /season/:num - a real, crawlable per-season episode list (the 301 target for the old /season-1/).
-// SSR; episodes ascending by episode number; BreadcrumbList schema.
+// SSR; episodes ascending by episode number; its trail runs through Episodes.
 import type { Route } from "./+types/season.$num";
 import { getEnv } from "~/lib/context.server";
 import { episodesInSeason, toPlayerTrack } from "~/lib/posts.server";
-import { breadcrumbs, jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { pageHead } from "~/lib/seo";
-import { SITE_ORIGIN } from "~/lib/site";
 import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "Season · Germomics" }];
   const { num } = loaderData;
-  return [
-    ...pageHead({
-      path: `/season/${num}`,
-      title: `Season ${num} · Germomics`,
-      socialTitle: `Germomics Season ${num}`,
-      description: `Germomics episodes from Season ${num}.`,
-    }),
-    jsonLd(
-      breadcrumbs(SITE_ORIGIN, [
-        { name: "Home", path: "/" },
-        { name: "Episodes", path: "/episodes" },
-        { name: `Season ${num}`, path: `/season/${num}` },
-      ]),
-    ),
-  ];
+  return pageHead({
+    path: `/season/${num}`,
+    title: `Season ${num} · Germomics`,
+    socialTitle: `Germomics Season ${num}`,
+    description: `Germomics episodes from Season ${num}.`,
+    pageType: "CollectionPage",
+    breadcrumbs: [
+      { name: "Germomics", path: "/" },
+      { name: "Episodes", path: "/episodes" },
+      { name: `Season ${num}`, path: `/season/${num}` },
+    ],
+  });
 }
 
 export async function loader({ params, context }: Route.LoaderArgs) {
@@ -48,7 +43,7 @@ export default function Season({ loaderData }: Route.ComponentProps) {
       <h1 className="mb-6 font-mono text-sm font-medium uppercase tracking-[0.18em] text-accent">Season {num}</h1>
       <div className="grid gap-3">
         {episodes.map((post) => (
-          <PostCard key={post.id} post={post} queue={tracks} />
+          <PostCard key={post.id} post={post} queue={tracks} heading="h2" />
         ))}
       </div>
     </div>

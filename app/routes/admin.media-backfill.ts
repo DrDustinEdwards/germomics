@@ -9,9 +9,10 @@
 import type { Route } from "./+types/admin.media-backfill";
 import { getEnv } from "~/lib/context.server";
 import { backfillMedia } from "~/lib/media/backfill.server";
+import { ADMIN_FORM, readForm } from "~/lib/body.server";
 
 export async function action({ request, context }: Route.ActionArgs) {
-  const form = await request.formData();
+  const form = await readForm(request, ADMIN_FORM);
   const cursor = String(form.get("cursor") ?? "") || null;
   const result = await backfillMedia(getEnv(context), { cursor });
   return Response.json({ ok: true, ...result, added: result.added.length });

@@ -6,8 +6,9 @@ import type { Post } from "~/db/schema";
 import type { PlayerTrack } from "~/lib/types";
 
 // A single content card for listings. Episodes get a play button (their track is the one in
-// `queue` with the post's id); articles get a read icon.
-export function PostCard({ post, queue }: { post: Post; queue?: PlayerTrack[] }) {
+// `queue` with the post's id); articles get a read icon. `heading` is h2 on a page where the cards
+// sit right under the h1, h3 under a section's h2.
+export function PostCard({ post, queue, heading: Heading = "h3" }: { post: Post; queue?: PlayerTrack[]; heading?: "h2" | "h3" }) {
   const isEpisode = post.kind === "episode";
   const track = queue?.find((t) => t.id === post.id);
   return (
@@ -34,11 +35,11 @@ export function PostCard({ post, queue }: { post: Post; queue?: PlayerTrack[] })
             <span className="tabular-nums">{post.readingTime} min read</span>
           ) : null}
         </div>
-        <h3 className="mt-1 font-display text-lg font-medium">
+        <Heading className="mt-1 font-display text-lg font-medium">
           <Link to={`/${post.slug}`} className="text-ink hover:text-brand">
             {post.title}
           </Link>
-        </h3>
+        </Heading>
         {post.excerpt ? (
           <p className="mt-1 line-clamp-2 text-sm text-muted">{post.excerpt}</p>
         ) : null}

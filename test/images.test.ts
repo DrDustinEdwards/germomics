@@ -2,10 +2,10 @@ import { env } from "cloudflare:test";
 import { beforeAll, describe, expect, it } from "vitest";
 import { RouterContextProvider } from "react-router";
 import { cloudflareContext } from "~/lib/context.server";
-import { imageSet, responsiveBody } from "~/lib/images.server";
+import { imageSet } from "~/lib/images.server";
 
-// Responsive images (app/lib/images.ts): a published season 1 figure becomes AVIF and WebP sizes
-// from /media, and /media serves BLOG_IMAGES. The widths, formats and refusals are site-runtime's
+// Responsive images (app/lib/images.ts): a cover gets its crops from /media, and /media serves BLOG_IMAGES.
+// A body's figures are sized when it is rendered (test/post-render.test.ts). The widths, formats and refusals are site-runtime's
 // and tested there; this is the site's half, which no other test reaches.
 const e = env as unknown as Env;
 const IMG = "https://images.germomics.com";
@@ -23,22 +23,6 @@ beforeAll(async () => {
   ({ loader } = await import("~/routes/media.$"));
   await e.BLOG_IMAGES.put(KEY, new Uint8Array([1, 2, 3]), { httpMetadata: { contentType: "image/webp" } });
 }, 120_000);
-
-describe("a body figure", () => {
-  it("becomes a picture of /media sizes, read from the pre-made file's name and the figure's shape", async () => {
-    const html =
-      `<figure><img src="${IMG}/${KEY}" srcset="${IMG}/a-sky-full-of-sars/coronavirus-400.webp 400w" sizes="400px" alt="Coronavirus" width="400" height="300" loading="lazy"><figcaption>C</figcaption></figure>` +
-      `<figure><img src="${IMG}/missing.webp" alt="Gone" width="400" height="300"></figure>`;
-    const out = await responsiveBody(e, html);
-    expect(out).toContain('<source type="image/avif" srcset="/media/a-sky-full-of-sars/coronavirus-795.webp?w=400&amp;f=avif 400w, ');
-    expect(out).toContain('src="/media/a-sky-full-of-sars/coronavirus-795.webp?w=400"');
-    expect(out).toContain('width="400" height="300" alt="Coronavirus"');
-    // Wider than the 795px original is never offered.
-    expect(out).not.toContain("w=800");
-    // A file the bucket does not hold is left exactly as it was.
-    expect(out).toContain(`<img src="${IMG}/missing.webp" alt="Gone" width="400" height="300">`);
-  });
-});
 
 describe("a cover", () => {
   it("gets 2:1 crops when its upload recorded a size, and stays the plain original when not", async () => {

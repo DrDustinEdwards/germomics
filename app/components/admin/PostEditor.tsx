@@ -1,5 +1,6 @@
 // The ONE kind-aware editor (spec §A) used by both articles and episodes. Two-column layout:
-// title + body on the left, sidebar cards on the right; episode-only cards render only when
+// title + the body's preview on the left, sidebar cards on the right; the body is written in Carrel, so it is
+// shown here read-only, as the site renders it, with a link to edit it there; episode-only cards render only when
 // kind=episode. Sticky action bar shows save state. Autosaves (debounced) and guards unsaved
 // navigation. State is serialized to a single JSON `payload` the route action parses.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -14,7 +15,6 @@ import type { Post } from "~/db/schema";
 import type { Chapter, Guest, KeyMoment, Source } from "~/lib/types";
 import { slugifyGuest } from "~/lib/posts";
 import { Card, Field, Button, Badge, inputCx } from "./ui";
-import { RichTextEditor } from "./RichTextEditor";
 import { ImageField } from "./ImageField";
 import { AudioField, type AudioState } from "./AudioField";
 import { TranscriptField } from "./TranscriptField";
@@ -24,8 +24,8 @@ import { SourcesEditor } from "./SourcesEditor";
 import { GuestsField, type PersonLite, type SelectedPerson } from "./GuestsField";
 import { SeoPanel } from "./SeoPanel";
 import { VersionHistory } from "./VersionHistory";
-import { AiAssist } from "./AiAssist";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
+import { carrelEditUrl } from "~/lib/site";
 
 export type EditorData = {
   post: Post;
@@ -44,7 +44,6 @@ type FormState = {
   slug: string;
   slugTouched: boolean;
   excerpt: string;
-  body: string;
   tags: string;
   sources: Source[];
   featured: boolean;
@@ -76,7 +75,6 @@ function initialState(d: EditorData): FormState {
     slug: p.slug ?? "",
     slugTouched: true,
     excerpt: p.excerpt ?? "",
-    body: p.body ?? "",
     tags: (p.tags ?? []).join(", "),
     sources: p.sources ?? [],
     featured: !!p.featured,
@@ -139,7 +137,6 @@ export function PostEditor({ data }: { data: EditorData }) {
       title: form.title,
       slug: form.slug,
       excerpt: form.excerpt,
-      body: form.body,
       tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
       sources: form.sources,
       featured: form.featured,
@@ -301,21 +298,28 @@ export function PostEditor({ data }: { data: EditorData }) {
             )}
           </Field>
 
-          {isEpisode ? (
-            <AiAssist<string>
-              kind="shownotes"
-              label="Generate show notes"
-              transcript={form.transcript}
-              available={data.aiAvailable}
-              hasTranscript={!!form.transcript.trim()}
-              hasExisting={!!form.body.trim()}
-              confirmReplaceLabel="body"
-              onAccept={(html) => set("body", html)}
-              renderPreview={(html) => <BodyRenderer html={html} />}
-            />
-          ) : null}
-
-          <RichTextEditor value={form.body} onChange={(html) => set("body", html)} postId={post.id} />
+          <Card title="Body" icon={<FileText size={15} aria-hidden />}>
+            <div className="space-y-3">
+              <p className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted">
+                <span>Written in Carrel. This is the body as the site shows it.</span>
+                <a
+                  href={carrelEditUrl(post.slug)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-mono text-xs text-accent hover:underline"
+                >
+                  <ExternalLink size={12} aria-hidden /> Edit in Carrel
+                </a>
+              </p>
+              {post.bodyHtml ? (
+                <div className="max-h-[32rem] overflow-y-auto rounded-xl border border-border bg-card p-4">
+                  <BodyRenderer html={post.bodyHtml} />
+                </div>
+              ) : (
+                <p className="font-mono text-xs text-muted">No body yet.</p>
+              )}
+            </div>
+          </Card>
 
           <Field
             label="Excerpt"
