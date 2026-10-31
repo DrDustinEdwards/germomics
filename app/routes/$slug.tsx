@@ -14,8 +14,7 @@ import {
   pageHead,
   stripHtml,
 } from "~/lib/seo";
-import { breadcrumbs, jsonLd } from "@drdustinedwards/site-helpers/schema";
-import { SITE_ORIGIN } from "~/lib/site";
+import { jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { postImages } from "~/lib/images.server";
 import { PostDetail, type DetailData } from "~/components/content/PostDetail";
 
@@ -23,6 +22,9 @@ export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData?.post) return [{ title: "Not found · Germomics" }];
   const { post, author, seriesTitle, guests, hosts, ogImage } = loaderData;
   const isEpisode = post.kind === "episode";
+  const season = isEpisode && post.seasonNumber
+    ? [{ name: `Season ${post.seasonNumber}`, path: `/season/${post.seasonNumber}` }]
+    : [];
   const faq = extractFaqLd(post.body);
   return [
     // Episodes are editorial articles with audio on this site, so og:type is article (the prior
@@ -31,19 +33,18 @@ export function meta({ loaderData }: Route.MetaArgs) {
       path: `/${post.slug}`,
       title: `${post.seoTitle ?? post.title} · Germomics`,
       socialTitle: post.title,
-      description: post.seoDescription ?? post.excerpt ?? stripHtml(post.body),
+      description: post.seoDescription || post.excerpt || stripHtml(post.body) || `${post.title}, on Germomics.`,
       image: ogImage,
       type: "article",
       article: { published: post.publishedAt ?? post.publishAt, modified: post.updatedAt, author, tags: post.tags ?? [] },
+      breadcrumbs: [
+        { name: "Germomics", path: "/" },
+        isEpisode ? { name: "Episodes", path: "/episodes" } : { name: "Writing", path: "/writing" },
+        ...season,
+        { name: post.title, path: `/${post.slug}` },
+      ],
     }),
     jsonLd(buildJsonLd({ post, author, seriesTitle, guests, hosts })),
-    jsonLd(
-      breadcrumbs(SITE_ORIGIN, [
-        { name: "Home", path: "/" },
-        isEpisode ? { name: "Episodes", path: "/episodes" } : { name: "Writing", path: "/writing" },
-        { name: post.title, path: `/${post.slug}` },
-      ]),
-    ),
     ...(faq ? [jsonLd(faq)] : []),
   ];
 }

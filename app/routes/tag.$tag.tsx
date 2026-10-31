@@ -10,6 +10,7 @@ export function meta({ params, location }: Route.MetaArgs) {
     path: location.pathname,
     title: `#${params.tag} · Germomics`,
     description: `Germomics episodes and writing tagged ${params.tag}.`,
+    pageType: "CollectionPage",
   });
 }
 
