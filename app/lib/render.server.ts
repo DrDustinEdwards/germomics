@@ -13,7 +13,7 @@
 //
 // Prelum is imported on first use, so the public routes that only read stored HTML never load the pipeline.
 import type * as Prelum from "@drdustinedwards/site-helpers/render/nomath";
-import { and, eq, inArray, isNotNull, ne } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, like, ne, sql } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { contentBlocks, media, posts, type Post } from "~/db/schema";
 import { imageKeyOf, images, mediaPath, type ImageUseName } from "~/lib/images";
@@ -28,7 +28,14 @@ RENDER_VERSION satisfies typeof Prelum.RENDER_VERSION;
 const EMPTY_META: BodyMeta = { toc: [], faq: [] };
 
 /** One library picture's size, as the media table holds it. */
-type MediaSize = { key: string; width: number | null; height: number | null; focus: string | null };
+type MediaSize = {
+  key: string;
+  width: number | null;
+  height: number | null;
+  focus: string | null;
+  /** The bytes' hash, the version a size URL carries (`v=`), so a replaced file is a new URL. */
+  sha256: string | null;
+};
 /** The library rows for some keys. */
 export type MediaLookup = (keys: string[]) => Promise<MediaSize[]>;
 
@@ -38,7 +45,7 @@ export function libraryMedia(env: Env): MediaLookup {
     keys.length === 0
       ? []
       : getDb(env)
-          .select({ key: media.key, width: media.width, height: media.height, focus: media.focus })
+          .select({ key: media.key, width: media.width, height: media.height, focus: media.focus, sha256: media.sha256 })
           .from(media)
           .where(inArray(media.key, keys));
 }
@@ -69,13 +76,15 @@ export async function renderMarkdown(body: string, lookup: MediaLookup): Promise
     const row = key ? rows.get(key) : undefined;
     if (!row) return null;
     const use: ImageUseName = wide.has(src) ? "leadFigure" : "figure";
-    return images.attributes({ src: mediaPath(row.key), width: row.width, height: row.height, focus: row.focus }, use);
+    return images.attributes({ src: mediaPath(row.key), width: row.width, height: row.height, focus: row.focus, version: row.sha256 }, use);
   };
   const out = await render({
     file: "body.md",
     body,
     async resolveImage(src) {
       const attrs = attributesOf(src);
+      // No placeholder to Prelum yet: it writes one as a bare background-image (img.has-lqip), which needs Capsomer's
+      // picture.css (0.57) to size it, and this site does not load that stylesheet.
       return attrs?.width && attrs.height ? { width: attrs.width, height: attrs.height } : null;
     },
     options: {
@@ -134,6 +143,43 @@ export async function storedBody(env: Env, row: Stored): Promise<{ html: string;
 /** The page's table of contents: the body's h2s, shown one level down as the page demotes them (BodyRenderer). */
 export function pageToc(meta: BodyMeta): Array<{ level: 2 | 3; id: string; text: string }> {
   return meta.toc.filter((t) => t.depth === 2).map((t) => ({ level: 3, id: t.id, text: t.text }));
+}
+
+/**
+ * Re-renders the converted posts and pages whose Markdown names a library file, after its bytes change (a replace,
+ * turn, revert or shrink). Their stored HTML carries the file's version in its size URLs (`v=`), so the re-render is
+ * what moves them to the new picture; without it a browser keeps the old one for the year the URL is cached.
+ * Returns how many rows it re-rendered; a row that no longer renders is logged and left as it is.
+ */
+export async function rerenderUsing(env: Env, key: string): Promise<number> {
+  const db = getDb(env);
+  const lookup = libraryMedia(env);
+  const pattern = `%${key.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+  const names = (col: typeof posts.body | typeof contentBlocks.value) => sql`${like(col, pattern)} ESCAPE '\\'`;
+  const [postRows, pageRows] = await Promise.all([
+    db.select({ id: posts.id, body: posts.body }).from(posts).where(and(isNotNull(posts.renderVersion), names(posts.body))),
+    db.select({ key: contentBlocks.key, value: contentBlocks.value }).from(contentBlocks).where(and(eq(contentBlocks.kind, "page"), isNotNull(contentBlocks.renderVersion), names(contentBlocks.value))),
+  ]);
+  let done = 0;
+  for (const p of postRows) {
+    try {
+      const r = await renderMarkdown(p.body, lookup);
+      await db.update(posts).set({ bodyHtml: r.html, bodyMeta: r.meta, renderVersion: r.renderVersion, readingTime: r.readingMinutes }).where(eq(posts.id, p.id));
+      done += 1;
+    } catch (err) {
+      console.error(JSON.stringify({ event: "render.media-failed", what: `post ${p.id}`, key, error: err instanceof Error ? err.message : String(err) }));
+    }
+  }
+  for (const b of pageRows) {
+    try {
+      const r = await renderMarkdown(b.value, lookup);
+      await db.update(contentBlocks).set({ bodyHtml: r.html, renderVersion: r.renderVersion }).where(eq(contentBlocks.key, b.key));
+      done += 1;
+    } catch (err) {
+      console.error(JSON.stringify({ event: "render.media-failed", what: b.key, key, error: err instanceof Error ? err.message : String(err) }));
+    }
+  }
+  return done;
 }
 
 /**

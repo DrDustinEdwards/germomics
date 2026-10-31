@@ -206,7 +206,15 @@ describe("the writes", () => {
     // A quarter turn of a picture a page uses would swap the width and height its figures record.
     await usePost("figure", `<img src="${item.url}" width="400" height="300">`);
     await expect(media.transform!(item.id, { op: "rotate-270", asNewFile: false, expectedVersion: replaced.item.version!, changeId: "c" })).rejects.toBeInstanceOf(RefusedError);
+    // A converted post that shows it is rendered again, so its size URLs carry the new bytes' version (v=) and no
+    // browser keeps the year-cached old picture.
+    await e.DB.prepare("INSERT INTO posts (kind, title, slug, body, status, render_version, body_html) VALUES ('article', 'md', 'md', ?, 'draft', '0', '')")
+      .bind(`![A vibrio](${item.url})`)
+      .run();
     expect((await media.transform!(item.id, { op: "flip-h", asNewFile: false, expectedVersion: replaced.item.version!, changeId: "c" })).item.width).toBe(640);
+    const { sha256 } = (await e.DB.prepare("SELECT sha256 FROM media WHERE key = ?").bind(item.id).first<{ sha256: string }>())!;
+    const { body_html } = (await e.DB.prepare("SELECT body_html FROM posts WHERE slug = 'md'").first<{ body_html: string }>())!;
+    expect(body_html).toContain(`v=${sha256.slice(0, 12)}`);
   });
 
   it("answers what changed since a cursor, each file once and as it is now", async () => {
