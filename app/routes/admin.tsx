@@ -23,6 +23,9 @@ import type { Theme } from "~/lib/types";
 
 const PRIVATE = { "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex, nofollow" };
 
+// The admin is an app: it and every page under it hydrate on load (lib/hydration.ts).
+export const handle = { hydrate: true };
+
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ request, context }, next) => {
     const refused = refuseCrossSite(request, PRIVATE);

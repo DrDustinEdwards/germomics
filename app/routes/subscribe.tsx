@@ -1,7 +1,7 @@
-import { useState } from "react";
 import { Form } from "react-router";
 import { Link } from "capsomer/react/link";
 import { Rss, Check, Copy, Mail, Smartphone } from "lucide-react";
+import { CopyButton } from "~/components/content/CopyLink";
 import { ExternalCue } from "~/components/ExternalCue";
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/subscribe";
@@ -58,17 +58,6 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
   const sl = loaderData.subscribeLinks as Record<string, string>;
   const primary = PRIMARY_KEYS.filter((k) => sl[k]);
   const secondary = SECONDARY_KEYS.filter((k) => sl[k]);
-  const [copied, setCopied] = useState(false);
-
-  const copyRss = async () => {
-    try {
-      await navigator.clipboard.writeText(`${window.location.origin}/feed/podcast/`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch {
-      /* clipboard blocked */
-    }
-  };
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -138,10 +127,7 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
             <Rss size={14} aria-hidden /> RSS feed
             <ExternalCue />
           </a>
-          <button type="button" onClick={copyRss} className={chip}>
-            {copied ? <Check size={14} aria-hidden /> : <Copy size={14} aria-hidden />}
-            {copied ? "Copied" : "Copy RSS link"}
-          </button>
+          <CopyButton path="/feed/podcast/" label="Copy RSS link" icon={Copy} className={chip} />
         </div>
       </section>
 

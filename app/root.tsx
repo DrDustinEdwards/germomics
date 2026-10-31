@@ -7,8 +7,9 @@ import {
   ScrollRestoration,
   UNSAFE_FrameworkContext,
   useLocation,
+  useMatches,
 } from "react-router";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { iconLinks } from "@drdustinedwards/site-helpers/icons";
 
 import type { Route } from "./+types/root";
@@ -18,8 +19,16 @@ import { loadSettings, loadSnippets, setting } from "~/lib/content.server";
 import { getShowConfig } from "~/lib/show.server";
 import { listSeasons } from "~/lib/posts.server";
 import { themeInitScript } from "~/lib/theme";
+import {
+  HYDRATED_ATTRIBUTE,
+  HYDRATED_EVENT,
+  HYDRATE_ON_INTENT_ID,
+  STREAM_BUFFER_SCRIPT,
+  routeHydrates,
+} from "~/lib/hydration";
 import { PRELOADS } from "~/lib/preloads";
 import { socialLinks } from "~/lib/seo";
+import { NO_PREFETCH } from "~/lib/site";
 import { PlayerProvider } from "~/components/player/player-context";
 import { PlayerDock } from "~/components/player/PlayerDock";
 import { Header } from "~/components/chrome/Header";
@@ -72,11 +81,41 @@ export async function loader({ context }: Route.LoaderArgs) {
   };
 }
 
-// Never prefetched on hover, beyond the family's NEVER_PREFETCH (/admin, /api and the rest): /unsubscribe, a per-reader
-// token page reached from email whose action unsubscribes, and the tokenized draft previews.
-const NO_PREFETCH = ["/unsubscribe", "/preview"];
+const isServer = typeof document === "undefined";
+// In the browser the page hydrates once, so whether it was deferred is fixed then and holds for every client-side
+// navigation after it: the hydration scripts below stay one tree, never remounted.
+let clientDeferred: boolean | undefined;
+
+/**
+ * React Router's hydration scripts. A route that hydrates on load gets them as usual. Any other page gets them inside
+ * a <noscript>, which a browser running script keeps as inert text (React renders a <link> there in place rather than
+ * hoisting it to the head), so the page downloads no React; /site.js runs them when a reader presses play
+ * (app/site/hydrate.ts). Once such a page has hydrated, ScrollRestoration mounts, so client-side navigations restore
+ * and reset the scroll as on any other page.
+ */
+function HydrationScripts({ deferred }: { deferred: boolean }) {
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+  if (!deferred) {
+    return (
+      <>
+        <ScrollRestoration />
+        <Scripts />
+      </>
+    );
+  }
+  return (
+    <>
+      <noscript id={HYDRATE_ON_INTENT_ID}>{isServer ? <Scripts /> : null}</noscript>
+      {hydrated ? <ScrollRestoration /> : null}
+    </>
+  );
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const nonce = useContext(UNSAFE_FrameworkContext)?.nonce;
+  const hydrates = routeHydrates(useMatches());
+  const deferred = isServer ? !hydrates : (clientDeferred ??= !hydrates);
   return (
     <html lang="en">
       <head>
@@ -88,18 +127,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
         {/* Set data-theme before paint — no flash of the wrong theme. The render's nonce lets it run. */}
-        <script nonce={useContext(UNSAFE_FrameworkContext)?.nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        {/* A deferred page keeps its streamed loader data here until it hydrates (lib/hydration.ts). */}
+        {deferred ? <script nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: STREAM_BUFFER_SCRIPT }} /> : null}
+        {/* Every page's own script: the menus, the theme button, the share buttons and hydrate-on-intent (app/site.ts). */}
+        <script src="/site.js" defer nonce={nonce} suppressHydrationWarning />
       </head>
       <body>
         <LinkPrefetch exclude={NO_PREFETCH}>{children}</LinkPrefetch>
-        <ScrollRestoration />
-        <Scripts />
+        <HydrationScripts deferred={deferred} />
       </body>
     </html>
   );
 }
 
 export default function App() {
+  // Tells /site.js the app is live, so a press that started the hydration can be handed to its button.
+  useEffect(() => {
+    document.documentElement.setAttribute(HYDRATED_ATTRIBUTE, "");
+    document.dispatchEvent(new Event(HYDRATED_EVENT));
+  }, []);
   // The admin brings its own shell (AdminShell), so it gets none of the public site's chrome.
   const isAdmin = useLocation().pathname.startsWith("/admin");
   if (isAdmin) return <Outlet />;

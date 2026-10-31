@@ -65,7 +65,7 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
             </Link>
           ))}
         </div>
-        <Form method="get" className="flex items-center gap-2">
+        <Form method="get" data-keep-focus className="flex items-center gap-2">
           <input type="hidden" name="tab" value={tab} />
           <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5">
             <Search size={15} aria-hidden className="text-muted" />

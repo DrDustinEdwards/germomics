@@ -26,6 +26,14 @@ export const INDEXNOW_KEY = "e181c18855ea5175390b4e1124cc23fd";
 export const SECURITY_CONTACT = "security@dustinedwards.info";
 export const SECURITY_TXT_EXPIRES = "2027-09-28T00:00:00Z";
 
+/**
+ * The paths never fetched ahead of a click, beyond the family's NEVER_PREFETCH (/admin, /api and the rest): /unsubscribe,
+ * a per-reader token page reached from email whose action unsubscribes, the tokenized draft previews, and the feeds.
+ * Both kinds of prefetch read it: React Router's on a hydrated page (root.tsx) and the speculation rules every page names
+ * (workers/app.ts).
+ */
+export const NO_PREFETCH = ["/unsubscribe", "/preview", "/feed"];
+
 /** OP3 (op3.dev), the download analytics prefix the podcast feed wraps enclosures in. */
 export const OP3_ORIGIN = "https://op3.dev";
 

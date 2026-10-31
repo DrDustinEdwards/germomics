@@ -17,6 +17,7 @@ import { withAdminIdle } from "@dustinedwards/site-runtime/access";
 import { preloads, rootStylesheets, withPreloadHeader } from "@dustinedwards/site-runtime/preload";
 import { timedRender } from "@dustinedwards/site-runtime/server-timing";
 import { generateNonce, renewNonce } from "@dustinedwards/site-runtime/csp";
+import { SPECULATION_RULES_HEADER, SPECULATION_RULES_PATH, speculationRulesResponse } from "@dustinedwards/site-runtime/prefetch";
 import { canonicalRedirect } from "@dustinedwards/site-runtime/url";
 import { runJobs } from "@dustinedwards/site-runtime/cron";
 import { logEvent, requestFields } from "@dustinedwards/site-runtime/log";
@@ -30,6 +31,7 @@ import { rerenderStale } from "../app/lib/render.server";
 import { continueMediaBackfill } from "../app/lib/media/backfill.server";
 import { nextPublishAt } from "../app/lib/posts.server";
 import { FONT_PRELOADS } from "../app/lib/preloads";
+import { NO_PREFETCH } from "../app/lib/site";
 
 // site-runtime's limiter class, bound as RATE_LIMITER (wrangler.jsonc); enforceRateLimit and the
 // score submit count through it.
@@ -54,7 +56,12 @@ function render(request: Request, env: Env, ctx: ExecutionContext): Promise<Resp
   const nonce = generateNonce();
   context.set(cloudflareContext, { env, ctx });
   context.set(cspNonceContext, nonce);
-  return requestHandler(request, context).then((page) => withSecurityHeaders(page, request.url, nonce));
+  return requestHandler(request, context).then((page) => {
+    // A public page sends no React, so the next page starts loading on hover through the speculation rules this header
+    // names (site-runtime ./prefetch), as React Router's prefetch did when every page hydrated.
+    if (page.headers.get("Content-Type")?.startsWith("text/html")) page.headers.set(SPECULATION_RULES_HEADER.name, SPECULATION_RULES_HEADER.value);
+    return withSecurityHeaders(page, request.url, nonce);
+  });
 }
 
 // Paths that are always rendered live in the gateway, never stored. /admin + /api are gated/mutating; /search is
@@ -148,6 +155,12 @@ const site = {
         // A preview link Carrel made (/preview/<token>, no key): the post's current source in the site's stylesheet,
         // noindex and never stored. The package's no-referrer stays, so the token, which is the address, is never sent on.
         if (carrel.matchesPreviewLink(request)) return withSecurityHeaders(await carrel.servePreviewLink(request), origin);
+      }
+
+      // The prefetch rules every page's Speculation-Rules header names (render above): never the paths in NO_PREFETCH
+      // (beside the family's /admin, /api and the rest), nor a game, whose page is heavy (Phaser) and holds a leaderboard.
+      if (url.pathname === SPECULATION_RULES_PATH) {
+        return withSecurityHeaders(speculationRulesResponse({ exclude: [...NO_PREFETCH, "/games/"] }, request), origin);
       }
 
       // CSP violation reports, logged to Workers Logs (security-headers.ts).

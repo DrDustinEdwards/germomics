@@ -12,6 +12,12 @@ const DataMap = lazy(() => import("~/components/data/DataMap.client"));
 
 export const links: Route.LinksFunction = () => [{ rel: "stylesheet", href: "/charts.css" }];
 
+// A map is an app from its first paint, so a data page with one hydrates on load; one with only its chart, drawn on
+// the server, sends no React (lib/hydration.ts).
+export const handle = {
+  hydrate: (data: unknown) => Boolean((data as { dataset?: { map?: unknown } } | undefined)?.dataset?.map),
+};
+
 export function meta({ loaderData, location }: Route.MetaArgs) {
   if (!loaderData?.dataset) return [{ title: "Data · Germomics" }];
   return pageHead({
