@@ -222,10 +222,10 @@ export function Sources({ sources }: { sources: Source[] }) {
                 {SOURCE_KIND[s.type] ?? s.type}
               </span>
               {s.url ? (
-                <a href={s.url} target="_blank" rel="noopener" className="inline-flex items-center gap-1 text-accent hover:underline">
+                <a href={s.url} className="inline-flex items-center gap-1 text-accent hover:underline">
                   {s.title}
                   <ExternalLink size={12} aria-hidden />
-                  <span className="sr-only"> (opens in a new tab)</span>
+                  <span className="sr-only"> (another site)</span>
                 </a>
               ) : (
                 <span className="text-ink">{s.title}</span>
@@ -262,7 +262,7 @@ export function Hosts({ hosts, images }: { hosts: Host[]; images?: ImageSet }) {
             )}
             <div className="min-w-0">
               {h.href ? (
-                <a href={h.href} target="_blank" rel="me noopener" className="font-display font-medium text-ink hover:text-brand">
+                <a href={h.href} rel="me" className="font-display font-medium text-ink hover:text-brand">
                   {h.name}
                 </a>
               ) : (

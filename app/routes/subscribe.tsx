@@ -79,8 +79,6 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
                 <a
                   key={k}
                   href={sl[k]}
-                  target="_blank"
-                  rel="noopener"
                   className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 font-display text-sm font-medium hover:border-accent hover:text-accent"
                 >
                   <Icon size={18} aria-hidden />
@@ -101,7 +99,7 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
               const d = SUBSCRIBE_DESTINATIONS[k];
               const Icon = d.icon;
               return (
-                <a key={k} href={sl[k]} target="_blank" rel="noopener" className={chip}>
+                <a key={k} href={sl[k]} className={chip}>
                   <Icon size={14} aria-hidden /> {d.label}
                   <ExternalCue />
                 </a>
@@ -115,17 +113,16 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
       <section className="mt-8">
         <h2 className="font-display text-lg font-semibold">Other ways to subscribe</h2>
         <div className="mt-3 flex flex-wrap gap-2">
-          <a href={`https://subscribeonandroid.com/${SITE_HOST}/feed/podcast/`} target="_blank" rel="noopener" className={chip}>
+          <a href={`https://subscribeonandroid.com/${SITE_HOST}/feed/podcast/`} className={chip}>
             <Smartphone size={14} aria-hidden /> Subscribe on Android
             <ExternalCue />
           </a>
-          <a href={`https://subscribebyemail.com/${SITE_HOST}/feed/podcast/`} target="_blank" rel="noopener" className={chip}>
+          <a href={`https://subscribebyemail.com/${SITE_HOST}/feed/podcast/`} className={chip}>
             <Mail size={14} aria-hidden /> Subscribe by Email
             <ExternalCue />
           </a>
-          <a href="/feed/podcast/" target="_blank" rel="noopener" className={chip}>
+          <a href="/feed/podcast/" className={chip}>
             <Rss size={14} aria-hidden /> RSS feed
-            <ExternalCue />
           </a>
           <CopyButton path="/feed/podcast/" label="Copy RSS link" icon={Copy} className={chip} />
         </div>

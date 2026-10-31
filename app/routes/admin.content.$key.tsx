@@ -72,6 +72,7 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
                   <span>Written in Carrel. {"{{email}}"} and {"{{address_line}}"} are filled in on the legal and contact pages.</span>
                   <a href={carrelUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-mono text-xs text-accent hover:underline">
                     <ExternalLink size={13} aria-hidden /> Edit in Carrel
+                    <span className="sr-only"> (opens in a new tab)</span>
                   </a>
                 </p>
                 <div className="max-h-[32rem] overflow-y-auto rounded-xl border border-border bg-card p-4">
@@ -103,6 +104,7 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
           {isPage && previewHref ? (
             <a href={`${previewHref}?preview=1`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-mono text-sm text-accent hover:underline">
               <ExternalLink size={13} aria-hidden /> Preview
+              <span className="sr-only"> (opens in a new tab)</span>
             </a>
           ) : null}
           {fetcher.data?.ok ? (

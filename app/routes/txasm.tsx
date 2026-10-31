@@ -39,13 +39,11 @@ export default function Txasm({ loaderData }: Route.ComponentProps) {
 
       <a
         href="https://txasm.org"
-        target="_blank"
-        rel="noopener"
         className="mt-6 inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 font-display text-sm font-medium text-white hover:bg-brand-strong"
       >
         Visit txasm.org
         <ExternalLink size={16} aria-hidden />
-        <span className="sr-only"> (opens in a new tab)</span>
+        <span className="sr-only"> (another site)</span>
       </a>
     </div>
   );

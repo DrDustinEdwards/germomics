@@ -60,8 +60,6 @@ export default function AuthorBio({ loaderData }: Route.ComponentProps) {
             <li key={l.url}>
               <a
                 href={l.url}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 hover:border-accent hover:text-accent"
               >
                 <ExternalLink size={13} aria-hidden /> {l.label}
