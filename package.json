@@ -29,7 +29,7 @@
     "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.24.0",
     "@dustinedwards/d1-dump": "github:DrDustinEdwards/d1-dump#v0.9.0",
     "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.18.0",
-    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.65.0",
+    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.67.0",
     "@googlemaps/js-api-loader": "2.1.3",
     "capsomer": "github:DrDustinEdwards/capsomer#v0.55.0",
     "drizzle-orm": "0.45.4",
