@@ -13,6 +13,7 @@ import {
   settleCacheHeaders,
   withPurgePages,
 } from "@dustinedwards/site-runtime/edge-cache";
+import { withAdminIdle } from "@dustinedwards/site-runtime/access";
 import { preloads, rootStylesheets, withPreloadHeader } from "@dustinedwards/site-runtime/preload";
 import { timedRender } from "@dustinedwards/site-runtime/server-timing";
 import { generateNonce, renewNonce } from "@dustinedwards/site-runtime/csp";
@@ -111,7 +112,7 @@ export class Renderer extends withPurgePages(WorkerEntrypoint<Env>) {
  * writes, the admin and the live paths answer here and are never stored; every other read is the Renderer's, through
  * the Workers cache.
  */
-export default {
+const site = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const origin = url.origin;
@@ -199,4 +200,10 @@ export default {
     // After the backup: the rows a Prelum upgrade left on an older render are rendered again and stored.
     console.log(JSON.stringify({ event: "render.stale", ...(await rerenderStale(env)) }));
   },
+} satisfies ExportedHandler<Env>;
+
+// An admin idle for an hour is signed out of Access (site-runtime ./access).
+export default {
+  ...site,
+  fetch: (request, env, ctx) => withAdminIdle(request, () => site.fetch(request, env, ctx)),
 } satisfies ExportedHandler<Env>;
