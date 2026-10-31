@@ -6,7 +6,7 @@ import { Rss, Mic, FileText, Database, Gamepad2, User } from "lucide-react";
 import type { Route } from "./+types/about";
 import { getEnv, getSettings } from "~/lib/context.server";
 import { getShowConfig } from "~/lib/show.server";
-import { loadPage, isPreviewing, settingAddress } from "~/lib/content.server";
+import { routePage, settingAddress } from "~/lib/content.server";
 import { jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { buildOrganizationLd, pageHead, stripHtml } from "~/lib/seo";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
@@ -20,10 +20,9 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = getEnv(context);
-  const preview = await isPreviewing(env, request);
   const [about, bio, show, settings] = await Promise.all([
-    loadPage(env, "page:about", { includeDrafts: preview }),
-    loadPage(env, "page:dustin-edwards", { includeDrafts: preview }),
+    routePage(context, request, "page:about"),
+    routePage(context, request, "page:dustin-edwards"),
     getShowConfig(env),
     getSettings(context),
   ]);

@@ -2,7 +2,6 @@
 // {{email}} filled from show_config. DRAFT banner stays as chrome. ?preview shows admin drafts.
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/terms";
-import { getEnv } from "~/lib/context.server";
 import { loadFilledPage } from "~/lib/content.server";
 import { LegalPage } from "~/components/content/Legal";
 
@@ -11,7 +10,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  return loadFilledPage(getEnv(context), request, "page:terms", "Terms of use");
+  return loadFilledPage(context, request, "page:terms", "Terms of use");
 }
 
 export default function Terms({ loaderData }: Route.ComponentProps) {

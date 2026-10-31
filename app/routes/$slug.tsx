@@ -1,6 +1,6 @@
 import type { Route } from "./+types/$slug";
-import { getEnv } from "~/lib/context.server";
-import { getPostBySlug, listPosts, relatedPosts, adjacentPosts, renamedPostRedirect, toPlayerTrack } from "~/lib/posts.server";
+import { getEnv, postPreviewContext } from "~/lib/context.server";
+import { getPostBySlug, listPosts, relatedPosts, adjacentPosts, renamedPostRedirect, seriesOf, toPlayerTrack } from "~/lib/posts.server";
 import { getEpisodeGuests } from "~/lib/people.server";
 import { soundbitesForPost } from "~/lib/soundbites.server";
 import { getShowConfig } from "~/lib/show.server";
@@ -55,7 +55,9 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const env = getEnv(context);
-  const [post, visible, show] = await Promise.all([getPostBySlug(env, params.slug), listPosts(env), getShowConfig(env)]);
+  // Carrel's preview renders its draft here, in-process (context.server); no request from outside sets it.
+  const draft = context.get(postPreviewContext);
+  const [post, visible, show] = await Promise.all([draft ?? getPostBySlug(env, params.slug), listPosts(env), getShowConfig(env)]);
   // A slug Carrel renamed away from answers a permanent redirect to the post's address now.
   if (!post) throw (await renamedPostRedirect(env, params.slug)) ?? new Response("Not found", { status: 404 });
 
@@ -90,7 +92,10 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     prev: adj.prev ? { slug: adj.prev.slug, title: adj.prev.title } : null,
     next: adj.next ? { slug: adj.next.slug, title: adj.next.title } : null,
     subscribeLinks: show.subscribeLinks ?? {},
-    author: show.author,
+    author: post.authors?.[0] ?? show.author,
+    authors: post.authors ?? null,
+    series: seriesOf(visible, post),
+    preview: !!draft,
     hosts,
     cover,
     readingMinutes: post.readingTime ?? 1,

@@ -10,7 +10,9 @@
 import { accessAdmin } from "@dustinedwards/site-runtime/access";
 import { escapeHtml } from "@dustinedwards/site-runtime/html";
 import { eq, sql } from "drizzle-orm";
+import type { RouterContextProvider } from "react-router";
 import { getDb } from "~/db/index.server";
+import { getEnv, pagePreviewContext } from "~/lib/context.server";
 import { settings as settingsTable, contentBlocks } from "~/db/schema";
 import { SETTING_DEFAULTS, SNIPPET_DEFAULTS, PAGE_DEFAULTS } from "~/lib/content-defaults";
 import { toFtsMatch } from "~/lib/posts.server";
@@ -23,22 +25,32 @@ export async function isPreviewing(env: Env, request: Request): Promise<boolean>
   return !!(await accessAdmin(request, env));
 }
 
+/** A page as its route shows it: Carrel's preview draft in a preview render, else the block (drafts with ?preview). */
+export async function routePage(context: Readonly<RouterContextProvider>, request: Request, key: string): Promise<Page> {
+  const draft = context.get(pagePreviewContext);
+  if (draft?.key === key) {
+    const shown = await loadPage(getEnv(context), key, { includeDrafts: true });
+    return { ...shown, title: draft.title ?? shown.title, value: "", html: draft.html, status: "draft" };
+  }
+  const env = getEnv(context);
+  return loadPage(env, key, { includeDrafts: await isPreviewing(env, request) });
+}
+
 /**
- * A contact or legal page (drafts with ?preview for the admin), its {{email}} filled from show_config
+ * A contact or legal page (routePage), its {{email}} filled from show_config
  * and, when given, its {{address_line}}. The values are escaped: they come from settings, not from
  * the rendered body, and are injected as HTML (Grok audit 2026-10-21, GE-3).
  */
 export async function loadFilledPage(
-  env: Env,
+  context: Readonly<RouterContextProvider>,
   request: Request,
   key: string,
   fallbackTitle: string,
   addressLine?: Promise<string>,
 ): Promise<{ title: string; html: string }> {
-  const preview = await isPreviewing(env, request);
   const [page, show, address] = await Promise.all([
-    loadPage(env, key, { includeDrafts: preview }),
-    getShowConfig(env),
+    routePage(context, request, key),
+    getShowConfig(getEnv(context)),
     addressLine,
   ]);
   const html = fill(page.html, "email", show.ownerEmail);
@@ -164,14 +176,6 @@ export async function upsertBlock(env: Env, b: BlockInput): Promise<void> {
     .insert(contentBlocks)
     .values({ key: b.key, kind: b.kind, ...set })
     .onConflictDoUpdate({ target: contentBlocks.key, set });
-}
-
-/** A Markdown page's title and status, which the admin sets; its text is written in Carrel (lib/carrel/adapter.server.ts). */
-export async function updatePageSettings(env: Env, key: string, fields: { title: string | null; status: "draft" | "published" }): Promise<void> {
-  await getDb(env)
-    .update(contentBlocks)
-    .set({ ...fields, updatedAt: new Date().toISOString() })
-    .where(eq(contentBlocks.key, key));
 }
 
 /** List blocks for the admin editor. */

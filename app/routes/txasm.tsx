@@ -3,8 +3,7 @@
 // bridges to the branch's own site at txasm.org. ?preview shows the draft to a signed-in admin.
 import { ExternalLink } from "lucide-react";
 import type { Route } from "./+types/txasm";
-import { getEnv } from "~/lib/context.server";
-import { loadPage, isPreviewing } from "~/lib/content.server";
+import { routePage } from "~/lib/content.server";
 import { pageHead, stripHtml } from "~/lib/seo";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 
@@ -17,9 +16,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const env = getEnv(context);
-  const preview = await isPreviewing(env, request);
-  const page = await loadPage(env, "page:txasm", { includeDrafts: preview });
+  const page = await routePage(context, request, "page:txasm");
   return {
     title: page.title || TITLE,
     description: stripHtml(page.html),

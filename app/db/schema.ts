@@ -95,6 +95,11 @@ export const posts = sqliteTable(
     // 0019: Carrel's trash (when the post was trashed) and the change that scheduled a post not yet live.
     trashedAt: text("trashed_at"),
     scheduleChangeId: text("schedule_change_id"),
+
+    // 0022: site-api's post fields: the post's own credit (null: the show's author), and its series and place in it.
+    authors: text("authors", { mode: "json" }).$type<string[]>(),
+    series: text("series"),
+    seriesPart: integer("series_part"),
   },
   (t) => ({
     slugIdx: uniqueIndex("posts_slug_idx").on(t.slug),
@@ -111,6 +116,9 @@ export const postVersions = sqliteTable(
       .notNull()
       .references(() => posts.id, { onDelete: "cascade" }),
     snapshot: text("snapshot", { mode: "json" }).notNull(),
+    // 0022: the change it was taken before, and by whom.
+    event: text("event"),
+    author: text("author"),
     createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   },
   (t) => ({ postIdx: index("post_versions_post_idx").on(t.postId) }),
@@ -220,6 +228,20 @@ export const contentBlocks = sqliteTable(
     renderVersion: text("render_version"),
   },
   (t) => ({ kindIdx: index("content_blocks_kind_idx").on(t.kind, t.status) }),
+);
+
+// 0022: a Markdown page's history, as post_versions is a post's: the block before each Carrel write.
+export const contentBlockVersions = sqliteTable(
+  "content_block_versions",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    blockKey: text("block_key").notNull(),
+    snapshot: text("snapshot", { mode: "json" }).notNull(),
+    event: text("event"),
+    author: text("author"),
+    createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  },
+  (t) => ({ keyIdx: index("content_block_versions_key_idx").on(t.blockKey) }),
 );
 
 export type Setting = typeof settings.$inferSelect;

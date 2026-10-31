@@ -173,13 +173,14 @@ describe("settings actions", () => {
 });
 
 describe("content block action", () => {
-  it("saves a Markdown page's title and status but never its text, which Carrel writes, and a snippet always published", async () => {
+  it("never writes a Markdown page, which Carrel alone edits, nor makes one, and saves a snippet always published", async () => {
     await upsertBlock(e, { key: "page:about", kind: "page", title: "Old", value: "Carrel's *text*", status: "draft" });
-    const before = "Carrel's *text*";
-    await content.action(args(form("/admin/content/page:about", { title: "About", value: "<p>v</p>" }), { key: "page:about" }));
-    expect(await loadBlock(e, "page:about", { includeDrafts: true })).toMatchObject({ title: "About", status: "draft", value: before });
-    await content.action(args(form("/admin/content/page:about", { status: "published" }), { key: "page:about" }));
-    expect(await loadBlock(e, "page:about")).toMatchObject({ status: "published", title: "", value: before });
+    for (const key of ["page:about", "page:new"]) {
+      const refused = await thrown(content.action(args(form(`/admin/content/${key}`, { title: "About", value: "<p>v</p>", status: "published" }), { key })));
+      expect(refused.status).toBe(405);
+    }
+    expect(await loadBlock(e, "page:about", { includeDrafts: true })).toMatchObject({ title: "Old", status: "draft", value: "Carrel's *text*" });
+    expect(await loadBlock(e, "page:new", { includeDrafts: true })).toBeNull();
     await content.action(args(form("/admin/content/snippet:x", { value: "Hi", status: "draft" }), { key: "snippet:x" }));
     expect(await loadBlock(e, "snippet:x")).toMatchObject({ status: "published" });
   });

@@ -30,6 +30,7 @@ beforeEach(async () => {
   await e.DB.exec("DELETE FROM posts");
   await e.DB.exec("DELETE FROM scheduled_updates");
   await e.DB.exec("DELETE FROM content_blocks");
+  await e.DB.exec("DELETE FROM content_block_versions");
   await e.DB.exec("DELETE FROM episode_people");
   await e.DB.exec("DELETE FROM people");
 });
@@ -238,20 +239,45 @@ describe("reading", () => {
     expect(await ids({ limit: 1, cursor: "junk" })).toEqual(["beta"]);
   });
 
-  it("lists revisions, newest first, and returns the source of any of them", async () => {
+  it("lists each state a change made, newest first, by Dustin, and returns the source of any of them", async () => {
     expect(await content.revisions("nope")).toBeNull();
     expect(await content.revisionSource("nope", "a".repeat(32))).toBeNull();
     const v1 = await save("rev", '---\ntitle: "One"\n---\n<p>1</p>');
+    expect((await content.revisions("rev"))!.map((i) => [i.version, i.message])).toEqual([[v1.version, "Current"]]);
     const v2 = await save("rev", '---\ntitle: "Two"\n---\n<p>2</p>', v1.version);
-    await save("rev", '---\ntitle: "Three"\n---\n<p>3</p>', v2.version);
-    const items = (await content.revisions("rev"))!;
-    expect(items.map((i) => i.version)).toEqual([v2.version, v1.version]);
-    expect(items[0]).toMatchObject({ author: "germomics", message: "Saved before an edit (Two)" });
+    const v3 = await save("rev", '---\ntitle: "Three"\n---\n<p>3</p>', v2.version);
+    const live = await content.publish("rev", { expectedVersion: v3.version, changeId: "c" });
+    const tagged = await content.setTags!("rev", { tags: ["cholera"], expectedVersion: live.version, changeId: "c" });
+    const renamed = await content.rename!("rev", { newId: "rev-2", expectedVersion: tagged.version, changeId: "c" });
+    const down = await content.unpublish("rev-2", { expectedVersion: renamed.version, changeId: "c" });
+    const items = (await content.revisions("rev-2"))!;
+    expect(items.map((i) => [i.version, i.message])).toEqual([
+      [down.version, "Taken off the site"],
+      [renamed.version, "Renamed from rev"],
+      [tagged.version, "Tags set"],
+      [live.version, "Published"],
+      [v3.version, "Saved"],
+      [v2.version, "Saved"],
+      [v1.version, "Earliest version kept"],
+    ]);
+    expect(new Set(items.map((i) => i.author))).toEqual(new Set(["Dustin Edwards"]));
     expect(items[0].at).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.000Z$/);
-    expect(await content.revisionSource("rev", v1.version)).toBe('---\ntitle: "One"\n---\n<p>1</p>');
-    const current = (await content.get("rev"))!;
-    expect(await content.revisionSource("rev", current.version)).toBe(current.source);
-    expect(await content.revisionSource("rev", "0".repeat(32))).toBeNull();
+    expect(await content.revisionSource("rev-2", v1.version)).toBe('---\ntitle: "One"\n---\n<p>1</p>');
+    expect(await content.revisionSource("rev-2", tagged.version)).toContain('tags: ["cholera"]');
+    const current = (await content.get("rev-2"))!;
+    expect(await content.revisionSource("rev-2", current.version)).toBe(current.source);
+    expect(await content.revisionSource("rev-2", "0".repeat(32))).toBeNull();
+  });
+
+  it("credits the show's author unless a post names its own, filters by either, and keeps a series and its part", async () => {
+    await save("own", '---\ntitle: "Own"\nauthors: ["Sample Author","Smith, Jr."]\nseries: "Sample Series"\nseriesPart: 2\n---\nx');
+    await save("show", '---\ntitle: "Show"\n---\nx');
+    expect(await row("own")).toMatchObject({ authors: '["Sample Author","Smith, Jr."]', series: "Sample Series", series_part: 2 });
+    expect((await content.get("own"))!.source).toContain('authors: ["Sample Author","Smith, Jr."]\nseries: "Sample Series"\nseriesPart: 2');
+    expect((await content.get("show"))!.authors).toEqual(["Dustin Edwards"]);
+    const ids = async (author: string) => (await content.list({ limit: 10, author })).items.map((i) => i.id);
+    expect(await ids("Smith, Jr.")).toEqual(["own"]);
+    expect(await ids("Dustin Edwards")).toEqual(["show"]);
   });
 });
 
@@ -301,22 +327,46 @@ describe("a page", () => {
     expect((await content.get("page.about"))!.path).toBe("/about");
   });
 
-  it("is never created, scheduled or taken down", async () => {
+  it("keeps its history: each save and publish, and the source of each", async () => {
+    await block("page:about", "First");
+    const first = (await content.get("page.about"))!;
+    const saved = await save("page.about", '---\ntitle: "About"\n---\nSecond', first.version);
+    const live = await content.publish("page.about", { expectedVersion: saved.version, changeId: "c" });
+    const items = (await content.revisions("page.about"))!;
+    expect(items.map((i) => [i.version, i.message, i.author])).toEqual([
+      [live.version, "Published", "Dustin Edwards"],
+      [saved.version, "Saved", "Dustin Edwards"],
+      [first.version, "Earliest version kept", "Dustin Edwards"],
+    ]);
+    expect(await content.revisionSource("page.about", first.version)).toBe(first.source);
+  });
+
+  it("is never created, scheduled, taken down or tagged", async () => {
     await expect(save("page.new", "x")).rejects.toThrow(RefusedError);
     await block("page:about", "x");
     const { version } = (await content.get("page.about"))!;
     await expect(content.unpublish("page.about", { expectedVersion: version, changeId: "c" })).rejects.toThrow("live route");
     await expect(content.schedule("page.about", { expectedVersion: version, changeId: "c", publishAt: "2030-01-01T00:00:00.000Z" })).rejects.toThrow("live route");
+    await expect(content.setTags!("page.about", { tags: ["x"], expectedVersion: version, changeId: "c" })).rejects.toThrow("no tags");
   });
 });
 
 describe("preview", () => {
-  it("draws the body in a noindex page with the title escaped, falling back to Untitled", async () => {
-    const html = await adapter.preview!.render({ source: '---\ntitle: "<b>x"\n---\nbody text' });
-    expect(html).not.toContain("<b>x");
-    expect(html).toContain("body text");
-    expect(html).toContain("noindex");
-    expect(await adapter.preview!.render({ source: "b" })).toContain("Untitled");
+  it("hands the real route the draft, noindex and unsaved, or the page's draft to its route", async () => {
+    const drawn: [string, unknown][] = [];
+    const renderDocument = async (request: Request, draft: unknown) => (drawn.push([new URL(request.url).pathname, draft]), new Response("<html><head></head>page</html>"));
+    const preview = createCarrelAdapter(e, () => {}, { renderDocument }).preview;
+    await save("live-one", '---\ntitle: "Stored"\nexcerpt: "Kept"\n---\nold');
+    const noindex = '<html><head><meta name="robots" content="noindex, nofollow"></head>page</html>';
+    expect(await preview.render({ id: "live-one", source: '---\ntitle: "Draft"\nexcerpt: "Kept"\n---\nnew *words*' })).toBe(noindex);
+    expect(await preview.render({ source: "{not front matter" })).toBe(noindex);
+    await insert("INSERT INTO content_blocks (key, kind, title, value, status) VALUES ('page:about', 'page', 'About', 'x', 'published')");
+    await preview.render({ id: "page.about", source: '---\ntitle: "About"\n---\nAbout *draft*' });
+    const [[path, { post }], [, unsaved], [pagePath, { page }]] = drawn as [string, any][];
+    expect([path, post.title, post.excerpt, post.noindex, post.bodyHtml]).toEqual(["/live-one", "Draft", "Kept", true, "<p>new <em>words</em></p>"]);
+    expect(unsaved.post).toMatchObject({ id: 0, slug: "preview", status: "draft", body: "{not front matter" });
+    expect([pagePath, page]).toEqual(["/about", { key: "page:about", title: "About", html: "<p>About <em>draft</em></p>" }]);
+    expect((await row("live-one"))!.title).toBe("Stored");
   });
 });
 

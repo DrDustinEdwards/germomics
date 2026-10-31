@@ -6,18 +6,17 @@ import { d1SiteApiStore } from "@dustinedwards/site-api/store";
 import { schedulePurgeHook } from "@dustinedwards/site-runtime/edge-cache";
 import { submitIndexNow } from "@drdustinedwards/site-helpers/indexnow";
 import { INDEXNOW_KEY, SITE_ORIGIN } from "~/lib/site";
-import { createCarrelAdapter } from "./adapter.server";
+import { createCarrelAdapter, type RenderDocument } from "./adapter.server";
 
 /** A request the site API or a preview link answers (or refuses): the only ones that load it. */
 export const isCarrelRequest = (url: URL) => insidePrefix(url.pathname) || url.pathname.startsWith(PREVIEW_LINK_PATH);
 
-/** `stylesheets`: the site's own, for a preview drawn as the site draws a post (workers/app.ts passes them). */
-export function carrelApi(env: Env, stylesheets: () => Promise<string[]> = async () => []) {
+export function carrelApi(env: Env, renderDocument?: RenderDocument) {
   // The replay store (safe retries by change id), preview links, failed hooks' retries and the webmentions sent
   // (drizzle/0018_site_api_store.sql).
   const store = d1SiteApiStore(env.DB);
   return createSiteApi({
-    adapter: createCarrelAdapter(env, undefined, { stylesheets }),
+    adapter: createCarrelAdapter(env, undefined, { renderDocument }),
     key: env.CARREL_SITE_KEY,
     limiter: env.CARREL_RATE_LIMIT,
     log: (entry) => console.log(JSON.stringify(entry)),

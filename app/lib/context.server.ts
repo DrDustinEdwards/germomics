@@ -6,6 +6,7 @@
 // property. getEnv() is the one sanctioned accessor — every loader/action/middleware goes
 // through it, so bindings never become a free-floating global and never reach the client.
 import { createContext, type RouterContextProvider } from "react-router";
+import type { Post } from "~/db/schema";
 
 export type CloudflareBindings = { env: Env; ctx: ExecutionContext };
 
@@ -13,6 +14,11 @@ export const cloudflareContext = createContext<CloudflareBindings>();
 
 // The Content-Security-Policy nonce this render puts on its inline scripts (workers/app.ts, app/entry.server.tsx).
 export const cspNonceContext = createContext<string | undefined>(undefined);
+
+// Carrel's preview draft, set only by its in-process render (workers/app.ts). Null defaults: an unset undefined one throws.
+export const postPreviewContext = createContext<Post | null>(null);
+export type PagePreview = { key: string; title: string | null; html: string };
+export const pagePreviewContext = createContext<PagePreview | null>(null);
 
 export function getEnv(context: Readonly<RouterContextProvider>): Env {
   return context.get(cloudflareContext).env;

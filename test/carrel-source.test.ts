@@ -8,6 +8,9 @@ const article: SourcePost = {
   kind: "article",
   title: 'A "quoted": title',
   excerpt: "One: two",
+  authors: ["Sample Author", "Smith, Jr."],
+  series: "Sample Series",
+  seriesPart: 2,
   tags: ["cholera", "history"],
   coverImage: "https://images.germomics.com/a.png",
   coverAlt: "Alt",
@@ -51,6 +54,9 @@ describe("the source", () => {
     expect(parseSource('---\ntitle: "T"\nseoTitle: "Old key"\n---\nx', "article").post).toEqual({
       title: "T",
       excerpt: null,
+      authors: null,
+      series: null,
+      seriesPart: null,
       tags: [],
       coverImage: null,
       coverAlt: null,
@@ -64,8 +70,8 @@ describe("the source", () => {
       sources: [],
     });
     expect(parseSource("just a body", "episode")).toEqual({ body: "just a body", post: null, episode: null });
-    expect(() => parseSource('---\nepisodeNumber: 1.5\nchapters: [{"title":"no start"}]\n---\n', "episode")).toThrow(
-      /episodeNumber must be a whole number\. chapters must be a list of objects/,
+    expect(() => parseSource('---\nseriesPart: 0\nepisodeNumber: 1.5\nchapters: [{"title":"no start"}]\n---\n', "episode")).toThrow(
+      /seriesPart must be 1 or more\. episodeNumber must be a whole number\. chapters must be a list of objects/,
     );
   });
 });
