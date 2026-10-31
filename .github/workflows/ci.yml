@@ -69,6 +69,15 @@ jobs:
       - name: Test
         run: npm test
 
+      # Area 8: raw console.* calls in server code may not rise above .console.json's baseline (devkit-console; the
+      # structured logger is site-runtime ./log), and a migration already in drizzle/ is never edited, renamed or
+      # deleted, and a new one only adds unless it says `-- contract: <reason>` (devkit-migrations, drizzle/manifest.json).
+      - name: Console ratchet
+        run: npm run --silent check:console
+
+      - name: Migrations are expand-only
+        run: npm run --silent check:migrations
+
       # NO-BLOAT REPORTS (capsid/decisions.md "no bloat, as a standing plan", 2026-10-01).
       # Knip and jscpd stay warn-only: devkit-no-bloat --warn-only reports against .no-bloat.json's baseline and
       # always exits 0. Page weight is a gate (area 7, D5: every React app fails CI over its route budget):
@@ -127,7 +136,7 @@ jobs:
     concurrency:
       group: deploy
       cancel-in-progress: false
-    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@d992f82350f7143b026597f89359bad90580ebfc # v0.20.9
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@65782d2c45431055672a315f0d126b62d0dd3aff # v0.20.14
     with:
       worker-name: germomics
       d1-database: germomics

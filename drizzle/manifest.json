@@ -1,0 +1,29 @@
+{
+  "note": "sha256 of each migration. devkit-migrations compares against this. Adding a migration means adding its hash in the same commit.",
+  "expand_only_after": "0021_search_fields.sql",
+  "sha256": {
+    "0000_content_and_fts.sql": "f101560703ef545539506518c43b33c3ddfb2b631dceaf44c048609a8834d6f1",
+    "0001_auth_and_app.sql": "9459ec89950f659faa4f831ccc19fda6eedb9fd1c65d64b7c78297d15b32e1a5",
+    "0002_editor_blog.sql": "7a5e2cbbda934584d0e7c4a91f93ae3d59721cb5d98b091092e0e529a307a2e5",
+    "0003_feed_standards.sql": "edc4c25d1fdc76b39e5625caa465ed97fc68acee245d2046d7b05743a03173aa",
+    "0004_newsletter_consent.sql": "d2ff7f6478ab875af3b28bd60be557a8207b3a158f81ecd245d9137d0c94f25f",
+    "0005_content_settings.sql": "5ea72839f5fdea3dfd1b51562ed35052b2e0f20daeefd0df1f4cc1265e13e171",
+    "0006_nav_snippets.sql": "2eda5a852147c62ba18596cfba6b695af3756ec2c202ff2e0bc06ebf9be1ccbd",
+    "0007_contact_and_finish.sql": "cc0be09375d9124a5c5ee228486af56a983a0ddb7543f4b2ace25b786084ad45",
+    "0008_txasm.sql": "1792ff1999616a3b33da1cd0b8883d7a440e10fdde2c8705d857e697d1f0a5b8",
+    "0009_episode_page.sql": "bc2d4c6a84682f5a8186fff6ddaaf90754c0b37d03bb9b636ed0e9b56cacd900",
+    "0010_retire_better_auth.sql": "aebe1d2b31ddfc88ae5b9c87d146b3c9557e639a6342dab1a9c892728fca444f",
+    "0011_ai_routine.sql": "0ce8166e272dd605de3f22dd1bfb1a0c32a3e2c35735ba4a17e6862b90cfbd8a",
+    "0012_style_rule.sql": "64368735c8455f27933adb7ed0555d1293651189d4632171c5aba48900e26e88",
+    "0013_scheduled_updates.sql": "376492e5b6c3776c0a96963e6af84b720e5a1807ebb0ce3815bfac8dd51b11af",
+    "0014_media_captions.sql": "70558384d05967ee97999d7a5347c123a09231b010b80b55e1d4c396422dad27",
+    "0015_media_library.sql": "c4de6c8168249791256eed324bf94075e076bd13f02d331569b6d0452f5982b7",
+    "0016_markdown_bodies.sql": "8964e77c4b3e98e982ef79624785924865914349ef6f566a7d33fd521665c2bf",
+    "0017_ops.sql": "cb473315b130832655ae29b103188f29cde5e2b58f92d075a182657b52be722f",
+    "0017_style_rule_writing_rules.sql": "e7a06345e3b5ac10ab010366a5a56a8e23599efb4eff30b6677a6020507d27ac",
+    "0018_site_api_store.sql": "a4978ae497be88b22840e26a1862c0568678d8440e7ef11748fd5c127103813f",
+    "0019_post_trash_and_renames.sql": "05ae31f21a1b9fb2316920ce346d5f2b20f4aa922ebff975665e01e8351adfea",
+    "0020_media_placeholder.sql": "ffdb201229aa5eee9eec0688988488b685efa6dcab4c93f7dadba534fd5acd13",
+    "0021_search_fields.sql": "8d99033cd41b0b4ee9dcfd449242f9d2e6df8e94baf5c8e3b00da584a06a5a3e"
+  }
+}

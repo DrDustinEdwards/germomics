@@ -20,15 +20,13 @@ import { generateNonce, renewNonce } from "@dustinedwards/site-runtime/csp";
 import { SPECULATION_RULES_HEADER, SPECULATION_RULES_PATH, speculationRulesResponse } from "@dustinedwards/site-runtime/prefetch";
 import { canonicalRedirect } from "@dustinedwards/site-runtime/url";
 import { runJobs } from "@dustinedwards/site-runtime/cron";
-import { logEvent, requestFields } from "@dustinedwards/site-runtime/log";
-import { countNotFound, pruneNotFound } from "@dustinedwards/site-runtime/not-found";
+import { logEvent, requestFields, withRequestLog } from "@dustinedwards/site-runtime/log";
+import { countNotFound } from "@dustinedwards/site-runtime/not-found";
 import { cloudflareContext, cspNonceContext } from "../app/lib/context.server";
 import { enforceRateLimit } from "../app/lib/security.server";
 import { CSP_REPORT_PATH, handleCspReport, withSecurityHeaders } from "../app/lib/security-headers";
-import { carrelApi, isCarrelRequest, runCarrelSchedules } from "../app/lib/carrel/handler.server";
-import { runAudioBackup, runBackup, runImagesBackup } from "../app/lib/backup.server";
-import { rerenderStale } from "../app/lib/render.server";
-import { continueMediaBackfill } from "../app/lib/media/backfill.server";
+import { carrelApi, isCarrelRequest } from "../app/lib/carrel/handler.server";
+import { cronJobs } from "../app/lib/cron.server";
 import { nextPublishAt } from "../app/lib/posts.server";
 import { FONT_PRELOADS } from "../app/lib/preloads";
 import { NO_PREFETCH } from "../app/lib/site";
@@ -36,9 +34,6 @@ import { NO_PREFETCH } from "../app/lib/site";
 // site-runtime's limiter class, bound as RATE_LIMITER (wrangler.jsonc); enforceRateLimit and the
 // score submit count through it.
 export { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-object";
-
-// The one-minute cron in wrangler.jsonc; any other cron is the nightly one.
-const SCHEDULES_CRON = "* * * * *";
 
 // A preview link's token (Carrel's /preview/<token>), cut from a logged path.
 const PREVIEW_TOKEN = /\/(preview)\/[^/?#\s'"]+/g;
@@ -213,35 +208,29 @@ const site = {
     }
   },
 
-  // Two crons (wrangler.jsonc triggers.crons), their jobs each isolated and recorded in cron_runs by site-runtime ./cron,
-  // which /health reads; a failed job fails the invocation after the others have run. Awaited rather than handed to
-  // waitUntil, whose rejection is only logged while the invocation still counts as a success (Grok audit 2026-10-21,
-  // GE-11). Every minute: what Carrel scheduled goes live, failed hooks run again and the trash past 30 days is emptied
-  // (site-api's runSchedules; each schedule that fails is logged and tried again next minute; each that lands purges
-  // the stored pages, carrel/handler.server), then,
-  // until it has finished once, a batch of the media backfill. Nightly: the D1 backup, the re-render of the bodies a
-  // Prelum upgrade left on an older render (app/lib/render.server.ts), the audio and image files beside the backup, and
-  // the 404 counts pruned to 90 days.
+  // Two crons (wrangler.jsonc triggers.crons), each with its own job list (app/lib/cron.server.ts), each job isolated,
+  // timed out and recorded in cron_runs by site-runtime ./cron, which /health reads; a failed job fails the invocation
+  // after the others have run. Awaited rather than handed to waitUntil, whose rejection is only logged while the
+  // invocation still counts as a success (Grok audit 2026-10-21, GE-11). A cron with no list (a trigger added in the
+  // dashboard or a misspelt key) runs nothing and says so, and the jobs it was meant for warn "never ran" on /health.
   async scheduled(controller, env) {
-    if (controller.cron === SCHEDULES_CRON) {
-      await runJobs(env.DB, [
-        { name: "schedules", everyMinutes: 1, run: () => runCarrelSchedules(env, new Date(controller.scheduledTime)) },
-        { name: "media-backfill", everyMinutes: 1, run: () => continueMediaBackfill(env) },
-      ]);
+    const jobs = cronJobs(env, new Date(controller.scheduledTime))[controller.cron];
+    if (!jobs) {
+      logEvent("cron_unknown", { cron: controller.cron }, { level: "warn" });
       return;
     }
-    await runJobs(env.DB, [
-      { name: "backup", everyMinutes: 1440, run: () => runBackup(env) },
-      { name: "rerender-stale", everyMinutes: 1440, run: async () => logEvent("render_stale", await rerenderStale(env)) },
-      { name: "audio-backup", everyMinutes: 1440, run: () => runAudioBackup(env) },
-      { name: "images-backup", everyMinutes: 1440, run: () => runImagesBackup(env) },
-      { name: "prune-404", everyMinutes: 1440, run: () => pruneNotFound(env.DB) },
-    ]);
+    await runJobs(env.DB, jobs);
   },
 } satisfies ExportedHandler<Env>;
 
-// An admin idle for an hour is signed out of Access (site-runtime ./access).
+// An admin idle for an hour is signed out of Access (site-runtime ./access). Every request writes one `request` line
+// (site-runtime ./log: path, status, ms and the deployed commit), a preview link's token cut from its path.
+type IncomingRequest = Parameters<typeof site.fetch>[0];
 export default {
   ...site,
-  fetch: (request, env, ctx) => withAdminIdle(request, () => site.fetch(request, env, ctx)),
+  fetch: withRequestLog(
+    (request: Request, env: Env, ctx: ExecutionContext) =>
+      withAdminIdle(request, () => site.fetch(request as IncomingRequest, env, ctx)),
+    { sha: (env) => env.DEPLOY_SHA, tokenPath: PREVIEW_TOKEN },
+  ),
 } satisfies ExportedHandler<Env>;
