@@ -163,8 +163,10 @@ export async function serveWithEdgeCache(opts: {
     const age = ageSeconds(cached);
     if (age !== null && age < SWR_SECONDS) {
       if (age >= FRESH_SECONDS) {
-        // Stale: serve immediately, refresh in the background.
-        ctx.waitUntil(revalidate(cache, key, origin, render));
+        // Stale: serve immediately, refresh in the background. Only a GET refreshes: render() replays
+        // the request it was given, and a HEAD render is a 200 with no body, which would be stored
+        // and served to every reader as a blank page.
+        if (method === "GET") ctx.waitUntil(revalidate(cache, key, origin, render));
         return fromCache(cached, "STALE", method);
       }
       return fromCache(cached, "HIT", method);
