@@ -5,7 +5,7 @@ import type { Route } from "./+types/games._index";
 import { listGames } from "~/lib/games.server";
 
 export function meta() {
-  return pageHead({ path: "/games", title: "Games · Germomics", description: "Arcade browser games tied to the microbiology content." });
+  return pageHead({ path: "/games", title: "Games · Germomics", description: "Arcade browser games tied to the microbiology content.", pageType: "CollectionPage" });
 }
 
 export function loader(_: Route.LoaderArgs) {

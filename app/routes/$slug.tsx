@@ -5,9 +5,8 @@ import { getEpisodeGuests } from "~/lib/people.server";
 import { soundbitesForPost } from "~/lib/soundbites.server";
 import { getShowConfig } from "~/lib/show.server";
 import { buildJsonLd, ogImageFor, pageHead, stripHtml } from "~/lib/seo";
-import { breadcrumbs, faqPage, jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { faqPage, jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { pageToc, storedBody } from "~/lib/render.server";
-import { SITE_ORIGIN } from "~/lib/site";
 import { postImages } from "~/lib/images.server";
 import { PostDetail, type DetailData } from "~/components/content/PostDetail";
 
@@ -15,6 +14,9 @@ export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData?.post) return [{ title: "Not found · Germomics" }];
   const { post, author, seriesTitle, guests, hosts, ogImage } = loaderData;
   const isEpisode = post.kind === "episode";
+  const season = isEpisode && post.seasonNumber
+    ? [{ name: `Season ${post.seasonNumber}`, path: `/season/${post.seasonNumber}` }]
+    : [];
   // The body's :::faq pairs, as Prelum rendered them, are its FAQPage.
   const pairs = post.bodyMeta?.faq ?? [];
   const faq = pairs.length ? faqPage(pairs) : null;
@@ -25,19 +27,18 @@ export function meta({ loaderData }: Route.MetaArgs) {
       path: `/${post.slug}`,
       title: `${post.seoTitle ?? post.title} · Germomics`,
       socialTitle: post.title,
-      description: post.seoDescription ?? post.excerpt ?? stripHtml(post.bodyHtml ?? ""),
+      description: post.seoDescription || post.excerpt || stripHtml(post.bodyHtml ?? "") || `${post.title}, on Germomics.`,
       image: ogImage,
       type: "article",
       article: { published: post.publishedAt ?? post.publishAt, modified: post.updatedAt, author, tags: post.tags ?? [] },
+      breadcrumbs: [
+        { name: "Germomics", path: "/" },
+        isEpisode ? { name: "Episodes", path: "/episodes" } : { name: "Writing", path: "/writing" },
+        ...season,
+        { name: post.title, path: `/${post.slug}` },
+      ],
     }),
     jsonLd(buildJsonLd({ post, author, seriesTitle, guests, hosts })),
-    jsonLd(
-      breadcrumbs(SITE_ORIGIN, [
-        { name: "Home", path: "/" },
-        isEpisode ? { name: "Episodes", path: "/episodes" } : { name: "Writing", path: "/writing" },
-        { name: post.title, path: `/${post.slug}` },
-      ]),
-    ),
     ...(faq ? [jsonLd(faq)] : []),
   ];
 }

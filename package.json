@@ -54,7 +54,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.65.0",
     "@cloudflare/vitest-plugin": "1.4.6",
-    "@dustinedwards/devkit": "github:DrDustinEdwards/devkit#v0.18.0",
+    "@dustinedwards/devkit": "github:DrDustinEdwards/devkit#v0.20.3",
     "@react-router/dev": "8.3.1",
     "@tailwindcss/vite": "4.3.3",
     "@types/google.maps": "3.66.7",

@@ -1,31 +1,21 @@
 // /about - what germomics is, who makes it, how to follow it. Prose comes from the page:about and
-// page:dustin-edwards content blocks (D1, editable); Organization + BreadcrumbList JSON-LD carry
-// entity clarity. Public, WCAG AA. ?preview shows drafts to a signed-in admin.
+// page:dustin-edwards content blocks (D1, editable); Organization JSON-LD carries entity clarity.
+// Public, WCAG AA. ?preview shows drafts to a signed-in admin.
 import { Link } from "capsomer/react/link";
 import { Rss, Mic, FileText, Database, Gamepad2, User } from "lucide-react";
 import type { Route } from "./+types/about";
 import { getEnv, getSettings } from "~/lib/context.server";
 import { getShowConfig } from "~/lib/show.server";
 import { loadPage, isPreviewing, settingAddress } from "~/lib/content.server";
-import { breadcrumbs, jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { buildOrganizationLd, pageHead, stripHtml } from "~/lib/seo";
-import { SITE_ORIGIN } from "~/lib/site";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { AUTHOR } from "~/lib/about";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "About Germomics" }];
   const { show, address, title, description } = loaderData;
-  return [
-    ...pageHead({ path: "/about", title, description }),
-    jsonLd(buildOrganizationLd(show, { address })),
-    jsonLd(
-      breadcrumbs(SITE_ORIGIN, [
-        { name: "Home", path: "/" },
-        { name: "About", path: "/about" },
-      ]),
-    ),
-  ];
+  return [...pageHead({ path: "/about", title, description }), jsonLd(buildOrganizationLd(show, { address }))];
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
