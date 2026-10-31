@@ -5,9 +5,7 @@ import { ExternalLink } from "lucide-react";
 import type { Route } from "./+types/txasm";
 import { getEnv } from "~/lib/context.server";
 import { loadPage, isPreviewing } from "~/lib/content.server";
-import { breadcrumbs, jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { pageHead, stripHtml } from "~/lib/seo";
-import { SITE_ORIGIN } from "~/lib/site";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 
 const TITLE = "Texas Branch of the American Society for Microbiology";
@@ -15,15 +13,7 @@ const TITLE = "Texas Branch of the American Society for Microbiology";
 export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: TITLE }];
   const { title, description } = loaderData;
-  return [
-    ...pageHead({ path: "/txasm", title, description }),
-    jsonLd(
-      breadcrumbs(SITE_ORIGIN, [
-        { name: "Home", path: "/" },
-        { name: "Texas Branch ASM", path: "/txasm" },
-      ]),
-    ),
-  ];
+  return pageHead({ path: "/txasm", title, description });
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -32,8 +22,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const page = await loadPage(env, "page:txasm", { includeDrafts: preview });
   return {
     title: page.title || TITLE,
-    description: stripHtml(page.value),
-    html: page.value,
+    description: stripHtml(page.html),
+    html: page.html,
   };
 }
 

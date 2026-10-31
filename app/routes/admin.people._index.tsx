@@ -10,6 +10,7 @@ import { Card, Field, Button, inputCx, EmptyState } from "~/components/admin/ui"
 import { ImageField } from "~/components/admin/ImageField";
 import { useSnippet } from "~/lib/content";
 import type { Person, PersonLink } from "~/db/schema";
+import { ADMIN_FORM, readForm } from "~/lib/body.server";
 
 export async function loader({ context }: Route.LoaderArgs) {
   return { people: await listPeople(getEnv(context)) };
@@ -17,7 +18,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 
 export async function action({ request, context }: Route.ActionArgs) {
   const env = getEnv(context);
-  const form = await request.formData();
+  const form = await readForm(request, ADMIN_FORM);
   const intent = String(form.get("intent") || "upsert");
 
   if (intent === "quick-create") {

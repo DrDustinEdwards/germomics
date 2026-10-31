@@ -15,6 +15,7 @@ import { settings as settingsTable, contentBlocks } from "~/db/schema";
 import { SETTING_DEFAULTS, SNIPPET_DEFAULTS, PAGE_DEFAULTS } from "~/lib/content-defaults";
 import { toFtsMatch } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
+import { storedBody } from "~/lib/render.server";
 
 /** True only for an admin viewing a page with ?preview (so drafts render in real context). */
 export async function isPreviewing(env: Env, request: Request): Promise<boolean> {
@@ -25,7 +26,7 @@ export async function isPreviewing(env: Env, request: Request): Promise<boolean>
 /**
  * A contact or legal page (drafts with ?preview for the admin), its {{email}} filled from show_config
  * and, when given, its {{address_line}}. The values are escaped: they come from settings, not from
- * the sanitized body, and are injected as HTML (Grok audit 2026-10-21, GE-3).
+ * the rendered body, and are injected as HTML (Grok audit 2026-10-21, GE-3).
  */
 export async function loadFilledPage(
   env: Env,
@@ -40,14 +41,20 @@ export async function loadFilledPage(
     getShowConfig(env),
     addressLine,
   ]);
-  const html = page.value.replaceAll("{{email}}", escapeHtml(show.ownerEmail));
+  const html = fill(page.html, "email", show.ownerEmail);
   return {
     title: page.title || fallbackTitle,
-    html: address === undefined ? html : html.replaceAll("{{address_line}}", escapeHtml(address)),
+    html: address === undefined ? html : fill(html, "address_line", address),
   };
 }
 
-/** Pages served as plain text (llms.txt, ai.txt): their bodies are not HTML, so the sanitizer is not run on them. */
+/** A {{name}} placeholder filled with an escaped value, in text and in a link, where Prelum writes it percent-encoded. */
+function fill(html: string, name: string, value: string): string {
+  const safe = escapeHtml(value);
+  return html.replaceAll(`{{${name}}}`, safe).replaceAll(`%7B%7B${name}%7D%7D`, safe);
+}
+
+/** Pages served as plain text (llms.txt, ai.txt): their bodies are not Markdown, so they are never rendered. */
 export const TEXT_PAGES = new Set(["page:llms", "page:ai-txt"]);
 
 type StrMap = Record<string, string>;
@@ -70,6 +77,8 @@ export async function loadSnippets(env: Env): Promise<StrMap> {
 }
 
 export type PageBlock = { key: string; title: string; value: string; status: "draft" | "published" };
+/** A page as a route shows it: its value (Markdown, or the text of a TEXT_PAGES page) and the HTML to show. */
+export type Page = PageBlock & { html: string };
 
 /**
  * A single content block. For public reads (includeDrafts=false) only a published row is returned;
@@ -80,24 +89,30 @@ export async function loadBlock(
   env: Env,
   key: string,
   opts: { includeDrafts?: boolean } = {},
-): Promise<PageBlock | null> {
+): Promise<Page | null> {
   const rows = await getDb(env).select().from(contentBlocks).where(eq(contentBlocks.key, key)).limit(1);
   const row = rows[0];
   if (!row) return null;
-  const block: PageBlock = { key: row.key, title: row.title ?? "", value: row.value, status: row.status };
-  return opts.includeDrafts || row.status === "published" ? block : null;
+  if (!opts.includeDrafts && row.status !== "published") return null;
+  const block = { key: row.key, title: row.title ?? "", value: row.value, status: row.status };
+  return TEXT_PAGES.has(key) || row.kind !== "page"
+    ? { ...block, html: row.value }
+    : { ...block, html: (await storedBody(env, { body: row.value, bodyHtml: row.bodyHtml, renderVersion: row.renderVersion })).html };
 }
 
-/** A page with the in-code fallback applied, so it always renders something. */
+/**
+ * A page with the in-code fallback applied, so it always renders something. The fallback is the seed's HTML
+ * (content-defaults.ts), shown as it is.
+ */
 export async function loadPage(
   env: Env,
   key: string,
   opts: { includeDrafts?: boolean } = {},
-): Promise<PageBlock> {
+): Promise<Page> {
   const found = await loadBlock(env, key, opts);
   if (found) return found;
   const d = PAGE_DEFAULTS[key];
-  return { key, title: d?.title ?? "", value: d?.value ?? "", status: "published" };
+  return { key, title: d?.title ?? "", value: d?.value ?? "", html: d?.value ?? "", status: "published" };
 }
 
 /** Read a setting with fallback to the generated default then an optional caller default. */
@@ -149,6 +164,14 @@ export async function upsertBlock(env: Env, b: BlockInput): Promise<void> {
     .insert(contentBlocks)
     .values({ key: b.key, kind: b.kind, ...set })
     .onConflictDoUpdate({ target: contentBlocks.key, set });
+}
+
+/** A Markdown page's title and status, which the admin sets; its text is written in Carrel (lib/carrel/adapter.server.ts). */
+export async function updatePageSettings(env: Env, key: string, fields: { title: string | null; status: "draft" | "published" }): Promise<void> {
+  await getDb(env)
+    .update(contentBlocks)
+    .set({ ...fields, updatedAt: new Date().toISOString() })
+    .where(eq(contentBlocks.key, key));
 }
 
 /** List blocks for the admin editor. */

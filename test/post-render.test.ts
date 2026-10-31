@@ -1,74 +1,91 @@
-import { describe, expect, it } from "vitest";
-import { addHeadingIds, demoteHeadings, tableOfContents } from "~/lib/seo";
+import { env } from "cloudflare:test";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { postBodyFields, RENDER_VERSION, rerenderStale, storedBody } from "~/lib/render.server";
+import { demoteHeadings } from "~/lib/seo";
+import { applyMigrations } from "./helpers/d1";
 
-// POST RENDER, pinned.
-//
-// app/components/content/BodyRenderer.tsx is the single public body renderer for both articles
-// and episodes, and everything it actually DOES is these two transforms:
-//
-//   demoteHeadings(html)  ->  addHeadingIds(...)  ->  dangerouslySetInnerHTML
-//
-// The component itself is a div and a long Tailwind string, so testing it through a React
-// renderer would pin the class list and nothing that matters. These are the functions a
-// dependency bump could break silently, and a broken heading id is a table of contents whose
-// links all 404 to nowhere on the page.
+// POST RENDER: the Markdown a save stores, the HTML a read serves, and the re-render that keeps them in step
+// (app/lib/render.server.ts). Prelum's own output is tested in Prelum; this is the site's half: the media
+// library's sizes, the lead figure's width, which rows a read renders, and the page's heading demotion.
+const e = env as unknown as Env;
+const IMG = "https://images.germomics.com";
+const PHOTO = "a-sky-full-of-sars/coronavirus-795.webp";
+const LEAD = "antitoxin-togo-please/antitoxin-togo-pls-795.webp";
+const BODY = [
+  `:::figure{src="${IMG}/${LEAD}" alt="A musher" credit="© Example" width=wide}`,
+  "The lead",
+  ":::",
+  "",
+  "## First section",
+  "",
+  "Some words here.",
+  "",
+  `:::figure{src="${IMG}/${PHOTO}" alt="Coronavirus" credit="© CDC"}`,
+  "Coronavirus",
+  ":::",
+  "",
+  `![Not in the library](${IMG}/missing.webp)`,
+  "",
+].join("\n");
+
+beforeAll(() => applyMigrations(e.DB));
+
+beforeEach(async () => {
+  await e.DB.exec("DELETE FROM posts; DELETE FROM media;");
+  for (const key of [PHOTO, LEAD]) {
+    await e.DB.prepare("INSERT INTO media (key, content_type, width, height, uploaded_at) VALUES (?, 'image/webp', 795, 597, '2026-01-01')").bind(key).run();
+  }
+});
+
+describe("a save", () => {
+  it("stores the render: figures sized from the media library, the lead at 520px, an unknown image as written", async () => {
+    const fields = await postBodyFields(e, BODY);
+    expect(fields).toMatchObject({ body: BODY, renderVersion: RENDER_VERSION, readingTime: 1 });
+    const html = fields.bodyHtml;
+    expect(html).toContain('<figure class="width-wide">');
+    expect(html).toContain(`srcset="/media/${LEAD}?w=520 520w`);
+    expect(html).toMatch(/alt="A musher"[^>]* width="520" height="390"/);
+    expect(html).toContain(`srcset="/media/${PHOTO}?w=400&#x26;f=avif 400w`);
+    expect(html).toMatch(/alt="Coronavirus"[^>]* width="400" height="300"/);
+    expect(html).toContain('<span class="figure-credit">© CDC</span>');
+    expect(html).toMatch(new RegExp(`<img src="${IMG}/missing.webp" alt="Not in the library" loading="lazy"`));
+    expect(fields.bodyMeta.toc).toEqual([{ depth: 2, id: "first-section", text: "First section" }]);
+  });
+
+  it("refuses a figure without alt text, with Prelum's reason", async () => {
+    await expect(postBodyFields(e, `:::figure{src="${IMG}/${PHOTO}"}\nx\n:::`)).rejects.toThrow("requires an alt attribute");
+  });
+});
+
+describe("a read", () => {
+  const row = { bodyHtml: "<p>stored</p>", bodyMeta: { toc: [], faq: [] } };
+
+  it("serves the stored HTML while its version is Prelum's, and renders a stale one in memory", async () => {
+    expect((await storedBody(e, { ...row, body: "fresh", renderVersion: RENDER_VERSION })).html).toBe("<p>stored</p>");
+    expect((await storedBody(e, { ...row, body: "fresh", renderVersion: "0" })).html).toBe("<p>fresh</p>");
+  });
+
+  it("serves a row not converted yet as the HTML it still holds", async () => {
+    expect((await storedBody(e, { body: "<p>old <em>html</em></p>", bodyHtml: null, renderVersion: null })).html).toBe("<p>old <em>html</em></p>");
+  });
+});
+
+describe("the nightly re-render", () => {
+  it("renders a stale row again and leaves an unconverted one alone", async () => {
+    await e.DB.exec(`
+      INSERT INTO posts (kind, title, slug, body, body_html, render_version, status) VALUES ('article', 'S', 'stale', 'New *words*', '<p>old</p>', '0', 'published');
+      INSERT INTO posts (kind, title, slug, body, status) VALUES ('article', 'L', 'legacy', '<p>html</p>', 'published');
+    `);
+    expect(await rerenderStale(e)).toMatchObject({ posts: 1, failed: 0 });
+    const read = (slug: string) => e.DB.prepare("SELECT body, body_html, render_version FROM posts WHERE slug = ?").bind(slug).first();
+    expect(await read("stale")).toEqual({ body: "New *words*", body_html: "<p>New <em>words</em></p>", render_version: RENDER_VERSION });
+    expect(await read("legacy")).toEqual({ body: "<p>html</p>", body_html: null, render_version: null });
+  });
+});
 
 describe("demoteHeadings", () => {
-  it("demotes the ladder by one so the page keeps a single h1", () => {
-    expect(demoteHeadings("<h1>a</h1>")).toBe("<h2>a</h2>");
-    expect(demoteHeadings("<h2>a</h2>")).toBe("<h3>a</h3>");
-    expect(demoteHeadings("<h3>a</h3>")).toBe("<h4>a</h4>");
-  });
-
-  it("preserves attributes on the tag it rewrites", () => {
-    expect(demoteHeadings('<h2 class="x">a</h2>')).toBe('<h3 class="x">a</h3>');
-  });
-
-  it("leaves h4 and non-heading tags alone", () => {
-    // The regex only matches h1 to h3. An h4 that became an h5 would break the heading ladder
-    // the renderer's styles are written against.
-    expect(demoteHeadings("<h4>a</h4>")).toBe("<h4>a</h4>");
-    expect(demoteHeadings("<p>a</p>")).toBe("<p>a</p>");
-  });
-});
-
-describe("addHeadingIds", () => {
-  it("injects an id on h2 and h3 so the table of contents can anchor", () => {
-    const out = addHeadingIds("<h2>Getting Started</h2>");
-    expect(out).toMatch(/<h2 id="[^"]+">Getting Started<\/h2>/);
-  });
-
-  it("does not overwrite an id the author already set", () => {
-    const html = '<h2 id="mine">Title</h2>';
-    expect(addHeadingIds(html)).toBe(html);
-  });
-
-  it("leaves headings outside the h2/h3 range alone", () => {
-    expect(addHeadingIds("<h4>Sub</h4>")).toBe("<h4>Sub</h4>");
-  });
-
-  it("agrees with tableOfContents on the id for the same heading", () => {
-    // The two are separate functions over the same text, and a TOC link only works while they
-    // agree. This is the assertion that catches them drifting apart.
-    const html = "<h2>Chapter One</h2><h3>Section Two</h3>";
-    const toc = tableOfContents(html);
-    const rendered = addHeadingIds(html);
-    expect(toc).toHaveLength(2);
-    for (const item of toc) {
-      expect(rendered, `no anchor for ${item.text}`).toContain(`id="${item.id}"`);
-    }
-  });
-});
-
-describe("the render pipeline in the order BodyRenderer applies it", () => {
-  it("demotes first, then anchors the demoted headings", () => {
-    // Order is load-bearing: anchoring first would put ids on the pre-demotion tags and the
-    // demotion would then rewrite tags the TOC had already pointed at.
-    const out = addHeadingIds(demoteHeadings("<h2>Only Heading</h2>"));
-    expect(out).toMatch(/<h3 id="[^"]+">Only Heading<\/h3>/);
-  });
-
-  it("passes an empty body through without throwing", () => {
-    expect(addHeadingIds(demoteHeadings(""))).toBe("");
+  it("moves every heading down one level, keeping Prelum's ids, so the page keeps its own h1 and h2s", () => {
+    expect(demoteHeadings('<h2 id="a">A<a class="heading-anchor" href="#a">#</a></h2>')).toBe('<h3 id="a">A<a class="heading-anchor" href="#a">#</a></h3>');
+    expect(demoteHeadings("<h1>a</h1><h5>b</h5><h6>c</h6><p>d</p>")).toBe("<h2>a</h2><h6>b</h6><h6>c</h6><p>d</p>");
   });
 });

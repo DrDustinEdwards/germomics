@@ -4,18 +4,9 @@ import { getPostBySlug, listPosts, relatedPosts, adjacentPosts, toPlayerTrack } 
 import { getEpisodeGuests } from "~/lib/people.server";
 import { soundbitesForPost } from "~/lib/soundbites.server";
 import { getShowConfig } from "~/lib/show.server";
-import {
-  readingTime,
-  tableOfContents,
-  demoteHeadings,
-  buildJsonLd,
-  extractFaqLd,
-  ogImageFor,
-  pageHead,
-  stripHtml,
-} from "~/lib/seo";
-import { breadcrumbs, jsonLd } from "@drdustinedwards/site-helpers/schema";
-import { SITE_ORIGIN } from "~/lib/site";
+import { buildJsonLd, ogImageFor, pageHead, stripHtml } from "~/lib/seo";
+import { faqPage, jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { pageToc, storedBody } from "~/lib/render.server";
 import { postImages } from "~/lib/images.server";
 import { PostDetail, type DetailData } from "~/components/content/PostDetail";
 
@@ -23,7 +14,12 @@ export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData?.post) return [{ title: "Not found · Germomics" }];
   const { post, author, seriesTitle, guests, hosts, ogImage } = loaderData;
   const isEpisode = post.kind === "episode";
-  const faq = extractFaqLd(post.body);
+  const season = isEpisode && post.seasonNumber
+    ? [{ name: `Season ${post.seasonNumber}`, path: `/season/${post.seasonNumber}` }]
+    : [];
+  // The body's :::faq pairs, as Prelum rendered them, are its FAQPage.
+  const pairs = post.bodyMeta?.faq ?? [];
+  const faq = pairs.length ? faqPage(pairs) : null;
   return [
     // Episodes are editorial articles with audio on this site, so og:type is article (the prior
     // music.song regressed the social card).
@@ -31,19 +27,18 @@ export function meta({ loaderData }: Route.MetaArgs) {
       path: `/${post.slug}`,
       title: `${post.seoTitle ?? post.title} · Germomics`,
       socialTitle: post.title,
-      description: post.seoDescription ?? post.excerpt ?? stripHtml(post.body),
+      description: post.seoDescription || post.excerpt || stripHtml(post.bodyHtml ?? "") || `${post.title}, on Germomics.`,
       image: ogImage,
       type: "article",
       article: { published: post.publishedAt ?? post.publishAt, modified: post.updatedAt, author, tags: post.tags ?? [] },
+      breadcrumbs: [
+        { name: "Germomics", path: "/" },
+        isEpisode ? { name: "Episodes", path: "/episodes" } : { name: "Writing", path: "/writing" },
+        ...season,
+        { name: post.title, path: `/${post.slug}` },
+      ],
     }),
     jsonLd(buildJsonLd({ post, author, seriesTitle, guests, hosts })),
-    jsonLd(
-      breadcrumbs(SITE_ORIGIN, [
-        { name: "Home", path: "/" },
-        isEpisode ? { name: "Episodes", path: "/episodes" } : { name: "Writing", path: "/writing" },
-        { name: post.title, path: `/${post.slug}` },
-      ]),
-    ),
     ...(faq ? [jsonLd(faq)] : []),
   ];
 }
@@ -64,14 +59,15 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   // brand default (so no raster default here). The social image still defaults to the show artwork.
   const cover = post.episodeArtwork ?? post.coverImage ?? null;
   const ogImage = ogImageFor(post) ?? show.artwork ?? null;
-  const { body, images } = await postImages(env, post, cover, { guests, hosts });
+  const [{ html, meta }, images] = await Promise.all([storedBody(env, post), postImages(env, post, cover, { guests, hosts })]);
 
   const data: DetailData & {
     seriesTitle: string;
     hosts: typeof hosts;
     ogImage: string | null;
   } = {
-    post: { ...post, body },
+    // The page shows the rendered HTML; the Markdown stays on the server.
+    post: { ...post, body: "", bodyHtml: html, bodyMeta: meta },
     images,
     track: post.kind === "episode" ? toPlayerTrack(post) : null,
     soundbites: clips.map((c) => ({ id: c.id, start: c.startSeconds, duration: c.durationSeconds, title: c.title })),
@@ -83,8 +79,8 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     author: show.author,
     hosts,
     cover,
-    readingMinutes: post.readingTime ?? readingTime(post.body),
-    toc: tableOfContents(demoteHeadings(post.body)),
+    readingMinutes: post.readingTime ?? 1,
+    toc: pageToc(meta),
     seriesTitle: show.title,
     ogImage,
   };

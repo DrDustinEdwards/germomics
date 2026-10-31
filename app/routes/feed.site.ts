@@ -21,7 +21,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     posts: articles.map((a) => ({
       slug: a.slug,
       title: a.title,
-      html: a.body,
+      html: a.bodyHtml ?? "",
       description: a.excerpt,
       publishAt: a.publishedAt,
       tags: a.tags ?? [],

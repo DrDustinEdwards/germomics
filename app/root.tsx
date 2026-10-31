@@ -5,8 +5,10 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  UNSAFE_FrameworkContext,
   useLocation,
 } from "react-router";
+import { useContext } from "react";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -88,8 +90,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="theme-color" content="#120B1F" media="(prefers-color-scheme: dark)" />
         <Meta />
         <Links />
-        {/* Set data-theme before paint — no flash of the wrong theme. */}
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        {/* Set data-theme before paint — no flash of the wrong theme. The render's nonce lets it run. */}
+        <script nonce={useContext(UNSAFE_FrameworkContext)?.nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>
         <LinkPrefetch exclude={NO_PREFETCH}>{children}</LinkPrefetch>

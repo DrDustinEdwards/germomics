@@ -65,7 +65,7 @@ beforeEach(async () => {
   await Promise.all(keys.map((k) => e.APP_KV.delete(k.name)));
   await setSettings(e.DB, { "ai.daily_cap": "5" });
   fired = [];
-  fireReply = () => Response.json({ type: "routine_fire", claude_code_session_url: "https://claude.ai/code/session_01abc" });
+  fireReply = () => Response.json({ type: "routine_fire", claude_code_session_url: "https://claude.ai/code/session_01TestSession" });
   vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : (input as Request).url;
     if (url !== FIRE) return new Response("unexpected", { status: 599 });

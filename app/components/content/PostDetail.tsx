@@ -126,7 +126,7 @@ export function PostDetail({ data }: { data: DetailData }) {
   const isEpisode = post.kind === "episode";
   const chapters = post.chapters ?? [];
   const bodyRef = useRef<HTMLDivElement>(null);
-  useHideBrokenFigures(bodyRef, [post.body]);
+  useHideBrokenFigures(bodyRef, [post.bodyHtml]);
 
   // Honor ?t=<seconds> deep links (share-at-timestamp landing) for episodes.
   useEffect(() => {
@@ -257,10 +257,10 @@ export function PostDetail({ data }: { data: DetailData }) {
               <EpisodeToc items={toc} />
             </div>
             <div className="min-w-0 lg:order-2">
-              {post.body ? (
+              {post.bodyHtml ? (
                 <div ref={bodyRef}>
-                  <BodyRenderer html={post.body} />
-                  <FigureLightbox bodyRef={bodyRef} deps={[post.body]} />
+                  <BodyRenderer html={post.bodyHtml} />
+                  <FigureLightbox bodyRef={bodyRef} deps={[post.bodyHtml]} />
                 </div>
               ) : null}
             </div>
@@ -339,7 +339,7 @@ export function PostDetail({ data }: { data: DetailData }) {
         </nav>
       ) : null}
 
-      {post.body ? <div className="mt-8"><BodyRenderer html={post.body} /></div> : null}
+      {post.bodyHtml ? <div className="mt-8"><BodyRenderer html={post.bodyHtml} /></div> : null}
 
       <div className="mt-8 flex items-center gap-3">
         <CopyLink slug={post.slug} />
