@@ -22,8 +22,10 @@ import { IMAGE_ORIGIN, MEDIA_ORIGIN, OP3_ORIGIN } from "~/lib/site";
 // which logs them through site-runtime's receiver, so Workers Logs hold anything the policy blocks.
 export const CSP_REPORT_PATH = "/csp-report";
 const CSP_ENDPOINT = "csp-endpoint";
-const MAPS_SCRIPT = ["https://*.googleapis.com", "https://*.gstatic.com"];
-const MAPS_DATA = [...MAPS_SCRIPT, "https://*.google.com", "https://*.googleusercontent.com"];
+// Scripts come from the two named Maps hosts: site-runtime 0.37 refuses a wildcard script host, since any
+// subdomain may serve JSONP. Images, data and frames keep Google's wildcards.
+const MAPS_SCRIPT = ["https://maps.googleapis.com", "https://maps.gstatic.com"];
+const MAPS_DATA = ["https://*.googleapis.com", "https://*.gstatic.com", "https://*.google.com", "https://*.googleusercontent.com"];
 const CSP = buildContentSecurityPolicy({
   inlineScripts: "unsafe-inline",
   cloudflareWebAnalytics: true,
