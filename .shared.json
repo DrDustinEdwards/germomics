@@ -2,7 +2,7 @@
   "copies": {
     "app/lib/rss.server.ts": "the podcast feed: iTunes and Podcasting 2.0 tags, OP3 enclosures and permanent episode guids, which Prelum's blog feeds do not write; the writing feed is Prelum's rssDocument",
     "scripts/feed-path-test.mjs": "a check of the live podcast feed's path and tags before a cutover; it reads a feed, it does not build one",
-    "public/_headers": "not by hand: scripts/gen-headers.mjs writes it on every build with site-runtime headersFile from the Worker's own set (app/lib/header-set.ts, buildSecurityHeaders({ site: germomics })); committed so the /assets/* cache rule can be read"
+    "public/_headers": "not by hand: site-runtime-headers writes it on every build from the registry entry the Worker's set comes from (buildSecurityHeaders({ site: germomics })); committed so the /assets/* cache rule can be read"
   },
   "spelling": {
     "skip": [
