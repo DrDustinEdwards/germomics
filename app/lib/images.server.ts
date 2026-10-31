@@ -52,15 +52,19 @@ export async function imageSet(env: Env, wanted: Array<[ImageUseName, string | n
   return set;
 }
 
+// The narrowest picture cut to the card's 1.9:1 without losing much: 3:2.
+const WIDE = 1.5;
+
 /**
- * A page's share card: its own image as /media serves it cut to 1200x630 around its focal point, with that size. An
- * image the site cannot size or crop (not in BLOG_IMAGES, or narrower than the card) is sent as it is; no image is the
- * site's wordmark card.
+ * A page's share card: its own image as /media serves it cut to 1200x630 around its focal point, with that size. A
+ * square or tall image (the show art, a portrait) would lose its subject in that strip, so it and no image share the
+ * site's wordmark card; an image the site cannot size or crop (not in BLOG_IMAGES) is sent as it is.
  */
 export async function shareImage(env: Env, own: { src: string; alt: string | null } | null | undefined): Promise<HeadImage> {
   if (!own?.src) return DEFAULT_CARD;
   const alt = own.alt ?? undefined;
   const stored = await storedImage(env, own.src, 1);
+  if (stored?.width && stored.height && stored.width / stored.height < WIDE) return DEFAULT_CARD;
   const card = stored ? images.attributes(stored, "share") : null;
   if (!card?.sources.length) return { url: own.src, alt };
   return { url: `${SITE_ORIGIN}${card.src}`, width: card.width, height: card.height, alt };
