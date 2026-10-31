@@ -10,8 +10,7 @@
 // stored ones, embedded credit, copyright, description and date, and suggested tags and alt text from Workers AI.
 //
 // An upload goes through site-api's prepareUpload: its byte checks, HEIC to JPEG, the location taken out, the shrink
-// and the embedded fields. Not offered: a placeholder and a main color (each item answers null); prepareUpload makes
-// both, but the site's pages use neither and the media table has no column for them.
+// and the embedded fields, and its placeholder and main color, kept on the row (0016) and made again when the bytes change.
 import {
   MediaId,
   MediaInUseError,
@@ -144,8 +143,8 @@ function itemOf(row: MediaRow, usedCount?: number): MediaItem {
     focus: row.focus,
     caption: row.caption,
     ...(usedCount === undefined ? {} : { usedCount }),
-    placeholder: null,
-    color: null,
+    placeholder: row.placeholder,
+    color: row.color,
     credit: row.credit,
     license: row.license,
     sourceUrl: row.sourceUrl,

@@ -320,6 +320,9 @@ export const media = sqliteTable(
     licenseExpires: text("license_expires"),
     takenAt: text("taken_at"),
     sha256: text("sha256"),
+    // prepareUpload's blurred data: URI and #rrggbb (0016); null for files stored before, or one the binding cannot read.
+    placeholder: text("placeholder"),
+    color: text("color"),
     trashedAt: text("trashed_at"),
     rev: integer("rev").notNull().default(0),
     uploadedAt: text("uploaded_at").notNull(),

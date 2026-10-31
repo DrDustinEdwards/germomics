@@ -60,6 +60,8 @@ export async function recordUpload(
     alt,
     sourceUrl,
     sha256: file.sha256,
+    placeholder: file.placeholder,
+    color: file.color,
     uploadedAt,
   });
 }

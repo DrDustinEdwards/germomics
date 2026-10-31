@@ -87,6 +87,8 @@ describe("an upload", () => {
     // The size rides on the object, where every page reads it.
     expect((await e.BLOG_IMAGES.head(item.id))!.customMetadata).toMatchObject({ width: "800", height: "600" });
     expect((await row(item.id))!.sha256).toMatch(/^[0-9a-f]{64}$/);
+    // The placeholder and main color prepareUpload made, kept on the row.
+    expect(item.placeholder).toMatch(/^data:image\//);
     expect(logged).toEqual([{ event: "carrel.media.upload", id: item.id, version: "r0", changeId: "chg_u" }]);
   });
 
