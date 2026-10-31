@@ -9,6 +9,7 @@ import { formatDate } from "~/lib/format";
 import { Badge, inputCx, Button, EmptyState } from "~/components/admin/ui";
 import { useSnippet } from "~/lib/content";
 import type { Post } from "~/db/schema";
+import { ADMIN_FORM, readForm } from "~/lib/body.server";
 
 export async function loader({ context }: Route.LoaderArgs) {
   return { posts: await listAllPosts(getEnv(context)) };
@@ -16,7 +17,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 
 export async function action({ request, context }: Route.ActionArgs) {
   const env = getEnv(context);
-  const form = await request.formData();
+  const form = await readForm(request, ADMIN_FORM);
   const intent = String(form.get("intent") || "create");
   if (intent === "duplicate") {
     const id = await duplicatePost(env, Number(form.get("id")));

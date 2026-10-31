@@ -10,6 +10,7 @@ import type { Route } from "./+types/unsubscribe";
 import { getEnv } from "~/lib/context.server";
 import { getDb } from "~/db/index.server";
 import { subscribers } from "~/db/schema";
+import { PUBLIC_FORM, readForm } from "~/lib/body.server";
 
 type Result = { status: "confirm" | "done" | "already" | "invalid"; email?: string; token?: string };
 
@@ -52,7 +53,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const url = new URL(request.url);
   let token = url.searchParams.get("token");
   if (!token) {
-    const form = await request.formData().catch(() => null);
+    const form = await readForm(request, PUBLIC_FORM).catch(() => null);
     token = form ? String(form.get("token") ?? "") || null : null;
   }
   return unsubscribe(getEnv(context), token);

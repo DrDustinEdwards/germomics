@@ -2,11 +2,12 @@
 // (CLAUDE.md rule #4); the one raw statement is the FTS5 MATCH, which Drizzle's DSL can't
 // express. Tag/guest filters parse the JSON columns in JS (the catalog is small), keeping
 // everything type-safe and camelCase.
-import { and, asc, desc, eq, getTableColumns, inArray, isNull, lte, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, gt, inArray, isNull, lte, min, or, sql, type SQL } from "drizzle-orm";
 import { toMatchExpression } from "@drdustinedwards/site-helpers/search";
 import { getDb } from "~/db/index.server";
 import { posts, type Post } from "~/db/schema";
 import { slugifyGuest, toPlayerTrack } from "~/lib/posts";
+import { storedBody } from "~/lib/render.server";
 
 // Re-export the client-safe pure helpers so existing server callers keep working.
 export { slugifyGuest, toPlayerTrack };
@@ -21,6 +22,8 @@ type Kind = "episode" | "article";
 // (and any consumer that reads those keys) stays intact, but nothing heavy is fetched or serialized.
 const {
   body: _body,
+  bodyHtml: _bodyHtml,
+  bodyMeta: _bodyMeta,
   transcript: _transcript,
   audioPeaks: _peaks,
   sources: _sources,
@@ -30,10 +33,10 @@ const {
 // readingTime stays in the projection: listing cards show it without loading the body.
 
 function asCards(
-  rows: Array<Omit<Post, "body" | "transcript" | "audioPeaks" | "sources" | "keyMoments">>,
+  rows: Array<Omit<Post, "body" | "bodyHtml" | "bodyMeta" | "transcript" | "audioPeaks" | "sources" | "keyMoments">>,
 ): Post[] {
   return rows.map(
-    (r) => ({ ...r, body: "", transcript: null, audioPeaks: null, sources: null, keyMoments: null }) as Post,
+    (r) => ({ ...r, body: "", bodyHtml: null, bodyMeta: null, transcript: null, audioPeaks: null, sources: null, keyMoments: null }) as Post,
   );
 }
 
@@ -47,6 +50,15 @@ function publiclyVisible(): SQL {
     eq(posts.status, "published"),
     or(isNull(posts.publishAt), lte(posts.publishAt, now)),
   )!;
+}
+
+/** When the next scheduled post goes live: it needs no write, so no purge, and a stored page stays fresh no later. */
+export async function nextPublishAt(env: Env): Promise<Date | null> {
+  const [row] = await getDb(env)
+    .select({ at: min(posts.publishAt) })
+    .from(posts)
+    .where(and(eq(posts.status, "published"), gt(posts.publishAt, new Date().toISOString())));
+  return row?.at ? new Date(row.at) : null;
 }
 
 /** In-JS mirror of publiclyVisible() for single rows already fetched. */
@@ -74,16 +86,18 @@ export async function listPosts(
 }
 
 /**
- * Visible posts of one kind with every column, newest first. For the readers that print the body or
- * the transcript (the podcast and writing feeds, llms-full.txt); listing pages use listPosts' cards.
+ * Visible posts of one kind with every column, newest first, each with its rendered body in bodyHtml. For the
+ * readers that print the body or the transcript (the podcast and writing feeds, llms-full.txt), which print
+ * HTML or plain text, never the Markdown; listing pages use listPosts' cards.
  */
 export async function listFullPosts(env: Env, kind: Kind, limit = 200): Promise<Post[]> {
-  return getDb(env)
+  const rows = await getDb(env)
     .select()
     .from(posts)
     .where(and(publiclyVisible(), eq(posts.kind, kind)))
     .orderBy(desc(posts.publishedAt))
     .limit(limit);
+  return Promise.all(rows.map(async (p) => ({ ...p, bodyHtml: (await storedBody(env, p)).html })));
 }
 
 export const listEpisodes = (env: Env, limit?: number) =>

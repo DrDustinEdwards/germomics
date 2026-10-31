@@ -3,8 +3,8 @@
 // per route (per the v8_middleware instruction). Cloudflare Access signs people in before a request
 // gets here; this re-verifies its JWT and the one admin email (site-runtime's accessAdmin) and
 // answers 403 to anything else, so a request that bypassed Access, or an Access setup that is wrong,
-// never reaches an admin route. A cross-origin write is refused first (site-runtime's
-// refuseCrossOrigin), since the framework's own Origin check never sees a resource route, and every
+// never reaches an admin route. A cross-site write is refused first (site-runtime's
+// refuseCrossSite), since the framework's own Origin check never sees a resource route, and every
 // admin answer is private, no-store and noindex.
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router";
@@ -15,7 +15,7 @@ import "~/admin.css";
 import type { Route } from "./+types/admin";
 import { getEnv } from "~/lib/context.server";
 import { accessAdmin } from "@dustinedwards/site-runtime/access";
-import { refuseCrossOrigin } from "@dustinedwards/site-runtime/origin";
+import { refuseCrossSite } from "@dustinedwards/site-runtime/origin";
 import { applyTheme, effectiveTheme } from "~/lib/theme";
 import type { Theme } from "~/lib/types";
 
@@ -23,7 +23,7 @@ const PRIVATE = { "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex
 
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ request, context }, next) => {
-    const refused = refuseCrossOrigin(request, PRIVATE);
+    const refused = refuseCrossSite(request, PRIVATE);
     if (refused) throw refused;
     if (!(await accessAdmin(request, getEnv(context)))) throw new Response("Forbidden", { status: 403, headers: PRIVATE });
     // A copy: a redirect's headers are immutable.

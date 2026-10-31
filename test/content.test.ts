@@ -73,7 +73,7 @@ describe("snippets and pages", () => {
   it("never serves a draft page publicly, but shows it to an admin preview", async () => {
     await upsertBlock(e, { key: "page:about", kind: "page", title: "Draft about", value: "<p>draft</p>" });
     expect(await loadBlock(e, "page:about")).toBeNull();
-    expect(await loadBlock(e, "page:about", { includeDrafts: true })).toEqual({ key: "page:about", title: "Draft about", value: "<p>draft</p>", status: "draft" });
+    expect(await loadBlock(e, "page:about", { includeDrafts: true })).toEqual({ key: "page:about", title: "Draft about", value: "<p>draft</p>", html: "<p>draft</p>", status: "draft" });
     const page = await loadPage(e, "page:about");
     expect(page.title).toBe("About Germomics");
     expect(page.status).toBe("published");
@@ -83,11 +83,12 @@ describe("snippets and pages", () => {
     await upsertBlock(e, { key: "page:p", kind: "page", title: "T", value: "v1", status: "published" });
     expect((await loadPage(e, "page:p")).value).toBe("v1");
     await upsertBlock(e, { key: "page:p", kind: "page", value: "v2", status: "published" });
-    expect(await loadPage(e, "page:p")).toEqual({ key: "page:p", title: "", value: "v2", status: "published" });
+    // Not converted (no render version): the value is still the HTML it was saved as, and is shown as it is.
+    expect(await loadPage(e, "page:p")).toEqual({ key: "page:p", title: "", value: "v2", html: "v2", status: "published" });
   });
 
   it("gives an empty page for a key with no row and no default", async () => {
-    expect(await loadPage(e, "page:none")).toEqual({ key: "page:none", title: "", value: "", status: "published" });
+    expect(await loadPage(e, "page:none")).toEqual({ key: "page:none", title: "", value: "", html: "", status: "published" });
     expect(await loadPage(e, "page:none", { includeDrafts: true })).toMatchObject({ value: "" });
   });
 

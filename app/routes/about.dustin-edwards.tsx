@@ -33,7 +33,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const preview = await isPreviewing(env, request);
   const bio = await loadPage(env, "page:dustin-edwards", { includeDrafts: preview });
-  return { bioHtml: bio.value, bioText: stripHtml(bio.value) };
+  return { bioHtml: bio.html, bioText: stripHtml(bio.html) };
 }
 
 export default function AuthorBio({ loaderData }: Route.ComponentProps) {

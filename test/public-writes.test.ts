@@ -58,6 +58,12 @@ describe("newsletter signup", () => {
     expect(await subscribers()).toEqual([]);
   });
 
+  it("answers 413 to a body over the public ceiling without storing anything", async () => {
+    const thrown = await signup({ email: "ada@example.com", consent: "on", pad: "x".repeat(20_000) }).catch((r: unknown) => r);
+    expect((thrown as Response).status).toBe(413);
+    expect(await subscribers()).toEqual([]);
+  });
+
   it("refuses without the consent box ticked", async () => {
     for (const fields of [{ email: "ada@example.com" }, { email: "ada@example.com", consent: "true" }] as Record<string, string>[]) {
       expect(await signup(fields)).toEqual({ ok: false, error: "Please tick the consent box so we can email you." });

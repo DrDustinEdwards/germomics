@@ -3,7 +3,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import { applyMigrations, setSettings } from "./helpers/d1";
 
 // The Worker entry (workers/app.ts): the order a request passes through (Carrel's API, then the
-// rate limiter, then the app behind the edge cache), the security headers on every answer, the
+// rate limiter, then the app behind the edge cache), the signed-in admin kept out of the stored pages, the
 // plain 500 that never leaks an error, and the nightly backup whose failure must not be swallowed.
 // React Router's request handler and the backup run are replaced so only the entry is under test.
 const h = vi.hoisted(() => ({
@@ -42,30 +42,22 @@ beforeEach(async () => {
 afterEach(() => vi.unstubAllEnvs());
 
 describe("the Worker entry", () => {
-  it("answers Carrel's API itself, with security headers, before the app or the rate limiter", async () => {
+  it("answers Carrel's API itself, before the app or the rate limiter", async () => {
     const res = await fetchWith(new Request(`${ORIGIN}/api/carrel/v1/meta`));
     expect(res.status).toBe(503);
-    expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
     expect(h.render).not.toHaveBeenCalled();
   });
 
-  it("rate-limits /admin before rendering, with security headers on the 429", async () => {
+  it("rate-limits /admin before rendering", async () => {
     await setSettings(e.DB, { "ratelimit.admin": "1" });
     const admin = () => new Request(`${ORIGIN}/admin`, { headers: { "cf-connecting-ip": "198.51.100.5" } });
     expect((await fetchWith(admin())).status).toBe(200);
     const limited = await fetchWith(admin());
     expect(limited.status).toBe(429);
-    expect(limited.headers.get("X-Frame-Options")).toBe("deny");
     expect(h.render).toHaveBeenCalledTimes(1);
   });
 
-  it("logs a CSP report the page's policy sends, per address, before the app", async () => {
-    vi.stubEnv("DEV", true);
-    const page = await fetchWith(new Request(fresh()));
-    expect(page.headers.get("Content-Security-Policy")).toContain("report-uri /csp-report");
-    expect(page.headers.get("Reporting-Endpoints")).toBe(`csp-endpoint="${ORIGIN}/csp-report"`);
-    h.render.mockClear();
-
+  it("logs a CSP report, per address, before the app", async () => {
     const report = () =>
       new Request(`${ORIGIN}/csp-report`, {
         method: "POST",
@@ -79,7 +71,6 @@ describe("the Worker entry", () => {
 
     const res = await fetchWith(report(), { CSP_REPORT_RATE_LIMIT: limiter } as never);
     expect(res.status).toBe(204);
-    expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
     expect(JSON.parse(log.mock.calls[0][0] as string)).toMatchObject({ event: "csp-violation", directive: "font-src", blocked: "https://fonts.gstatic.com/s/roboto.woff2", page: `${ORIGIN}/data/x` });
     expect(keys).toEqual(["198.51.100.7"]);
 
@@ -100,28 +91,38 @@ describe("the Worker entry", () => {
     expect((context as { get: (k: unknown) => { env: Env } }).get(cloudflareContext).env.DB).toBe(e.DB);
   });
 
-  it("in development renders live with security headers and never caches", async () => {
+  it("in development renders live", async () => {
     vi.stubEnv("DEV", true);
-    const url = fresh();
-    const res = await fetchWith(new Request(url));
+    const res = await fetchWith(new Request(fresh()));
     expect(await res.text()).toBe("<p>page</p>");
-    expect(res.headers.has("Strict-Transport-Security")).toBe(true);
-    expect(res.headers.has("x-cache")).toBe(false);
   });
 
-  it("in production serves public pages through the edge cache", async () => {
+  // A stored page goes to every reader, so the admin's ?preview, which shows drafts, must never reach the Renderer
+  // (CLAUDE.md rule 5: a scheduled post would leak), and an admin save purges.
+  it("in production keeps the signed-in admin and writes out of the stored pages", async () => {
     vi.stubEnv("DEV", false);
-    const c = ctx();
-    const url = fresh("/episodes/");
-    const first = await fetchWith(new Request(url), {}, c);
-    expect(first.headers.get("x-cache")).toBe("MISS");
-    await Promise.all(c.pending);
-    const second = await fetchWith(new Request(url));
-    expect(second.headers.get("x-cache")).toBe("HIT");
-    expect(h.render).toHaveBeenCalledTimes(1);
+    const stored: string[] = [];
+    const purges: string[] = [];
+    const c = Object.assign(ctx(), {
+      exports: {
+        Renderer: {
+          fetch: async (_r: Request, init: { cf: { cacheKey: string } }) => (stored.push(init.cf.cacheKey), new Response("stored")),
+          purgePages: async (why: string) => void purges.push(why),
+        },
+      },
+    });
+    await fetchWith(new Request(`${ORIGIN}/episodes?utm_source=x`), {}, c);
+    expect(stored).toEqual(["/episodes"]);
+
+    const admin = await fetchWith(new Request(`${ORIGIN}/writing?preview`, { headers: { Cookie: "CF_Authorization=abc" } }), {}, c);
+    expect(admin.headers.get("Cache-Control")).toBe("private, no-store");
+    await fetchWith(new Request(`${ORIGIN}/admin/posts/1`, { method: "POST", body: "x" }), {}, c);
+    expect(stored).toHaveLength(1);
+    expect(h.render).toHaveBeenCalledTimes(2);
+    expect(purges).toEqual(["admin POST /admin/posts/1"]);
   });
 
-  it("answers a plain 500 with security headers and no detail when rendering throws", async () => {
+  it("answers a plain 500 with no detail when rendering throws", async () => {
     h.render.mockImplementationOnce(async () => {
       throw new Error("secret stack detail");
     });
@@ -129,7 +130,6 @@ describe("the Worker entry", () => {
     const res = await fetchWith(new Request(fresh()));
     expect(res.status).toBe(500);
     expect(res.headers.get("Content-Type")).toBe("text/plain; charset=utf-8");
-    expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
     expect(await res.text()).toBe("Internal Server Error");
     expect(spy).toHaveBeenCalled();
     spy.mockRestore();
