@@ -36,7 +36,7 @@ export async function uploadAudio(
 export async function uploadImage(
   env: Env,
   key: string,
-  body: ArrayBuffer | ReadableStream,
+  body: Uint8Array,
   contentType: string,
   customMetadata?: Record<string, string>,
 ): Promise<string> {

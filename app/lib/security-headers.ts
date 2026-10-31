@@ -22,8 +22,12 @@ import { IMAGE_ORIGIN, MEDIA_ORIGIN, OP3_ORIGIN } from "~/lib/site";
 // which logs them through site-runtime's receiver, so Workers Logs hold anything the policy blocks.
 export const CSP_REPORT_PATH = "/csp-report";
 const CSP_ENDPOINT = "csp-endpoint";
-const MAPS_SCRIPT = ["https://*.googleapis.com", "https://*.gstatic.com"];
-const MAPS_DATA = [...MAPS_SCRIPT, "https://*.google.com", "https://*.googleusercontent.com"];
+// Scripts name the Maps API's loader, its modules and its JSONP services, each at its exact path, since site-runtime
+// refuses a wildcard script host (the prefix /maps/api/js/ also serves GeoPhotoService, a known allowlist bypass).
+const MAPS = "https://maps.googleapis.com";
+const MAPS_JSONP = ["AuthenticationService.Authenticate", "QuotaService.RecordEvent", "ApplicationService.GetEntityDetails", "StaticMapService.GetMapImage"];
+const MAPS_SCRIPT = [`${MAPS}/maps/api/js`, ...MAPS_JSONP.map((service) => `${MAPS}/maps/api/js/${service}`), `${MAPS}/maps-api-v3/`];
+const MAPS_DATA = ["https://*.googleapis.com", "https://*.gstatic.com", "https://*.google.com", "https://*.googleusercontent.com"];
 const CSP = buildContentSecurityPolicy({
   inlineScripts: "unsafe-inline",
   cloudflareWebAnalytics: true,

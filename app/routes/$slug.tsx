@@ -15,8 +15,9 @@ import {
   stripHtml,
 } from "~/lib/seo";
 import { breadcrumbs, jsonLd } from "@drdustinedwards/site-helpers/schema";
+import type { HeadImage } from "@drdustinedwards/site-helpers/head";
 import { SITE_ORIGIN } from "~/lib/site";
-import { postImages } from "~/lib/images.server";
+import { postImages, shareImage } from "~/lib/images.server";
 import { PostDetail, type DetailData } from "~/components/content/PostDetail";
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -61,15 +62,14 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const adj = adjacentPosts(visible, post);
   const hosts = show.hosts ?? [];
   // Hero cover uses the item's own artwork; when it has none, the CoverArt component renders the SVG
-  // brand default (so no raster default here). The social image still defaults to the show artwork.
+  // brand default (so no raster default here). The social image defaults to the wordmark card.
   const cover = post.episodeArtwork ?? post.coverImage ?? null;
-  const ogImage = ogImageFor(post) ?? show.artwork ?? null;
-  const { body, images } = await postImages(env, post, cover, { guests, hosts });
+  const [{ body, images }, ogImage] = await Promise.all([postImages(env, post, cover, { guests, hosts }), shareImage(env, ogImageFor(post))]);
 
   const data: DetailData & {
     seriesTitle: string;
     hosts: typeof hosts;
-    ogImage: string | null;
+    ogImage: HeadImage;
   } = {
     post: { ...post, body },
     images,

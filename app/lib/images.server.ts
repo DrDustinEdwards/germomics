@@ -1,13 +1,15 @@
 // Server half of the responsive images (app/lib/images.ts): reads each stored original's size, and
 // rewrites a post body's figures into AVIF and WebP <picture>s served from /media.
 //
-// THE SIZE OF AN ORIGINAL. An upload records its width and height as R2 custom metadata
-// (`imageMetadata`, from the Images binding). The season 1 figures were uploaded before that, as
-// pre-made `<slug>-<width>.webp` files, so for those the width is read from the name and the shape
-// from the figure's own width and height. An image with neither is left as it is: the original,
+// THE SIZE OF AN ORIGINAL. An upload records its width and height as R2 custom metadata (measured
+// by site-api's prepareUpload). The season 1 figures were uploaded before that, as pre-made
+// `<slug>-<width>.webp` files, so for those the width is read from the name and the shape from the
+// figure's own width and height. An image with neither is left as it is: the original,
 // unsized, is better than a guess (site-runtime's rule).
 import { FOCUS_METADATA, pictureHtml, type StoredImage } from "@dustinedwards/site-runtime/image";
 import { escapeHtml } from "@dustinedwards/site-runtime/html";
+import type { HeadImage } from "@drdustinedwards/site-helpers/head";
+import { DEFAULT_CARD, SITE_ORIGIN } from "~/lib/site";
 import { imageKey, imageKeyOf, images, mediaPath, type ImageSet, type ImageUseName } from "~/lib/images";
 
 const NAMED_WIDTH = /-(\d{2,4})\.(?:webp|jpe?g|png|avif|gif)$/i;
@@ -105,18 +107,17 @@ export async function responsiveBody(env: Env, html: string): Promise<string> {
 }
 
 /**
- * The width and height an upload records as custom metadata, read by the Images binding. Empty when
- * the binding is missing or the file is not a raster it can read (an SVG, say), so the upload still
- * goes through and the image is shown unsized.
+ * A page's share card: its own image as /media serves it cut to 1200x630 around its focal point, with that size. An
+ * image the site cannot size or crop (not in BLOG_IMAGES, or narrower than the card) is sent as it is; no image is the
+ * site's wordmark card.
  */
-export async function imageMetadata(env: Env, bytes: ArrayBuffer | Uint8Array): Promise<Record<string, string>> {
-  if (!env.IMAGES) return {};
-  try {
-    const info = await env.IMAGES.info(new Blob([bytes as BlobPart]).stream());
-    return "width" in info && info.width && info.height ? { width: String(info.width), height: String(info.height) } : {};
-  } catch {
-    return {};
-  }
+export async function shareImage(env: Env, own: { src: string; alt: string | null } | null | undefined): Promise<HeadImage> {
+  if (!own?.src) return DEFAULT_CARD;
+  const alt = own.alt ?? undefined;
+  const stored = await storedImage(env, own.src, 1);
+  const card = stored ? images.attributes(stored, "share") : null;
+  if (!card?.sources.length) return { url: own.src, alt };
+  return { url: `${SITE_ORIGIN}${card.src}`, width: card.width, height: card.height, alt };
 }
 
 /** What the post page (and its preview) shows: the body's figures, and the cover, artwork and people photos. */

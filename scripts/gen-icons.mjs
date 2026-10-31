@@ -1,5 +1,6 @@
-// One-off: rasterize the Germomics G hexagon mark into favicon/app-icon assets.
-// Source of truth is public/brand/germomics-g.svg (transparent bg). Run with `node scripts/gen-icons.mjs`.
+// One-off: rasterize the Germomics G hexagon mark into favicon/app-icon assets, and the wordmark into
+// the share card. Source of truth is public/brand/germomics-g.svg (transparent bg) and
+// germomics-wordmark-white.svg. Run with `node scripts/gen-icons.mjs`.
 //
 // Two transparency policies on purpose:
 //  - Browser-tab favicons (favicon.ico) stay TRANSPARENT — they sit on the tab chrome.
@@ -72,6 +73,21 @@ for (const [name, size] of [
     .toBuffer();
   writeFileSync(out("icon-maskable-512.png"), buf);
   console.log(`wrote public/icon-maskable-512.png (${MASK}x${MASK} maskable ${VIOLET}, ${buf.length} bytes)`);
+}
+
+// The share card of every page without its own image (DEFAULT_CARD, app/lib/site.ts): 1200x630, the
+// white wordmark on violet at the cover art's proportions, as JPEG, which every link preview reads.
+{
+  const [W, H, LOGO_H] = [1200, 630, 470];
+  const logo = await sharp(resolve(root, "public/brand/germomics-wordmark-white.svg"), { density: 300 })
+    .resize({ height: LOGO_H })
+    .toBuffer();
+  const buf = await sharp({ create: { width: W, height: H, channels: 3, background: VIOLET } })
+    .composite([{ input: logo, gravity: "center" }])
+    .jpeg({ quality: 88, mozjpeg: true })
+    .toBuffer();
+  writeFileSync(out("brand/germomics-card.jpg"), buf);
+  console.log(`wrote public/brand/germomics-card.jpg (${W}x${H} ${VIOLET}, ${buf.length} bytes)`);
 }
 
 // Multi-size .ico (16/32/48), TRANSPARENT, PNG-compressed entries (modern browsers + Windows).

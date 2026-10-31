@@ -7,7 +7,7 @@ import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 import { Picture } from "~/components/content/Picture";
 import { imageFor } from "~/lib/images";
-import { imageSet } from "~/lib/images.server";
+import { imageSet, shareImage } from "~/lib/images.server";
 
 export function meta({ loaderData, location }: Route.MetaArgs) {
   const name = loaderData?.name ?? "Guest";
@@ -15,7 +15,7 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
     path: location.pathname,
     title: `${name} · Germomics`,
     description: `Germomics episodes with ${name}.`,
-    image: loaderData?.photo,
+    image: loaderData?.share,
   });
 }
 
@@ -36,9 +36,11 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     .sort((a, b) => String(b.publishedAt ?? "").localeCompare(String(a.publishedAt ?? "")));
 
   const legacy = episodes.flatMap((e) => e.guests ?? []).find((g) => slugifyGuest(g.name) === params.guest);
+  const name = person?.name ?? legacy?.name ?? params.guest;
+  const photo = person?.photo ? { src: person.photo, alt: person.photoAlt ?? name } : null;
 
   return {
-    name: person?.name ?? legacy?.name ?? params.guest,
+    name,
     role: person?.role ?? legacy?.role ?? null,
     bio: person?.bio ?? legacy?.bio ?? null,
     photo: person?.photo ?? null,
@@ -47,6 +49,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     episodes,
     tracks: episodes.map(toPlayerTrack),
     images: await imageSet(env, [["portrait", person?.photo]]),
+    share: await shareImage(env, photo),
   };
 }
 

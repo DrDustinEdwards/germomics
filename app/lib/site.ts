@@ -10,8 +10,15 @@ export const SITE_HOST = "germomics.com";
 export const SITE_ORIGIN = `https://${SITE_HOST}`;
 export const MEDIA_ORIGIN = "https://media.germomics.com";
 export const IMAGE_ORIGIN = "https://images.germomics.com";
-/** The show cover: the share card of any page without its own, and the show's artwork until show_config sets one. */
-export const DEFAULT_CARD = `${IMAGE_ORIGIN}/cover.jpg`;
+/** The show's square cover art: its artwork in the feed until show_config sets one. */
+export const DEFAULT_ARTWORK = `${IMAGE_ORIGIN}/brand/germomics-artwork-1400.jpg`;
+/** The share card of any page without its own image: the wordmark at 1200x630 (scripts/gen-icons.mjs). */
+export const DEFAULT_CARD = {
+  url: `${SITE_ORIGIN}/brand/germomics-card.jpg`,
+  width: 1200,
+  height: 630,
+  alt: "Germomics: a broadcasting microphone forming the M in the GERMOMICS wordmark",
+};
 /** The site's IndexNow key, public by the protocol's design: served as /<key>.txt and sent with each changed page. */
 export const INDEXNOW_KEY = "e181c18855ea5175390b4e1124cc23fd";
 

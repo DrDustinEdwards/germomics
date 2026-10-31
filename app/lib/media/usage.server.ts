@@ -7,7 +7,7 @@
 import { getDb } from "~/db/index.server";
 import { contentBlocks, people, posts, scheduledUpdates, settings, showConfig } from "~/db/schema";
 import { imageKeyOf } from "~/lib/images";
-import { DEFAULT_CARD, IMAGE_ORIGIN, SITE_ORIGIN } from "~/lib/site";
+import { DEFAULT_ARTWORK, IMAGE_ORIGIN, SITE_ORIGIN } from "~/lib/site";
 
 export type MediaPlace = { type: string; id: string; title: string; detail: string; keys: Set<string> };
 
@@ -86,9 +86,9 @@ export async function mediaPlaces(env: Env): Promise<Array<MediaPlace & { fields
   for (const person of persons) add("person", person.slug, person.name, [["photo", person.photo]]);
   for (const b of blocks) add("content", b.key, b.title ?? b.key, [["text", b.value]]);
   for (const s of sets) add("setting", s.key, s.label ?? s.key, [["value", s.value]]);
-  // The site's default share card and show artwork until show_config names one (app/lib/site.ts).
-  const card = imageKeyOf(DEFAULT_CARD);
-  if (card) places.push({ type: "code", id: "DEFAULT_CARD", title: "The site's default share card", detail: "app/lib/site.ts", keys: new Set([card]), fields: new Map([[card, ["code"]]]) });
+  // The show artwork until show_config names one (app/lib/site.ts).
+  const art = imageKeyOf(DEFAULT_ARTWORK);
+  if (art) places.push({ type: "code", id: "DEFAULT_ARTWORK", title: "The show's default artwork", detail: "app/lib/site.ts", keys: new Set([art]), fields: new Map([[art, ["code"]]]) });
   return places;
 }
 

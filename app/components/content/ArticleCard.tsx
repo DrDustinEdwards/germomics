@@ -14,8 +14,6 @@ export function ArticleCard({ post, image }: { post: Post; image?: ImageAttribut
           <Picture
             src={post.coverImage}
             image={image}
-            loading="lazy"
-            decoding="async"
             alt={post.coverAlt ?? ""}
             className="aspect-[2/1] w-full border-b border-border object-cover"
           />

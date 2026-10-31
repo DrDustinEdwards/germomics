@@ -9,7 +9,9 @@
 // BACKUPS), the change log a screen polls (triggers on `media`), shrinking large pictures at upload and in a pass over
 // stored ones, embedded credit, copyright, description and date, and suggested tags and alt text from Workers AI.
 //
-// Not offered: a placeholder and a main color (each item answers null), since the site makes neither for its pages.
+// An upload goes through site-api's prepareUpload: its byte checks, HEIC to JPEG, the location taken out, the shrink
+// and the embedded fields. Not offered: a placeholder and a main color (each item answers null); prepareUpload makes
+// both, but the site's pages use neither and the media table has no column for them.
 import {
   MediaId,
   MediaInUseError,
@@ -18,32 +20,32 @@ import {
   VersionConflictError,
   kindOf,
   orientationOf,
-  sha256Hex,
+  prepareUpload,
   transformFocus,
   turnsSize,
   type MediaAdapter,
   type MediaItem,
   type MediaLens,
   type MediaResize,
+  type MediaUploadLimits,
   type MediaTransformOp,
-  type MediaUploaded,
 } from "@dustinedwards/site-api";
 import { writeFocus, type R2BucketLike } from "@dustinedwards/site-api/r2";
 import { editImage } from "@dustinedwards/site-runtime/image";
-import { readEmbedded } from "~/lib/media/embedded.server";
 import { historyOf, keepBytes, revisionBytes, swapBytes } from "~/lib/media/revisions.server";
 import {
   addMediaRevision,
   allMediaRows,
   deleteMediaRow,
   followMedia,
-  insertMediaRow,
   mediaByHash,
   mediaChangeCursor,
   mediaChangedSince,
   mediaRow,
   mediaRows,
   mediaTwins,
+  recordUpload,
+  sizeMetadata,
   writeAtRev,
   type MediaFields,
   type MediaRow,
@@ -52,8 +54,11 @@ import { suggestFor } from "~/lib/media/suggest.server";
 import { mediaPlaces, usageCounts, usesOfKey } from "~/lib/media/usage.server";
 import { buildKey, imageUrl } from "~/lib/r2.server";
 
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
-const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif", "image/avif"];
+/** What Carrel may upload; HEIC and HEIF are stored as JPEG (prepareUpload). */
+export const LIMITS: MediaUploadLimits = {
+  maxBytes: 10 * 1024 * 1024,
+  types: ["image/png", "image/jpeg", "image/webp", "image/gif", "image/avif", "image/heic", "image/heif"],
+};
 const LARGE_BYTES = 1024 * 1024;
 
 /** The ready-made views, each computed here over the whole library. */
@@ -63,7 +68,7 @@ const LENSES: readonly MediaLens[] = ["unattached", "no-alt", "large", "duplicat
  * What an upload shrinks to unless it says `resize=no`: the longer edge kept and the quality, dustinedwards.info's
  * values. A phone photo (4032 pixels) keeps its size; a larger camera file is shrunk, its original kept in the history.
  */
-const RESIZE: MediaResize = { maxEdge: 4096, quality: 85 };
+export const RESIZE: MediaResize = { maxEdge: 4096, quality: 85 };
 
 /** The quality a turn or a mirror encodes at: high, since each one re-encodes a lossy picture. */
 const TRANSFORM_QUALITY = 92;
@@ -188,7 +193,7 @@ export function carrelMedia(env: Env, recordChange: Log): MediaAdapter {
   const claim = (id: string, expectedVersion: string) => atVersion(env, id, expectedVersion, {});
 
   return {
-    limits: { maxBytes: MAX_IMAGE_BYTES, types: IMAGE_TYPES },
+    limits: LIMITS,
     lenses: LENSES,
     usage: true,
     filters: true,
@@ -260,61 +265,32 @@ export function carrelMedia(env: Env, recordChange: Log): MediaAdapter {
     },
 
     async upload(input) {
-      const type = input.contentType;
-      // Read before any shrink, which drops the metadata with the pixels.
-      const found = readEmbedded(input.bytes, type);
-
-      let bytes = input.bytes;
-      let size = await measure(env, bytes);
-      let resizedFrom: MediaUploaded["resizedFrom"];
-      const small = input.resize && REENCODED.has(type) && size ? shrunk(size.width, size.height) : null;
-      if (small && size) {
-        bytes = await reencode(env, input.bytes, { maxEdge: RESIZE.maxEdge }, type as Encoded, RESIZE.quality);
-        resizedFrom = { width: size.width, height: size.height, bytes: input.bytes.byteLength };
-        size = (await measure(env, bytes)) ?? small;
-      }
-      const original = input.sha256 ?? (await sha256Hex(input.bytes));
-      const sha256 = resizedFrom ? await sha256Hex(bytes) : original;
-
-      const key = buildKey("carrel", input.filename);
+      const prepared = await prepareUpload(env.IMAGES, input, { resize: RESIZE });
+      const { width, height, resizedFrom, original } = prepared;
+      const key = buildKey("carrel", prepared.filename);
       const at = new Date().toISOString();
-      const put = await env.BLOG_IMAGES.put(key, bytes, {
-        httpMetadata: { contentType: type },
+      await env.BLOG_IMAGES.put(key, prepared.bytes, {
+        httpMetadata: { contentType: prepared.contentType },
         // The size is what every page sizes the image by (images.server.ts reads it from the object).
-        customMetadata: { filename: input.filename, changeId: input.changeId, ...(size ? { width: String(size.width), height: String(size.height) } : {}) },
+        customMetadata: { filename: prepared.filename, changeId: input.changeId, ...sizeMetadata(prepared) },
       });
-      const embedded = (["credit", "license", "caption", "takenAt"] as const).filter((field) => found[field]);
       try {
-        await insertMediaRow(env, {
-          key,
-          filename: input.filename,
-          contentType: type,
-          bytes: put.size,
-          width: size?.width ?? null,
-          height: size?.height ?? null,
-          alt: input.alt,
-          caption: found.caption ?? "",
-          credit: found.credit ?? "",
-          license: found.license ?? "",
-          takenAt: found.takenAt ?? null,
-          sourceUrl: input.sourceUrl ?? null,
-          sha256,
-          uploadedAt: at,
-        });
+        await recordUpload(env, key, prepared, { alt: input.alt, sourceUrl: input.sourceUrl ?? null, uploadedAt: at });
       } catch (error) {
         // Nothing names a key made a moment ago, so the object goes with the row that failed.
         await env.BLOG_IMAGES.delete(key);
         throw error;
       }
-      if (resizedFrom) {
+      if (resizedFrom && original) {
         // The original in BACKUPS and in the file's history, as the revision the shrink replaced.
-        const backupKey = await keepBytes(env, key, input.bytes, type);
+        const backupKey = await keepBytes(env, key, original, prepared.contentType);
         const reason = input.sourceUrl ? "import" : "upload";
-        await addMediaRevision(env, { mediaKey: key, at, bytes: resizedFrom.bytes, width: resizedFrom.width, height: resizedFrom.height, reason, sha256: original, backupKey });
-        await addMediaRevision(env, { mediaKey: key, at, bytes: bytes.byteLength, width: size?.width ?? null, height: size?.height ?? null, reason: "resize", sha256 });
+        await addMediaRevision(env, { mediaKey: key, at, bytes: resizedFrom.bytes, width: resizedFrom.width, height: resizedFrom.height, reason, sha256: prepared.uploadSha256, backupKey });
+        await addMediaRevision(env, { mediaKey: key, at, bytes: prepared.bytes.byteLength, width, height, reason: "resize", sha256: prepared.sha256 });
       }
       const item = itemOf(await reread(env, key, "stored"), 0);
       recordChange("media.upload", key, item.version!, input.changeId);
+      const embedded = (["credit", "license", "caption", "takenAt"] as const).filter((field) => prepared.embedded[field]);
       return { ...item, ...(embedded.length > 0 ? { embedded } : {}), ...(resizedFrom ? { resizedFrom } : {}) };
     },
 

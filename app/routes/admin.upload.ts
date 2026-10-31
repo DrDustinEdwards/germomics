@@ -1,15 +1,15 @@
 // Admin upload endpoint — drag-drop / file-picker target for the editor's dual-input fields.
 // Resource route (action only) under the admin.* gate (admin.tsx middleware runs first), so it
-// is never publicly writable. Streams the file straight into R2 via the native binding and
-// returns JSON the client uses to fill the field. Images → images.germomics.com (BLOG_IMAGES), with
-// their width and height as custom metadata so pages can offer resized copies from /media, and a row
-// in the media library;
-// audio → media.germomics.com (germomics-audio).
+// is never publicly writable. Writes the file into R2 via the native binding and returns JSON the
+// client uses to fill the field. Images → images.germomics.com (BLOG_IMAGES), through site-api's
+// prepareUpload, with their width and height as custom metadata so pages can offer resized copies
+// from /media, and a row in the media library; audio → media.germomics.com (germomics-audio).
 import type { Route } from "./+types/admin.upload";
 import { getEnv } from "~/lib/context.server";
 import { uploadAudio, uploadImage, buildKey } from "~/lib/r2.server";
-import { imageMetadata } from "~/lib/images.server";
-import { recordUpload } from "~/lib/media/store.server";
+import { RefusedError, prepareUpload } from "@dustinedwards/site-api";
+import { LIMITS, RESIZE } from "~/lib/carrel/media.server";
+import { recordUpload, sizeMetadata } from "~/lib/media/store.server";
 
 const MAX_IMAGE = 25 * 1024 * 1024; // 25 MB
 // Cloudflare refuses a request body over 100 MB on the Free and Pro plans before the Worker sees it,
@@ -32,19 +32,25 @@ export async function action({ request, context }: Route.ActionArgs) {
     if (file.size > MAX_IMAGE) {
       return Response.json({ ok: false, error: "Image exceeds 25 MB." }, { status: 413 });
     }
-    if (!file.type.startsWith("image/")) {
-      return Response.json({ ok: false, error: "Not an image file." }, { status: 415 });
+    // The bytes are checked against the type (an SVG or anything unknown is refused), a HEIC becomes a JPEG, a location
+    // is taken out and a camera-sized picture shrunk, as Carrel's uploads are.
+    let prepared;
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const input = { bytes, contentType: file.type, filename: file.name, alt: "", changeId: "", resize: true };
+      prepared = await prepareUpload(env.IMAGES, input, { resize: RESIZE, limits: { ...LIMITS, maxBytes: MAX_IMAGE } });
+    } catch (error) {
+      if (error instanceof RefusedError) return Response.json({ ok: false, error: error.message }, { status: 415 });
+      throw error;
     }
-    const key = buildKey(`posts/${postId}`, file.name);
-    const bytes = await file.arrayBuffer();
-    const size = await imageMetadata(env, bytes);
-    const url = await uploadImage(env, key, bytes, file.type, size);
+    const key = buildKey(`posts/${postId}`, prepared.filename);
+    const url = await uploadImage(env, key, prepared.bytes, prepared.contentType, sizeMetadata(prepared));
     // Into the media library too (Carrel's media page). The image is stored and its address works either way; a row
     // that could not be written is made by the next backfill (POST /admin/media/backfill).
-    await recordUpload(env, { key, bytes, contentType: file.type, filename: file.name, ...size }).catch((error) =>
+    await recordUpload(env, key, prepared).catch((error) =>
       console.error(JSON.stringify({ event: "media.record_failed", key, error: String(error) })),
     );
-    return Response.json({ ok: true, url, contentType: file.type, name: file.name, size: file.size });
+    return Response.json({ ok: true, url, contentType: prepared.contentType, name: prepared.filename, size: prepared.bytes.byteLength });
   }
 
   if (kind === "audio") {

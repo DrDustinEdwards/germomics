@@ -153,10 +153,10 @@ describe("the library", () => {
     await expect(media.delete(key, { changeId: "c" })).rejects.toBeInstanceOf(MediaInUseError);
     expect(await row(key)).not.toBeNull();
 
-    // The show's default card is named in code, so it is never unused.
-    await e.BLOG_IMAGES.put("cover.jpg", png(10, 10));
+    // The show's default artwork is named in code, so it is never unused.
+    await e.BLOG_IMAGES.put("brand/germomics-artwork-1400.jpg", png(10, 10));
     await backfillMedia(e);
-    await expect(media.delete("cover.jpg", { changeId: "c" })).rejects.toBeInstanceOf(MediaInUseError);
+    await expect(media.delete("brand/germomics-artwork-1400.jpg", { changeId: "c" })).rejects.toBeInstanceOf(MediaInUseError);
 
     const loose = await upload(png(20, 20, {}, 9));
     const cursor = (await media.list({ limit: 1 })).changeCursor!;

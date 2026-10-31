@@ -6,6 +6,7 @@ import type { Post } from "~/db/schema";
 import type { GuestView, Host } from "~/lib/types";
 import {
   type ArticleFacts,
+  type HeadImage,
   articleDates,
   defineHead,
 } from "@drdustinedwards/site-helpers/head";
@@ -78,8 +79,12 @@ function isoDuration(totalSeconds?: number | null): string | undefined {
   return `PT${h ? `${h}H` : ""}${m ? `${m}M` : ""}${s ? `${s}S` : ""}` || "PT0S";
 }
 
-export function ogImageFor(post: Post): string | null {
-  return post.ogImage ?? post.episodeArtwork ?? post.coverImage ?? null;
+/** A post's own share image and its alt text: the social image, else the episode artwork, else the cover. */
+export function ogImageFor(post: Post): { src: string; alt: string | null } | null {
+  if (post.ogImage) return { src: post.ogImage, alt: post.ogImageAlt };
+  if (post.episodeArtwork) return { src: post.episodeArtwork, alt: post.episodeArtworkAlt };
+  if (post.coverImage) return { src: post.coverImage, alt: post.coverAlt };
+  return null;
 }
 
 type JsonLdOpts = {
@@ -93,7 +98,7 @@ type JsonLdOpts = {
 /** schema.org JSON-LD object for a post — BlogPosting (article) or PodcastEpisode. */
 export function buildJsonLd({ post, author, seriesTitle, guests = [], hosts = [] }: JsonLdOpts) {
   const url = `${SITE_ORIGIN}/${post.slug}`;
-  const image = ogImageFor(post) ?? undefined;
+  const image = ogImageFor(post)?.src;
   const description = post.seoDescription ?? post.excerpt ?? stripHtml(post.body).slice(0, 200);
   const datePublished = post.publishedAt ?? post.publishAt ?? undefined;
 
@@ -264,7 +269,7 @@ type PageHead = {
   path: string;
   title: string;
   description: string;
-  image?: string | null;
+  image?: HeadImage | null;
   socialTitle?: string;
   type?: "website" | "article" | "profile";
   article?: ArticleFacts;
@@ -274,7 +279,7 @@ const head = defineHead({ origin: SITE_ORIGIN, siteName: "Germomics", image: DEF
 
 /**
  * The head of a public page from Prelum's defineHead: title, description, canonical, Open Graph and Twitter, always on
- * SITE_ORIGIN so a workers.dev copy never claims the page. The show cover is the card when the page has none. A
+ * SITE_ORIGIN so a workers.dev copy never claims the page. The wordmark card is the card when the page has none. A
  * description too long for a search result is cut at a word (the share card keeps it whole), so a page whose
  * description is its own text (About, TXASM) sends one sentence's worth, not the page. The title is passed whole.
  * One canonical path per page: Prelum drops a trailing slash a visitor typed (except on "/"), but the podcast feed's

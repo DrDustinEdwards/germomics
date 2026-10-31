@@ -22,7 +22,6 @@ export function meta({ loaderData }: Route.MetaArgs) {
     path: "/",
     title: loaderData?.homeTitle ?? SNIPPET_DEFAULTS["snippet:meta.home_title"],
     description: loaderData?.homeDescription ?? SNIPPET_DEFAULTS["snippet:meta.home_description"],
-    image: loaderData?.show?.artwork,
   });
   if (!loaderData?.show) return head;
   const { show, address, sameAs } = loaderData;
