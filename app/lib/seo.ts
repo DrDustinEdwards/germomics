@@ -273,6 +273,8 @@ type PageHead = {
   socialTitle?: string;
   type?: "website" | "article" | "profile";
   article?: ArticleFacts;
+  canonical?: string;
+  noindex?: boolean;
 };
 
 const head = defineHead({ origin: SITE_ORIGIN, siteName: "Germomics", image: DEFAULT_CARD });

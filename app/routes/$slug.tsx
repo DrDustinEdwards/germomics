@@ -34,6 +34,8 @@ export function meta({ loaderData }: Route.MetaArgs) {
       socialTitle: post.title,
       description: post.seoDescription ?? post.excerpt ?? stripHtml(post.body),
       image: ogImage,
+      canonical: post.canonical ? new URL(post.canonical, SITE_ORIGIN).href : undefined,
+      noindex: post.noindex,
       type: "article",
       article: { published: post.publishedAt ?? post.publishAt, modified: post.updatedAt, author, tags: post.tags ?? [] },
     }),

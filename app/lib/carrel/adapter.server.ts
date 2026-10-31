@@ -25,6 +25,7 @@ import {
   type SiteAdapter,
   type WriteResult,
 } from "@dustinedwards/site-api";
+import { SEARCH_FIELDS } from "@dustinedwards/site-api/frontmatter";
 import { d1ScheduledUpdates, utc } from "@dustinedwards/site-api/schedules";
 import { getDb } from "~/db/index.server";
 import { posts, postVersions, type Post } from "~/db/schema";
@@ -107,8 +108,13 @@ async function fieldsFromSource(source: string): Promise<Partial<Post>> {
   if (parsed.tags !== null) fields.tags = parsed.tags;
   if (parsed.coverImage !== null) fields.coverImage = parsed.coverImage;
   if (parsed.coverAlt !== null) fields.coverAlt = parsed.coverAlt;
-  if (parsed.seoTitle !== null) fields.seoTitle = parsed.seoTitle;
-  if (parsed.seoDescription !== null) fields.seoDescription = parsed.seoDescription;
+  // The search fields under site-api's names, onto the posts columns; a blank one is null, the site's default.
+  if (parsed.searchTitle !== null) fields.seoTitle = parsed.searchTitle || null;
+  if (parsed.description !== null) fields.seoDescription = parsed.description || null;
+  if (parsed.image !== null) fields.ogImage = parsed.image || null;
+  if (parsed.imageAlt !== null) fields.ogImageAlt = parsed.imageAlt || null;
+  if (parsed.canonical !== null) fields.canonical = parsed.canonical || null;
+  if (parsed.noindex !== null) fields.noindex = parsed.noindex;
   return fields;
 }
 
@@ -165,6 +171,8 @@ export function createCarrelAdapter(env: Env, log: (entry: Record<string, unknow
     site: { id: "germomics", name: "Germomics", origin: SITE_ORIGIN },
 
     content: {
+      searchFields: SEARCH_FIELDS,
+
       async list({ status, q, cursor, limit }) {
         const rows = await db
           .select()

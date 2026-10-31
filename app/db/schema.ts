@@ -56,6 +56,9 @@ export const posts = sqliteTable(
     coverAlt: text("cover_alt"),
     ogImage: text("og_image"),
     ogImageAlt: text("og_image_alt"),
+    // site-api's canonical and noindex search fields (0017).
+    canonical: text("canonical"),
+    noindex: integer("noindex", { mode: "boolean" }).notNull().default(false),
     createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
     updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 

@@ -59,7 +59,7 @@ describe("the guard: planted requests must be refused", () => {
   });
 
   it("refuses a stale expectedVersion and leaves the article as it was", async () => {
-    const created = await json(await put("stale-test", renderSource({ title: "One", excerpt: null, tags: null, coverImage: null, coverAlt: null, seoTitle: null, seoDescription: null, body: "<p>one</p>" }), null));
+    const created = await json(await put("stale-test", renderSource({ title: "One", excerpt: null, tags: null, coverImage: null, coverAlt: null, seoTitle: null, seoDescription: null, ogImage: null, ogImageAlt: null, body: "<p>one</p>" }), null));
     const stale = await put("stale-test", "---\ntitle: \"Two\"\n---\n<p>two</p>", "0".repeat(32));
     expect(stale.status).toBe(409);
     expect((await json(stale)).currentVersion).toBe(created.version);
