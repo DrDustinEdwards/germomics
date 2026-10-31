@@ -15,6 +15,7 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
     path: location.pathname,
     title: `${name} · Germomics`,
     description: `Germomics episodes with ${name}.`,
+    pageType: "CollectionPage",
     image: loaderData?.photo,
   });
 }
