@@ -89,6 +89,29 @@ export async function listPosts(
 }
 
 /**
+ * Each visible post's pictures for the image sitemap, by slug: its cover, then every <img> its body shows, as they
+ * are written (a site path or an absolute URL); data: URLs and the dark half of a themed pair are left out. Read from
+ * the stored render (or a legacy row's HTML body) as it is, never re-rendered: a sitemap is no place to render.
+ */
+export async function listPostImages(env: Env): Promise<Map<string, string[]>> {
+  const rows = await getDb(env)
+    .select({ slug: posts.slug, coverImage: posts.coverImage, body: posts.body, bodyHtml: posts.bodyHtml, renderVersion: posts.renderVersion })
+    .from(posts)
+    .where(publiclyVisible());
+  const out = new Map<string, string[]>();
+  for (const row of rows) {
+    const html = row.renderVersion === null ? row.body : (row.bodyHtml ?? "");
+    const found = new Set<string>(row.coverImage ? [row.coverImage] : []);
+    for (const [tag] of html.matchAll(/<img\b[^>]*>/g)) {
+      const src = /\ssrc="([^"]+)"/.exec(tag)?.[1];
+      if (src && !src.startsWith("data:") && !/\bdark\b/.test(/\sclass="([^"]*)"/.exec(tag)?.[1] ?? "")) found.add(src.replace(/&amp;/g, "&"));
+    }
+    if (found.size > 0) out.set(row.slug, [...found]);
+  }
+  return out;
+}
+
+/**
  * Visible posts of one kind with every column, newest first, each with its rendered body in bodyHtml. For the
  * readers that print the body or the transcript (the podcast and writing feeds, llms-full.txt), which print
  * HTML or plain text, never the Markdown; listing pages use listPosts' cards.

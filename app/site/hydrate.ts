@@ -87,6 +87,8 @@ function load(audio: HTMLAudioElement, button: HTMLElement) {
   if (!src) return;
   const url = new URL(src, location.href).href;
   if (audio.src === url) return;
+  // The element is preload="none" until a reader reaches for an episode; this is that moment.
+  audio.preload = "metadata";
   audio.src = url;
   const id = button.dataset.trackId;
   audio.addEventListener(
