@@ -6,7 +6,7 @@ import { getEnv } from "~/lib/context.server";
 import { getPostById, listPosts, relatedPosts, toPlayerTrack } from "~/lib/posts.server";
 import { getEpisodeGuests } from "~/lib/people.server";
 import { getShowConfig } from "~/lib/show.server";
-import { readingTime, tableOfContents, demoteHeadings } from "~/lib/seo";
+import { pageToc, storedBody } from "~/lib/render.server";
 import { verifyPreviewToken } from "~/lib/preview.server";
 import { postImages } from "~/lib/images.server";
 import { PostDetail, type DetailData } from "~/components/content/PostDetail";
@@ -32,9 +32,10 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
   const cover = post.episodeArtwork ?? post.coverImage ?? null;
   const hosts = show.hosts ?? [];
-  const { body, images } = await postImages(env, post, cover, { guests, hosts });
+  const [{ html, meta }, images] = await Promise.all([storedBody(env, post), postImages(env, post, cover, { guests, hosts })]);
   const data: DetailData = {
-    post: { ...post, body },
+    // The page shows the rendered HTML; the Markdown stays on the server.
+    post: { ...post, body: "", bodyHtml: html, bodyMeta: meta },
     images,
     track: post.kind === "episode" && post.audioUrl ? toPlayerTrack(post) : null,
     guests,
@@ -45,8 +46,8 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     author: show.author,
     hosts,
     cover,
-    readingMinutes: post.readingTime ?? readingTime(post.body),
-    toc: tableOfContents(demoteHeadings(post.body)),
+    readingMinutes: post.readingTime ?? 1,
+    toc: pageToc(meta),
     preview: true,
   };
   return data;
