@@ -6,11 +6,13 @@
 //   session       Better Auth sessions: a bearer `token` per row, plus IP and user agent.
 //   verification  Better Auth one-time sign-in and verification values.
 //   account       the Google OAuth access, refresh and id tokens (and a password column).
-// drizzle/0010_retire_better_auth.sql drops them (with user). d1-dump fails a run on an excluded
+//   preview_links Carrel's preview links (site-api's store): the hash of each link's token. Restoring an older copy
+//                 would bring back a link revoked since; a lost link is made again in Carrel.
+// drizzle/0010_retire_better_auth.sql drops the first three (with user). d1-dump fails a run on an excluded
 // name that is not a table, so runBackup passes it only the names that exist at run time
 // (presentExcludes); one that exists is excluded, and the standard check fails a dump that carries
 // it. That holds whether the deploy or the migration lands first, and after both.
-export const BACKUP_EXCLUDE = ["session", "verification", "account"] as const;
+export const BACKUP_EXCLUDE = ["session", "verification", "account", "preview_links"] as const;
 
 /** The credential tables to hand d1-dump as `exclude`: those in BACKUP_EXCLUDE that exist. */
 export function presentExcludes(liveTables: Iterable<string>): string[] {

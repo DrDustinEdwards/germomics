@@ -127,10 +127,12 @@ describe("the Worker entry", () => {
 
   it("counts a 404 with its referring host, but never a preview link's, whose path carries its token", async () => {
     const notFound = async () => new Response("<p>gone</p>", { status: 404, headers: { "Content-Type": "text/html" } });
-    h.render.mockImplementationOnce(notFound).mockImplementationOnce(notFound);
+    h.render.mockImplementationOnce(notFound);
     const c = ctx();
     await fetchWith(new Request(`${ORIGIN}/moved-page`, { headers: { Referer: "https://example.com/links?x=1" } }), {}, c);
-    await fetchWith(new Request(`${ORIGIN}/preview/7/secret-token`), {}, c);
+    // A preview link: site-api answers it (here 503, the test Worker has no key), noindex, before the app.
+    const link = await fetchWith(new Request(`${ORIGIN}/preview/secret-token`), {}, c);
+    expect(link.headers.get("x-robots-tag")).toContain("noindex");
     await Promise.all(c.pending);
     const rows = await e.DB.prepare("SELECT path, referrer_host, hit_count FROM page_404_daily").all();
     expect(rows.results).toEqual([{ path: "/moved-page", referrer_host: "example.com", hit_count: 1 }]);

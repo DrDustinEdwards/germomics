@@ -24,7 +24,7 @@ import { countNotFound, pruneNotFound } from "@dustinedwards/site-runtime/not-fo
 import { cloudflareContext, cspNonceContext } from "../app/lib/context.server";
 import { enforceRateLimit } from "../app/lib/security.server";
 import { CSP_REPORT_PATH, handleCspReport, withSecurityHeaders } from "../app/lib/security-headers";
-import { carrelApi } from "../app/lib/carrel/handler.server";
+import { carrelApi, isCarrelRequest, runCarrelSchedules } from "../app/lib/carrel/handler.server";
 import { runAudioBackup, runBackup, runImagesBackup } from "../app/lib/backup.server";
 import { rerenderStale } from "../app/lib/render.server";
 import { continueMediaBackfill } from "../app/lib/media/backfill.server";
@@ -38,8 +38,8 @@ export { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-obje
 // The one-minute cron in wrangler.jsonc; any other cron is the nightly one.
 const SCHEDULES_CRON = "* * * * *";
 
-// A preview link's token (/preview/<id>/<token>), cut from a logged path.
-const PREVIEW_TOKEN = /\/(preview\/[^/?#\s'"]+)\/[^/?#\s'"]+/g;
+// A preview link's token (Carrel's /preview/<token>), cut from a logged path.
+const PREVIEW_TOKEN = /\/(preview)\/[^/?#\s'"]+/g;
 
 // Seed React Router v8's request context with the native Cloudflare bindings, so every
 // loader/action/middleware reaches D1/R2/KV through `context` and never over HTTP or a
@@ -58,7 +58,7 @@ function render(request: Request, env: Env, ctx: ExecutionContext): Promise<Resp
 }
 
 // Paths that are always rendered live in the gateway, never stored. /admin + /api are gated/mutating; /search is
-// query-driven and low-repeat; /preview shows tokenized drafts; /unsubscribe renders a per-token email; /health is an
+// query-driven and low-repeat; /preview is Carrel's preview links, answered before the app; /unsubscribe renders a per-token email; /health is an
 // ops probe (no-store); /games/assets are immutable R2 binaries that already cache on their own, and /media keeps each
 // resized image in the cache itself.
 function livePath(pathname: string): boolean {
@@ -137,11 +137,17 @@ const site = {
 
       // Carrel's site API. Its own guard (prefix, rate limit, key, route) runs first and answers
       // everything under /api/carrel/v1; nothing else is served by it. An accepted write purges the stored pages.
-      const carrel = carrelApi(env);
-      if (carrel.matches(request)) {
-        const response = await carrel.handle(request, ctx);
-        purgeAfterWrite(request, response, ctx, `carrel ${request.method} ${url.pathname}`);
-        return withSecurityHeaders(response, origin);
+      // Only its own requests load it; a preview reads the site's stylesheets when it draws.
+      if (isCarrelRequest(url)) {
+        const carrel = carrelApi(env, async () => rootStylesheets(await serverBuild()).map((s) => s.href));
+        if (carrel.matches(request)) {
+          const response = await carrel.handle(request, ctx);
+          purgeAfterWrite(request, response, ctx, `carrel ${request.method} ${url.pathname}`);
+          return withSecurityHeaders(response, origin);
+        }
+        // A preview link Carrel made (/preview/<token>, no key): the post's current source in the site's stylesheet,
+        // noindex and never stored. The package's no-referrer stays, so the token, which is the address, is never sent on.
+        if (carrel.matchesPreviewLink(request)) return withSecurityHeaders(await carrel.servePreviewLink(request), origin);
       }
 
       // CSP violation reports, logged to Workers Logs (security-headers.ts).
@@ -197,15 +203,16 @@ const site = {
   // Two crons (wrangler.jsonc triggers.crons), their jobs each isolated and recorded in cron_runs by site-runtime ./cron,
   // which /health reads; a failed job fails the invocation after the others have run. Awaited rather than handed to
   // waitUntil, whose rejection is only logged while the invocation still counts as a success (Grok audit 2026-10-21,
-  // GE-11). Every minute: the updates Carrel scheduled on live articles go live (site-api's runSchedules; each one that
-  // fails is logged and tried again next minute; each that lands purges the stored pages, carrel/handler.server), then,
+  // GE-11). Every minute: what Carrel scheduled goes live, failed hooks run again and the trash past 30 days is emptied
+  // (site-api's runSchedules; each schedule that fails is logged and tried again next minute; each that lands purges
+  // the stored pages, carrel/handler.server), then,
   // until it has finished once, a batch of the media backfill. Nightly: the D1 backup, the re-render of the bodies a
   // Prelum upgrade left on an older render (app/lib/render.server.ts), the audio and image files beside the backup, and
   // the 404 counts pruned to 90 days.
   async scheduled(controller, env) {
     if (controller.cron === SCHEDULES_CRON) {
       await runJobs(env.DB, [
-        { name: "schedules", everyMinutes: 1, run: () => carrelApi(env).runSchedules({ now: new Date(controller.scheduledTime) }) },
+        { name: "schedules", everyMinutes: 1, run: () => runCarrelSchedules(env, new Date(controller.scheduledTime)) },
         { name: "media-backfill", everyMinutes: 1, run: () => continueMediaBackfill(env) },
       ]);
       return;

@@ -88,6 +88,10 @@ export const posts = sqliteTable(
     bodyHtml: text("body_html"),
     bodyMeta: text("body_meta", { mode: "json" }).$type<BodyMeta>(),
     renderVersion: text("render_version"),
+
+    // 0019: Carrel's trash (when the post was trashed) and the change that scheduled a post not yet live.
+    trashedAt: text("trashed_at"),
+    scheduleChangeId: text("schedule_change_id"),
   },
   (t) => ({
     slugIdx: uniqueIndex("posts_slug_idx").on(t.slug),
@@ -299,6 +303,63 @@ export const scheduledUpdates = sqliteTable(
   },
   (t) => ({ dueIdx: index("scheduled_updates_due").on(t.publishAt) }),
 );
+
+// 0019: a renamed post's old slug, which redirects (301) to the post's slug now (app/lib/posts.server.ts).
+export const postRedirects = sqliteTable("post_redirects", {
+  fromSlug: text("from_slug").primaryKey(),
+  postId: integer("post_id")
+    .notNull()
+    .references(() => posts.id, { onDelete: "cascade" }),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// 0018: site-api's store (safe retries, hook retries, preview links, the webmentions sent). Read and written only
+// through @dustinedwards/site-api/store (app/lib/carrel/handler.server.ts); declared here so the schema test sees it.
+export const siteApiWrites = sqliteTable(
+  "site_api_writes",
+  {
+    changeId: text("change_id").primaryKey(),
+    route: text("route").notNull(),
+    requestHash: text("request_hash").notNull(),
+    status: integer("status"),
+    response: text("response"),
+    state: text("state").notNull(),
+    at: text("at").notNull(),
+  },
+  (t) => ({ atIdx: index("site_api_writes_at").on(t.at) }),
+);
+
+export const hookRetries = sqliteTable(
+  "hook_retries",
+  {
+    id: text("id").primaryKey(),
+    hook: text("hook").notNull(),
+    event: text("event").notNull(),
+    attempts: integer("attempts").notNull(),
+    nextAt: text("next_at").notNull(),
+    lastError: text("last_error").notNull(),
+  },
+  (t) => ({ dueIdx: index("hook_retries_due").on(t.nextAt) }),
+);
+
+export const previewLinks = sqliteTable(
+  "preview_links",
+  {
+    tokenHash: text("token_hash").primaryKey(),
+    contentId: text("content_id").notNull(),
+    createdAt: text("created_at").notNull(),
+    expiresAt: text("expires_at").notNull(),
+    revokedAt: text("revoked_at"),
+    changeId: text("change_id").notNull(),
+  },
+  (t) => ({ contentIdx: index("preview_links_content").on(t.contentId, t.expiresAt) }),
+);
+
+export const webmentionTargets = sqliteTable("webmention_targets", {
+  source: text("source").primaryKey(),
+  targets: text("targets").notNull(),
+  sentAt: text("sent_at").notNull(),
+});
 
 // 0014: the caption Carrel set on an image in BLOG_IMAGES, keyed by its R2 key. Since 0015 a caption lives on its
 // `media` row; this table is read only by the backfill that made those rows (app/lib/media/backfill.server.ts).
