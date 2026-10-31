@@ -17,7 +17,7 @@ import type { Route } from "./+types/admin";
 import { getEnv } from "~/lib/context.server";
 import { accessAdmin } from "@dustinedwards/site-runtime/access";
 import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runtime/log";
-import { refuseCrossSite } from "@dustinedwards/site-runtime/origin";
+import { isolationVerdict, refuseCrossSite } from "@dustinedwards/site-runtime/origin";
 import { applyTheme, effectiveTheme } from "~/lib/theme";
 import type { Theme } from "~/lib/types";
 
@@ -32,6 +32,12 @@ export const middleware: Route.MiddlewareFunction[] = [
     if (refused) {
       logRefusal(request, "cross-site", refused.status);
       throw refused;
+    }
+    // Resource isolation (site-runtime isolationVerdict): another site may link to an admin page and nothing more, so
+    // no page elsewhere loads an admin response as an image, script, frame or fetch with the Access cookie.
+    if (!isolationVerdict(request).ok) {
+      logRefusal(request, "cross-site-resource", 403);
+      throw new Response("Forbidden", { status: 403, headers: PRIVATE });
     }
     if (!(await accessAdmin(request, getEnv(context)))) {
       logRefusal(request, "not-admin", 403);
