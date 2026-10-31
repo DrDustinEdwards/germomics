@@ -5,6 +5,7 @@ import { CSP_REPORT_PATH, handleCspReport, withSecurityHeaders } from "../app/li
 import { serveWithEdgeCache } from "../app/lib/edge-cache.server";
 import { carrelApi } from "../app/lib/carrel/handler.server";
 import { runBackup } from "../app/lib/backup.server";
+import { rerenderStale } from "../app/lib/render.server";
 import { continueMediaBackfill } from "../app/lib/media/backfill.server";
 import { PRELOADS } from "../app/lib/preloads";
 
@@ -80,7 +81,8 @@ export default {
 
   // Two crons (wrangler.jsonc triggers.crons). Every minute: the updates Carrel scheduled on live
   // articles go live (site-api's runSchedules; each one that fails is logged and tried again next
-  // minute), then, until it has finished once, a batch of the media backfill. Nightly: the D1 backup. Its errors are logged and rethrown, never swallowed: a failed
+  // minute), then, until it has finished once, a batch of the media backfill. Nightly: the D1 backup, then the re-render of
+  // stale bodies (app/lib/render.server.ts). The backup's errors are logged and rethrown, never swallowed: a failed
   // run must show as a failed invocation and age /health's backup reading. Awaited rather than
   // handed to waitUntil, whose rejection is only logged while the invocation still counts as a
   // success (Grok audit 2026-10-21, GE-11).
@@ -96,5 +98,7 @@ export default {
       console.error("Nightly backup failed:", err);
       throw err;
     }
+    // After the backup: the rows a Prelum upgrade left on an older render are rendered again and stored.
+    console.log(JSON.stringify({ event: "render.stale", ...(await rerenderStale(env)) }));
   },
 } satisfies ExportedHandler<Env>;

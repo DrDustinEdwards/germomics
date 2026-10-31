@@ -22,8 +22,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const page = await loadPage(env, "page:txasm", { includeDrafts: preview });
   return {
     title: page.title || TITLE,
-    description: stripHtml(page.value),
-    html: page.value,
+    description: stripHtml(page.html),
+    html: page.html,
   };
 }
 

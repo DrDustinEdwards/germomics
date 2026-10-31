@@ -1,6 +1,7 @@
 // The kind-aware post editor route — loader + action behind the admin gate; renders <PostEditor>.
-// All field writes go through Drizzle (admin.server / people.server); body HTML is sanitized on
-// every save; scheduling rides on publish_at (publish-on-read gate). guid stays immutable.
+// All field writes go through Drizzle (admin.server / people.server); scheduling rides on publish_at
+// (publish-on-read gate). guid stays immutable. The body is written in Carrel (lib/carrel/adapter.server.ts),
+// which stores its Markdown and render; this editor shows that render and never writes the body.
 import { redirect } from "react-router";
 import type { Route } from "./+types/admin.posts.$id";
 import { cloudflareContext, getEnv } from "~/lib/context.server";
@@ -17,8 +18,7 @@ import {
   listAllPosts,
 } from "~/lib/admin.server";
 import { listPeople, getEpisodePeople, setEpisodePeople } from "~/lib/people.server";
-import { sanitizeHtml } from "~/lib/sanitize.server";
-import { readingTime } from "~/lib/seo";
+import { storedBody } from "~/lib/render.server";
 import { previewToken } from "~/lib/preview.server";
 import { aiConfigured } from "~/lib/ai.server";
 import { PostEditor, type EditorData } from "~/components/admin/PostEditor";
@@ -38,17 +38,18 @@ export async function loader({ params, context, request }: Route.LoaderArgs) {
   const post = await getPostById(env, Number(params.id));
   if (!post) throw new Response("Not found", { status: 404 });
 
-  const [versions, people, links, all] = await Promise.all([
+  const [versions, people, links, all, body] = await Promise.all([
     listVersions(env, post.id),
     listPeople(env),
     getEpisodePeople(env, post.id),
     listAllPosts(env),
+    storedBody(env, post),
   ]);
   const origin = new URL(request.url).origin;
   const token = await previewToken(env, post.id);
 
   const data: EditorData = {
-    post,
+    post: { ...post, bodyHtml: body.html },
     versions: versions.map((v) => ({ id: v.id, createdAt: String(v.createdAt) })),
     people: people.map((p) => ({ id: p.id, name: p.name, slug: p.slug, role: p.role })),
     selectedPeople: links.map((l) => ({ personId: l.person.id, role: l.role ?? "" })),
@@ -93,14 +94,10 @@ export async function action({ params, request, context }: Route.ActionArgs) {
   }
 
   const isEpisode = post.kind === "episode";
-  const sanitizedBody = await sanitizeHtml(String(payload.body ?? ""));
-
   const fields: Partial<Post> = {
     title: String(payload.title ?? "").trim() || "Untitled",
     slug,
     excerpt: orNull(payload.excerpt),
-    body: sanitizedBody,
-    readingTime: readingTime(sanitizedBody),
     tags: Array.isArray(payload.tags) ? (payload.tags as string[]) : [],
     sources: Array.isArray(payload.sources) ? (payload.sources as Source[]) : [],
     featured: !!payload.featured,

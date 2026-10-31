@@ -2,6 +2,7 @@ import { env } from "cloudflare:test";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { RefusedError, VersionConflictError } from "@dustinedwards/site-api";
 import { createCarrelAdapter } from "~/lib/carrel/adapter.server";
+import { RENDER_VERSION } from "~/lib/render.server";
 import { carrelApi } from "~/lib/carrel/handler.server";
 import { applyMigrations } from "./helpers/d1";
 
@@ -28,6 +29,7 @@ beforeEach(async () => {
   await e.DB.exec("DELETE FROM post_versions");
   await e.DB.exec("DELETE FROM posts");
   await e.DB.exec("DELETE FROM scheduled_updates");
+  await e.DB.exec("DELETE FROM content_blocks");
 });
 
 describe("saving a draft", () => {
@@ -71,10 +73,18 @@ describe("saving a draft", () => {
     expect(await row("bad")).toBeNull();
   });
 
-  it("refuses an id that cannot be a slug, and a slug an episode holds", async () => {
-    await expect(save("-leading-dash", "<p>x</p>")).rejects.toThrow("That id cannot be used as a slug.");
-    await insert("INSERT INTO posts (kind, title, slug, body, status) VALUES ('episode', 'Ep', 'ep-1', '', 'draft')");
-    await expect(save("ep-1", "<p>x</p>")).rejects.toThrow("That slug belongs to a podcast episode, which Carrel does not edit.");
+  it("refuses an id that cannot be a slug, and an id in the pages' form", async () => {
+    await expect(save("-leading-dash", "x")).rejects.toThrow("That id cannot be used as a slug.");
+    await expect(save("page.new", "x")).rejects.toThrow(RefusedError);
+    expect(await row("page.new")).toBeNull();
+  });
+
+  it("stores the Markdown with its render, reading time and render version, and refuses one Prelum refuses", async () => {
+    await save("md", '---\ntitle: "M"\n---\n## Part\n\nSome *words*.\n');
+    expect(await row("md")).toMatchObject({ body: "## Part\n\nSome *words*.\n", render_version: RENDER_VERSION, reading_time: 1 });
+    expect((await row("md"))!.body_html).toContain("<em>words</em>");
+    await expect(save("md2", ':::figure{src="https://images.germomics.com/x.webp"}\nx\n:::')).rejects.toThrow("requires an alt attribute");
+    expect(await row("md2")).toBeNull();
   });
 
   it("refuses a version that is not current, naming the current one", async () => {
@@ -202,26 +212,26 @@ describe("reading", () => {
     expect(new Set([draft, published, scheduled]).size).toBe(3);
   });
 
-  it("lists articles only, filtered by text and status, newest first, a page at a time", async () => {
+  it("lists articles and episodes, filtered by text and status, newest first, a page at a time", async () => {
     for (const [slug, title, updated] of [["alpha", "Cholera notes", "2026-01-01 00:00:00"], ["beta", "Plague", "2026-01-03 00:00:00"], ["gamma-cholera", "Third", "2026-01-02 00:00:00"]]) {
       await insert("INSERT INTO posts (kind, title, slug, body, status, updated_at) VALUES ('article', ?, ?, '', 'draft', ?)", title, slug, updated);
     }
     await insert("INSERT INTO posts (kind, title, slug, body, status) VALUES ('article', 'Bad slug', '-bad', '', 'draft')");
-    await insert("INSERT INTO posts (kind, title, slug, body, status) VALUES ('episode', 'Cholera episode', 'ep', '', 'draft')");
+    await insert("INSERT INTO posts (kind, title, slug, body, status, updated_at) VALUES ('episode', 'Cholera episode', 'ep', '', 'draft', '2025-12-01 00:00:00')");
     await insert("UPDATE posts SET status = 'published' WHERE slug = 'beta'");
 
     const ids = async (q: Parameters<typeof content.list>[0]) => (await content.list(q)).items.map((i) => i.id);
-    expect(await ids({ limit: 10 })).toEqual(["beta", "gamma-cholera", "alpha"]);
-    expect(await ids({ limit: 10, q: "cholera" })).toEqual(["gamma-cholera", "alpha"]);
+    expect(await ids({ limit: 10 })).toEqual(["beta", "gamma-cholera", "alpha", "ep"]);
+    expect(await ids({ limit: 10, q: "cholera" })).toEqual(["gamma-cholera", "alpha", "ep"]);
     expect(await ids({ limit: 10, status: "published" })).toEqual(["beta"]);
 
     const first = await content.list({ limit: 2 });
     expect(first.items.map((i) => i.id)).toEqual(["beta", "gamma-cholera"]);
     expect(first.nextCursor).toBe("2");
     const second = await content.list({ limit: 2, cursor: first.nextCursor! });
-    expect(second.items.map((i) => i.id)).toEqual(["alpha"]);
+    expect(second.items.map((i) => i.id)).toEqual(["alpha", "ep"]);
     expect(second.nextCursor).toBeNull();
-    expect((await content.list({ limit: 3 })).nextCursor).toBeNull();
+    expect((await content.list({ limit: 4 })).nextCursor).toBeNull();
     expect(await ids({ limit: 1, cursor: "-5" })).toEqual(["beta"]);
     expect(await ids({ limit: 1, cursor: "junk" })).toEqual(["beta"]);
   });
@@ -240,6 +250,58 @@ describe("reading", () => {
     const current = (await content.get("rev"))!;
     expect(await content.revisionSource("rev", current.version)).toBe(current.source);
     expect(await content.revisionSource("rev", "0".repeat(32))).toBeNull();
+  });
+});
+
+describe("an episode", () => {
+  const episode = (status: string) =>
+    insert("INSERT INTO posts (kind, title, slug, body, status, guid, audio_url) VALUES ('episode', 'Ep', 'ep', 'Old', ?, 'urn:germomics:ep', 'https://media.germomics.com/ep.mp3')", status);
+
+  it("takes its text from Carrel, live, and keeps its audio and guid", async () => {
+    await episode("published");
+    const doc = (await content.get("ep"))!;
+    expect(doc).toMatchObject({ kind: "episode", status: "published" });
+    await save("ep", '---\ntitle: "Ep, retitled"\n---\nNew notes', doc.version);
+    expect(await row("ep")).toMatchObject({ kind: "episode", title: "Ep, retitled", body: "New notes", status: "published", guid: "urn:germomics:ep", audio_url: "https://media.germomics.com/ep.mp3" });
+  });
+
+  it("is never put live for the first time, scheduled or taken down from Carrel", async () => {
+    await episode("draft");
+    const { version } = (await content.get("ep"))!;
+    await expect(content.publish("ep", { expectedVersion: version, changeId: "c" })).rejects.toThrow("from the germomics admin");
+    await expect(content.schedule("ep", { expectedVersion: version, changeId: "c", publishAt: "2030-01-01T00:00:00.000Z" })).rejects.toBeInstanceOf(RefusedError);
+    await insert("UPDATE posts SET status = 'published' WHERE slug = 'ep'");
+    const live = (await content.get("ep"))!;
+    await expect(content.unpublish("ep", { expectedVersion: live.version, changeId: "c" })).rejects.toThrow("taken down in the germomics admin");
+    expect(await row("ep")).toMatchObject({ status: "published" });
+  });
+});
+
+describe("a page", () => {
+  const block = (key: string, value: string) =>
+    insert("INSERT INTO content_blocks (key, kind, title, value, status) VALUES (?, 'page', 'About', ?, 'draft')", key, value);
+  const page = (key: string) => e.DB.prepare("SELECT * FROM content_blocks WHERE key = ?").bind(key).first<Record<string, any>>();
+
+  it("is listed and read as Markdown under page.<name>, saved with its render and published", async () => {
+    await block("page:about", "Old *about*");
+    await block("page:llms", "plain text");
+    expect((await content.list({ limit: 10 })).items.map((i) => i.id)).toEqual(["page.about"]);
+    const doc = (await content.get("page.about"))!;
+    expect(doc).toMatchObject({ kind: "page", status: "draft", source: '---\ntitle: "About"\n---\nOld *about*' });
+    expect(await content.get("page.llms")).toBeNull();
+    const saved = await save("page.about", '---\ntitle: "About us"\n---\nNew *about*', doc.version);
+    expect(await page("page:about")).toMatchObject({ title: "About us", value: "New *about*", body_html: "<p>New <em>about</em></p>", render_version: RENDER_VERSION, status: "draft" });
+    const published = await content.publish("page.about", { expectedVersion: saved.version, changeId: "c" });
+    expect(published.status).toBe("published");
+    expect((await content.get("page.about"))!.path).toBe("/about");
+  });
+
+  it("is never created, scheduled or taken down", async () => {
+    await expect(save("page.new", "x")).rejects.toThrow(RefusedError);
+    await block("page:about", "x");
+    const { version } = (await content.get("page.about"))!;
+    await expect(content.unpublish("page.about", { expectedVersion: version, changeId: "c" })).rejects.toThrow("live route");
+    await expect(content.schedule("page.about", { expectedVersion: version, changeId: "c", publishAt: "2030-01-01T00:00:00.000Z" })).rejects.toThrow("live route");
   });
 });
 
