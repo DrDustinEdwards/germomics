@@ -127,7 +127,8 @@ jobs:
   # VITE_GOOGLE_MAPS_MAP_ID and the secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID), so Cloudflare Workers Builds keeps deploying until it is turned off; turn it off before
   # setting CF_DEPLOY, or both deploy each merge.
   # devkit's shared deploy (worker-deploy.yml): it reads the D1 Time Travel bookmark (`d1-database`), so a bad
-  # migration is one restore to undo, applies the migrations (`npm run db:migrate:prod`) and builds, deploys with
+  # migration is one restore to undo, applies the pending migrations that only add (devkit-migrations --apply; a
+  # drop, rename or row delete is refused with the command to run it by hand) and builds, deploys with
   # DEPLOY_SHA set to this commit, waits for /health to report it, checks the home page answers, and rolls the deploy
   # back if it does not. A rollback never undoes a migration, so migrations stay additive (CLAUDE.md, hard rule 2).
   deploy:
@@ -150,7 +151,7 @@ jobs:
       pre-deploy: >-
         export VITE_GOOGLE_MAPS_KEY='${{ vars.VITE_GOOGLE_MAPS_KEY }}' VITE_GOOGLE_MAPS_MAP_ID='${{ vars.VITE_GOOGLE_MAPS_MAP_ID }}' &&
         { [ -n "$VITE_GOOGLE_MAPS_KEY" ] || { echo "::error::the repo variable VITE_GOOGLE_MAPS_KEY is not set, so the maps would not render"; exit 1; }; } &&
-        npm run db:migrate:prod &&
+        npx devkit-migrations drizzle --apply germomics &&
         npm run build
       sha-var: DEPLOY_SHA
     secrets:

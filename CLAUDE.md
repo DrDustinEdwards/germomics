@@ -17,7 +17,7 @@ React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-pl
 - `npm run typecheck` (wrangler types, typegen, tsc -b) and `npm test`: the quick local checks.
 - `npm run dev`: Vite in workerd with bindings.
 - `npm run db:migrate` (local) and `db:migrate:prod` (remote).
-- Deploys: a push to `main` that passes CI applies the D1 migrations and then deploys (the `deploy` job in `.github/workflows/ci.yml`, devkit's shared deploy, live once the repo variable `CF_DEPLOY` is `true`). A merge to `main` is a production deploy and runs its migrations. `npm run deploy` deploys by hand.
+- Deploys: a push to `main` that passes CI applies the pending D1 migrations that only add (a drop, rename or row delete is refused for a hand run) and then deploys (the `deploy` job in `.github/workflows/ci.yml`, devkit's shared deploy, live once the repo variable `CF_DEPLOY` is `true`). A merge to `main` is a production deploy and runs its migrations. `npm run deploy` deploys by hand.
 
 ## Backup: nightly d1-dump into R2
 
