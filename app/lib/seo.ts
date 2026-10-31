@@ -219,6 +219,8 @@ type PageHead = {
   article?: ArticleFacts;
   pageType?: "CollectionPage";
   breadcrumbs?: Array<{ name: string; path: string }>;
+  canonical?: string;
+  noindex?: boolean;
 };
 
 // Prelum builds each page's WebPage and BreadcrumbList from these sections; a page whose trail is not its URL (a season,

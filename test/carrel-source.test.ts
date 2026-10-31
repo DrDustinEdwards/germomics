@@ -15,6 +15,8 @@ const article: SourcePost = {
   seoDescription: "Desc",
   ogImage: "https://images.germomics.com/og.png",
   ogImageAlt: "OG",
+  canonical: "https://example.com/elsewhere",
+  noindex: true,
   featured: true,
   sources: [{ type: "book", title: "Sample Book", url: "https://example.com/book" }],
   body: "Body\n---\nstill body",
@@ -56,6 +58,8 @@ describe("the source", () => {
       seoDescription: null,
       ogImage: null,
       ogImageAlt: null,
+      canonical: null,
+      noindex: false,
       featured: false,
       sources: [],
     });

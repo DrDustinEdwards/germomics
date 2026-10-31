@@ -47,6 +47,7 @@ import {
   type SiteAdapter,
   type WriteResult,
 } from "@dustinedwards/site-api";
+import { SEARCH_FIELDS } from "@dustinedwards/site-api/frontmatter";
 import { d1ScheduledUpdates, utc } from "@dustinedwards/site-api/schedules";
 import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
 import { getDb } from "~/db/index.server";
@@ -333,9 +334,10 @@ export function createCarrelAdapter(
 
   const content: ContentAdapter = {
     // site-api's post and search fields this site renders (./source.ts): the excerpt, and the search title,
-    // description, image and its alt text, kept in seo_title, seo_description, og_image and og_image_alt.
+    // description, image and its alt text, kept in seo_title, seo_description, og_image and og_image_alt, and the
+    // canonical address and noindex in their own columns.
     postFields: ["excerpt"],
-    searchFields: ["searchTitle", "description", "image", "imageAlt"],
+    searchFields: SEARCH_FIELDS,
     // A page has no tags and no publish date, so a tag or date filter leaves the pages out. No post names authors.
     filters: ["kind", "tag", "published"],
     publishedAtSettable: true,

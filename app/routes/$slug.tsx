@@ -5,6 +5,7 @@ import { getEpisodeGuests } from "~/lib/people.server";
 import { soundbitesForPost } from "~/lib/soundbites.server";
 import { getShowConfig } from "~/lib/show.server";
 import { buildJsonLd, ogImageFor, pageHead, stripHtml } from "~/lib/seo";
+import { SITE_ORIGIN } from "~/lib/site";
 import { faqPage, jsonLd } from "@drdustinedwards/site-helpers/schema";
 import type { HeadImage } from "@drdustinedwards/site-helpers/head";
 import { pageToc, storedBody } from "~/lib/render.server";
@@ -30,6 +31,8 @@ export function meta({ loaderData }: Route.MetaArgs) {
       socialTitle: post.title,
       description: post.seoDescription || post.excerpt || stripHtml(post.bodyHtml ?? "") || `${post.title}, on Germomics.`,
       image: ogImage,
+      canonical: post.canonical ? new URL(post.canonical, SITE_ORIGIN).href : undefined,
+      noindex: post.noindex,
       type: "article",
       article: { published: post.publishedAt ?? post.publishAt, modified: post.updatedAt, author, tags: post.tags ?? [] },
       breadcrumbs: [

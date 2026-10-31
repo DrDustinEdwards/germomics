@@ -19,9 +19,9 @@
 //
 // THE WHOLE SET. A source with front matter is the post: a key it leaves out is cleared, as Carrel's post and search
 // field boxes clear a blank one by removing its key. A source with no front matter at all is a body alone, and leaves
-// every field as it was. `excerpt` is site-api's post field and searchTitle, description, image and imageAlt its search
-// fields (@dustinedwards/site-api/frontmatter), in the columns seo_title, seo_description, og_image and og_image_alt;
-// the keys before them, seoTitle and seoDescription, are still read.
+// every field as it was. `excerpt` is site-api's post field and searchTitle, description, image, imageAlt, canonical
+// and noindex its search fields (@dustinedwards/site-api/frontmatter), in the columns seo_title, seo_description,
+// og_image, og_image_alt, canonical and noindex; the keys before them, seoTitle and seoDescription, are still read.
 //
 // READING. site-api's jsonSource reads the lines, given this field list; the structured fields (numbers and lists of
 // objects) are read as text, which jsonSource hands back as written, and parsed and checked here.
@@ -41,6 +41,8 @@ type PostFields = {
   seoDescription: string | null;
   ogImage: string | null;
   ogImageAlt: string | null;
+  canonical: string | null;
+  noindex: boolean;
   featured: boolean;
   sources: Source[];
 };
@@ -74,6 +76,8 @@ const POST_KEYS = {
   description: "text",
   image: "text",
   imageAlt: "text",
+  canonical: "text",
+  noindex: "flag",
   featured: "flag",
   sources: "text",
 } as const;
@@ -110,6 +114,8 @@ export function renderSource(post: SourcePost): string {
     description: post.seoDescription,
     image: post.ogImage,
     imageAlt: post.ogImageAlt,
+    canonical: post.canonical,
+    noindex: post.noindex,
     featured: post.featured,
     sources: post.sources,
   };
@@ -146,6 +152,8 @@ export function parseSource(source: string, kind: "article" | "episode"): Parsed
     seoDescription: text(v.description ?? v.seoDescription),
     ogImage: text(v.image),
     ogImageAlt: text(v.imageAlt),
+    canonical: text(v.canonical),
+    noindex: v.noindex ?? false,
     featured: v.featured ?? false,
     sources: objects<Source>("sources", v.sources, problems, { title: "string" }),
   };

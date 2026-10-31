@@ -27,6 +27,9 @@ function summaryFor(p: Post): string {
   return oneLine(p.excerpt ?? p.seoDescription ?? p.bodyHtml);
 }
 
+/** A post marked noindex (site-api's search field) stays out of llms.txt and llms-full.txt. */
+const indexed = (list: Post[]) => list.filter((p) => !p.noindex);
+
 const link = (p: Post, origin: string): LlmsLink => ({ title: p.title, url: `${origin}/${p.slug}`, description: summaryFor(p) });
 
 /** Curated Markdown index of hubs + key content, in Prelum's llms.txt skeleton. */
@@ -52,8 +55,8 @@ export function buildLlmsTxt(
         page("/about", `About ${show.title}`, "what the project is and how to follow it."),
         page(`/about/${AUTHOR.slug}`, `${AUTHOR.name}, author`, `${AUTHOR.jobTitle.toLowerCase()}; bio and research.`),
       ] },
-      { heading: "Episodes", links: episodes.slice(0, INDEX_LIMIT).map((e) => link(e, origin)) },
-      { heading: "Writing", links: articles.slice(0, INDEX_LIMIT).map((a) => link(a, origin)) },
+      { heading: "Episodes", links: indexed(episodes).slice(0, INDEX_LIMIT).map((e) => link(e, origin)) },
+      { heading: "Writing", links: indexed(articles).slice(0, INDEX_LIMIT).map((a) => link(a, origin)) },
       { heading: "Explore", links: [
         page("/subscribe", "Subscribe", "podcast apps and the email newsletter."),
         page("/feed/podcast/", "Podcast RSS feed", "the canonical feed."),
@@ -109,13 +112,10 @@ export function buildLlmsFullTxt(
     "",
   ];
 
-  if (episodes.length) {
-    out.push("# Episodes", "");
-    for (const e of episodes) out.push(fullSection(e, origin));
-  }
-  if (articles.length) {
-    out.push("# Writing", "");
-    for (const a of articles) out.push(fullSection(a, origin));
+  for (const [heading, list] of [["Episodes", indexed(episodes)], ["Writing", indexed(articles)]] as const) {
+    if (!list.length) continue;
+    out.push(`# ${heading}`, "");
+    for (const p of list) out.push(fullSection(p, origin));
   }
   return out.join("\n");
 }
