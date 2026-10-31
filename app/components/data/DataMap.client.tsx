@@ -24,8 +24,8 @@ import type { DataPoint } from "~/lib/datasets.server";
 import { siteIsDark, toLatLng } from "~/lib/map";
 
 // BUILD-TIME, NOT RUNTIME. Vite inlines import.meta.env.VITE_* into the CLIENT bundle at build
-// time, so the value has to be present when `react-router build` runs (a Workers Builds
-// environment variable, or .env locally). The matching entry in wrangler.jsonc `vars` documents
+// time, so the value has to be present when `react-router build` runs (a GitHub repo
+// variable read by CI's deploy, or .env locally). The matching entry in wrangler.jsonc `vars` documents
 // the same value for the deploy and is deliberately NOT what this reads: a Worker var is not
 // visible to a browser bundle. A Maps browser key is public by construction, which is why it
 // must be HTTP-referrer restricted in the Google Cloud console rather than kept secret.

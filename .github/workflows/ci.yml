@@ -1,5 +1,5 @@
-# CI gate. Runs on every push and PR. (Cloudflare Workers Builds still runs `npm run deploy`
-# on push to main; this is the correctness/security gate that should pass before that.)
+# CI gate. Runs on every push and PR, and a push to main that passes it deploys: D1 migrations first, then the
+# Worker (the `deploy` job at the end).
 #
 # TWO JOBS, NOT ONE, AND THE SPLIT IS THE POINT (2026-09-08).
 #
@@ -112,3 +112,38 @@ jobs:
       # problem into an unknown one, which is how six weeks of red happened in the first place.
       - name: Audit (production deps)
         run: npm audit --omit=dev --audit-level=high
+
+  # A merge to main deploys once both jobs are green: migrations first, then the Worker, so a migration is never a
+  # manual step. Dormant until the repo variable CF_DEPLOY is 'true' (with the variables VITE_GOOGLE_MAPS_KEY and
+  # VITE_GOOGLE_MAPS_MAP_ID and the secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID), so Cloudflare Workers Builds keeps deploying until it is turned off; turn it off before
+  # setting CF_DEPLOY, or both deploy each merge.
+  # devkit's shared deploy (worker-deploy.yml): it reads the D1 Time Travel bookmark (`d1-database`), so a bad
+  # migration is one restore to undo, applies the migrations (`npm run db:migrate:prod`) and builds, deploys with
+  # DEPLOY_SHA set to this commit, waits for /health to report it, checks the home page answers, and rolls the deploy
+  # back if it does not. A rollback never undoes a migration, so migrations stay additive (CLAUDE.md, hard rule 2).
+  deploy:
+    needs: [verify, audit]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CF_DEPLOY == 'true'
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@d992f82350f7143b026597f89359bad90580ebfc # v0.20.9
+    with:
+      worker-name: germomics
+      d1-database: germomics
+      health-url: https://germomics.com/health
+      verify-command: >-
+        code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 https://germomics.com/ || true);
+        echo "home page answered $code";
+        if [ "$code" = 200 ]; then exit 0; elif [ "$code" = 000 ]; then exit 3; else exit 1; fi
+      # The Maps key and Map ID are BUILD-time values Vite inlines into the client bundle (wrangler.jsonc, .env.example),
+      # so they come from repo variables (public by construction, referrer-restricted) and a deploy without the key stops.
+      pre-deploy: >-
+        export VITE_GOOGLE_MAPS_KEY='${{ vars.VITE_GOOGLE_MAPS_KEY }}' VITE_GOOGLE_MAPS_MAP_ID='${{ vars.VITE_GOOGLE_MAPS_MAP_ID }}' &&
+        { [ -n "$VITE_GOOGLE_MAPS_KEY" ] || { echo "::error::the repo variable VITE_GOOGLE_MAPS_KEY is not set, so the maps would not render"; exit 1; }; } &&
+        npm run db:migrate:prod &&
+        npm run build
+      sha-var: DEPLOY_SHA
+    secrets:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

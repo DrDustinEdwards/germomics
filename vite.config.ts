@@ -7,9 +7,9 @@ export default defineConfig({
   plugins: [
     cloudflare({
       viteEnvironment: { name: "ssr" },
-      // The deployed commit for /health's `sha`: Workers Builds sets WORKERS_CI_COMMIT_SHA in the build. Always written,
-      // empty for a local build, so keep_vars never carries an older commit's value into a manual deploy.
-      config: { vars: { DEPLOY_SHA: process.env.WORKERS_CI_COMMIT_SHA ?? "" } },
+      // The deployed commit for /health's `sha`: CI's deploy passes `--var DEPLOY_SHA:<commit>`. Always written, empty
+      // for a local build, so keep_vars never carries an older commit's value into a manual deploy.
+      config: { vars: { DEPLOY_SHA: "" } },
     }),
     tailwindcss(),
     reactRouter(),
