@@ -6,6 +6,7 @@ import type { Route } from "./+types/admin.ai";
 import { getEnv } from "~/lib/context.server";
 import { AI_KINDS, aiConfigured, aiErrors, draftStatus, startDraft, type AiKind } from "~/lib/ai.server";
 import { aiCostCapExceeded, recordAiUse } from "~/lib/security.server";
+import { ADMIN_FORM, readForm } from "~/lib/body.server";
 
 const noStore = { "Cache-Control": "no-store" };
 
@@ -27,7 +28,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     return Response.json({ ok: false, error: errors.dailyCap }, { status: 429 });
   }
 
-  const form = await request.formData();
+  const form = await readForm(request, ADMIN_FORM);
   const kind = String(form.get("kind") || "") as AiKind;
   if (!AI_KINDS.includes(kind)) return Response.json({ ok: false, error: "Unknown generation kind." }, { status: 400 });
   try {

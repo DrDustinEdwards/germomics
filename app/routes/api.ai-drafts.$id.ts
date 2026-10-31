@@ -5,6 +5,7 @@
 import type { Route } from "./+types/api.ai-drafts.$id";
 import { getEnv } from "~/lib/context.server";
 import { finishDraft, jobForRoutine, routineInstructions } from "~/lib/ai.server";
+import { ADMIN_FORM, readJson } from "~/lib/body.server";
 
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex" } });
 const bearer = (request: Request) => /^Bearer (\S+)$/.exec(request.headers.get("Authorization") ?? "")?.[1] ?? "";
@@ -23,7 +24,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   const env = getEnv(context);
   const job = await jobForRoutine(env, params.id, bearer(request));
   if (!job) return json({ ok: false, error: NO_JOB }, 404);
-  const answer = (await request.json().catch(() => null)) as { draft?: unknown; error?: unknown } | null;
+  const answer = (await readJson(request, ADMIN_FORM)) as { draft?: unknown; error?: unknown } | null;
   if (!answer || typeof answer !== "object") return json({ ok: false, error: 'Send JSON: {"draft": "..."} or {"error": "..."}.' }, 400);
   const refused = await finishDraft(env, params.id, job, answer);
   if (refused) return json({ ok: false, error: refused }, refused.startsWith("This job is already") ? 409 : 400);

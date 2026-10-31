@@ -1,93 +1,70 @@
-// Every security header germomics sends, in one file: site-runtime's standard set (the OWASP Secure
-// Headers Project's values) with this site's deviations, each beside its reason, and the
-// Content-Security-Policy built from what the site really loads. workers/app.ts and the edge cache
-// apply withSecurityHeaders to every response (pages, feeds, resource routes, redirects, errors).
-// Server-only.
+// The Worker's side of germomics' security headers: the set (header-set.ts) on every response (pages, feeds, resource
+// routes, redirects, errors; workers/app.ts applies it), and the Content-Security-Policy built from what the site
+// really loads. Server-only.
 
 import { buildContentSecurityPolicy, reportingEndpoints } from "@dustinedwards/site-runtime/csp";
 import { receiveCspReport } from "@dustinedwards/site-runtime/csp-report";
-import { applyHeaderSet, buildSecurityHeaders, STANDARD_SECURITY_HEADERS } from "@dustinedwards/site-runtime/headers";
-import { TDM_RESERVATION_HEADERS } from "@drdustinedwards/site-helpers/robots";
+import { applyHeaderSet, corpFor } from "@dustinedwards/site-runtime/headers";
 
+import { SECURITY_HEADERS } from "~/lib/header-set";
 import { IMAGE_ORIGIN, MEDIA_ORIGIN, OP3_ORIGIN } from "~/lib/site";
 
-// Content-Security-Policy, enforced, built by site-runtime's buildContentSecurityPolicy. Allowlist:
-// self + cdnjs, the Maps JavaScript API, the media/images subdomains, and Cloudflare's Web Analytics
-// beacon (which reports to this origin's /cdn-cgi/rum). The Maps hosts are the allowlist in Google's
-// Maps JavaScript API CSP guide (googleapis.com and gstatic.com for script, image and connect, the
-// Google Fonts pair for the map's Roboto, google.com frames), minus the legacy-domain entries this
-// site does not load from. Scripts take inlineScripts: "unsafe-inline" because React Router streams
-// inline hydration scripts and the pre-paint theme script is inline, and an edge-cached page cannot
-// carry a nonce; style-src keeps 'unsafe-inline' for TipTap. Violations still go to CSP_REPORT_PATH,
-// which logs them through site-runtime's receiver, so Workers Logs hold anything the policy blocks.
+// Content-Security-Policy, enforced, built by site-runtime's buildContentSecurityPolicy. Inline scripts run by the
+// page's nonce: React Router puts it on its hydration and streaming scripts, React on its own, root.tsx on the theme
+// script, and the edge cache gives every reader a fresh one (renewNonce, edge-cache.server.ts). Allowlist: self, the
+// media/images subdomains, Cloudflare's Web Analytics beacon (which reports to this origin's /cdn-cgi/rum), and the
+// hosts the data pages' map loads (DataMap.client.tsx, through @googlemaps/js-api-loader), named one by one from the
+// API's own bootstrap rather than Google's wildcard list: its loader, modules and JSONP services at maps.googleapis.com,
+// tiles and map styles from maps.googleapis.com, images from maps.gstatic.com and mts.googleapis.com, its logging at
+// www.google.com/maps/, and the Google Fonts pair for the map's Roboto. No street view, satellite or Google frame is
+// used. Styles keep 'unsafe-inline' for TipTap and the map (so the nonce stays off style-src, which would switch it
+// off). Violations go to CSP_REPORT_PATH, which logs them through site-runtime's receiver, so Workers Logs hold
+// anything the policy blocks.
 export const CSP_REPORT_PATH = "/csp-report";
 const CSP_ENDPOINT = "csp-endpoint";
-const MAPS_SCRIPT = ["https://*.googleapis.com", "https://*.gstatic.com"];
-const MAPS_DATA = [...MAPS_SCRIPT, "https://*.google.com", "https://*.googleusercontent.com"];
-const CSP = buildContentSecurityPolicy({
-  inlineScripts: "unsafe-inline",
-  cloudflareWebAnalytics: true,
-  reportUri: CSP_REPORT_PATH,
-  reportTo: CSP_ENDPOINT,
-  sources: {
-    script: ["https://cdnjs.cloudflare.com", ...MAPS_SCRIPT],
-    style: ["'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
-    img: ["data:", "blob:", IMAGE_ORIGIN, MEDIA_ORIGIN, ...MAPS_DATA],
-    media: ["blob:", MEDIA_ORIGIN, OP3_ORIGIN],
-    font: ["data:", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"],
-    connect: [IMAGE_ORIGIN, MEDIA_ORIGIN, OP3_ORIGIN, ...MAPS_DATA, "blob:"],
-    frame: ["https://*.google.com"],
-  },
-  extraDirectives: ["worker-src 'self' blob:", "child-src 'self' blob:", "manifest-src 'self'", "upgrade-insecure-requests"],
-});
-
-// The family header set: OWASP's values from site-runtime, with germomics's deviations, each with its
-// reason (buildSecurityHeaders refuses an override without one or one that restates the standard).
-const OWASP_PERMISSIONS = (STANDARD_SECURITY_HEADERS["Permissions-Policy"] ?? "").split(",").map((d) => d.trim()).filter(Boolean);
-const SELF_FEATURES = ["autoplay", "clipboard-write", "web-share"];
-const SECURITY_HEADERS = buildSecurityHeaders({
-  overrides: {
-    "Permissions-Policy": {
-      value: [
-        ...OWASP_PERMISSIONS.filter((d) => !SELF_FEATURES.includes(d.split("=")[0])),
-        ...SELF_FEATURES.map((f) => `${f}=(self)`),
-        // Not in OWASP's list; this site denied it before adopting the set.
-        ...(OWASP_PERMISSIONS.some((d) => d.startsWith("browsing-topics=")) ? [] : ["browsing-topics=()"]),
-      ].join(", "),
-      reason:
-        "OWASP denies autoplay, clipboard-write and web-share; the player starts the next queued episode on `ended` and from lock-screen controls, and Copy link, the transcript quote and the feed-URL copy use the clipboard and the share sheet. Allowed for this origin only.",
+const MAPS = "https://maps.googleapis.com";
+// The JSONP services the API calls, each at its exact path: the prefix /maps/api/js/ also serves GeoPhotoService, a
+// known allowlist bypass, which street view alone would need.
+const MAPS_JSONP = ["AuthenticationService.Authenticate", "QuotaService.RecordEvent", "ApplicationService.GetEntityDetails", "StaticMapService.GetMapImage"];
+const MAPS_DATA = [MAPS, "https://maps.gstatic.com", "https://mts.googleapis.com", "https://www.google.com/maps/"];
+const csp = (nonce: string | undefined) =>
+  buildContentSecurityPolicy({
+    nonce,
+    nonceStyles: false,
+    cloudflareWebAnalytics: true,
+    reportUri: CSP_REPORT_PATH,
+    reportTo: CSP_ENDPOINT,
+    sources: {
+      script: [`${MAPS}/maps/api/js`, ...MAPS_JSONP.map((service) => `${MAPS}/maps/api/js/${service}`), `${MAPS}/maps-api-v3/`],
+      style: ["'unsafe-inline'", "https://fonts.googleapis.com"],
+      img: ["data:", "blob:", IMAGE_ORIGIN, MEDIA_ORIGIN, ...MAPS_DATA],
+      media: ["blob:", MEDIA_ORIGIN, OP3_ORIGIN],
+      font: ["data:", "https://fonts.gstatic.com"],
+      connect: [IMAGE_ORIGIN, MEDIA_ORIGIN, OP3_ORIGIN, ...MAPS_DATA, "blob:"],
     },
-    "Referrer-Policy": {
-      value: "strict-origin-when-cross-origin",
-      reason:
-        "OWASP's no-referrer strips the origin from the player's episode requests through OP3, which tells web players apart by Referer, and blanks Web Analytics' page-to-page referrers. Cross-origin requests still get the origin only, never the path.",
-    },
-    "Cross-Origin-Resource-Policy": {
-      value: "cross-origin",
-      reason: "Carrel's preview, a sandboxed frame on Carrel's own origin, loads this site's stylesheets and images",
-    },
-  },
-});
-
-// Added to every response (only if a route hasn't already set them), with Prelum's TDMRep header
-// reserving training rights; robots.txt and /ai.txt carry the rest of the policy.
-const STATIC_HEADERS: Record<string, string> = { ...SECURITY_HEADERS, ...TDM_RESERVATION_HEADERS };
+    extraDirectives: ["worker-src 'self' blob:", "child-src 'self' blob:", "manifest-src 'self'", "upgrade-insecure-requests"],
+  });
 
 /**
  * Return a copy of `response` with the security headers added. Never clobbers headers a route
- * already set (Content-Type, Cache-Control, Set-Cookie, its own CSP, etc.). `origin` is used
- * for the Reporting API endpoint.
+ * already set (Content-Type, Cache-Control, Set-Cookie, its own CSP, etc.). `url` is the request's,
+ * whose origin names the Reporting API endpoint; `nonce` is the one the page was rendered with.
+ * Images and feeds are Cross-Origin-Resource-Policy: cross-origin (corpFor), since other sites embed them.
  */
-export function withSecurityHeaders(response: Response, origin: string): Response {
+export function withSecurityHeaders(response: Response, url: string, nonce?: string): Response {
+  const { origin } = new URL(url);
   const headers = new Headers(response.headers);
-  applyHeaderSet(headers, STATIC_HEADERS, { overwrite: false });
+  applyHeaderSet(headers, { ...SECURITY_HEADERS, "Cross-Origin-Resource-Policy": corpFor(headers.get("Content-Type")) }, { overwrite: false });
   // The Reporting API's endpoint for report-to. reportingEndpoints refuses plain http off localhost
   // (a dev server on a LAN address), which a browser would ignore anyway, so that origin gets none.
   if (!headers.has("Reporting-Endpoints") && !/^http:\/\/(?!localhost|127\.0\.0\.1|\[::1\])/.test(origin)) {
     headers.set("Reporting-Endpoints", reportingEndpoints(CSP_ENDPOINT, new URL(CSP_REPORT_PATH, origin)));
   }
   // A route that declared its own policy keeps it.
-  if (!headers.has("Content-Security-Policy") && !headers.has("Content-Security-Policy-Report-Only")) headers.set(CSP.name, CSP.value);
+  if (!headers.has("Content-Security-Policy") && !headers.has("Content-Security-Policy-Report-Only")) {
+    const policy = csp(nonce);
+    headers.set(policy.name, policy.value);
+  }
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
