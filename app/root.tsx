@@ -23,6 +23,7 @@ import { socialLinks } from "~/lib/seo";
 import { PlayerProvider } from "~/components/player/player-context";
 import { PlayerDock } from "~/components/player/PlayerDock";
 import { Header } from "~/components/chrome/Header";
+import { LinkPrefetch } from "capsomer/react/link";
 import { Footer } from "~/components/chrome/Footer";
 
 export const links: Route.LinksFunction = () => [
@@ -71,6 +72,10 @@ export async function loader({ context }: Route.LoaderArgs) {
   };
 }
 
+// Never prefetched on hover, beyond the family's NEVER_PREFETCH (/admin, /api and the rest): /unsubscribe, a per-reader
+// token page reached from email whose action unsubscribes, and the tokenized draft previews.
+const NO_PREFETCH = ["/unsubscribe", "/preview"];
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -86,7 +91,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script nonce={useContext(UNSAFE_FrameworkContext)?.nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>
-        {children}
+        <LinkPrefetch exclude={NO_PREFETCH}>{children}</LinkPrefetch>
         <ScrollRestoration />
         <Scripts />
       </body>
