@@ -2,15 +2,16 @@ import { lazy } from "react";
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/data.$slug";
 import { getDataset } from "~/lib/datasets.server";
-import { getSnippets } from "~/lib/context.server";
-import { snippet } from "~/lib/content.server";
 import { timelineChart } from "~/lib/charts.server";
 import { ClientOnly } from "~/components/util/ClientOnly";
+import type { Source } from "~/lib/datasets.server";
+import chartsCss from "~/charts.css?url";
 
-// Heavy viz libs are lazy() — Vite code-splits them onto this route only. Charts are drawn on the server.
+// Heavy viz libs are lazy() — Vite code-splits them onto this route only. Charts are drawn on the server, and their
+// stylesheet and island (app/islands/charts.ts) load on this route alone.
 const DataMap = lazy(() => import("~/components/data/DataMap.client"));
 
-export const links: Route.LinksFunction = () => [{ rel: "stylesheet", href: "/charts.css" }];
+export const links: Route.LinksFunction = () => [{ rel: "stylesheet", href: chartsCss }];
 
 // A map is an app from its first paint, so a data page with one hydrates on load; one with only its chart, drawn on
 // the server, sends no React (lib/hydration.ts).
@@ -27,22 +28,31 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
   });
 }
 
-export async function loader({ params, context }: Route.LoaderArgs) {
+// The summary is the dataset's own, which states only what its numbers show (data._index.tsx says why).
+export function loader({ params }: Route.LoaderArgs) {
   const dataset = getDataset(params.slug);
   if (!dataset) throw new Response("Not found", { status: 404 });
-  const summary = snippet(await getSnippets(context), `snippet:dataset.${dataset.slug}`, dataset.summary);
   const chart = dataset.timeline ? timelineChart(dataset.slug, dataset.timeline) : null;
-  return { dataset: { ...dataset, summary }, chart };
+  return { dataset, chart };
 }
 
-function DataTable({ columns, rows }: { columns: string[]; rows: (string | number)[][] }) {
+/** Where a map's or table's numbers come from, as the chart's own source line reads. */
+function SourceLine({ source }: { source: Source }) {
+  return (
+    <p className="mt-2 font-display text-xs text-muted">
+      Source: <a href={source.url}>{source.label}</a>
+    </p>
+  );
+}
+
+function DataTable({ title, columns, rows }: { title: string; columns: string[]; rows: (string | number)[][] }) {
   return (
     <table className="w-full border-collapse text-sm">
-      <caption className="sr-only">Data table</caption>
+      <caption className="sr-only">{title}</caption>
       <thead>
         <tr>
           {columns.map((c) => (
-            <th key={c} scope="col" className="border-b border-border py-2 text-left font-display text-muted">
+            <th key={c} scope="col" className="border-b border-border py-2 pr-3 text-left align-bottom font-display text-muted">
               {c}
             </th>
           ))}
@@ -52,8 +62,8 @@ function DataTable({ columns, rows }: { columns: string[]; rows: (string | numbe
         {rows.map((r, i) => (
           <tr key={i}>
             {r.map((cell, j) => (
-              <td key={j} className="border-b border-border py-2 tabular-nums">
-                {cell}
+              <td key={j} className="border-b border-border py-2 pr-3 align-top tabular-nums">
+                {typeof cell === "number" ? cell.toLocaleString("en-GB") : cell}
               </td>
             ))}
           </tr>
@@ -74,19 +84,30 @@ export default function DataDetail({ loaderData }: Route.ComponentProps) {
       {d.map ? (
         <div className="mt-8">
           <ClientOnly fallback={<div className="h-80 w-full animate-pulse rounded-xl bg-surface" />}>
-            <DataMap center={d.map.center} zoom={d.map.zoom} points={d.map.points} />
+            <DataMap center={d.map.center} zoom={d.map.zoom} points={d.map.points} landmarks={d.map.landmarks} marked={d.map.marked} />
           </ClientOnly>
+          <p className="mt-2 font-display text-sm text-muted">{d.map.legend}</p>
+          <SourceLine source={d.map.source} />
         </div>
       ) : null}
 
       {chart ? (
-        <div className="mt-6 rounded-xl border border-border bg-card p-3" dangerouslySetInnerHTML={{ __html: chart }} />
+        <div
+          className="mt-6 rounded-xl border border-border bg-card p-3"
+          data-island="charts"
+          data-client="visible"
+          data-client-root-margin="200px"
+          dangerouslySetInnerHTML={{ __html: chart }}
+        />
       ) : null}
+
+      {d.note ? <p className="mt-6 max-w-2xl text-muted">{d.note}</p> : null}
 
       {d.table ? (
         <section className="mt-8">
-          <h2 className="mb-2 font-display text-lg font-semibold">The data</h2>
-          <DataTable columns={d.table.columns} rows={d.table.rows} />
+          <h2 className="mb-2 font-display text-lg font-semibold">{d.table.title}</h2>
+          <DataTable title={d.table.title} columns={d.table.columns} rows={d.table.rows} />
+          <SourceLine source={d.table.source} />
         </section>
       ) : null}
     </article>

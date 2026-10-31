@@ -3,20 +3,15 @@ import { Activity, Dna } from "lucide-react";
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/data._index";
 import { listDatasets } from "~/lib/datasets.server";
-import { getSnippets } from "~/lib/context.server";
-import { snippet } from "~/lib/content.server";
 
 export function meta() {
   return pageHead({ path: "/data", title: "Data · Germomics", description: "Interactive maps and charts on viruses and bacteria.", pageType: "CollectionPage" });
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
-  const snippets = await getSnippets(context);
-  const datasets = listDatasets().map((d) => ({
-    ...d,
-    summary: snippet(snippets, `snippet:dataset.${d.slug}`, d.summary),
-  }));
-  return { datasets };
+// Each summary is the dataset's own (datasets.server.ts), written to state only what its numbers show, so it moves
+// with them; the old `snippet:dataset.*` rows in D1 are no longer read.
+export function loader() {
+  return { datasets: listDatasets() };
 }
 
 export default function DataHub({ loaderData }: Route.ComponentProps) {

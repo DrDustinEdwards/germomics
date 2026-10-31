@@ -12,7 +12,6 @@ export default [
   route("search", "routes/search.tsx"),
   route("data", "routes/data._index.tsx"),
   route("data/:slug", "routes/data.$slug.tsx"),
-  route("charts.css", "routes/charts-css.ts"),
   route("games", "routes/games._index.tsx"),
   route("games/assets/*", "routes/games.assets.$.ts"),
   // resized images from BLOG_IMAGES (app/lib/images.ts)

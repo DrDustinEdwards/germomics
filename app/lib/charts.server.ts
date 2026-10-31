@@ -1,49 +1,43 @@
-// The /data charts, drawn on the server by Enarratio (nothing reaches the client, hard rule 4), themed
-// from app.css's tokens (card, ink, muted, border, accent, brand); other series slots pass checkTheme.
-import { stylesheet } from "enarratio";
-import { lineChart } from "enarratio/lite/line";
-import { defaultTheme } from "enarratio/themes";
+// The /data charts, drawn on the server by Enarratio in Capsomer's chart frame (nothing reaches the shared client
+// chunk, hard rule 4). Their look is capsomer/enarratio.css with germomics' tokens mapped in (app/charts.css); the
+// charts island (app/islands/charts.ts) enhances them and swaps in the narrow drawing on a phone.
+import { frameHtml } from "capsomer/behavior/chart-frame";
+import { type LineChartOptions, lineChart } from "enarratio/lite/line";
 import type { Timeline } from "~/lib/datasets.server";
 
-const light = defaultTheme.light.series;
-const dark = defaultTheme.dark.series;
+/**
+ * The phone drawing's width: a 320 px screen leaves the frame about 262 px, so its text stays near 12 px. A full
+ * redraw spec (`{ chart: "line", options }`) would fit every width, but it travels as JSON and would lose formatX,
+ * which names each point by its label ("Autumn 1918") in the hover details.
+ */
+const NARROW_WIDTH = 280;
 
-export const chartStylesheet = stylesheet({
-  name: "germomics",
-  fonts: { body: '"Space Grotesk", ui-sans-serif, system-ui, sans-serif' },
-  gridlines: "y",
-  light: {
-    ...defaultTheme.light,
-    background: "#ffffff",
-    text: "#14101f",
-    mutedText: "#6b6577",
-    grid: "#e2dcec",
-    focus: "#0e7490",
-    series: ["#4f2d7f", light[1], light[2], light[3], light[6], "#325d56", "#0b4fd5", "#242442"],
-  },
-  dark: {
-    ...defaultTheme.dark,
-    background: "#181125",
-    text: "#edeaf5",
-    mutedText: "#9a8fb0",
-    grid: "#2c2440",
-    focus: "#22d3ee",
-    series: ["#c4aef0", dark[1], dark[2], dark[3], dark[6], "#6aafa3", "#256af4", "#8b8bc1"],
-  },
-});
+/** The `.enarratio-frame` (the drawing alone) of a chart's markup, what enarratio/redraw swaps in. */
+function drawingOf(html: string): string {
+  const start = html.indexOf('<div class="enarratio-frame');
+  const end = html.indexOf("</svg></div>", start);
+  if (start === -1 || end === -1) throw new Error("timelineChart: no drawing in Enarratio's output");
+  return html.slice(start, end + "</svg></div>".length);
+}
 
 export function timelineChart(slug: string, t: Timeline): string {
-  const labels = new Map(t.points.map((p) => [Date.parse(p.date), p.label]));
-  return lineChart({
+  const several = t.series.length > 1;
+  const data = t.series.flatMap((s) => s.points.map((p) => ({ ...p, series: s.name })));
+  const labels = new Map(data.map((p) => [Date.parse(p.date), p.label]));
+  const options = {
     id: `${slug}-timeline`,
-    data: t.points,
+    data,
     x: "date",
     y: "value",
+    ...(several ? { series: "series" as const } : {}),
     xLabel: t.xLabel,
     yLabel: t.yLabel,
     ...(t.yUnit ? { yUnit: t.yUnit } : {}),
+    ...(t.caption ? { caption: t.caption } : {}),
+    source: { name: t.source.label, href: t.source.url },
     title: t.title,
     alt: t.alt,
-    formatX: (v) => labels.get(Number(v)) ?? String(v),
-  });
+    formatX: (v: number | Date) => labels.get(Number(v)) ?? String(v),
+  } satisfies LineChartOptions<(typeof data)[number]>;
+  return frameHtml(lineChart(options), { redraw: { narrow: drawingOf(lineChart({ ...options, width: NARROW_WIDTH })) } });
 }
