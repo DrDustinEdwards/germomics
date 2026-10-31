@@ -142,7 +142,7 @@ export function buildJsonLd({ post, author, seriesTitle, guests = [], hosts = []
   });
 }
 
-// ── Site-level + entity JSON-LD (Organization, PodcastSeries, Person, Breadcrumb, FAQ) ───────
+// ── Site-level + entity JSON-LD (Organization, PodcastSeries, Person, FAQ) ───────
 
 type ShowLike = {
   title: string;
@@ -268,9 +268,18 @@ type PageHead = {
   socialTitle?: string;
   type?: "website" | "article" | "profile";
   article?: ArticleFacts;
+  pageType?: "CollectionPage";
+  breadcrumbs?: Array<{ name: string; path: string }>;
 };
 
-const head = defineHead({ origin: SITE_ORIGIN, siteName: "Germomics", image: DEFAULT_CARD });
+// Prelum builds each page's WebPage and BreadcrumbList from these sections; a page whose trail is not its URL (a season,
+// an episode under its season) passes its own.
+const head = defineHead({
+  origin: SITE_ORIGIN,
+  siteName: "Germomics",
+  image: DEFAULT_CARD,
+  sections: { "/about": "About", "/episodes": "Episodes", "/writing": "Writing", "/data": "Data", "/games": "Games" },
+});
 
 /**
  * The head of a public page from Prelum's defineHead: title, description, canonical, Open Graph and Twitter, always on
