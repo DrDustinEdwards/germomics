@@ -17,11 +17,14 @@ import { preloads, rootStylesheets, withPreloadHeader } from "@dustinedwards/sit
 import { timedRender } from "@dustinedwards/site-runtime/server-timing";
 import { generateNonce, renewNonce } from "@dustinedwards/site-runtime/csp";
 import { canonicalRedirect } from "@dustinedwards/site-runtime/url";
+import { runJobs } from "@dustinedwards/site-runtime/cron";
+import { logEvent, requestFields } from "@dustinedwards/site-runtime/log";
+import { countNotFound, pruneNotFound } from "@dustinedwards/site-runtime/not-found";
 import { cloudflareContext, cspNonceContext } from "../app/lib/context.server";
 import { enforceRateLimit } from "../app/lib/security.server";
 import { CSP_REPORT_PATH, handleCspReport, withSecurityHeaders } from "../app/lib/security-headers";
 import { carrelApi } from "../app/lib/carrel/handler.server";
-import { runBackup } from "../app/lib/backup.server";
+import { runAudioBackup, runBackup, runImagesBackup } from "../app/lib/backup.server";
 import { rerenderStale } from "../app/lib/render.server";
 import { continueMediaBackfill } from "../app/lib/media/backfill.server";
 import { nextPublishAt } from "../app/lib/posts.server";
@@ -31,8 +34,11 @@ import { FONT_PRELOADS } from "../app/lib/preloads";
 // score submit count through it.
 export { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-object";
 
-// The one-minute cron in wrangler.jsonc; any other cron is the nightly backup.
+// The one-minute cron in wrangler.jsonc; any other cron is the nightly one.
 const SCHEDULES_CRON = "* * * * *";
+
+// A preview link's token (/preview/<id>/<token>), cut from a logged path.
+const PREVIEW_TOKEN = /\/(preview\/[^/?#\s'"]+)\/[^/?#\s'"]+/g;
 
 // Seed React Router v8's request context with the native Cloudflare bindings, so every
 // loader/action/middleware reaches D1/R2/KV through `context` and never over HTTP or a
@@ -72,6 +78,13 @@ function livePath(pathname: string): boolean {
 function hasSessionCookie(request: Request): boolean {
   const cookie = request.headers.get("Cookie");
   return cookie ? /(?:^|;\s*)CF_Authorization=/.test(cookie) : false;
+}
+
+// Each 404 a GET gets from the app, counted per path and referring host (site-runtime ./not-found), stored page or
+// live; never a preview link's, whose path carries its token.
+function counted(response: Response, request: Request, env: Env, ctx: ExecutionContext): Response {
+  if (!new URL(request.url).pathname.startsWith("/preview/")) countNotFound(env.DB, request, response, ctx);
+  return response;
 }
 
 // A game page shows its leaderboard, so it carries its own tag too and a score purges only that page.
@@ -151,9 +164,9 @@ export default {
         if (tag && !read && live.status < 400) ctx.waitUntil(ctx.exports.Renderer.purgePages(`score ${url.pathname}`, [tag]));
         // A public page rendered for the admin is theirs alone; a response naming no Cache-Control would otherwise be
         // cached by the platform's heuristics.
-        if (signedIn && !livePath(url.pathname)) return privateRender(live);
+        if (signedIn && !livePath(url.pathname)) return counted(privateRender(live), request, env, ctx);
         if (!live.headers.has("Cache-Control")) live.headers.set("Cache-Control", UNCACHED);
-        return live;
+        return counted(live, request, env, ctx);
       }
 
       // The key is the path and the query without tracking parameters. The Worker version stays in the key (no
@@ -161,11 +174,15 @@ export default {
       // reader who already holds the page gets a 304. A HEAD reaches the Renderer as a GET, so its answer is a whole page
       // that may be stored; the reader still gets no body.
       const page = await ctx.exports.Renderer.fetch(forRenderer(request), { cf: { cacheKey: cacheKey(url) } });
-      return forReader(renewNonce(page), request);
-    } catch (err) {
+      return counted(forReader(renewNonce(page), request), request, env, ctx);
+    } catch (error) {
       // Prod error hygiene: never leak a stack trace or internal detail to the client. The error
       // goes to Workers Logs.
-      console.error("Unhandled worker error:", err);
+      logEvent(
+        "worker_error",
+        { ...requestFields(request, { sha: env.DEPLOY_SHA, tokenPath: PREVIEW_TOKEN }), error },
+        { level: "error", tokenPath: PREVIEW_TOKEN },
+      );
       return withSecurityHeaders(
         new Response("Internal Server Error", {
           status: 500,
@@ -176,27 +193,28 @@ export default {
     }
   },
 
-  // Two crons (wrangler.jsonc triggers.crons). Every minute: the updates Carrel scheduled on live
-  // articles go live (site-api's runSchedules; each one that fails is logged and tried again next
-  // minute; each that lands purges the stored pages, carrel/handler.server), then, until it has finished once, a batch of
-  // the media backfill. Nightly: the D1 backup, then the re-render of stale bodies (app/lib/render.server.ts).
-  // The backup's errors are logged and rethrown, never swallowed: a failed
-  // run must show as a failed invocation and age /health's backup reading. Awaited rather than
-  // handed to waitUntil, whose rejection is only logged while the invocation still counts as a
-  // success (Grok audit 2026-10-21, GE-11).
+  // Two crons (wrangler.jsonc triggers.crons), their jobs each isolated and recorded in cron_runs by site-runtime ./cron,
+  // which /health reads; a failed job fails the invocation after the others have run. Awaited rather than handed to
+  // waitUntil, whose rejection is only logged while the invocation still counts as a success (Grok audit 2026-10-21,
+  // GE-11). Every minute: the updates Carrel scheduled on live articles go live (site-api's runSchedules; each one that
+  // fails is logged and tried again next minute; each that lands purges the stored pages, carrel/handler.server), then,
+  // until it has finished once, a batch of the media backfill. Nightly: the D1 backup, the re-render of the bodies a
+  // Prelum upgrade left on an older render (app/lib/render.server.ts), the audio and image files beside the backup, and
+  // the 404 counts pruned to 90 days.
   async scheduled(controller, env) {
     if (controller.cron === SCHEDULES_CRON) {
-      await carrelApi(env).runSchedules({ now: new Date(controller.scheduledTime) });
-      await continueMediaBackfill(env);
+      await runJobs(env.DB, [
+        { name: "schedules", everyMinutes: 1, run: () => carrelApi(env).runSchedules({ now: new Date(controller.scheduledTime) }) },
+        { name: "media-backfill", everyMinutes: 1, run: () => continueMediaBackfill(env) },
+      ]);
       return;
     }
-    try {
-      await runBackup(env);
-    } catch (err) {
-      console.error("Nightly backup failed:", err);
-      throw err;
-    }
-    // After the backup: the rows a Prelum upgrade left on an older render are rendered again and stored.
-    console.log(JSON.stringify({ event: "render.stale", ...(await rerenderStale(env)) }));
+    await runJobs(env.DB, [
+      { name: "backup", everyMinutes: 1440, run: () => runBackup(env) },
+      { name: "rerender-stale", everyMinutes: 1440, run: async () => logEvent("render_stale", await rerenderStale(env)) },
+      { name: "audio-backup", everyMinutes: 1440, run: () => runAudioBackup(env) },
+      { name: "images-backup", everyMinutes: 1440, run: () => runImagesBackup(env) },
+      { name: "prune-404", everyMinutes: 1440, run: () => pruneNotFound(env.DB) },
+    ]);
   },
 } satisfies ExportedHandler<Env>;

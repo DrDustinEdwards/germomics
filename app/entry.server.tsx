@@ -2,6 +2,7 @@ import type { EntryContext, RouterContextProvider } from "react-router";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
 import { renderToReadableStream } from "react-dom/server";
+import { logEvent } from "@dustinedwards/site-runtime/log";
 import { cspNonceContext } from "~/lib/context.server";
 
 export default async function handleRequest(
@@ -27,7 +28,7 @@ export default async function handleRequest(
         // errors encountered during initial shell rendering since they'll
         // reject and get logged in handleDocumentRequest.
         if (shellRendered) {
-          console.error(error);
+          logEvent("render_failed", { error }, { level: "error" });
         }
       },
     },
