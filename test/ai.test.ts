@@ -2,8 +2,7 @@ import { env } from "cloudflare:test";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { RouterContextProvider } from "react-router";
 import { cloudflareContext } from "~/lib/context.server";
-import { STYLE_RULE } from "~/lib/ai.server";
-import { SETTING_DEFAULTS } from "~/lib/content-defaults";
+import { WRITING_RULES } from "@dustinedwards/site-runtime/prose";
 import { applyMigrations, setSettings } from "./helpers/d1";
 
 // AI drafts on the subscription (app/lib/ai.server.ts): the editor's button fires the drafting
@@ -86,9 +85,9 @@ describe("AI drafts on the drafting routine", () => {
     const { id, key } = handoff();
     const given = (await (await routineGet(id, key)).json()) as { kind: string; system: string; prompt: string };
     expect(given.kind).toBe("shownotes");
-    expect(given.system).toContain(STYLE_RULE);
+    expect(given.system).toContain(WRITING_RULES);
     expect(given.prompt.startsWith("CUSTOM PROMPT")).toBe(true);
-    expect(given.prompt).toContain("Cholera in London.");
+    expect(given.prompt).toContain('<data label="transcript">WEBVTT');
 
     expect((await routinePost(id, key, { draft: "  <p>Notes</p> " })).status).toBe(200);
     expect(await poll(job)).toMatchObject({ status: "ready", draft: "<p>Notes</p>" });
@@ -105,10 +104,6 @@ describe("AI drafts on the drafting routine", () => {
       expect(res.status).toBe(404);
     }
     expect((await routineGet(id, key)).status).toBe(200);
-  });
-
-  it("keeps the stored style rule in step with STYLE_RULE, so a prompt edited in settings still starts from it", () => {
-    expect(SETTING_DEFAULTS["ai.prompt.style"]).toBe(STYLE_RULE);
   });
 
   it("parses chapters and SEO answers into the editor's shapes, and fails a job whose answer it cannot use", async () => {
