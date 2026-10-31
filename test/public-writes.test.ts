@@ -141,6 +141,6 @@ describe("game score submission", () => {
   it("stores the submitted score for the game in the URL, and refuses an unknown game", async () => {
     await submit({ "CF-Connecting-IP": "198.51.100.3" });
     expect((await e.DB.prepare("SELECT game_slug, name, score FROM scores").all()).results).toEqual([{ game_slug: "phage-defense", name: "Ada", score: 10 }]);
-    expect(await submit({ "CF-Connecting-IP": "198.51.100.3" }, "no-such-game")).toEqual({ ok: false, error: "Unknown game." });
+    expect(await submit({ "CF-Connecting-IP": "198.51.100.3" }, "no-such-game")).toEqual({ ok: false, error: "Unknown game.", input: true });
   });
 });

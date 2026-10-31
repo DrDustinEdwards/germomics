@@ -11,7 +11,7 @@ import { RefusedError, prepareUpload } from "@dustinedwards/site-api";
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { LIMITS, RESIZE } from "~/lib/carrel/media.server";
 import { recordUpload, sizeMetadata } from "~/lib/media/store.server";
-import { readForm } from "~/lib/body.server";
+import { inputRefused, readForm } from "~/lib/body.server";
 
 const MAX_IMAGE = 25 * 1024 * 1024; // 25 MB
 // Cloudflare refuses a request body over 100 MB on the Free and Pro plans before the Worker sees it,
@@ -28,11 +28,13 @@ export async function action({ request, context }: Route.ActionArgs) {
   const postId = String(form.get("postId") || "misc").replace(/[^\w-]/g, "") || "misc";
 
   if (!(file instanceof File) || file.size === 0) {
+    inputRefused(request, "no file");
     return Response.json({ ok: false, error: "No file received." }, { status: 400 });
   }
 
   if (kind === "image") {
     if (file.size > MAX_IMAGE) {
+      inputRefused(request, "image over 25 MB");
       return Response.json({ ok: false, error: "Image exceeds 25 MB." }, { status: 413 });
     }
     // The bytes are checked against the type (an SVG or anything unknown is refused), a HEIC becomes a JPEG, a location
@@ -43,7 +45,10 @@ export async function action({ request, context }: Route.ActionArgs) {
       const input = { bytes, contentType: file.type, filename: file.name, alt: "", changeId: "", resize: true };
       prepared = await prepareUpload(env.IMAGES, input, { resize: RESIZE, limits: { ...LIMITS, maxBytes: MAX_IMAGE } });
     } catch (error) {
-      if (error instanceof RefusedError) return Response.json({ ok: false, error: error.message }, { status: 415 });
+      if (error instanceof RefusedError) {
+        inputRefused(request, "image type");
+        return Response.json({ ok: false, error: error.message }, { status: 415 });
+      }
       throw error;
     }
     const key = buildKey(`posts/${postId}`, prepared.filename);
@@ -58,6 +63,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   if (kind === "audio") {
     if (file.size > MAX_AUDIO) {
+      inputRefused(request, "audio over 100 MB");
       return Response.json({ ok: false, error: "Audio exceeds 100 MB." }, { status: 413 });
     }
     const key = buildKey(`episodes/${postId}`, file.name);
@@ -66,5 +72,6 @@ export async function action({ request, context }: Route.ActionArgs) {
     return Response.json({ ok: true, url, size, contentType: ct, name: file.name });
   }
 
+  inputRefused(request, "upload kind");
   return Response.json({ ok: false, error: "Unknown upload kind." }, { status: 400 });
 }

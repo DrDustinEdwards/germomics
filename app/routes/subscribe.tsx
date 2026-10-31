@@ -11,7 +11,7 @@ import { subscribers } from "~/db/schema";
 import { getShowConfig } from "~/lib/show.server";
 import { SUBSCRIBE_DESTINATIONS, PRIMARY_KEYS, SECONDARY_KEYS } from "~/lib/subscribe";
 import { SITE_HOST } from "~/lib/site";
-import { PUBLIC_FORM, readForm } from "~/lib/body.server";
+import { inputRefused, PUBLIC_FORM, readForm } from "~/lib/body.server";
 
 export function meta() {
   return pageHead({ path: "/subscribe", title: "Subscribe · Germomics", description: "Follow Germomics in any podcast app, by email, or by RSS." });
@@ -30,6 +30,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const consent = form.get("consent");
 
   if (!EMAIL_RE.test(email) || email.length > 254) {
+    inputRefused(request, "email");
     return { ok: false as const, error: "Please enter a valid email address." };
   }
   // Explicit, unambiguous consent is required (GDPR). No pre-ticked box, no implied opt-in.

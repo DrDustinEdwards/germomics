@@ -30,6 +30,7 @@ import { cronJobs } from "../app/lib/cron.server";
 import { nextPublishAt } from "../app/lib/posts.server";
 import { FONT_PRELOADS } from "../app/lib/preloads";
 import { NO_PREFETCH } from "../app/lib/site";
+import { routeNamer } from "./route-name";
 
 // site-runtime's limiter class, bound as RATE_LIMITER (wrangler.jsonc); enforceRateLimit and the
 // score submit count through it.
@@ -223,14 +224,27 @@ const site = {
   },
 } satisfies ExportedHandler<Env>;
 
+// The paths the gateway answers itself, named for the request log; every other path by its React Router route.
+const routes = routeNamer(serverBuild);
+function gatewayRoute(path: string): string | undefined {
+  if (path === CSP_REPORT_PATH || path === SPECULATION_RULES_PATH) return path;
+  if (path.startsWith("/preview/")) return "/preview/:token";
+  if (path.startsWith("/api/carrel/")) return "/api/carrel/*";
+  return undefined;
+}
+
 // An admin idle for an hour is signed out of Access (site-runtime ./access). Every request writes one `request` line
-// (site-runtime ./log: path, status, ms and the deployed commit), a preview link's token cut from its path.
+// (site-runtime ./log: its route, path, status, ms and the deployed commit), a preview link's token cut from its path.
 type IncomingRequest = Parameters<typeof site.fetch>[0];
 export default {
   ...site,
   fetch: withRequestLog(
-    (request: Request, env: Env, ctx: ExecutionContext) =>
-      withAdminIdle(request, () => site.fetch(request as IncomingRequest, env, ctx)),
-    { sha: (env) => env.DEPLOY_SHA, tokenPath: PREVIEW_TOKEN },
+    async (request: Request, env: Env, ctx: ExecutionContext) =>
+      (await Promise.all([withAdminIdle(request, () => site.fetch(request as IncomingRequest, env, ctx)), routes.ready()]))[0],
+    {
+      sha: (env) => env.DEPLOY_SHA,
+      tokenPath: PREVIEW_TOKEN,
+      route: (request) => gatewayRoute(new URL(request.url).pathname) ?? routes.name(request),
+    },
   ),
 } satisfies ExportedHandler<Env>;

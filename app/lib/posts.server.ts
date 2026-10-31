@@ -4,9 +4,11 @@
 // everything type-safe and camelCase.
 import { and, asc, desc, eq, getTableColumns, gt, inArray, isNull, lte, min, or, sql, type SQL } from "drizzle-orm";
 import { toMatchExpression } from "@drdustinedwards/site-helpers/search";
+import { goneResponse, renameRedirect } from "@dustinedwards/site-runtime/url";
 import { getDb } from "~/db/index.server";
 import { postRedirects, posts, type Post } from "~/db/schema";
 import { slugifyGuest, toPlayerTrack } from "~/lib/posts";
+import { GONE } from "~/lib/site";
 import { storedBody } from "~/lib/render.server";
 
 // Re-export the client-safe pure helpers so existing server callers keep working.
@@ -143,19 +145,30 @@ export async function getPostBySlug(
   return post;
 }
 
-/**
- * The permanent redirect for a slug a post was renamed from (Carrel's rename, post_redirects), to the same `suffix`
- * under the slug it has now; null when the slug was never renamed or the post is not publicly visible, so a redirect
- * never names a draft's address.
- */
-export async function renamedPostRedirect(env: Env, slug: string, suffix = ""): Promise<Response | null> {
+/** The slug a post renamed away from `slug` has now (Carrel's rename, post_redirects); null when none, or the post is
+ * not publicly visible, so a redirect never names a draft's address. */
+async function renamedSlug(env: Env, slug: string): Promise<string | null> {
   const [row] = await getDb(env)
     .select({ slug: posts.slug })
     .from(postRedirects)
     .innerJoin(posts, eq(posts.id, postRedirects.postId))
     .where(and(eq(postRedirects.fromSlug, slug), publiclyVisible()))
     .limit(1);
-  return row ? new Response(null, { status: 301, headers: { Location: `/${row.slug}${suffix}` } }) : null;
+  return row?.slug ?? null;
+}
+
+/**
+ * The answer for a path whose post does not exist, for its route to throw: 410 for a path on GONE (site-runtime
+ * goneResponse), a permanent redirect for a slug a post was renamed from, to the same address under the slug it has
+ * now with whatever follows it (`/old/transcript.vtt` to `/new/transcript.vtt`, site-runtime renameRedirect, a chain
+ * followed to its end), else 404. The root ErrorBoundary draws the 410 and the 404.
+ */
+export async function missingPost(env: Env, request: Request): Promise<Response> {
+  return (
+    goneResponse(request, GONE) ??
+    (await renameRedirect(request, { prefix: "/", renames: (slug) => renamedSlug(env, slug) })) ??
+    new Response("Not found", { status: 404 })
+  );
 }
 
 export async function getPostById(env: Env, id: number): Promise<Post | null> {

@@ -2,13 +2,13 @@
 // publishing because it is fetched live). Path: /:slug/chapters.json — resource route.
 import type { Route } from "./+types/chapters";
 import { getEnv } from "~/lib/context.server";
-import { getPostBySlug, renamedPostRedirect } from "~/lib/posts.server";
+import { getPostBySlug, missingPost } from "~/lib/posts.server";
 import { buildChaptersJson } from "~/lib/rss.server";
 
-export async function loader({ params, context }: Route.LoaderArgs) {
+export async function loader({ params, context, request }: Route.LoaderArgs) {
   const env = getEnv(context);
   const post = await getPostBySlug(env, params.slug);
-  if (!post) throw (await renamedPostRedirect(env, params.slug, "/chapters.json")) ?? new Response("Not found", { status: 404 });
+  if (!post) throw await missingPost(env, request);
   return new Response(buildChaptersJson(post), {
     headers: {
       "Content-Type": "application/json+chapters; charset=utf-8",

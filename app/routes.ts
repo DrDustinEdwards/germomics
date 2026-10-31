@@ -74,4 +74,7 @@ export default [
 
   // episode/article detail — single dynamic segment, ranked below every static route above.
   route(":slug", "routes/$slug.tsx"),
+
+  // Every other path: 410 for a page removed on purpose, else 404, drawn by the root ErrorBoundary.
+  route("*", "routes/not-found.tsx"),
 ] satisfies RouteConfig;

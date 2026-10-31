@@ -78,3 +78,11 @@ export const ROBOTS_DISALLOW = ["/admin", "/preview/"];
 const CARREL_ORIGIN = "https://desk.dustinedwards.info";
 /** The Carrel editor for one of this site's items, by its Carrel id (a post's slug, `page.<name>` for a page). */
 export const carrelEditUrl = (id: string) => `${CARREL_ORIGIN}/p/germomics/e/${encodeURIComponent(id)}`;
+
+/**
+ * Pages taken down on purpose: each answers 410 Gone (site-runtime ./url goneResponse; posts.server missingPost and the
+ * catch-all routes/not-found.tsx), so a crawler drops it sooner than a 404 and a reader is told it is not a typo. An
+ * entry is a path, a "/prefix*" or a RegExp. None yet: add a path here when a page or post is removed for good, rather
+ * than leaving it a 404. A slug Carrel renamed needs nothing here; post_redirects answers it.
+ */
+export const GONE: readonly (string | RegExp)[] = [];
