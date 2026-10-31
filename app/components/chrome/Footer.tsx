@@ -99,7 +99,7 @@ export function Footer() {
 
         {/* Listen */}
         <nav aria-labelledby="footer-listen">
-          <h3 id="footer-listen" className="font-display text-sm font-semibold text-ink">Listen</h3>
+          <h2 id="footer-listen" className="font-display text-sm font-semibold text-ink">Listen</h2>
           <ul className="mt-3 space-y-2 max-sm:space-y-0 text-sm">
             {PRIMARY_KEYS.map((k) =>
               subscribeLinks[k] ? (
@@ -133,7 +133,7 @@ export function Footer() {
 
         {/* Explore */}
         <nav aria-labelledby="footer-explore">
-          <h3 id="footer-explore" className="font-display text-sm font-semibold text-ink">Explore</h3>
+          <h2 id="footer-explore" className="font-display text-sm font-semibold text-ink">Explore</h2>
           <ul className="mt-3 space-y-2 max-sm:space-y-0 text-sm">
             {explore.map(([to, label]) => (
               <li key={to}><Link to={to} className={`${link} ${tap}`}>{label}</Link></li>
@@ -143,7 +143,7 @@ export function Footer() {
 
         {/* About */}
         <nav aria-labelledby="footer-about">
-          <h3 id="footer-about" className="font-display text-sm font-semibold text-ink">About</h3>
+          <h2 id="footer-about" className="font-display text-sm font-semibold text-ink">About</h2>
           <ul className="mt-3 space-y-2 max-sm:space-y-0 text-sm">
             {about.map(([to, label]) => (
               <li key={to}><Link to={to} className={`${link} ${tap}`}>{label}</Link></li>
