@@ -5,7 +5,8 @@
 // answers 403 to anything else, so a request that bypassed Access, or an Access setup that is wrong,
 // never reaches an admin route. A cross-site write is refused first (site-runtime's
 // refuseCrossSite), since the framework's own Origin check never sees a resource route, and every
-// admin answer is private, no-store and noindex.
+// admin answer is private, no-store and noindex. Each refusal writes one OWASP `authz_fail` line
+// (site-runtime's ./log), so a run of them shows in Workers Logs.
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { Link } from "capsomer/react/link";
@@ -15,6 +16,7 @@ import "~/admin.css";
 import type { Route } from "./+types/admin";
 import { getEnv } from "~/lib/context.server";
 import { accessAdmin } from "@dustinedwards/site-runtime/access";
+import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runtime/log";
 import { refuseCrossSite } from "@dustinedwards/site-runtime/origin";
 import { applyTheme, effectiveTheme } from "~/lib/theme";
 import type { Theme } from "~/lib/types";
@@ -24,8 +26,14 @@ const PRIVATE = { "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ request, context }, next) => {
     const refused = refuseCrossSite(request, PRIVATE);
-    if (refused) throw refused;
-    if (!(await accessAdmin(request, getEnv(context)))) throw new Response("Forbidden", { status: 403, headers: PRIVATE });
+    if (refused) {
+      logRefusal(request, "cross-site", refused.status);
+      throw refused;
+    }
+    if (!(await accessAdmin(request, getEnv(context)))) {
+      logRefusal(request, "not-admin", 403);
+      throw new Response("Forbidden", { status: 403, headers: PRIVATE });
+    }
     // A copy: a redirect's headers are immutable.
     const response = await next();
     const headers = new Headers(response.headers);
@@ -33,6 +41,11 @@ export const middleware: Route.MiddlewareFunction[] = [
     return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
   },
 ];
+
+// No email or token in the line: accessAdmin says only yes or no, and the log scrubs any address.
+function logRefusal(request: Request, reason: string, status: number) {
+  logEvent(OWASP_EVENTS.authorizationFailure, { ...requestFields(request), reason, status }, { level: "warn" });
+}
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const session = await accessAdmin(request, getEnv(context));
