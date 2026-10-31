@@ -91,7 +91,7 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
 
       <div className="grid gap-3">
         {items.map((post) => (
-          <PostCard key={post.id} post={post} queue={tracks} />
+          <PostCard key={post.id} post={post} queue={tracks} heading="h2" />
         ))}
         {items.length === 0 ? <p className="text-muted">Nothing here yet.</p> : null}
       </div>

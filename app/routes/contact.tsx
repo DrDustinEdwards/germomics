@@ -22,7 +22,7 @@ export default function Contact({ loaderData }: Route.ComponentProps) {
   return (
     <article className="prose-legal mx-auto max-w-2xl">
       <h1 className="font-display text-4xl font-semibold leading-tight">{loaderData.title}</h1>
-      <BodyRenderer html={loaderData.html} />
+      <BodyRenderer html={loaderData.html} page />
     </article>
   );
 }

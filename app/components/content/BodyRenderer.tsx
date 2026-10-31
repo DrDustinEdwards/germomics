@@ -1,21 +1,28 @@
 // The single public body renderer, reused by the article page, the episode page and the content pages (spec
 // §B/§H, built once). It shows HTML Prelum rendered from the stored Markdown (app/lib/render.server.ts), which is
 // safe by construction and checked (assertSafe), so it is rendered directly. Prelum gives each h2 and h3 its id and
-// a "#" anchor; the headings are demoted one level here, so the page keeps its own h1 and h2s. The classes below
+// a "#" anchor; in a post the headings are demoted one level here, so the page keeps its own h1 and h2s. The classes below
 // style Prelum's output (README, "The markdown pipeline") in the germomics palette.
 import { useMemo } from "react";
 import { demoteHeadings } from "~/lib/seo";
 
-const PROSE =
-  "max-w-none text-[1.05rem] leading-relaxed " +
-  "[&_a]:text-accent [&_a]:underline [&_a]:underline-offset-2 " +
-  // Heading ladder: clear, legible steps in size, weight, and top spacing so the section hierarchy
-  // reads at a glance. Body headings are demoted one level at render (authored ## -> h3, ### -> h4),
-  // so h3/h4 carry the real section/subsection distinction; h2 covers the rare top-level case.
+// Heading ladder: clear, legible steps in size, weight, and top spacing so the section hierarchy reads at a glance.
+// In a post the body's headings are demoted one level (authored ## -> h3, ### -> h4), below the page's own h2s, so
+// h3/h4 carry the real section/subsection distinction. A content page has no h2s of its own, so its headings keep
+// their level and take the same look one step up.
+const SECTION_HEADINGS =
   "[&_h2]:mt-12 [&_h2]:mb-3 [&_h2]:font-display [&_h2]:text-3xl [&_h2]:font-bold [&_h2]:tracking-tight [&_h2]:scroll-mt-24 " +
   "[&_h3]:mt-10 [&_h3]:mb-2 [&_h3]:font-display [&_h3]:text-2xl [&_h3]:font-semibold [&_h3]:scroll-mt-24 " +
   "[&_h4]:mt-6 [&_h4]:mb-1 [&_h4]:font-display [&_h4]:text-base [&_h4]:font-semibold [&_h4]:uppercase [&_h4]:tracking-wide [&_h4]:scroll-mt-24 " +
-  "[&_h5]:mt-5 [&_h5]:mb-1 [&_h5]:font-display [&_h5]:text-sm [&_h5]:font-semibold " +
+  "[&_h5]:mt-5 [&_h5]:mb-1 [&_h5]:font-display [&_h5]:text-sm [&_h5]:font-semibold";
+const PAGE_HEADINGS =
+  "[&_h2]:mt-10 [&_h2]:mb-2 [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:scroll-mt-24 " +
+  "[&_h3]:mt-6 [&_h3]:mb-1 [&_h3]:font-display [&_h3]:text-base [&_h3]:font-semibold [&_h3]:uppercase [&_h3]:tracking-wide [&_h3]:scroll-mt-24 " +
+  "[&_h4]:mt-5 [&_h4]:mb-1 [&_h4]:font-display [&_h4]:text-sm [&_h4]:font-semibold";
+
+const PROSE =
+  "max-w-none text-[1.05rem] leading-relaxed " +
+  "[&_a]:text-accent [&_a]:underline [&_a]:underline-offset-2 " +
   // The "#" link Prelum appends to each heading: quiet until the heading is hovered or the link has focus.
   "[&_.heading-anchor]:ml-2 [&_.heading-anchor]:font-normal [&_.heading-anchor]:text-muted [&_.heading-anchor]:no-underline [&_.heading-anchor]:opacity-0 " +
   "[&_.heading-anchor:focus-visible]:opacity-100 [&_:is(h2,h3,h4,h5,h6):hover_.heading-anchor]:opacity-100 [&_.heading-anchor:hover]:text-accent " +
@@ -53,7 +60,8 @@ const PROSE =
   "[&_.bookmark-title]:block [&_.bookmark-title]:font-display [&_.bookmark-title]:font-semibold [&_.bookmark-title]:text-ink [&_.bookmark-description]:block [&_.bookmark-description]:text-sm [&_.bookmark-description]:text-muted [&_.bookmark-host]:block [&_.bookmark-host]:font-mono [&_.bookmark-host]:text-xs [&_.bookmark-host]:text-muted " +
   "[&_.footnotes]:mt-10 [&_.footnotes]:text-sm [&_.footnotes]:text-muted";
 
-export function BodyRenderer({ html, className = "" }: { html: string; className?: string }) {
-  const demoted = useMemo(() => demoteHeadings(html ?? ""), [html]);
-  return <div className={`${PROSE} ${className}`} dangerouslySetInnerHTML={{ __html: demoted }} />;
+/** `page`: a content page, whose headings sit right under its h1 and keep their level. */
+export function BodyRenderer({ html, page = false, className = "" }: { html: string; page?: boolean; className?: string }) {
+  const shown = useMemo(() => (page ? html ?? "" : demoteHeadings(html ?? "")), [html, page]);
+  return <div className={`${PROSE} ${page ? PAGE_HEADINGS : SECTION_HEADINGS} ${className}`} dangerouslySetInnerHTML={{ __html: shown }} />;
 }

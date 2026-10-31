@@ -60,7 +60,7 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
 
       <div className="mt-4 grid gap-3">
         {posts.map((post) => (
-          <PostCard key={post.id} post={post} queue={tracks} />
+          <PostCard key={post.id} post={post} queue={tracks} heading="h2" />
         ))}
       </div>
 
