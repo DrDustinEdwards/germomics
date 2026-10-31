@@ -150,8 +150,9 @@ describe("content", () => {
     expect(renamed).toMatchObject({ id: "new-name", status: "published", previousPath: "/old-name" });
     expect(heard.map((h) => [h.action, h.previousPath, h.path])).toEqual([["rename", "/old-name", "/new-name"]]);
     expect((await e.DB.prepare("SELECT guid FROM posts WHERE slug = 'new-name'").first<{ guid: string }>())!.guid).toBe(guid);
-    const { renamedPostRedirect } = await import("~/lib/posts.server");
-    expect((await renamedPostRedirect(e, "old-name", "/transcript.vtt"))?.headers.get("Location")).toBe("/new-name/transcript.vtt");
+    const { missingPost } = await import("~/lib/posts.server");
+    const moved = await missingPost(e, new Request("https://germomics.com/old-name/transcript.vtt"));
+    expect([moved.status, moved.headers.get("Location")]).toEqual([301, "https://germomics.com/new-name/transcript.vtt"]);
     // A taken slug is refused; the history moved with the post.
     await put("other", "x", null);
     expect((await post("new-name/rename", { newId: "other", expectedVersion: renamed.version, changeId: cid() })).status).toBe(422);

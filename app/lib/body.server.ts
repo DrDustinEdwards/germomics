@@ -1,6 +1,7 @@
 // Request bodies read to a ceiling (site-runtime's readCappedBytes), so no form post or upload is held in memory
 // past what its route accepts. Over the ceiling, the read throws a 413 for the route to answer with.
 import { readCappedBytes } from "@dustinedwards/site-runtime/body";
+import { logEvent, OWASP_EVENTS, requestFields } from "@dustinedwards/site-runtime/log";
 
 const KIB = 1024;
 /** A public form: an email, a token, a name and a score. */
@@ -10,9 +11,20 @@ export const ADMIN_FORM = 4 * KIB * KIB;
 
 const tooLarge = () => new Response("Payload Too Large", { status: 413, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
 
+/**
+ * One `input_validation_fail` line (OWASP's name, site-runtime ./log) for a request refused for its input: the route,
+ * method and reason, never the value refused.
+ */
+export function inputRefused(request: Request, reason: string): void {
+  logEvent(OWASP_EVENTS.inputValidationFailure, { ...requestFields(request), reason }, { level: "warn" });
+}
+
 async function readBytes(request: Request, max: number): Promise<Uint8Array> {
   const bytes = await readCappedBytes(request, max);
-  if (!bytes) throw tooLarge();
+  if (!bytes) {
+    inputRefused(request, `body over ${max} bytes`);
+    throw tooLarge();
+  }
   return bytes;
 }
 

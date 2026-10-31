@@ -1,5 +1,4 @@
 import {
-  isRouteErrorResponse,
   Links,
   Meta,
   Outlet,
@@ -11,9 +10,12 @@ import {
 } from "react-router";
 import { useContext, useEffect, useState } from "react";
 import { iconLinks } from "@drdustinedwards/site-helpers/icons";
+import { ErrorPage, errorTitle } from "capsomer/react/error-page";
 
 import type { Route } from "./+types/root";
 import "./app.css";
+// The error page's own stylesheet, linked only when an error is drawn (ErrorBoundary below).
+import errorPageCss from "./error-page.css?url";
 import { getEnv, getSnippets, getSettings, once, siteContentContext } from "~/lib/context.server";
 import { loadSettings, loadSnippets, setting } from "~/lib/content.server";
 import { getShowConfig } from "~/lib/show.server";
@@ -172,31 +174,25 @@ export default function App() {
   );
 }
 
+// The error path's title: "Page not found | Germomics". Every other page's title is its route's own meta.
+export function meta({ error }: Route.MetaArgs) {
+  return error ? [{ title: errorTitle(error, "Germomics") }] : [];
+}
+
+// Capsomer's error page (404, 410 and 500 in plain words, noindex, the stack only in development) in the site's own
+// header and footer, so the skip link, the landmarks and the way around the site stay. React hoists its stylesheet into
+// the head.
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
-  let stack: string | undefined;
-
-  if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message;
-    stack = error.stack;
-  }
-
   return (
-    <main className="mx-auto max-w-3xl px-4 pt-16">
-      <h1 className="font-display text-4xl font-semibold text-brand">{message}</h1>
-      <p className="mt-3 text-muted">{details}</p>
-      {stack && (
-        <pre className="mt-4 w-full overflow-x-auto rounded bg-surface p-4 text-sm">
-          <code>{stack}</code>
-        </pre>
-      )}
-    </main>
+    <>
+      <link rel="stylesheet" href={errorPageCss} precedence="default" />
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-brand focus:px-3 focus:py-2 focus:text-white"
+      >
+        Skip to content
+      </a>
+      <ErrorPage error={error} home="/" className="min-h-[60vh]" dev={import.meta.env.DEV} siteHeader={<Header />} siteFooter={<Footer />} />
+    </>
   );
 }

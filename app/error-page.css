@@ -1,0 +1,20 @@
+/* Capsomer's error page (components/error-page) for germomics' 404, 410 and 500, loaded only by the root ErrorBoundary
+   (root.tsx), so no other page downloads it. Capsomer's tokens give the page its spacing, type scale and states, on the
+   purple family that is germomics' own (capsomer/site-germomics.css); its colors follow the site's data-theme, as the
+   site's do. The title keeps the site's display face and the buttons its crystal violet, so the page reads as
+   germomics. Layered under app.css's order (theme, base, cap, components, utilities): the site's own tokens win. */
+@import "capsomer/tokens.css";
+@import "capsomer/button.css";
+@import "capsomer/empty.css";
+@import "capsomer/error-page.css";
+
+@layer cap.tokens {
+  .cap-error-page {
+    --ui: var(--font-display);
+    --primary: var(--brand-strong);
+    --primary-hover: var(--brand);
+    --primary-line: var(--brand-strong);
+    --text: var(--ink);
+    --ring: var(--accent);
+  }
+}

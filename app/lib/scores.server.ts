@@ -31,17 +31,18 @@ export function sanitizeName(raw: unknown): string {
   return cleaned || "anon";
 }
 
-type SubmitResult = { ok: true; score: number } | { ok: false; error: string };
+// `input` marks a refusal for what was sent (logged as input_validation_fail by the route), not for the rate limit.
+type SubmitResult = { ok: true; score: number } | { ok: false; error: string; input?: true };
 
 export async function submitScore(
   env: Env,
   input: { gameSlug: string; name: unknown; score: unknown; ip: string },
 ): Promise<SubmitResult> {
-  if (!getGame(input.gameSlug)) return { ok: false, error: "Unknown game." };
+  if (!getGame(input.gameSlug)) return { ok: false, error: "Unknown game.", input: true };
 
   // Validate + clamp the score server-side — never trust the client number.
   const raw = Math.floor(Number(input.score));
-  if (!Number.isFinite(raw) || raw < 0) return { ok: false, error: "Invalid score." };
+  if (!Number.isFinite(raw) || raw < 0) return { ok: false, error: "Invalid score.", input: true };
   const score = Math.min(raw, MAX_SCORE);
 
   // Rate-limit by IP (fixed window). A counter that is down lets the score through (logged): the

@@ -21,10 +21,10 @@ describe("submitScore", () => {
   });
 
   it("refuses an unknown game, a negative score and one that is not a number, storing nothing", async () => {
-    expect(await submit({ gameSlug: "not-a-game" })).toEqual({ ok: false, error: "Unknown game." });
-    expect(await submit({ score: -1 })).toEqual({ ok: false, error: "Invalid score." });
-    expect(await submit({ score: "lots" })).toEqual({ ok: false, error: "Invalid score." });
-    expect(await submit({ score: Infinity })).toEqual({ ok: false, error: "Invalid score." });
+    expect(await submit({ gameSlug: "not-a-game" })).toEqual({ ok: false, error: "Unknown game.", input: true });
+    expect(await submit({ score: -1 })).toEqual({ ok: false, error: "Invalid score.", input: true });
+    expect(await submit({ score: "lots" })).toEqual({ ok: false, error: "Invalid score.", input: true });
+    expect(await submit({ score: Infinity })).toEqual({ ok: false, error: "Invalid score.", input: true });
     expect(await stored()).toEqual([]);
   });
 
