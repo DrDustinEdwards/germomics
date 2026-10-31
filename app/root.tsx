@@ -9,6 +9,7 @@ import {
   useLocation,
 } from "react-router";
 import { useContext } from "react";
+import { iconLinks } from "@drdustinedwards/site-helpers/icons";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -25,11 +26,7 @@ import { Header } from "~/components/chrome/Header";
 import { Footer } from "~/components/chrome/Footer";
 
 export const links: Route.LinksFunction = () => [
-  // Modern SVG favicon (scales, theme-agnostic) with raster fallbacks for older agents.
-  { rel: "icon", type: "image/svg+xml", href: "/brand/germomics-g.svg" },
-  { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
-  { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
-  { rel: "manifest", href: "/site.webmanifest" },
+  ...iconLinks(),
   // Feed autodiscovery: the writing feed and the podcast feed (whose URL never changes, CLAUDE.md rule 1).
   { rel: "alternate", type: "application/rss+xml", title: "Germomics: Writing", href: "/feed/site.xml" },
   { rel: "alternate", type: "application/rss+xml", title: "Germomics podcast", href: "/feed/podcast/" },
