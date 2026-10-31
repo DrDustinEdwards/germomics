@@ -6,7 +6,6 @@ import { getEnv } from "~/lib/context.server";
 import { listPosts, listSeasons } from "~/lib/posts.server";
 import { isoDay } from "@drdustinedwards/site-helpers/xml";
 import { sitemapDocument } from "@drdustinedwards/site-helpers/sitemap";
-import { HOURLY_CACHE_CONTROL } from "~/lib/edge-cache.server";
 
 const STATIC_PATHS = [
   "",
@@ -46,7 +45,6 @@ export async function loader({ context }: Route.LoaderArgs) {
   return new Response(xml, {
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": HOURLY_CACHE_CONTROL,
     },
   });
 }

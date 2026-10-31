@@ -61,8 +61,8 @@ describe("a read", () => {
   const row = { bodyHtml: "<p>stored</p>", bodyMeta: { toc: [], faq: [] } };
 
   it("serves the stored HTML while its version is Prelum's, and renders a stale one in memory", async () => {
-    expect((await storedBody(e, { ...row, body: "fresh", renderVersion: RENDER_VERSION })).html).toBe("<p>stored</p>");
-    expect((await storedBody(e, { ...row, body: "fresh", renderVersion: "0" })).html).toBe("<p>fresh</p>");
+    expect((await storedBody(e, { ...row, body: "fresh", renderVersion: RENDER_VERSION })).html).toBe(`<div data-render-version="${RENDER_VERSION}"><p>stored</p></div>`);
+    expect((await storedBody(e, { ...row, body: "fresh", renderVersion: "0" })).html).toBe(`<div data-render-version="${RENDER_VERSION}"><p>fresh</p></div>`);
   });
 
   it("serves a row not converted yet as the HTML it still holds", async () => {
