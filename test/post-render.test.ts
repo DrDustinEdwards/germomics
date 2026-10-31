@@ -43,9 +43,9 @@ describe("a save", () => {
     expect(fields).toMatchObject({ body: BODY, renderVersion: RENDER_VERSION, readingTime: 1 });
     const html = fields.bodyHtml;
     expect(html).toContain('<figure class="width-wide">');
-    expect(html).toContain(`srcset="/media/${LEAD}?w=520 520w`);
+    expect(html).toContain(`srcset="/media/${LEAD}.webp?w=520 520w`);
     expect(html).toMatch(/alt="A musher"[^>]* width="520" height="390"/);
-    expect(html).toContain(`srcset="/media/${PHOTO}?w=400&#x26;f=avif 400w`);
+    expect(html).toContain(`srcset="/media/${PHOTO}.avif?w=400 400w`);
     expect(html).toMatch(/alt="Coronavirus"[^>]* width="400" height="300"/);
     expect(html).toContain('<span class="figure-credit">© CDC</span>');
     expect(html).toMatch(new RegExp(`<img src="${IMG}/missing.webp" alt="Not in the library" loading="lazy"`));
