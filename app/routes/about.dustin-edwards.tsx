@@ -1,14 +1,13 @@
 // /about/dustin-edwards - author bio. Prose comes from the page:dustin-edwards content block (D1).
-// Person + BreadcrumbList JSON-LD carry author authority. Independent framing: credentials in the
+// Person JSON-LD carries author authority. Independent framing: credentials in the
 // prose only, no institutional branding. ?preview shows the draft to a signed-in admin.
 import { Link } from "capsomer/react/link";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import type { Route } from "./+types/about.dustin-edwards";
 import { getEnv } from "~/lib/context.server";
 import { loadPage, isPreviewing } from "~/lib/content.server";
-import { breadcrumbs, jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { buildPersonLd, pageHead, stripHtml } from "~/lib/seo";
-import { SITE_ORIGIN } from "~/lib/site";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { AUTHOR } from "~/lib/about";
 
@@ -27,13 +26,6 @@ export function meta({ loaderData }: Route.MetaArgs) {
       type: "profile",
     }),
     jsonLd(buildPersonLd({ ...AUTHOR, bio: bioText })),
-    jsonLd(
-      breadcrumbs(SITE_ORIGIN, [
-        { name: "Home", path: "/" },
-        { name: "About", path: "/about" },
-        { name: AUTHOR.name, path: `/about/${AUTHOR.slug}` },
-      ]),
-    ),
   ];
 }
 
