@@ -24,7 +24,7 @@
     "nobloat:baseline": "react-router typegen && devkit-no-bloat --write-baseline && npm run build && devkit-route-weight --write-baseline"
   },
   "dependencies": {
-    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.22.0",
+    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.22.1",
     "@dustinedwards/d1-dump": "github:DrDustinEdwards/d1-dump#v0.7.0",
     "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.17.0",
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.48.1",
@@ -54,7 +54,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.65.0",
     "@cloudflare/vitest-plugin": "1.4.6",
-    "@dustinedwards/devkit": "github:DrDustinEdwards/devkit#v0.20.8",
+    "@dustinedwards/devkit": "github:DrDustinEdwards/devkit#v0.20.9",
     "@react-router/dev": "8.5.1",
     "@tailwindcss/vite": "4.3.3",
     "@types/google.maps": "3.66.7",
