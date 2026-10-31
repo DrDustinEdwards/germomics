@@ -14,6 +14,8 @@ import {
   useState,
 } from "react";
 import type { PlayerTrack } from "~/lib/types";
+import { AUDIO_STARTED_ATTRIBUTE } from "~/lib/hydration";
+import { RATE_KEY, RESUME_PREFIX, VOL_KEY, resumeAt, storedRate, storedVolume } from "~/lib/player-storage";
 
 export type SleepMode = "end" | number; // "end" of episode, or minutes from now
 
@@ -63,9 +65,6 @@ type PlayerApi = PlayerState & {
 
 const PlayerContext = createContext<PlayerApi | null>(null);
 
-const RESUME_PREFIX = "germomics-resume-";
-const RATE_KEY = "germomics-rate";
-const VOL_KEY = "germomics-volume";
 
 function ms(): MediaSession | null {
   if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return null;
@@ -97,10 +96,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
   // Restore last-used rate + volume.
   useEffect(() => {
-    const r = Number(localStorage.getItem(RATE_KEY));
-    if (r >= 0.5 && r <= 3) setRateState(r);
-    const v = localStorage.getItem(VOL_KEY);
-    if (v !== null && Number(v) >= 0 && Number(v) <= 1) setVolumeState(Number(v));
+    const r = storedRate();
+    if (r !== null) setRateState(r);
+    const v = storedVolume();
+    if (v !== null) setVolumeState(v);
   }, []);
 
   const saveResume = useCallback((id: number, time: number) => {
@@ -144,6 +143,15 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const audio = audioRef.current;
     if (!audio || !current) return;
     setErrored(false);
+    // A press on a page that had no React yet started this element itself (app/site/hydrate.ts), resume position
+    // included, and the press is now replayed here: adopt the playing audio as it is, with no reload and no seek.
+    const started = audio.hasAttribute(AUDIO_STARTED_ATTRIBUTE);
+    audio.removeAttribute(AUDIO_STARTED_ATTRIBUTE);
+    if (started && audio.src === current.audioUrl) {
+      audio.playbackRate = rate;
+      updatePositionState();
+      return;
+    }
     if (audio.src !== current.audioUrl) {
       audio.src = current.audioUrl;
       audio.load();
@@ -154,14 +162,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         audio.currentTime = pendingSeekRef.current;
         pendingSeekRef.current = null;
       } else {
-        const saved = Number(localStorage.getItem(RESUME_PREFIX + current.id));
-        if (saved > 0 && saved < audio.duration - 5) audio.currentTime = saved;
+        const saved = resumeAt(current.id, audio.duration);
+        if (saved !== null) audio.currentTime = saved;
       }
       if (isPlayingRef.current) void audio.play().catch(() => setIsPlaying(false));
       updatePositionState();
     };
-    // The source may already be loading: the press that hydrated the page set it to unlock the element
-    // (app/site/hydrate.ts), and its metadata may have arrived before this effect.
+    // The source may already be loaded (the same track pressed again after a dismiss), and then no
+    // loadedmetadata is coming.
     if (audio.readyState >= HTMLMediaElement.HAVE_METADATA) {
       onMeta();
       return;

@@ -1,11 +1,13 @@
 // Hydrate on intent: a public page sends no React (lib/hydration.ts), but its play buttons need the player, whose one
 // <audio> element keeps playing while client-side navigation changes the page around it. So the first press of a play
-// button (data-play-intent, components/content/PlayButton.tsx) runs React Router's hydration scripts, which the page
-// holds as text in a <noscript>, and is handed to the button once the app is live: the queue starts exactly as it
-// would have, with the focus where it was. A pointer resting on a play button starts the work early. From then on the
-// page is the app, as every page was before. A page that hydrates on load has no <noscript>, and this stays out of
-// its way.
-import { HYDRATED_ATTRIBUTE, HYDRATED_EVENT, HYDRATE_ON_INTENT_ID, STREAM_BUFFER } from "../lib/hydration";
+// button (data-play-intent, components/content/PlayButton.tsx) starts the audio at once, inside the press, then runs
+// React Router's hydration scripts, which the page holds as text in a <noscript>, and is handed to the button once the
+// app is live: the player adopts the playing element and the queue is set exactly as it would have been, with the
+// focus where it was. A pointer resting on a play button, or the focus reaching one, starts the work early. From then
+// on the page is the app, as every page was before. A page that hydrates on load has no <noscript>, and this stays
+// out of its way.
+import { AUDIO_STARTED_ATTRIBUTE, HYDRATED_ATTRIBUTE, HYDRATED_EVENT, HYDRATE_ON_INTENT_ID, STREAM_BUFFER } from "../lib/hydration";
+import { resumeAt, storedRate, storedVolume } from "../lib/player-storage";
 
 const INTENT = "[data-play-intent]";
 // React Router's sessionStorage key for its saved scroll positions (ScrollRestoration).
@@ -76,15 +78,59 @@ function start(nonce: string) {
   }
 }
 
-/** A press the page cannot play yet: unlocks the <audio> element while the press is still a user gesture, since
- * Safari plays a media element later only if a gesture played it first. */
-function unlockAudio(button: HTMLElement) {
-  const audio = document.querySelector("audio");
+/**
+ * Points the page's <audio> element (the one the player renders, which hydration adopts) at the button's episode,
+ * resuming where the reader left off once its metadata is in, as the player would.
+ */
+function load(audio: HTMLAudioElement, button: HTMLElement) {
   const src = button.dataset.audioSrc;
-  if (!audio || !src || audio.getAttribute("src")) return;
-  audio.src = src;
-  audio.play().catch(() => {});
-  audio.pause();
+  if (!src) return;
+  const url = new URL(src, location.href).href;
+  if (audio.src === url) return;
+  audio.src = url;
+  const id = button.dataset.trackId;
+  audio.addEventListener(
+    "loadedmetadata",
+    () => {
+      const at = id ? resumeAt(id, audio.duration) : null;
+      if (at !== null) audio.currentTime = at;
+    },
+    { once: true },
+  );
+}
+
+/**
+ * Plays the pressed episode inside the press itself, since Safari and iOS refuse a play() that comes later, after React
+ * has loaded, with the remembered rate and volume. Pressing the same button again before React is live pauses it.
+ * Returns whether the press still needs the app (false once it paused).
+ */
+function playNow(button: HTMLElement): boolean {
+  const audio = document.querySelector("audio");
+  if (!audio || !button.dataset.audioSrc) return true;
+  if (audio.src === new URL(button.dataset.audioSrc, location.href).href && !audio.paused) {
+    audio.pause();
+    audio.removeAttribute(AUDIO_STARTED_ATTRIBUTE);
+    return false;
+  }
+  load(audio, button);
+  audio.playbackRate = storedRate() ?? 1;
+  audio.volume = storedVolume() ?? 1;
+  audio.setAttribute(AUDIO_STARTED_ATTRIBUTE, "");
+  audio.play().catch(() => audio.removeAttribute(AUDIO_STARTED_ATTRIBUTE));
+  return true;
+}
+
+/**
+ * A pointer resting on a play button, or the focus reaching one, readies the press: the app starts loading, and the
+ * episode's metadata (and resume position) loads on the idle element, so a press plays at once.
+ */
+function warm(event: Event, nonce: string) {
+  if (hydrated() || !(event.target instanceof Element)) return;
+  const button = event.target.closest<HTMLElement>(INTENT);
+  if (!button) return;
+  const audio = document.querySelector("audio");
+  if (audio && audio.paused) load(audio, button);
+  start(nonce);
 }
 
 export function enhanceHydrateOnIntent(nonce: string) {
@@ -97,15 +143,15 @@ export function enhanceHydrateOnIntent(nonce: string) {
       if (!button) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      unlockAudio(button);
-      pending = { index: Array.from(document.querySelectorAll(INTENT)).indexOf(button), focused: document.activeElement === button };
+      pending = playNow(button)
+        ? { index: Array.from(document.querySelectorAll(INTENT)).indexOf(button), focused: document.activeElement === button }
+        : null;
       start(nonce);
     },
     true,
   );
-  document.addEventListener("pointerover", (event) => {
-    if (!started && event.target instanceof Element && event.target.closest(INTENT)) start(nonce);
-  });
+  document.addEventListener("pointerover", (event) => warm(event, nonce));
+  document.addEventListener("focusin", (event) => warm(event, nonce));
   document.addEventListener(HYDRATED_EVENT, () => {
     if (!pending) return;
     const { index, focused } = pending;

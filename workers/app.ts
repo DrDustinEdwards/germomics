@@ -157,9 +157,10 @@ const site = {
         if (carrel.matchesPreviewLink(request)) return withSecurityHeaders(await carrel.servePreviewLink(request), origin);
       }
 
-      // The prefetch rules every page's Speculation-Rules header names (render above).
+      // The prefetch rules every page's Speculation-Rules header names (render above): never the paths in NO_PREFETCH
+      // (beside the family's /admin, /api and the rest), nor a game, whose page is heavy (Phaser) and holds a leaderboard.
       if (url.pathname === SPECULATION_RULES_PATH) {
-        return withSecurityHeaders(speculationRulesResponse({ exclude: NO_PREFETCH }, request), origin);
+        return withSecurityHeaders(speculationRulesResponse({ exclude: [...NO_PREFETCH, "/games/"] }, request), origin);
       }
 
       // CSP violation reports, logged to Workers Logs (security-headers.ts).
