@@ -1,7 +1,8 @@
 import { lazy } from "react";
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/data.$slug";
-import { getDataset } from "~/lib/datasets.server";
+import { datasetSummary, getDataset } from "~/lib/datasets.server";
+import { getSnippets } from "~/lib/context.server";
 import { timelineChart } from "~/lib/charts.server";
 import { ClientOnly } from "~/components/util/ClientOnly";
 import type { Source } from "~/lib/datasets.server";
@@ -28,12 +29,12 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
   });
 }
 
-// The summary is the dataset's own, which states only what its numbers show (data._index.tsx says why).
-export function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, context }: Route.LoaderArgs) {
   const dataset = getDataset(params.slug);
   if (!dataset) throw new Response("Not found", { status: 404 });
+  const summary = datasetSummary(await getSnippets(context), dataset.slug, dataset.summary);
   const chart = dataset.timeline ? timelineChart(dataset.slug, dataset.timeline) : null;
-  return { dataset, chart };
+  return { dataset: { ...dataset, summary }, chart };
 }
 
 /** Where a map's or table's numbers come from, as the chart's own source line reads. */

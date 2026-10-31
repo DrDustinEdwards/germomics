@@ -5,6 +5,7 @@
 // THE NUMBERS are app/lib/data/datasets.json, each read from the source it cites; app/lib/data/SOURCES.md says what
 // was fetched and how each was checked. This file adds only the page's words: titles, summaries, the chart's alt
 // text and notes, each stating only what those numbers show.
+import { SNIPPET_DEFAULTS } from "~/lib/content-defaults";
 import data from "~/lib/data/datasets.json";
 
 export type DataPoint = { lng: number; lat: number; label: string; value: number };
@@ -125,4 +126,15 @@ export function listDatasets(): Pick<Dataset, "slug" | "title" | "kind" | "summa
 
 export function getDataset(slug: string): Dataset | null {
   return Object.hasOwn(DATASETS, slug) ? DATASETS[slug] : null;
+}
+
+/**
+ * A dataset's summary as the page shows it. Carrel edits it as the D1 snippet `snippet:dataset.<slug>`, and an edit
+ * there wins. A row that still holds the placeholder migration 0005 seeded (SNIPPET_DEFAULTS), or no row at all,
+ * gives the summary above, written to state only what the numbers show.
+ */
+export function datasetSummary(snippets: Record<string, string>, slug: string, summary: string): string {
+  const key = `snippet:dataset.${slug}`;
+  const stored = snippets[key];
+  return stored === undefined || stored === SNIPPET_DEFAULTS[key] ? summary : stored;
 }
