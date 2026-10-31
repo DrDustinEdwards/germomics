@@ -4,11 +4,13 @@ import type { Route } from "./+types/data.$slug";
 import { getDataset } from "~/lib/datasets.server";
 import { getSnippets } from "~/lib/context.server";
 import { snippet } from "~/lib/content.server";
+import { timelineChart } from "~/lib/charts.server";
 import { ClientOnly } from "~/components/util/ClientOnly";
 
-// Heavy viz libs are lazy() — Vite code-splits them onto this route only.
+// Heavy viz libs are lazy() — Vite code-splits them onto this route only. Charts are drawn on the server.
 const DataMap = lazy(() => import("~/components/data/DataMap.client"));
-const DataChart = lazy(() => import("~/components/data/DataChart.client"));
+
+export const links: Route.LinksFunction = () => [{ rel: "stylesheet", href: "/charts.css" }];
 
 export function meta({ loaderData, location }: Route.MetaArgs) {
   if (!loaderData?.dataset) return [{ title: "Data · Germomics" }];
@@ -23,7 +25,8 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const dataset = getDataset(params.slug);
   if (!dataset) throw new Response("Not found", { status: 404 });
   const summary = snippet(await getSnippets(context), `snippet:dataset.${dataset.slug}`, dataset.summary);
-  return { dataset: { ...dataset, summary } };
+  const chart = dataset.timeline ? timelineChart(dataset.slug, dataset.timeline) : null;
+  return { dataset: { ...dataset, summary }, chart };
 }
 
 function DataTable({ columns, rows }: { columns: string[]; rows: (string | number)[][] }) {
@@ -55,7 +58,7 @@ function DataTable({ columns, rows }: { columns: string[]; rows: (string | numbe
 }
 
 export default function DataDetail({ loaderData }: Route.ComponentProps) {
-  const d = loaderData.dataset;
+  const { dataset: d, chart } = loaderData;
   return (
     <article className="mx-auto max-w-3xl">
       <p className="font-mono text-xs uppercase tracking-wide text-accent">{d.kind}</p>
@@ -70,18 +73,16 @@ export default function DataDetail({ loaderData }: Route.ComponentProps) {
         </div>
       ) : null}
 
-      {d.timeline ? (
-        <div className="mt-6">
-          <ClientOnly fallback={<div className="h-72 w-full animate-pulse rounded-xl bg-surface" />}>
-            <DataChart data={d.timeline} unit={d.unit} />
-          </ClientOnly>
-        </div>
+      {chart ? (
+        <div className="mt-6 rounded-xl border border-border bg-card p-3" dangerouslySetInnerHTML={{ __html: chart }} />
       ) : null}
 
-      <section className="mt-8">
-        <h2 className="mb-2 font-display text-lg font-semibold">The data</h2>
-        <DataTable columns={d.table.columns} rows={d.table.rows} />
-      </section>
+      {d.table ? (
+        <section className="mt-8">
+          <h2 className="mb-2 font-display text-lg font-semibold">The data</h2>
+          <DataTable columns={d.table.columns} rows={d.table.rows} />
+        </section>
+      ) : null}
     </article>
   );
 }

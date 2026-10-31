@@ -2,17 +2,24 @@
 // D1 table — small, versioned with the code, and crawlable. getDataset() is the single read
 // point, so moving these into an R2 "germomics-data" bucket later is a one-function change.
 export type DataPoint = { lng: number; lat: number; label: string; value: number };
-export type Series = { label: string; value: number };
+/** A line chart over dated points; `label` is how each date reads in the table and hover details. */
+export type Timeline = {
+  title: string;
+  alt: string;
+  xLabel: string;
+  yLabel: string;
+  yUnit?: string;
+  points: { date: string; label: string; value: number }[];
+};
 
 export type Dataset = {
   slug: string;
   title: string;
   kind: "virus" | "bacteria";
   summary: string;
-  unit: string;
   map: { center: [number, number]; zoom: number; points: DataPoint[] } | null;
-  timeline: Series[] | null;
-  table: { columns: string[]; rows: (string | number)[][] };
+  timeline: Timeline | null;
+  table: { columns: string[]; rows: (string | number)[][] } | null;
 };
 
 const DATASETS: Record<string, Dataset> = {
@@ -22,7 +29,6 @@ const DATASETS: Record<string, Dataset> = {
     kind: "bacteria",
     summary:
       "John Snow's map of the Broad Street outbreak: deaths clustered around a single pump, the founding case of epidemiology and a Vibrio cholerae story.",
-    unit: "deaths",
     map: {
       center: [-0.1367, 51.5132],
       zoom: 15.5,
@@ -33,14 +39,20 @@ const DATASETS: Record<string, Dataset> = {
         { lng: -0.1378, lat: 51.5141, label: "Poland Street", value: 7 },
       ],
     },
-    timeline: [
-      { label: "Aug 31", value: 56 },
-      { label: "Sep 1", value: 143 },
-      { label: "Sep 2", value: 116 },
-      { label: "Sep 3", value: 54 },
-      { label: "Sep 4", value: 46 },
-      { label: "Sep 5", value: 36 },
-    ],
+    timeline: {
+      title: "Cholera deaths per day, Soho, 1854",
+      alt: "Deaths peaked at 143 on 1 September 1854, the day after the outbreak began, and fell to 36 by 5 September.",
+      xLabel: "Day",
+      yLabel: "Deaths",
+      points: [
+        { date: "1854-08-31", label: "31 August", value: 56 },
+        { date: "1854-09-01", label: "1 September", value: 143 },
+        { date: "1854-09-02", label: "2 September", value: 116 },
+        { date: "1854-09-03", label: "3 September", value: 54 },
+        { date: "1854-09-04", label: "4 September", value: 46 },
+        { date: "1854-09-05", label: "5 September", value: 36 },
+      ],
+    },
     table: {
       columns: ["Location", "Deaths"],
       rows: [
@@ -57,25 +69,23 @@ const DATASETS: Record<string, Dataset> = {
     kind: "virus",
     summary:
       "The three waves of the 1918 H1N1 pandemic: mortality peaked sharply in the deadly autumn wave, a defining example of viral pandemic dynamics.",
-    unit: "excess mortality (per 1,000)",
     map: null,
-    timeline: [
-      { label: "Spring '18", value: 1.2 },
-      { label: "Summer '18", value: 0.8 },
-      { label: "Autumn '18", value: 7.4 },
-      { label: "Winter '19", value: 3.1 },
-      { label: "Spring '19", value: 1.6 },
-    ],
-    table: {
-      columns: ["Wave", "Excess mortality / 1,000"],
-      rows: [
-        ["Spring 1918", 1.2],
-        ["Summer 1918", 0.8],
-        ["Autumn 1918", 7.4],
-        ["Winter 1919", 3.1],
-        ["Spring 1919", 1.6],
+    // Each season sits at its middle month on the time axis.
+    timeline: {
+      title: "Excess mortality by season, 1918 to 1919",
+      alt: "Excess mortality peaked at 7.4 per 1,000 in autumn 1918, about six times the spring 1918 wave, and fell to 1.6 by spring 1919.",
+      xLabel: "Season",
+      yLabel: "Excess mortality",
+      yUnit: "per 1,000",
+      points: [
+        { date: "1918-04-01", label: "Spring 1918", value: 1.2 },
+        { date: "1918-07-01", label: "Summer 1918", value: 0.8 },
+        { date: "1918-10-01", label: "Autumn 1918", value: 7.4 },
+        { date: "1919-01-01", label: "Winter 1919", value: 3.1 },
+        { date: "1919-04-01", label: "Spring 1919", value: 1.6 },
       ],
     },
+    table: null,
   },
 };
 
