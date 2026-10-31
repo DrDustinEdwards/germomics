@@ -4,7 +4,7 @@
 // shows admin drafts.
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/contact";
-import { getEnv, getSettings } from "~/lib/context.server";
+import { getSettings } from "~/lib/context.server";
 import { loadFilledPage, setting } from "~/lib/content.server";
 import { SITE_ADDRESS_LINE } from "~/lib/site";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
@@ -15,7 +15,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const addressLine = getSettings(context).then((s) => setting(s, "contact.address_line", SITE_ADDRESS_LINE));
-  return loadFilledPage(getEnv(context), request, "page:contact", "Contact", addressLine);
+  return loadFilledPage(context, request, "page:contact", "Contact", addressLine);
 }
 
 export default function Contact({ loaderData }: Route.ComponentProps) {

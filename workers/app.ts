@@ -22,10 +22,11 @@ import { canonicalRedirect } from "@dustinedwards/site-runtime/url";
 import { runJobs } from "@dustinedwards/site-runtime/cron";
 import { logEvent, requestFields, withRequestLog } from "@dustinedwards/site-runtime/log";
 import { countNotFound } from "@dustinedwards/site-runtime/not-found";
-import { cloudflareContext, cspNonceContext } from "../app/lib/context.server";
+import { cloudflareContext, cspNonceContext, pagePreviewContext, postPreviewContext } from "../app/lib/context.server";
 import { enforceRateLimit } from "../app/lib/security.server";
 import { CSP_REPORT_PATH, handleCspReport, withSecurityHeaders } from "../app/lib/security-headers";
 import { carrelApi, isCarrelRequest } from "../app/lib/carrel/handler.server";
+import type { RenderDocument } from "../app/lib/carrel/adapter.server";
 import { cronJobs } from "../app/lib/cron.server";
 import { nextPublishAt } from "../app/lib/posts.server";
 import { FONT_PRELOADS } from "../app/lib/preloads";
@@ -58,6 +59,16 @@ function render(request: Request, env: Env, ctx: ExecutionContext): Promise<Resp
     return withSecurityHeaders(page, request.url, nonce);
   });
 }
+
+// Carrel's preview through the real route, in-process with the draft on the context, so the Renderer never stores it.
+const previewRenderer = (env: Env, ctx: ExecutionContext): RenderDocument => (request, draft) => {
+  const context = new RouterContextProvider();
+  context.set(cloudflareContext, { env, ctx });
+  context.set(cspNonceContext, undefined); // a preview runs no script
+  if ("post" in draft) context.set(postPreviewContext, draft.post);
+  else context.set(pagePreviewContext, draft.page);
+  return requestHandler(request, context);
+};
 
 // Paths that are always rendered live in the gateway, never stored. /admin + /api are gated/mutating; /search is
 // query-driven and low-repeat; /preview is Carrel's preview links, answered before the app; /unsubscribe renders a per-token email; /health is an
@@ -139,15 +150,15 @@ const site = {
 
       // Carrel's site API. Its own guard (prefix, rate limit, key, route) runs first and answers
       // everything under /api/carrel/v1; nothing else is served by it. An accepted write purges the stored pages.
-      // Only its own requests load it; a preview reads the site's stylesheets when it draws.
+      // Only its own requests load it; a preview is drawn by the app itself (previewRenderer).
       if (isCarrelRequest(url)) {
-        const carrel = carrelApi(env, async () => rootStylesheets(await serverBuild()).map((s) => s.href));
+        const carrel = carrelApi(env, previewRenderer(env, ctx));
         if (carrel.matches(request)) {
           const response = await carrel.handle(request, ctx);
           purgeAfterWrite(request, response, ctx, `carrel ${request.method} ${url.pathname}`);
           return withSecurityHeaders(response, origin);
         }
-        // A preview link Carrel made (/preview/<token>, no key): the post's current source in the site's stylesheet,
+        // A preview link Carrel made (/preview/<token>, no key): the post's current source as its page would show it,
         // noindex and never stored. The package's no-referrer stays, so the token, which is the address, is never sent on.
         if (carrel.matchesPreviewLink(request)) return withSecurityHeaders(await carrel.servePreviewLink(request), origin);
       }

@@ -1,9 +1,11 @@
 import { env } from "cloudflare:test";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { RouterContextProvider } from "react-router";
 import { createSiteApi, type PublishEvent } from "@dustinedwards/site-api";
 import { runConformance } from "@dustinedwards/site-api/conformance";
 import { d1SiteApiStore } from "@dustinedwards/site-api/store";
-import { createCarrelAdapter } from "~/lib/carrel/adapter.server";
+import { createCarrelAdapter, type RenderDocument } from "~/lib/carrel/adapter.server";
+import { cloudflareContext, postPreviewContext } from "~/lib/context.server";
 import { parseSource } from "~/lib/carrel/source";
 import { applyMigrations } from "./helpers/d1";
 
@@ -12,10 +14,21 @@ import { applyMigrations } from "./helpers/d1";
 
 const KEY = "k".repeat(40);
 const e = env as unknown as Env;
+/** The app's renderer as far as a test runs it: the real post route's loader with the draft on the context. */
+const renderDocument: RenderDocument = async (request, draft) => {
+  if (!("post" in draft)) throw new Error("only a post's preview is drawn here");
+  const context = new RouterContextProvider();
+  context.set(cloudflareContext, { env: e, ctx: {} as ExecutionContext });
+  context.set(postPreviewContext, draft.post);
+  const { loader } = await import("~/routes/$slug");
+  const data = await loader({ request, params: { slug: new URL(request.url).pathname.slice(1) }, context } as never);
+  const part = data.series ? `<p>Part ${data.series.part} of ${data.series.of}</p>` : "";
+  return new Response(`<meta name="robots" content="${data.post.noindex ? "noindex" : "all"}">${data.preview ? "<p>Preview</p>" : ""}<h1>${data.post.title}</h1>${part}${data.post.bodyHtml}`);
+};
 /** What the publish hooks heard, as IndexNow, the page purge and the webmentions would. */
 const heard: PublishEvent[] = [];
 const api = createSiteApi({
-  adapter: createCarrelAdapter(e, () => {}),
+  adapter: createCarrelAdapter(e, () => {}, { renderDocument }),
   key: KEY,
   limiter: { limit: async () => ({ success: true }) },
   store: d1SiteApiStore(e.DB),
@@ -42,10 +55,11 @@ const put = (id: string, source: string, expectedVersion: string | null) =>
 const post = (path: string, body: unknown) =>
   call(`/api/carrel/v1/content/${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
-// Prelum loads on first use; loaded here, so the first test's time is its own.
+// Prelum and the post route load on first use; loaded here, so the first test's time is its own.
 beforeAll(async () => {
   await applyMigrations(e.DB);
   await import("@drdustinedwards/site-helpers/render/nomath");
+  await import("~/routes/$slug");
 }, 60_000);
 
 beforeEach(async () => {
@@ -131,14 +145,19 @@ describe("content", () => {
     expect(html).toContain("<p>ok</p>");
   });
 
-  it("renders a preview without saving anything", async () => {
-    const res = await call("/api/carrel/v1/preview", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ source: '---\ntitle: "T"\n---\n# Head\n\n<script>x()</script>' }) });
+  it("renders a preview through the post route without saving anything, its series part counted with the live posts", async () => {
+    const one = await json(await put("part-one", '---\ntitle: "One"\nseries: "Sample Series"\nseriesPart: 1\n---\nx', null));
+    await post("part-one/publish", { expectedVersion: one.version, changeId: cid() });
+    const source = '---\ntitle: "T"\nseries: "Sample Series"\nseriesPart: 2\n---\n# Head\n\n<script>x()</script>';
+    const res = await call("/api/carrel/v1/preview", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ source }) });
     expect(res.status).toBe(200);
+    expect(res.headers.get("x-robots-tag")).toContain("noindex");
     const html = await res.text();
+    expect(html).toContain('content="noindex"');
+    expect(html).toContain("<p>Preview</p><h1>T</h1><p>Part 2 of 2</p>");
     expect(html).toMatch(/<h[23]/);
-    expect(html).toContain("noindex");
     expect(html).not.toContain("<script");
-    expect((await e.DB.prepare("SELECT COUNT(*) AS n FROM posts").first<{ n: number }>())!.n).toBe(0);
+    expect((await e.DB.prepare("SELECT COUNT(*) AS n FROM posts").first<{ n: number }>())!.n).toBe(1);
   });
 
   it("renames a live post, the old address and its feed files redirecting to the new one, the guid kept", async () => {

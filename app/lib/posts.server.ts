@@ -185,6 +185,14 @@ export function adjacentPosts(visible: Post[], post: Post): { prev: Post | null;
   return { prev: all[i + 1] ?? null, next: all[i - 1] ?? null }; // older = prev, newer = next
 }
 
+/** "Part n of m": m is the series' live posts with this one, or the highest part named, whichever is more. */
+export function seriesOf(visible: Post[], post: Post): { name: string; part: number; of: number } | null {
+  if (!post.series || !post.seriesPart) return null;
+  const others = visible.filter((p) => p.series === post.series && p.id !== post.id);
+  const of = Math.max(others.length + 1, post.seriesPart, ...others.map((p) => p.seriesPart ?? 0));
+  return { name: post.series, part: post.seriesPart, of };
+}
+
 /** Related = same-kind posts sharing the most tags, newest first. */
 export function relatedPosts(visible: Post[], post: Post, limit = 3): Post[] {
   const tags = new Set(post.tags ?? []);

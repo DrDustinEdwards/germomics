@@ -4,8 +4,7 @@
 import { Link } from "capsomer/react/link";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import type { Route } from "./+types/about.dustin-edwards";
-import { getEnv } from "~/lib/context.server";
-import { loadPage, isPreviewing } from "~/lib/content.server";
+import { routePage } from "~/lib/content.server";
 import { jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { buildPersonLd, pageHead, stripHtml } from "~/lib/seo";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
@@ -30,9 +29,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const env = getEnv(context);
-  const preview = await isPreviewing(env, request);
-  const bio = await loadPage(env, "page:dustin-edwards", { includeDrafts: preview });
+  const bio = await routePage(context, request, "page:dustin-edwards");
   return { bioHtml: bio.html, bioText: stripHtml(bio.html) };
 }
 

@@ -1,4 +1,4 @@
-// The site's side of Carrel's contract (@dustinedwards/site-api v0.17.0): an adapter over the writing in D1 (articles,
+// The site's side of Carrel's contract (@dustinedwards/site-api v0.18.0): an adapter over the writing in D1 (articles,
 // episodes and the Markdown pages) and the images in the BLOG_IMAGES bucket (the media group is ./media.server.ts).
 // Carrel is the only editor of the site's writing (Dustin, 2026-10-29); the admin keeps everything that is not writing.
 //
@@ -11,14 +11,22 @@
 //     `page.<name>` for the block `page:<name>`. Each is a route, so Carrel saves and publishes one but cannot create,
 //     schedule, take down, rename or trash one. llms.txt and ai.txt are plain text (TEXT_PAGES) and stay in the admin.
 //
+// FIELDS. A post with no authors of its own (./source.ts) credits the show's author, in Carrel's list and author filter.
+//
 // RENDER. Every write renders the Markdown with Prelum (app/lib/render.server.ts) and stores the HTML beside it, with
 // the reading time and the render version, which meta names (renderVersion); a source Prelum refuses (a figure without
-// alt text, say) is refused with its reason and nothing is written. A snapshot goes into post_versions before every
-// edit of a post, the episode's people with it, and the guid is generated once at first publish and never rewritten.
+// alt text, say) is refused with its reason and nothing is written. The guid is generated once at first publish and
+// never rewritten.
+//
+// HISTORY. Every write first snapshots the whole row into post_versions (a page's block into content_block_versions),
+// with the change and who made it; the revision list is each state a change made, newest first, named by that change.
+//
+// PREVIEW. The draft goes through the site's real route and layout in-process, on the request context (context.server),
+// so it has the header, footer and byline; never through the Renderer, so never stored; noindex.
 //
 // IDS AND VERSIONS. A post's id is its slug. A version is a hash of everything Carrel can see or change (the source,
-// the status and the schedule, the trash, and an update waiting on a live post), so any change anywhere gives a new
-// version and two saves in one second cannot collide.
+// the status and the schedule, the slug, the trash, and an update waiting on a live post), so any change anywhere,
+// a rename too, gives a new version and two saves in one second cannot collide.
 //
 // SCHEDULES. A post scheduled before it was ever live is a published row with a future publish_at: every public read
 // hides it until then (publiclyVisible), so it goes live by the clock. The one-minute cron (workers/app.ts,
@@ -30,18 +38,16 @@
 // slug of a post ever live redirects (301) to the new one (post_redirects, app/lib/posts.server.ts). Trash takes a live
 // post off the site (a draft, trashed_at set); a restore is a draft; only a trashed post is deleted, and site-api's
 // cron deletes one trashed 30 days.
-import { and, eq, inArray, isNotNull, lte } from "drizzle-orm";
-import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { and, eq, getTableColumns, inArray, isNotNull, lte } from "drizzle-orm";
 import {
   contentVersion,
   NotFoundError,
-  previewDocument,
   RefusedError,
   VersionConflictError,
   type ContentAdapter,
   type ContentSummary,
   type DueSchedule,
+  type Revision,
   type ScheduledUpdate,
   type SchedulesAdapter,
   type SiteAdapter,
@@ -51,16 +57,29 @@ import { SEARCH_FIELDS } from "@dustinedwards/site-api/frontmatter";
 import { d1ScheduledUpdates, utc } from "@dustinedwards/site-api/schedules";
 import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
 import { getDb } from "~/db/index.server";
-import { contentBlocks, episodePeople, people, postRedirects, posts, postVersions, type ContentBlock, type Post } from "~/db/schema";
-import { deletePost, generateGuid, snapshotVersion, updatePost } from "~/lib/admin.server";
+import {
+  contentBlocks,
+  contentBlockVersions,
+  episodePeople,
+  people,
+  postRedirects,
+  posts,
+  postVersions,
+  type ContentBlock,
+  type Post,
+} from "~/db/schema";
+import { CHANGE_AUTHOR, deletePost, generateGuid, snapshotVersion, updatePost } from "~/lib/admin.server";
 import { TEXT_PAGES } from "~/lib/content.server";
+import type { PagePreview } from "~/lib/context.server";
 import { setEpisodePeople } from "~/lib/people.server";
 import { libraryMedia, pageFields, postBodyFields, renderMarkdown, RENDER_VERSION } from "~/lib/render.server";
+import { getShowConfig } from "~/lib/show.server";
 import { SITE_ORIGIN } from "~/lib/site";
 import { PAGE_HREF } from "~/components/content/PageHits";
-import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { carrelMedia } from "./media.server";
-import { parsePageSource, parseSource, renderPageSource, renderSource, SourceError, type PersonRef } from "./source";
+import { parsePageSource, parseSource, renderPageSource, renderSource, SourceError, type ParsedSource, type PersonRef } from "./source";
+
+export type RenderDocument = (request: Request, draft: { post: Post } | { page: PagePreview }) => Promise<Response>;
 
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/;
 // A page's id: content_blocks' `page:about` is Carrel's `page.about` (a colon is not an id character).
@@ -93,9 +112,14 @@ function statusOf(p: Pick<Post, "status" | "publishAt">): Status {
 /** Live, or live once and taken down since: the post's address has been public. */
 const everLive = (p: Post) => !!p.publishedAt && p.publishedAt <= nowIso();
 
+const creditOf = (p: Pick<Post, "authors">, show: string): string[] => (p.authors?.length ? p.authors : [show]);
+
 const sourceOf = (p: Item) =>
   renderSource({
     ...p,
+    authors: p.authors ?? null,
+    series: p.series ?? null,
+    seriesPart: p.seriesPart ?? null,
     tags: p.tags ?? [],
     sources: p.sources ?? [],
     episodeType: p.episodeType ?? "full",
@@ -108,20 +132,21 @@ const sourceOf = (p: Item) =>
 
 /**
  * The version of a post as Carrel sees it. The trash and a waiting update join the parts only when there is one, so
- * the version of a post with neither is the hash it always was of its source, status and schedule.
+ * the version of a post with neither is the hash of its source, status, schedule and slug.
  */
 const versionOf = (p: Item, update: Waiting = null): Promise<string> =>
   contentVersion([
     sourceOf(p),
     p.status,
     p.publishAt ?? null,
+    p.slug,
     ...(p.trashedAt ? ["trashed", p.trashedAt] : []),
     ...(update ? [update.publishAt, update.changeId] : []),
   ]);
 
 const waitingOf = (u: ScheduledUpdate | null): Waiting => (u ? { publishAt: u.publishAt, changeId: u.changeId } : null);
 
-async function summaryOf(p: Item, update: Waiting = null): Promise<ContentSummary> {
+async function summaryOf(p: Item, show: string, update: Waiting = null): Promise<ContentSummary> {
   return {
     scheduledUpdate: update,
     id: p.slug,
@@ -134,6 +159,7 @@ async function summaryOf(p: Item, update: Waiting = null): Promise<ContentSummar
     updatedAt: iso(p.updatedAt),
     version: await versionOf(p, update),
     tags: p.tags ?? [],
+    authors: creditOf(p, show),
     ...(p.excerpt ? { excerpt: p.excerpt } : {}),
     trashedAt: iso(p.trashedAt),
   };
@@ -150,6 +176,57 @@ async function rendered<T>(run: () => Promise<T>): Promise<T> {
 
 const EPISODE_NEEDS = "An episode goes live with its audio and transcript, which are added in the germomics admin (/admin/episodes).";
 const IN_TRASH = "This post is in the trash. Restore it first.";
+
+const CHANGE_NAMES: Record<string, string> = {
+  save: "Saved",
+  publish: "Published",
+  schedule: "Scheduled",
+  unpublish: "Taken off the site",
+  tags: "Tags set",
+  trash: "Moved to the trash",
+  restore: "Restored from the trash",
+  "schedule.apply": "Scheduled update put live",
+  "schedule.cancel": "Schedule canceled",
+  audio: "Audio or transcript saved in the admin",
+};
+
+type Kept<T> = { snapshot: unknown; event: string | null; author: string | null; createdAt: string };
+
+/** Newest first: the state after each change is the next snapshot (or the current state), the oldest snapshot last. */
+async function historyOf<T>(
+  rows: Kept<T>[],
+  current: { state: T; version: string; at: string | null },
+  versionOf: (state: T) => Promise<string>,
+  nameOf: (event: string | null, before: T) => string,
+): Promise<Revision[]> {
+  const epoch = new Date(0).toISOString();
+  const states = [...rows.map((r) => r.snapshot as T), current.state];
+  const entries: Revision[] = [];
+  const seen = new Set<string>();
+  const add = async (r: Omit<Revision, "version">, state: T, version?: string) => {
+    const v = version ?? (await versionOf(state));
+    if (seen.has(v)) return;
+    seen.add(v);
+    entries.push({ version: v, ...r });
+  };
+  if (!rows.length) await add({ at: current.at ?? epoch, author: CHANGE_AUTHOR, message: "Current" }, current.state, current.version);
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const r = rows[i];
+    await add(
+      { at: iso(r.createdAt) ?? epoch, author: r.author ?? CHANGE_AUTHOR, message: nameOf(r.event, states[i]) },
+      states[i + 1],
+      i === rows.length - 1 ? current.version : undefined,
+    );
+  }
+  if (rows.length) {
+    const oldest = states[0] as { updatedAt?: string | null };
+    await add({ at: iso(oldest.updatedAt) ?? iso(rows[0].createdAt) ?? epoch, author: CHANGE_AUTHOR, message: "Earliest version kept" }, states[0]);
+  }
+  return entries;
+}
+
+const postChange = (event: string | null, before: Item) =>
+  event === "rename" ? `Renamed from ${before.slug}` : (CHANGE_NAMES[event ?? ""] ?? "Saved");
 
 // ---------- pages ----------
 
@@ -178,6 +255,9 @@ async function findPage(env: Env, id: string): Promise<PageRow | null> {
   return rows[0] ?? null;
 }
 
+const pageHistory = (env: Env, key: string) =>
+  getDb(env).select().from(contentBlockVersions).where(eq(contentBlockVersions.blockKey, key)).orderBy(contentBlockVersions.id);
+
 async function listPages(env: Env): Promise<PageRow[]> {
   const rows = await getDb(env).select().from(contentBlocks).where(eq(contentBlocks.kind, "page"));
   return rows.filter((b) => !TEXT_PAGES.has(b.key));
@@ -186,9 +266,10 @@ async function listPages(env: Env): Promise<PageRow[]> {
 export function createCarrelAdapter(
   env: Env,
   log: (entry: Record<string, unknown>) => void = console.log,
-  options: { stylesheets?: () => Promise<string[]> } = {},
+  options: { renderDocument?: RenderDocument } = {},
 ): SiteAdapter {
   const db = getDb(env);
+  const showAuthor = async () => (await getShowConfig(env)).author;
   const updates = d1ScheduledUpdates(env.DB);
   const waiting = async (slug: string): Promise<Waiting> => waitingOf(await updates.get(slug));
 
@@ -259,7 +340,7 @@ export function createCarrelAdapter(
     const { fields, people: links } = await build(current);
     let id: number;
     if (current) {
-      await snapshotVersion(env, current);
+      await snapshotVersion(env, current, event);
       await updatePost(env, current.id, fields);
       id = current.id;
     } else {
@@ -301,6 +382,7 @@ export function createCarrelAdapter(
     if (now !== expectedVersion) throw new VersionConflictError(now);
     if (!current) throw new RefusedError("A germomics page is a route of its own, so Carrel edits the pages it lists and adds none.");
     const fields = await build(current);
+    await db.insert(contentBlockVersions).values({ blockKey: current.key, snapshot: current, event, author: CHANGE_AUTHOR });
     await db.update(contentBlocks).set({ ...fields, updatedAt: nowIso() }).where(eq(contentBlocks.key, current.key));
     const next = { ...current, ...fields };
     const version = await pageVersion(next);
@@ -332,18 +414,43 @@ export function createCarrelAdapter(
     return current;
   }
 
+  /** The post a source would make, never written: over the stored row when there is one, noindex either way. */
+  async function draftPost(id: string | undefined, source: string): Promise<Post> {
+    const current = id ? await findPost(id) : null;
+    const kind = current?.kind ?? "article";
+    let parsed: ParsedSource;
+    try {
+      parsed = parseSource(source, kind);
+    } catch {
+      parsed = { body: source, post: null, episode: null };
+    }
+    const { people: _people, ...episode } = parsed.episode ?? {};
+    const now = nowIso();
+    const blank = Object.fromEntries(Object.keys(getTableColumns(posts)).map((column) => [column, null]));
+    const base = current ?? ({ ...blank, id: 0, kind, title: "Untitled", body: "", status: "draft", tags: [], featured: false, createdAt: now, updatedAt: now } as unknown as Post);
+    return {
+      ...base,
+      ...parsed.post,
+      ...episode,
+      ...(await rendered(() => postBodyFields(env, parsed.body))),
+      slug: current?.slug ?? (id && ID_PATTERN.test(id) ? id : "preview"),
+      noindex: true,
+    };
+  }
+
   const content: ContentAdapter = {
     // site-api's post and search fields this site renders (./source.ts): the excerpt, and the search title,
     // description, image and its alt text, kept in seo_title, seo_description, og_image and og_image_alt, and the
-    // canonical address and noindex in their own columns.
-    postFields: ["excerpt"],
+    // canonical address and noindex in their own columns; authors, series and seriesPart.
+    postFields: ["excerpt", "authors", "series", "seriesPart"],
     searchFields: SEARCH_FIELDS,
-    // A page has no tags and no publish date, so a tag or date filter leaves the pages out. No post names authors.
-    filters: ["kind", "tag", "published"],
+    // A page has no tags, authors or publish date, so a tag, author or date filter leaves the pages out.
+    filters: ["kind", "tag", "author", "published"],
     publishedAtSettable: true,
 
     async list(query) {
-      const { status, q, kind, tag, publishedAfter, publishedBefore, trashed = false, cursor, limit } = query;
+      const { status, q, kind, tag, author, publishedAfter, publishedBefore, trashed = false, cursor, limit } = query;
+      const show = await showAuthor();
       const needle = q?.toLowerCase();
       const after = publishedAfter ? new Date(publishedAfter).toISOString() : null;
       const before = publishedBefore ? new Date(publishedBefore).toISOString() : null;
@@ -354,6 +461,7 @@ export function createCarrelAdapter(
           !!p.trashedAt === trashed &&
           (!kind || p.kind === kind) &&
           (!tag || (p.tags ?? []).includes(tag)) &&
+          (!author || creditOf(p, show).includes(author)) &&
           (!after || (published !== null && published >= after)) &&
           (!before || (published !== null && published <= before)) &&
           (!needle || [p.title, p.slug, p.body].some((t) => t.toLowerCase().includes(needle))) &&
@@ -361,7 +469,7 @@ export function createCarrelAdapter(
         );
       });
       const pages =
-        trashed || tag || after || before || (kind && kind !== "page")
+        trashed || tag || author || after || before || (kind && kind !== "page")
           ? []
           : (await listPages(env)).filter(
               (b) =>
@@ -381,7 +489,7 @@ export function createCarrelAdapter(
       // Only the page shown is read in full: its episodes' people and its waiting updates.
       const full = new Map((await withPeople(shown.flatMap((i) => (i.post ? [i.post] : [])))).map((p) => [p.id, p]));
       const items = await Promise.all(
-        shown.map(async (i) => (i.post ? summaryOf(full.get(i.post.id)!, await waiting(i.post.slug)) : pageSummary(i.page!))),
+        shown.map(async (i) => (i.post ? summaryOf(full.get(i.post.id)!, show, await waiting(i.post.slug)) : pageSummary(i.page!))),
       );
       return { items, nextCursor: start + limit < all.length ? String(start + limit) : null, total: all.length, sorted: { sort, dir } };
     },
@@ -392,7 +500,7 @@ export function createCarrelAdapter(
       const p = await findPost(id);
       if (!p) return null;
       const update = await waiting(id);
-      return { ...(await summaryOf(p, update)), format: "markdown" as const, source: sourceOf(p), version: await versionOf(p, update) };
+      return { ...(await summaryOf(p, await showAuthor(), update)), format: "markdown" as const, source: sourceOf(p), version: await versionOf(p, update) };
     },
 
     // A new id is a new article: an episode starts in the admin, with its audio.
@@ -440,6 +548,13 @@ export function createCarrelAdapter(
             if (!current) throw new NotFoundError();
             return { fields: { status: "draft", publishAt: null, scheduleChangeId: null } };
           }, { dropUpdate: true }),
+
+    async setTags(id, { tags, expectedVersion, changeId }) {
+      if (await findPage(env, id)) throw new RefusedError("A germomics page has no tags.");
+      const current = await existingPost(id, "tagged");
+      if (current.trashedAt) throw new RefusedError(IN_TRASH);
+      return write("tags", id, changeId, expectedVersion, async () => ({ fields: { tags } }));
+    },
 
     // The slug moves and the row stays, so the history, the people and the guid move with it. The old address of a
     // post ever live redirects to the new one; a slug taken by another post or a page id is refused.
@@ -493,27 +608,27 @@ export function createCarrelAdapter(
 
     async revisions(id) {
       const b = await findPage(env, id);
-      // A page keeps no history of its own; its one revision is the current text.
-      if (b) return [{ version: await pageVersion(b), at: iso(b.updatedAt) ?? new Date(0).toISOString(), author: "germomics", message: "Current" }];
+      if (b) {
+        const current = { state: b, version: await pageVersion(b), at: iso(b.updatedAt) };
+        return historyOf(await pageHistory(env, b.key), current, pageVersion, (event) => CHANGE_NAMES[event ?? ""] ?? "Saved");
+      }
       const p = await findPost(id);
       if (!p) return null;
       const rows = await db.select().from(postVersions).where(eq(postVersions.postId, p.id)).orderBy(postVersions.id);
-      const items = [];
-      for (const r of rows.reverse()) {
-        const snap = r.snapshot as Item;
-        items.push({
-          version: await versionOf(snap),
-          at: iso(r.createdAt) ?? new Date(0).toISOString(),
-          author: "germomics",
-          message: `Saved before an edit (${snap.title})`,
-        });
-      }
-      return items;
+      const current = { state: p, version: await versionOf(p, await waiting(id)), at: iso(p.updatedAt) };
+      return historyOf<Item>(rows, current, (snap) => versionOf(snap), postChange);
     },
 
     async revisionSource(id, version) {
       const b = await findPage(env, id);
-      if (b) return (await pageVersion(b)) === version ? renderPageSource(b) : null;
+      if (b) {
+        if ((await pageVersion(b)) === version) return renderPageSource(b);
+        for (const r of await pageHistory(env, b.key)) {
+          const snap = r.snapshot as PageRow;
+          if ((await pageVersion(snap)) === version) return renderPageSource(snap);
+        }
+        return null;
+      }
       const p = await findPost(id);
       if (!p) return null;
       if ((await versionOf(p, await waiting(id))) === version) return sourceOf(p);
@@ -602,7 +717,7 @@ export function createCarrelAdapter(
         return null;
       }
       const { fields, people: links } = await changeFromSource(update.source, current.kind);
-      await snapshotVersion(env, current);
+      await snapshotVersion(env, current, "schedule.apply");
       await updatePost(env, current.id, fields);
       if (links) await setEpisodePeople(env, current.id, links);
       await updates.remove(id, match).run();
@@ -619,32 +734,29 @@ export function createCarrelAdapter(
     // The Prelum render every stored body was made with (render.server.ts keeps the constant, checked against Prelum's).
     renderVersion: RENDER_VERSION,
 
-    // The body as the site renders it (the same Prelum render, media library and prose styles), in the site's own
-    // stylesheet, because an unsaved source has no row for the route to load. A source that cannot be read previews
-    // as its body alone; a save still refuses it.
+    // A source whose front matter cannot be read previews as its body alone; a save still refuses it.
     preview: {
       async render({ id, source }) {
-        let title: string | null;
-        let body: string;
-        if (pageKeyOf(id ?? "")) ({ title, body } = parsePageSource(source));
-        else {
-          try {
-            const parsed = parseSource(source, (id ? (await findPost(id))?.kind : null) ?? "episode");
-            ({ body } = parsed);
-            title = parsed.post?.title ?? null;
-          } catch {
-            ({ title, body } = { title: null, body: source });
-          }
+        const { renderDocument } = options;
+        if (!renderDocument) throw new Error("the document renderer is not on this request");
+        const key = pageKeyOf(id ?? "");
+        let path: string;
+        let draft: Parameters<RenderDocument>[1];
+        if (key) {
+          path = PAGE_HREF[key];
+          if (!path || TEXT_PAGES.has(key)) throw new RefusedError("That page has no preview.");
+          const { title, body } = parsePageSource(source);
+          const { html } = await rendered(() => renderMarkdown(body, libraryMedia(env)));
+          draft = { page: { key, title, html } };
+        } else {
+          const post = await draftPost(id, source);
+          path = `/${post.slug}`;
+          draft = { post };
         }
-        const { html } = await rendered(() => renderMarkdown(body, libraryMedia(env)));
-        const heading = (title ?? "Untitled").replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
-        return previewDocument({
-          title: title ?? "Untitled",
-          body: `<main class="mx-auto max-w-3xl px-4 py-10"><article><h1 class="font-display text-3xl font-semibold">${heading}</h1>${renderToStaticMarkup(createElement(BodyRenderer, { html }))}</article></main>`,
-          stylesheets: (await options.stylesheets?.()) ?? [],
-          origin: SITE_ORIGIN,
-          attributes: { "data-theme": "light" },
-        });
+        const response = await renderDocument(new Request(new URL(path, SITE_ORIGIN), { headers: { Accept: "text/html" } }), draft);
+        if (!response.ok) throw new RefusedError(`The preview did not render: ${path} answered ${response.status}.`);
+        // A page's own robots tag indexes it; the strictest tag wins, so this one keeps a preview out of every index.
+        return (await response.text()).replace(/<head\b[^>]*>/i, (head) => `${head}<meta name="robots" content="noindex, nofollow">`);
       },
     },
 

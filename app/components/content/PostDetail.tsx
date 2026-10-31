@@ -44,6 +44,8 @@ export type DetailData = {
   next: { slug: string; title: string } | null;
   subscribeLinks: Record<string, string>;
   author: string;
+  authors?: string[] | null;
+  series?: { name: string; part: number; of: number } | null;
   hosts: Host[];
   cover: string | null;
   readingMinutes: number;
@@ -201,6 +203,7 @@ export function PostDetail({ data }: { data: DetailData }) {
       [post.seasonNumber ? `Season ${post.seasonNumber}` : null, post.episodeNumber ? `Episode ${post.episodeNumber}` : null]
         .filter(Boolean)
         .join(" · ") || "Episode";
+    const part = seriesLine(data.series);
     const moments =
       post.keyMoments && post.keyMoments.length
         ? post.keyMoments
@@ -216,7 +219,7 @@ export function PostDetail({ data }: { data: DetailData }) {
           {/* Hero */}
           <header className="grid gap-6 sm:grid-cols-[1fr_12rem] sm:items-start lg:grid-cols-[1fr_14rem]">
             <div>
-              <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent">{eyebrow}</p>
+              <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent">{part ? `${eyebrow} · ${part}` : eyebrow}</p>
               <h1 className="mt-2 font-display text-4xl font-semibold leading-tight">{post.title}</h1>
               <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-muted">
                 {post.publishedAt ? (
@@ -309,11 +312,11 @@ export function PostDetail({ data }: { data: DetailData }) {
         <Picture src={post.coverImage} image={imageFor(data.images, "cover", post.coverImage)} alt={post.coverAlt ?? ""} priority className="mb-6 aspect-[2/1] w-full rounded-2xl border border-border object-cover" />
       ) : null}
       <p className="flex items-center gap-1 font-mono text-xs uppercase tracking-wide text-accent">
-        <FileText size={12} aria-hidden /> Article
+        <FileText size={12} aria-hidden /> Article{data.series ? ` · ${seriesLine(data.series)}` : null}
       </p>
       <h1 className="mt-2 font-display text-4xl font-semibold leading-tight">{post.title}</h1>
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-muted">
-        <span>{AUTHOR.byline}</span>
+        <span>{data.authors?.length ? `Written by ${new Intl.ListFormat("en").format(data.authors)}.` : AUTHOR.byline}</span>
         {post.publishedAt ? <span className="flex items-center gap-1"><Calendar size={12} aria-hidden /> {formatDate(post.publishedAt)}</span> : null}
         {wasUpdatedAfterPublish(post) ? <span className="text-accent">Updated {formatDate(post.updatedAt)}</span> : null}
         <span className="flex items-center gap-1"><Clock size={12} aria-hidden /> {readingMinutes} min read</span>
@@ -350,6 +353,10 @@ export function PostDetail({ data }: { data: DetailData }) {
       {Related}
     </article>
   );
+}
+
+function seriesLine(series: DetailData["series"]): string | null {
+  return series ? `Part ${series.part} of ${series.of}: ${series.name}` : null;
 }
 
 function PreviewBanner({ post }: { post: Post }) {

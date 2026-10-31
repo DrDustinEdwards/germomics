@@ -4,6 +4,10 @@
 import { desc, eq, sql } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { posts, postVersions, type Post } from "~/db/schema";
+import { AUTHOR } from "~/lib/about";
+
+/** Who a change is recorded under: Dustin, the one writer, until Carrel sends the person who made it. */
+export const CHANGE_AUTHOR = AUTHOR.name;
 
 /** A new untitled draft with a placeholder slug, which Carrel renames. */
 export async function createDraft(env: Env, kind: "episode" | "article"): Promise<number> {
@@ -27,9 +31,9 @@ export async function deletePost(env: Env, id: number): Promise<void> {
   await getDb(env).delete(posts).where(eq(posts.id, id));
 }
 
-/** Snapshot the current row into post_versions before an edit overwrites it (an episode's people with it, from Carrel). */
-export async function snapshotVersion(env: Env, post: Post): Promise<void> {
-  await getDb(env).insert(postVersions).values({ postId: post.id, snapshot: post });
+/** Snapshot the row into post_versions before a change (save, publish, rename...) overwrites it, an episode's people with it. */
+export async function snapshotVersion(env: Env, post: Post, event: string): Promise<void> {
+  await getDb(env).insert(postVersions).values({ postId: post.id, snapshot: post, event, author: CHANGE_AUTHOR });
 }
 
 export async function listAllPosts(env: Env): Promise<Post[]> {
