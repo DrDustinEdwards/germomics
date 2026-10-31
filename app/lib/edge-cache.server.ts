@@ -10,7 +10,7 @@
 // makes an admin edit visible to anonymous visitors, and every signed-in/admin request is always
 // live via the session-cookie bypass (which is also what gives the admin instant-edit visibility).
 
-import { withSecurityHeaders } from "./security-headers";
+import { renewNonce } from "@dustinedwards/site-runtime/csp";
 
 // Tunable windows. age < FRESH: serve cached as-is. FRESH..SWR: serve stale and refresh in the
 // background. age >= SWR (or a miss): render live. Kept at the top so they are easy to tune.
@@ -107,6 +107,7 @@ function forStorage(secured: Response): Response {
 
 // Serve an entry pulled from cache. Strip the storage bookkeeping, restore the client-facing
 // Cache-Control (the route's own, or the HTML default — never the long retention TTL), and tag it.
+// Every reader gets a fresh CSP nonce, never the one the page was stored with (renewNonce).
 function fromCache(cached: Response, status: "HIT" | "STALE", method: string): Response {
   const headers = new Headers(cached.headers);
   headers.delete(STORED_AT);
@@ -114,11 +115,11 @@ function fromCache(cached: Response, status: "HIT" | "STALE", method: string): R
   headers.delete(ORIG_CC);
   headers.set("Cache-Control", orig ?? HTML_CLIENT_CC);
   headers.set(STATUS, status);
-  return new Response(method === "HEAD" ? null : cached.body, {
+  return renewNonce(new Response(method === "HEAD" ? null : cached.body, {
     status: cached.status,
     statusText: cached.statusText,
     headers,
-  });
+  }));
 }
 
 // Serve a live render (not from cache). MISS = rendered and stored; BYPASS = never cached.
@@ -148,7 +149,7 @@ export async function serveWithEdgeCache(opts: {
   // Bypass: any non-readable method, an authenticated request, or a non-public path goes straight
   // to a live render and never touches the cache.
   if (!readable || hasSessionCookie(request) || bypassPath(url.pathname)) {
-    return liveServed(withSecurityHeaders(await render(), request.url), "BYPASS");
+    return liveServed(await render(), "BYPASS");
   }
 
   // caches.default is the Cloudflare cache (worker-configuration.d.ts), but this app also pulls in
@@ -163,7 +164,7 @@ export async function serveWithEdgeCache(opts: {
     if (age !== null && age < SWR_SECONDS) {
       if (age >= FRESH_SECONDS) {
         // Stale: serve immediately, refresh in the background.
-        ctx.waitUntil(revalidate(cache, key, request.url, render));
+        ctx.waitUntil(revalidate(cache, key, render));
         return fromCache(cached, "STALE", method);
       }
       return fromCache(cached, "HIT", method);
@@ -172,7 +173,7 @@ export async function serveWithEdgeCache(opts: {
   }
 
   // Miss / expired: render live, then store only a GET response that passes every invariant.
-  const secured = withSecurityHeaders(await render(), request.url);
+  const secured = await render();
   if (method === "GET" && responseIsCacheable(secured)) {
     ctx.waitUntil(cache.put(key, forStorage(secured.clone())));
     return liveServed(secured, "MISS");
@@ -182,9 +183,9 @@ export async function serveWithEdgeCache(opts: {
 
 // Background refresh of a stale entry. Best-effort: a failed render just leaves the existing entry
 // to age out and be re-rendered on a later request.
-async function revalidate(cache: Cache, key: Request, url: string, render: RenderFn): Promise<void> {
+async function revalidate(cache: Cache, key: Request, render: RenderFn): Promise<void> {
   try {
-    const secured = withSecurityHeaders(await render(), url);
+    const secured = await render();
     if (responseIsCacheable(secured)) await cache.put(key, forStorage(secured));
   } catch {
     /* keep the old entry */

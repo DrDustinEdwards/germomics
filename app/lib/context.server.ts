@@ -11,6 +11,9 @@ export type CloudflareBindings = { env: Env; ctx: ExecutionContext };
 
 export const cloudflareContext = createContext<CloudflareBindings>();
 
+// The Content-Security-Policy nonce this render puts on its inline scripts (workers/app.ts, app/entry.server.tsx).
+export const cspNonceContext = createContext<string | undefined>(undefined);
+
 export function getEnv(context: Readonly<RouterContextProvider>): Env {
   return context.get(cloudflareContext).env;
 }

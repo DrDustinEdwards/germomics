@@ -1,5 +1,6 @@
 import { createRequestHandler, RouterContextProvider } from "react-router";
-import { cloudflareContext } from "../app/lib/context.server";
+import { generateNonce } from "@dustinedwards/site-runtime/csp";
+import { cloudflareContext, cspNonceContext } from "../app/lib/context.server";
 import { enforceRateLimit } from "../app/lib/security.server";
 import { CSP_REPORT_PATH, handleCspReport, withSecurityHeaders } from "../app/lib/security-headers";
 import { serveWithEdgeCache } from "../app/lib/edge-cache.server";
@@ -49,19 +50,21 @@ export default {
       const limited = await enforceRateLimit(env, request);
       if (limited) return withSecurityHeaders(limited, request.url);
 
-      // Render closure: a fresh RR context per call, since the edge-cache layer may re-render in
-      // the background to refresh a stale entry. The cache layer applies the security headers (so
-      // both live and cached responses carry them) and serves public anonymous GETs from
-      // caches.default with stale-while-revalidate; authenticated/admin/api/mutating requests
-      // bypass it and stay live.
+      // Render closure: a fresh RR context and CSP nonce per call, since the edge-cache layer may
+      // re-render in the background to refresh a stale entry. The render carries the security
+      // headers, so a stored copy has them too; the cache layer serves public anonymous GETs from
+      // caches.default with stale-while-revalidate, giving every reader a fresh nonce, while
+      // authenticated/admin/api/mutating requests bypass it and stay live.
       const render = () => {
         const context = new RouterContextProvider();
+        const nonce = generateNonce();
         context.set(cloudflareContext, { env, ctx });
-        return requestHandler(request, context).then(withPreloads);
+        context.set(cspNonceContext, nonce);
+        return requestHandler(request, context).then((page) => withSecurityHeaders(withPreloads(page), request.url, nonce));
       };
       // Skip the edge cache during `npm run dev` so local edits are always live; the SWR cache is
       // a production concern and would only make local iteration serve stale anonymous HTML.
-      if (import.meta.env.DEV) return withSecurityHeaders(await render(), request.url);
+      if (import.meta.env.DEV) return await render();
       return await serveWithEdgeCache({ request, ctx, render });
     } catch (err) {
       // Prod error hygiene: never leak a stack trace or internal detail to the client. The error
