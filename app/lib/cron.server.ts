@@ -16,8 +16,8 @@ import { runCarrelSchedules } from "~/lib/carrel/handler.server";
 import { continueMediaBackfill } from "~/lib/media/backfill.server";
 import { rerenderStale } from "~/lib/render.server";
 
-export const SCHEDULES_CRON = "* * * * *";
-export const NIGHTLY_CRON = "17 3 * * *";
+const SCHEDULES_CRON = "* * * * *";
+const NIGHTLY_CRON = "17 3 * * *";
 
 const MINUTE = 60_000;
 const DAY = 1440;
