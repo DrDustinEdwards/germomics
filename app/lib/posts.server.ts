@@ -5,7 +5,7 @@
 import { and, asc, desc, eq, getTableColumns, gt, inArray, isNull, lte, min, or, sql, type SQL } from "drizzle-orm";
 import { toMatchExpression } from "@drdustinedwards/site-helpers/search";
 import { getDb } from "~/db/index.server";
-import { posts, type Post } from "~/db/schema";
+import { postRedirects, posts, type Post } from "~/db/schema";
 import { slugifyGuest, toPlayerTrack } from "~/lib/posts";
 import { storedBody } from "~/lib/render.server";
 
@@ -43,11 +43,13 @@ function asCards(
 // Publish-on-read scheduling gate (the mechanism chosen this pass — see the editor spec §F):
 // a post is publicly visible when it is published AND not scheduled into the future. A
 // "scheduled" post is status=published with a future publishAt; it stays hidden from every
-// public read (lists, detail, search, feeds) until publishAt passes — no cron required.
+// public read (lists, detail, search, feeds) until publishAt passes — no cron required. A post in
+// Carrel's trash is a draft already; trashedAt is checked as well, so no stray row can show one.
 function publiclyVisible(): SQL {
   const now = new Date().toISOString();
   return and(
     eq(posts.status, "published"),
+    isNull(posts.trashedAt),
     or(isNull(posts.publishAt), lte(posts.publishAt, now)),
   )!;
 }
@@ -65,6 +67,7 @@ export async function nextPublishAt(env: Env): Promise<Date | null> {
 export function isVisibleNow(post: Post): boolean {
   return (
     post.status === "published" &&
+    !post.trashedAt &&
     (!post.publishAt || post.publishAt <= new Date().toISOString())
   );
 }
@@ -138,6 +141,21 @@ export async function getPostBySlug(
   if (!post) return null;
   if (!opts.includeDrafts && !isVisibleNow(post)) return null;
   return post;
+}
+
+/**
+ * The permanent redirect for a slug a post was renamed from (Carrel's rename, post_redirects), to the same `suffix`
+ * under the slug it has now; null when the slug was never renamed or the post is not publicly visible, so a redirect
+ * never names a draft's address.
+ */
+export async function renamedPostRedirect(env: Env, slug: string, suffix = ""): Promise<Response | null> {
+  const [row] = await getDb(env)
+    .select({ slug: posts.slug })
+    .from(postRedirects)
+    .innerJoin(posts, eq(posts.id, postRedirects.postId))
+    .where(and(eq(postRedirects.fromSlug, slug), publiclyVisible()))
+    .limit(1);
+  return row ? new Response(null, { status: 301, headers: { Location: `/${row.slug}${suffix}` } }) : null;
 }
 
 export async function getPostById(env: Env, id: number): Promise<Post | null> {

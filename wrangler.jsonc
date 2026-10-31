@@ -6,7 +6,7 @@
 	"compatibility_date": "2026-10-19",
 	"compatibility_flags": ["nodejs_compat"],
 	// Keep dashboard-set vars/secrets (ADMIN_EMAIL, ACCESS_TEAM_DOMAIN, ACCESS_AUD,
-	// BETTER_AUTH_SECRET for preview tokens) from being wiped on deploy.
+	// CARREL_SITE_KEY) from being wiped on deploy.
 	"keep_vars": true,
 	"observability": { "enabled": true, "traces": { "enabled": true, "head_sampling_rate": 0.1 } },
 	// Run the Worker next to D1 (primary in ENAM, read replication off). A page render waits on D1

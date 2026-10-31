@@ -44,7 +44,7 @@ const icon = (Icon: typeof LayoutDashboard) => <Icon className="cap-admin-icon" 
 // The admin's pages, grouped as the menu shows them. `match` decides which entry is current.
 const ENTRIES: Array<AdminEntry & { match: (path: string) => boolean }> = [
   { id: "dashboard", label: "Dashboard", href: "/admin", group: "Overview", icon: icon(LayoutDashboard), match: (p) => p === "/admin" },
-  { id: "posts", label: "Posts", href: "/admin/posts", group: "Content", icon: icon(FileAudio), match: (p) => p.startsWith("/admin/posts") },
+  { id: "episodes", label: "Episode audio", href: "/admin/episodes", group: "Content", icon: icon(FileAudio), match: (p) => p.startsWith("/admin/episodes") },
   { id: "people", label: "People", href: "/admin/people", group: "Content", icon: icon(Users), match: (p) => p.startsWith("/admin/people") },
   { id: "soundbites", label: "Soundbites", href: "/admin/soundbites", group: "Content", icon: icon(Scissors), match: (p) => p.startsWith("/admin/soundbites") },
   { id: "subscribers", label: "Subscribers", href: "/admin/subscribers", group: "Audience", icon: icon(Mail), match: (p) => p.startsWith("/admin/subscribers") },

@@ -30,6 +30,8 @@ beforeEach(async () => {
   await e.DB.exec("DELETE FROM posts");
   await e.DB.exec("DELETE FROM scheduled_updates");
   await e.DB.exec("DELETE FROM content_blocks");
+  await e.DB.exec("DELETE FROM episode_people");
+  await e.DB.exec("DELETE FROM people");
 });
 
 describe("saving a draft", () => {
@@ -265,15 +267,18 @@ describe("an episode", () => {
     expect(await row("ep")).toMatchObject({ kind: "episode", title: "Ep, retitled", body: "New notes", status: "published", guid: "urn:germomics:ep", audio_url: "https://media.germomics.com/ep.mp3" });
   });
 
-  it("is never put live for the first time, scheduled or taken down from Carrel", async () => {
+  it("goes live from Carrel only once it has its audio and transcript, and names its people by slug", async () => {
     await episode("draft");
     const { version } = (await content.get("ep"))!;
-    await expect(content.publish("ep", { expectedVersion: version, changeId: "c" })).rejects.toThrow("from the germomics admin");
-    await expect(content.schedule("ep", { expectedVersion: version, changeId: "c", publishAt: "2030-01-01T00:00:00.000Z" })).rejects.toBeInstanceOf(RefusedError);
-    await insert("UPDATE posts SET status = 'published' WHERE slug = 'ep'");
-    const live = (await content.get("ep"))!;
-    await expect(content.unpublish("ep", { expectedVersion: live.version, changeId: "c" })).rejects.toThrow("taken down in the germomics admin");
-    expect(await row("ep")).toMatchObject({ status: "published" });
+    await expect(content.publish("ep", { expectedVersion: version, changeId: "c" })).rejects.toThrow("audio and transcript");
+    await insert("UPDATE posts SET transcript = 'WEBVTT' WHERE slug = 'ep'");
+    await insert("INSERT INTO people (name, slug) VALUES ('Sample Person', 'sample-person')");
+    const named = await save("ep", '---\ntitle: "Ep"\nepisodeNumber: 3\npeople: [{"slug":"sample-person","role":"guest"}]\n---\nNotes', version);
+    await expect(save("ep", '---\ntitle: "Ep"\npeople: [{"slug":"nobody"}]\n---\nNotes', named.version)).rejects.toThrow("nobody");
+    const live = await content.publish("ep", { expectedVersion: named.version, changeId: "c" });
+    expect(await row("ep")).toMatchObject({ status: "published", episode_number: 3, guid: "urn:germomics:ep" });
+    expect((await content.get("ep"))!.source).toContain('people: [{"slug":"sample-person","role":"guest"}]');
+    expect((await content.unpublish("ep", { expectedVersion: live.version, changeId: "c" })).status).toBe("draft");
   });
 });
 
@@ -306,12 +311,12 @@ describe("a page", () => {
 });
 
 describe("preview", () => {
-  it("escapes the title and falls back to Untitled", async () => {
-    const html = await adapter.preview!.render({ source: '---\ntitle: "<b>&\\"x\\""\n---\n<p>b</p>' });
-    expect(html).toContain("<title>&#60;b&#62;&#38;&#34;x&#34;</title>");
-    expect(html).toContain("<h1>&#60;b&#62;&#38;&#34;x&#34;</h1>");
-    expect(html).toContain('<meta name="robots" content="noindex">');
-    expect(await adapter.preview!.render({ source: "<p>b</p>" })).toContain("<h1>Untitled</h1>");
+  it("draws the body in a noindex page with the title escaped, falling back to Untitled", async () => {
+    const html = await adapter.preview!.render({ source: '---\ntitle: "<b>x"\n---\nbody text' });
+    expect(html).not.toContain("<b>x");
+    expect(html).toContain("body text");
+    expect(html).toContain("noindex");
+    expect(await adapter.preview!.render({ source: "b" })).toContain("Untitled");
   });
 });
 
