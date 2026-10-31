@@ -3,8 +3,8 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import { applyMigrations, setSettings } from "./helpers/d1";
 
 // The Worker entry (workers/app.ts): the order a request passes through (Carrel's API, then the
-// rate limiter, then the app behind the edge cache), the plain
-// 500 that never leaks an error, and the nightly backup whose failure must not be swallowed.
+// rate limiter, then the app behind the edge cache), the signed-in admin kept out of the stored pages, the
+// plain 500 that never leaks an error, and the nightly backup whose failure must not be swallowed.
 // React Router's request handler and the backup run are replaced so only the entry is under test.
 const h = vi.hoisted(() => ({
   render: vi.fn(async (_req: Request, _ctx: unknown) => new Response("<p>page</p>", { headers: { "Content-Type": "text/html" } })),
@@ -91,24 +91,35 @@ describe("the Worker entry", () => {
     expect((context as { get: (k: unknown) => { env: Env } }).get(cloudflareContext).env.DB).toBe(e.DB);
   });
 
-  it("in development renders live and never caches", async () => {
+  it("in development renders live", async () => {
     vi.stubEnv("DEV", true);
-    const url = fresh();
-    const res = await fetchWith(new Request(url));
+    const res = await fetchWith(new Request(fresh()));
     expect(await res.text()).toBe("<p>page</p>");
-    expect(res.headers.has("x-cache")).toBe(false);
   });
 
-  it("in production serves public pages through the edge cache", async () => {
+  // A stored page goes to every reader, so the admin's ?preview, which shows drafts, must never reach the Renderer
+  // (CLAUDE.md rule 5: a scheduled post would leak), and an admin save purges.
+  it("in production keeps the signed-in admin and writes out of the stored pages", async () => {
     vi.stubEnv("DEV", false);
-    const c = ctx();
-    const url = fresh("/episodes/");
-    const first = await fetchWith(new Request(url), {}, c);
-    expect(first.headers.get("x-cache")).toBe("MISS");
-    await Promise.all(c.pending);
-    const second = await fetchWith(new Request(url));
-    expect(second.headers.get("x-cache")).toBe("HIT");
-    expect(h.render).toHaveBeenCalledTimes(1);
+    const stored: string[] = [];
+    const purges: string[] = [];
+    const c = Object.assign(ctx(), {
+      exports: {
+        Renderer: {
+          fetch: async (_r: Request, init: { cf: { cacheKey: string } }) => (stored.push(init.cf.cacheKey), new Response("stored")),
+          purgePages: async (why: string) => void purges.push(why),
+        },
+      },
+    });
+    await fetchWith(new Request(`${ORIGIN}/episodes?utm_source=x`), {}, c);
+    expect(stored).toEqual(["/episodes"]);
+
+    const admin = await fetchWith(new Request(`${ORIGIN}/writing?preview`, { headers: { Cookie: "CF_Authorization=abc" } }), {}, c);
+    expect(admin.headers.get("Cache-Control")).toBe("private, no-store");
+    await fetchWith(new Request(`${ORIGIN}/admin/posts/1`, { method: "POST", body: "x" }), {}, c);
+    expect(stored).toHaveLength(1);
+    expect(h.render).toHaveBeenCalledTimes(2);
+    expect(purges).toEqual(["admin POST /admin/posts/1"]);
   });
 
   it("answers a plain 500 with no detail when rendering throws", async () => {

@@ -2,7 +2,7 @@
 // (CLAUDE.md rule #4); the one raw statement is the FTS5 MATCH, which Drizzle's DSL can't
 // express. Tag/guest filters parse the JSON columns in JS (the catalog is small), keeping
 // everything type-safe and camelCase.
-import { and, asc, desc, eq, getTableColumns, inArray, isNull, lte, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, gt, inArray, isNull, lte, min, or, sql, type SQL } from "drizzle-orm";
 import { toMatchExpression } from "@drdustinedwards/site-helpers/search";
 import { getDb } from "~/db/index.server";
 import { posts, type Post } from "~/db/schema";
@@ -50,6 +50,15 @@ function publiclyVisible(): SQL {
     eq(posts.status, "published"),
     or(isNull(posts.publishAt), lte(posts.publishAt, now)),
   )!;
+}
+
+/** When the next scheduled post goes live: it needs no write, so no purge, and a stored page stays fresh no later. */
+export async function nextPublishAt(env: Env): Promise<Date | null> {
+  const [row] = await getDb(env)
+    .select({ at: min(posts.publishAt) })
+    .from(posts)
+    .where(and(eq(posts.status, "published"), gt(posts.publishAt, new Date().toISOString())));
+  return row?.at ? new Date(row.at) : null;
 }
 
 /** In-JS mirror of publiclyVisible() for single rows already fetched. */
