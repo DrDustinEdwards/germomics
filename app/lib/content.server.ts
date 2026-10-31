@@ -3,7 +3,7 @@
 // EVERY read falls back to the in-code default (app/lib/content-defaults.ts, generated from the same
 // source as the seed), so a missing or draft row never breaks a page.
 //
-// Reads go straight to D1: the edge cache (edge-cache.server) already serves repeat visits, and on
+// Reads go straight to D1: the edge cache (workers/app.ts) already serves repeat visits, and on
 // its misses a KV cache in front of D1 was cold too, adding a KV read and write to the round trips
 // before the first byte. Settings and snippets are started once per request by the root middleware
 // (getSettings/getSnippets in context.server).

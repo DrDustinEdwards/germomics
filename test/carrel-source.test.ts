@@ -1,35 +1,67 @@
 import { describe, expect, it } from "vitest";
-import { parseSource, renderSource } from "~/lib/carrel/source";
+import { parseSource, renderSource, SourceError, type SourcePost } from "~/lib/carrel/source";
 
-// The text Carrel edits: front matter of JSON values, then the body. An absent key parses to null so
-// a save leaves that field alone. Reading and refusing malformed front matter is site-api's jsonSource,
-// tested there; this is germomics' field mapping.
-const empty = { title: "", excerpt: null, tags: null, coverImage: null, coverAlt: null, seoTitle: null, seoDescription: null, body: "" };
+// The text Carrel edits: front matter of JSON values, then the body. Reading malformed front matter is site-api's
+// jsonSource, tested there; this is germomics' field mapping, the structured fields it parses itself, and the rule that
+// a source with front matter is the whole post.
+const article: SourcePost = {
+  kind: "article",
+  title: 'A "quoted": title',
+  excerpt: "One: two",
+  tags: ["cholera", "history"],
+  coverImage: "https://images.germomics.com/a.png",
+  coverAlt: "Alt",
+  seoTitle: "SEO",
+  seoDescription: "Desc",
+  ogImage: "https://images.germomics.com/og.png",
+  ogImageAlt: "OG",
+  featured: true,
+  sources: [{ type: "book", title: "Sample Book", url: "https://example.com/book" }],
+  body: "Body\n---\nstill body",
+};
 
-describe("renderSource", () => {
-  it("writes only the fields that have a value, in a fixed order", () => {
-    const src = renderSource({ ...empty, title: "T", tags: [], excerpt: "", seoDescription: "D", body: "<p>b</p>" });
-    expect(src).toBe('---\ntitle: "T"\nseoDescription: "D"\n---\n<p>b</p>');
-  });
-
-  it("round-trips every field through parseSource, quotes and colons included", () => {
-    const post = {
-      title: 'A "quoted": title',
-      excerpt: "One: two",
-      tags: ["cholera", "history"],
-      coverImage: "https://images.germomics.com/a.png",
-      coverAlt: "Alt",
-      seoTitle: "SEO",
-      seoDescription: "Desc",
-      body: "<p>Body\n---\nstill body</p>",
+describe("the source", () => {
+  it("round-trips every field of an episode, its structured fields included, under site-api's search field names", () => {
+    const episode: SourcePost = {
+      ...article,
+      kind: "episode",
+      episodeNumber: 12,
+      seasonNumber: 2,
+      episodeType: "bonus",
+      explicit: true,
+      episodeArtwork: "https://images.germomics.com/ep.png",
+      episodeArtworkAlt: "Art",
+      chapters: [{ start: 0, title: "Cold open" }],
+      keyMoments: [{ seconds: 90, label: "The pump" }],
+      guests: [{ name: "Sample Guest" }],
+      people: [{ slug: "sample-person", role: "guest" }],
     };
-    expect(parseSource(renderSource(post))).toEqual(post);
+    const source = renderSource(episode);
+    expect(source).toContain('searchTitle: "SEO"\ndescription: "Desc"\nimage: ');
+    const { body, post, episode: fields } = parseSource(source, "episode");
+    expect({ kind: "episode", body, ...post, ...fields }).toEqual(episode);
+    // An article's source has no episode fields, and refuses them.
+    expect(renderSource(article)).not.toContain("episodeType");
+    expect(() => parseSource(source, "article")).toThrow(SourceError);
   });
-});
 
-describe("parseSource", () => {
-  it("treats text with no front matter as all body", () => {
-    expect(parseSource("<p>just body</p>")).toEqual({ ...empty, title: null, body: "<p>just body</p>" });
-    expect(parseSource("x\n---\ntitle: \"T\"\n---\n").title).toBeNull();
+  it("clears what front matter leaves out, leaves every field alone without any, and names each problem", () => {
+    expect(parseSource('---\ntitle: "T"\nseoTitle: "Old key"\n---\nx', "article").post).toEqual({
+      title: "T",
+      excerpt: null,
+      tags: [],
+      coverImage: null,
+      coverAlt: null,
+      seoTitle: "Old key",
+      seoDescription: null,
+      ogImage: null,
+      ogImageAlt: null,
+      featured: false,
+      sources: [],
+    });
+    expect(parseSource("just a body", "episode")).toEqual({ body: "just a body", post: null, episode: null });
+    expect(() => parseSource('---\nepisodeNumber: 1.5\nchapters: [{"title":"no start"}]\n---\n', "episode")).toThrow(
+      /episodeNumber must be a whole number\. chapters must be a list of objects/,
+    );
   });
 });

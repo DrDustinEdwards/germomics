@@ -1,6 +1,6 @@
 import type { Route } from "./+types/$slug";
 import { getEnv } from "~/lib/context.server";
-import { getPostBySlug, listPosts, relatedPosts, adjacentPosts, toPlayerTrack } from "~/lib/posts.server";
+import { getPostBySlug, listPosts, relatedPosts, adjacentPosts, renamedPostRedirect, toPlayerTrack } from "~/lib/posts.server";
 import { getEpisodeGuests } from "~/lib/people.server";
 import { soundbitesForPost } from "~/lib/soundbites.server";
 import { getShowConfig } from "~/lib/show.server";
@@ -47,7 +47,8 @@ export function meta({ loaderData }: Route.MetaArgs) {
 export async function loader({ params, context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const [post, visible, show] = await Promise.all([getPostBySlug(env, params.slug), listPosts(env), getShowConfig(env)]);
-  if (!post) throw new Response("Not found", { status: 404 });
+  // A slug Carrel renamed away from answers a permanent redirect to the post's address now.
+  if (!post) throw (await renamedPostRedirect(env, params.slug)) ?? new Response("Not found", { status: 404 });
 
   const [guests, clips] = await Promise.all([
     getEpisodeGuests(env, post),
