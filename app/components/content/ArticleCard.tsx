@@ -5,7 +5,8 @@ import type { Post } from "~/db/schema";
 import type { ImageAttributes } from "~/lib/images";
 import { Picture } from "./Picture";
 
-// Editorial card for the writing index: cover image, title, excerpt, date, reading time, tags.
+// Editorial card for the writing index: cover image, title, excerpt, date, reading time, tags. The title is an h2, right
+// under the index's h1.
 export function ArticleCard({ post, image }: { post: Post; image?: ImageAttributes }) {
   return (
     <article className="group overflow-hidden rounded-2xl border border-border bg-card transition hover:border-brand">
@@ -29,7 +30,7 @@ export function ArticleCard({ post, image }: { post: Post; image?: ImageAttribut
               <span className="tabular-nums">{post.readingTime} min read</span>
             ) : null}
           </div>
-          <h3 className="mt-1.5 font-display text-xl font-semibold text-ink group-hover:text-brand">{post.title}</h3>
+          <h2 className="mt-1.5 font-display text-xl font-semibold text-ink group-hover:text-brand">{post.title}</h2>
           {post.excerpt ? <p className="mt-1.5 line-clamp-2 text-sm text-muted">{post.excerpt}</p> : null}
         </div>
       </Link>
