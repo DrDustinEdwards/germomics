@@ -153,6 +153,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     if (audio.src !== current.audioUrl) {
+      // The page loads no audio; once a reader picks a track its metadata is wanted (position, duration, resume).
+      audio.preload = "metadata";
       audio.src = current.audioUrl;
       audio.load();
     }
@@ -443,8 +445,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   return (
     <PlayerContext.Provider value={value}>
       {children}
-      {/* The single audio element. Never unmounted. preload metadata only; no autoplay. */}
-      <audio ref={audioRef} preload="metadata" />
+      {/* The single audio element. Never unmounted. Nothing loads until a reader picks a track (it then asks for the
+          track's metadata, above); no autoplay. */}
+      <audio ref={audioRef} preload="none" />
     </PlayerContext.Provider>
   );
 }

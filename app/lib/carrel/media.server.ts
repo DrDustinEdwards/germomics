@@ -11,6 +11,7 @@
 //
 // An upload goes through site-api's prepareUpload: its byte checks, HEIC to JPEG, the location taken out, the shrink
 // and the embedded fields, and its placeholder and main color, kept on the row (0016) and made again when the bytes change.
+import { rerenderUsing } from "~/lib/render.server";
 import {
   MediaId,
   MediaInUseError,
@@ -342,6 +343,8 @@ export function carrelMedia(env: Env, recordChange: Log): MediaAdapter {
       const row = await rowOf(env, id);
       await swapBytes(env, row, { bytes, contentType, width: size?.width ?? null, height: size?.height ?? null, reason: "replace", focus: null });
       recordChange("media.replace", id, claimed.version, changeId);
+      // Bodies carry the file's version in their size URLs; re-rendering them is what shows the new picture.
+      await rerenderUsing(env, id);
       return { item: itemOf(await reread(env, id, "replaced")), sizesNeedPurge: false };
     },
 
@@ -374,6 +377,8 @@ export function carrelMedia(env: Env, recordChange: Log): MediaAdapter {
       // The focal point moves with the picture rather than being cleared.
       await swapBytes(env, row, { bytes, contentType: row.contentType, width, height, reason: "transform", focus: transformFocus(row.focus, op) });
       recordChange("media.transform", id, claimed.version, changeId);
+      // Bodies carry the file's version in their size URLs; re-rendering them is what shows the new picture.
+      await rerenderUsing(env, id);
       return { item: itemOf(await reread(env, id, "turned")), sizesNeedPurge: false };
     },
 
@@ -391,6 +396,8 @@ export function carrelMedia(env: Env, recordChange: Log): MediaAdapter {
       const claimed = await claim(id, expectedVersion);
       await swapBytes(env, row, { bytes: kept.bytes, contentType: row.contentType, width: kept.row.width, height: kept.row.height, reason: "revert", focus: null });
       recordChange("media.revert", id, claimed.version, changeId);
+      // Bodies carry the file's version in their size URLs; re-rendering them is what shows the new picture.
+      await rerenderUsing(env, id);
       return { item: itemOf(await reread(env, id, "reverted")), sizesNeedPurge: false };
     },
 
@@ -410,6 +417,7 @@ export function carrelMedia(env: Env, recordChange: Log): MediaAdapter {
       const claimed = await claim(id, expectedVersion);
       await swapBytes(env, row, { bytes, contentType: row.contentType, ...size, reason: "resize", focus: row.focus });
       recordChange("media.resize", id, claimed.version, changeId);
+      await rerenderUsing(env, id);
       return { resized: true, item: itemOf(await reread(env, id, "shrunk")) };
     },
 

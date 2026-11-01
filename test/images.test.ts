@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { RouterContextProvider } from "react-router";
 import { cloudflareContext } from "~/lib/context.server";
 import { imageSet } from "~/lib/images.server";
+import { applyMigrations } from "./helpers/d1";
 
 // Responsive images (app/lib/images.ts): a cover gets its crops from /media, and /media serves BLOG_IMAGES.
 // A body's figures are sized when it is rendered (test/post-render.test.ts). The widths, formats and refusals are site-runtime's
@@ -20,6 +21,7 @@ function media(path: string) {
 }
 
 beforeAll(async () => {
+  await applyMigrations(e.DB);
   ({ loader } = await import("~/routes/media.$"));
   await e.BLOG_IMAGES.put(KEY, new Uint8Array([1, 2, 3]), { httpMetadata: { contentType: "image/webp" } });
 }, 120_000);
@@ -30,7 +32,8 @@ describe("a cover", () => {
     await e.BLOG_IMAGES.put("posts/1/unsized.jpg", new Uint8Array([1]), { httpMetadata: { contentType: "image/jpeg" } });
     const set = await imageSet(e, [["cover", `${IMG}/posts/1/sized.jpg`], ["cover", `${IMG}/posts/1/unsized.jpg`]]);
     expect(Object.keys(set)).toEqual([`cover|${IMG}/posts/1/sized.jpg`]);
-    expect(set[`cover|${IMG}/posts/1/sized.jpg`]).toMatchObject({ src: "/media/posts/1/sized.jpg.webp?w=768&r=2x1", width: 768, height: 384 });
+    // The etag (the bytes' MD5) is the version, so a replaced file is a new URL.
+    expect(set[`cover|${IMG}/posts/1/sized.jpg`]).toMatchObject({ src: "/media/posts/1/sized.jpg.webp?v=55a54008ad1b&w=768&r=2x1", width: 768, height: 384 });
   });
 });
 
@@ -40,6 +43,8 @@ describe("/media", () => {
     expect(original.status).toBe(200);
     expect(original.headers.get("content-type")).toBe("image/webp");
     expect((await media(`${KEY}?w=401`)).status).toBe(400);
+    // A size URL is suffixed (…webp.webp?w=401): the stored key is found (400 for the width, not 404).
+    expect((await media(`${KEY}.webp?w=401`)).status).toBe(400);
     expect((await media("nope.webp")).status).toBe(404);
   });
 });

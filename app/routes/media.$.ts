@@ -11,7 +11,7 @@ import { images } from "~/lib/images";
 export async function loader({ params, request, context }: Route.LoaderArgs) {
   const path = params["*"];
   if (!path) return new Response("Not found", { status: 404 });
-  // A size URL ends in its own format (`photo.jpg.webp?w=640`); the stored key is `photo.jpg`.
+  // A size URL is suffixed (photo.jpg.webp?w=640); the stored key is the original's.
   const key = originalKey(path, request);
   const env = getEnv(context);
   const read = () => env.BLOG_IMAGES.get(key);
