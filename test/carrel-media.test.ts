@@ -11,7 +11,7 @@ import { applyMigrations } from "./helpers/d1";
 // BACKUPS buckets, and a stand-in Images binding and Workers AI. carrel.test.ts runs the same group through the HTTP
 // handler and site-api's conformance suite.
 const e = env as unknown as Env;
-const ORIGIN = "https://images.germomics.com";
+const ORIGIN = "/media";
 
 /** A PNG of the given size, with tEXt chunks (the embedded metadata) and a tail that makes each one's bytes its own. */
 function png(width: number, height: number, text: Record<string, string> = {}, tail = 0): Uint8Array<ArrayBuffer> {
@@ -84,7 +84,7 @@ describe("an upload", () => {
     const item = await upload(bytes, { alt: "Curved rods" });
     expect(item).toMatchObject({ width: 800, height: 600, alt: "Curved rods", credit: "Dustin Edwards", license: "CC BY 4.0", caption: "Vibrio cholerae", usedCount: 0, version: "r0", tags: [], trashedAt: null, embedded: ["credit", "license", "caption"] });
     expect(item.id).toMatch(/^carrel\/\d+-Vibrio\.png$/);
-    expect(item.url).toBe(`${ORIGIN}/${item.id}`);
+    expect(item.url).toBe(`/media/${item.id}`);
     // The size rides on the object, where every page reads it.
     expect((await e.BLOG_IMAGES.head(item.id))!.customMetadata).toMatchObject({ width: "800", height: "600" });
     expect((await row(item.id))!.sha256).toMatch(/^[0-9a-f]{64}$/);

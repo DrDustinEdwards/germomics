@@ -1,7 +1,7 @@
 // Admin upload endpoint — drag-drop / file-picker target for the editor's dual-input fields.
 // Resource route (action only) under the admin.* gate (admin.tsx middleware runs first), so it
 // is never publicly writable. Writes the file into R2 via the native binding and returns JSON the
-// client uses to fill the field. Images → images.germomics.com (BLOG_IMAGES), through site-api's
+// client uses to fill the field. Images → BLOG_IMAGES, at /media/<key>, through site-api's
 // prepareUpload, with their width and height as custom metadata so pages can offer resized copies
 // from /media, and a row in the media library; audio → media.germomics.com (germomics-audio).
 import type { Route } from "./+types/admin.upload";

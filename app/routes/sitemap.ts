@@ -19,6 +19,7 @@ const STATIC_PATHS = [
   "about/dustin-edwards",
   "privacy",
   "terms",
+  "accessibility",
   "contact",
   "txasm",
 ];

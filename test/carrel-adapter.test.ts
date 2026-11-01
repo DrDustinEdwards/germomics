@@ -49,11 +49,11 @@ describe("saving a draft", () => {
   });
 
   it("leaves fields the source does not name alone, and snapshots the row before the edit", async () => {
-    const created = await save("keep", '---\ntitle: "T"\nexcerpt: "Keep me"\ncoverImage: "https://images.germomics.com/c.png"\ncoverAlt: "C"\nseoTitle: "S"\nseoDescription: "D"\n---\n<p>v1</p>');
+    const created = await save("keep", '---\ntitle: "T"\nexcerpt: "Keep me"\ncoverImage: "/media/c.png"\ncoverAlt: "C"\nseoTitle: "S"\nseoDescription: "D"\n---\n<p>v1</p>');
     const edited = await save("keep", "<p>v2</p>", created.version);
     expect(edited.version).not.toBe(created.version);
     const r = (await row("keep"))!;
-    expect(r).toMatchObject({ title: "T", excerpt: "Keep me", cover_image: "https://images.germomics.com/c.png", cover_alt: "C", seo_title: "S", seo_description: "D", body: "<p>v2</p>" });
+    expect(r).toMatchObject({ title: "T", excerpt: "Keep me", cover_image: "/media/c.png", cover_alt: "C", seo_title: "S", seo_description: "D", body: "<p>v2</p>" });
     const snaps = await e.DB.prepare("SELECT snapshot FROM post_versions").all<{ snapshot: string }>();
     expect(snaps.results).toHaveLength(1);
     expect(JSON.parse(snaps.results[0].snapshot).body).toBe("<p>v1</p>");
@@ -81,7 +81,7 @@ describe("saving a draft", () => {
     await save("md", '---\ntitle: "M"\n---\n## Part\n\nSome *words*.\n');
     expect(await row("md")).toMatchObject({ body: "## Part\n\nSome *words*.\n", render_version: RENDER_VERSION, reading_time: 1 });
     expect((await row("md"))!.body_html).toContain("<em>words</em>");
-    await expect(save("md2", ':::figure{src="https://images.germomics.com/x.webp"}\nx\n:::')).rejects.toThrow("requires an alt attribute");
+    await expect(save("md2", ':::figure{src="/media/x.webp"}\nx\n:::')).rejects.toThrow("requires an alt attribute");
     expect(await row("md2")).toBeNull();
   });
 

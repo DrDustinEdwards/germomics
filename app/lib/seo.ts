@@ -67,7 +67,9 @@ type JsonLdOpts = {
 /** schema.org JSON-LD object for a post — BlogPosting (article) or PodcastEpisode. */
 export function buildJsonLd({ post, author, seriesTitle, guests = [], hosts = [] }: JsonLdOpts) {
   const url = `${SITE_ORIGIN}/${post.slug}`;
-  const image = ogImageFor(post)?.src;
+  // A stored image address may be a site path (/media/<key>); structured data needs an absolute URL.
+  const own = ogImageFor(post)?.src;
+  const image = own ? new URL(own, SITE_ORIGIN).href : undefined;
   const description = post.seoDescription ?? post.excerpt ?? stripHtml(post.bodyHtml ?? "").slice(0, 200);
   const datePublished = post.publishedAt ?? post.publishAt ?? undefined;
 
