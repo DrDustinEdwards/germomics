@@ -1,0 +1,3 @@
+-- Area 1: the home page's meta description is 70 to 155 characters, the length search shows (it was 216). Only the seeded
+-- text is replaced; a description edited in the admin is left alone.
+UPDATE content_blocks SET value = 'A mix of microbiology and history: how microbes, bacteria, viruses, and parasites connect to natural events, discoveries, and human inventions.' WHERE key = 'snippet:meta.home_description' AND value = 'A mix of microbiology and history, this series connects different aspects of modern life and society to microbes, bacteria, viruses, and parasites through seemingly unconnected natural events, scientific discoveries, and human inventions.';
