@@ -5,7 +5,7 @@
 --   wrangler d1 migrations apply germomics [--local|--remote]
 --
 -- Rewrites addresses only, never words, in the post bodies and pages that hold one, and marks each render stale
--- (render_version '0'), so a read renders it again in memory and the nightly job stores it. updated_at is left alone:
+-- (render_version '0'), so a read renders it again in memory and the every-minute job stores it. updated_at is left alone:
 -- no reader sees a post as changed. Checked live 2026-11-01: no other table (post_versions, scheduled_updates,
 -- settings, show_config hosts, media) holds the old address. A restore is D1 Time Travel to the bookmark the deploy
 -- takes before applying.

@@ -1,7 +1,7 @@
 // The one render of the site's writing: a post body or a page, stored as Markdown, rendered to HTML by Prelum's
 // pipeline (render/nomath: `$` is a price here, so no KaTeX) with assertSafe on. Every save path stores the result
 // beside the Markdown (renderFields), a public read serves the stored HTML while its renderVersion is Prelum's
-// (storedBody), and the nightly cron re-renders the rows an upgrade left behind (rerenderStale).
+// (storedBody), and the every-minute cron re-renders the rows an upgrade or a migration left behind (rerenderStale).
 //
 // IMAGES. A picture's size comes from the media library (D1 `media`), so the HTML carries its width and height, and
 // its srcset and AVIF and WebP sources are /media copies (site-runtime ./image, app/lib/images.ts). A figure is shown
@@ -202,7 +202,7 @@ export async function rerenderUsing(env: Env, key: string): Promise<number> {
 }
 
 /**
- * Re-renders every converted post and page whose render is older than Prelum's, from the nightly cron. Rows that
+ * Re-renders every converted post and page whose render is older than Prelum's, from the every-minute cron. Rows that
  * no longer render are logged and left as they are. The updated_at stays: nothing a writer did changed.
  */
 export async function rerenderStale(env: Env): Promise<{ posts: number; pages: number; failed: number }> {
