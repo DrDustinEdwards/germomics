@@ -30,7 +30,7 @@ describe("a cover", () => {
     await e.BLOG_IMAGES.put("posts/1/unsized.jpg", new Uint8Array([1]), { httpMetadata: { contentType: "image/jpeg" } });
     const set = await imageSet(e, [["cover", `${IMG}/posts/1/sized.jpg`], ["cover", `${IMG}/posts/1/unsized.jpg`]]);
     expect(Object.keys(set)).toEqual([`cover|${IMG}/posts/1/sized.jpg`]);
-    expect(set[`cover|${IMG}/posts/1/sized.jpg`]).toMatchObject({ src: "/media/posts/1/sized.jpg?w=768&r=2x1", width: 768, height: 384 });
+    expect(set[`cover|${IMG}/posts/1/sized.jpg`]).toMatchObject({ src: "/media/posts/1/sized.jpg.webp?w=768&r=2x1", width: 768, height: 384 });
   });
 });
 

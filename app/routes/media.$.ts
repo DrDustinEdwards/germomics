@@ -5,11 +5,14 @@
 // published body or feed keeps working.
 import type { Route } from "./+types/media.$";
 import { getEnv } from "~/lib/context.server";
+import { originalKey } from "@dustinedwards/site-runtime/image";
 import { images } from "~/lib/images";
 
 export async function loader({ params, request, context }: Route.LoaderArgs) {
-  const key = params["*"];
-  if (!key) return new Response("Not found", { status: 404 });
+  const path = params["*"];
+  if (!path) return new Response("Not found", { status: 404 });
+  // A size URL ends in its own format (`photo.jpg.webp?w=640`); the stored key is `photo.jpg`.
+  const key = originalKey(path, request);
   const env = getEnv(context);
   const read = () => env.BLOG_IMAGES.get(key);
   return images.respond(request, {
