@@ -1,9 +1,44 @@
-/* The error page's styles: Capsomer's error page and the failed Empty it shows, on Capsomer's tokens with germomics'
-   palette (the admin's set, app/admin.css). Linked only by the root ErrorBoundary (app/root.tsx), so the public pages
-   keep their own look until the Capsomer move (CLAUDE.md). */
+/* The error page's stylesheet, linked by the root ErrorBoundary alone (app/root.tsx), as charts.css is by the /data
+   route: Capsomer's error page, the failed Empty it shows and its button, drawn in germomics' own look. The layer order
+   is repeated first because React hoists this link above app.css: without it Capsomer's layers would be declared
+   before Tailwind's, and preflight and the site's link color would win over the page's padding, heading and button.
+   Nothing here is a color: germomics' tokens (app.css) stand in for the Capsomer names these pieces read, so the page
+   follows the site's palette in both themes. */
+@layer theme, base, cap, components, utilities;
 @import "capsomer/tokens.css";
-@import "capsomer/themes.css" layer(cap.tokens);
-@import "capsomer/site-germomics.css";
 @import "capsomer/button.css";
 @import "capsomer/empty.css";
 @import "capsomer/error-page.css";
+
+:root {
+  --text: var(--ink);
+  --line: var(--border);
+  --line-strong: var(--border);
+  --ring: var(--accent);
+  --primary: var(--brand);
+  --primary-hover: var(--brand-strong);
+  --primary-line: var(--brand);
+  --primary-fg: var(--bg);
+  --ui: var(--font-display);
+}
+
+/* The heading as the site's page headings are (font-display text-3xl font-semibold), in the brand purple of the old
+   404; the edge in the site's border, not Capsomer's critical red; the column's side padding the site's (px-4). */
+.cap-error-page {
+  padding-inline: 1rem;
+
+  & > .cap-empty[data-kind="failed"] {
+    border-color: var(--border);
+  }
+
+  & h1.cap-empty-title {
+    color: var(--brand);
+    font-family: var(--font-display);
+    font-size: 1.875rem;
+    line-height: 1.2;
+  }
+
+  & .cap-empty-text {
+    font-size: 1.0625rem;
+  }
+}
