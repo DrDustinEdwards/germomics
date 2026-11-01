@@ -25,6 +25,6 @@
     "0019_post_trash_and_renames.sql": "05ae31f21a1b9fb2316920ce346d5f2b20f4aa922ebff975665e01e8351adfea",
     "0020_media_placeholder.sql": "ffdb201229aa5eee9eec0688988488b685efa6dcab4c93f7dadba534fd5acd13",
     "0021_search_fields.sql": "8d99033cd41b0b4ee9dcfd449242f9d2e6df8e94baf5c8e3b00da584a06a5a3e",
-    "0022_images_through_media.sql": "b20e7378543942afaf43944211a1e8b76c7a8211fb7a51c7b80ac0ae3f0196fb"
+    "0022_images_through_media.sql": "10d729959db03c813a1584621b88955ae3e1d313e1617ca8d04adc34df5327d8"
   }
 }

@@ -5,8 +5,8 @@
 /**
  * The site and its R2 subdomains. Feed enclosures always point at MEDIA_ORIGIN. A stored image address is
  * /media/<key> on SITE_ORIGIN, the original and each size (app/lib/images.ts). IMAGE_ORIGIN is the bucket's old
- * address: it 301s to SITE_ORIGIN/media/<same path> (a zone redirect rule), and an address written there before
- * 2026-11-01 is still read as its key.
+ * address, which the site no longer writes or serves from; an address written there before 2026-11-01 (a draft
+ * saved earlier) is still read as its key.
  */
 export const SITE_HOST = "germomics.com";
 export const SITE_ORIGIN = `https://${SITE_HOST}`;

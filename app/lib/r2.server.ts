@@ -4,8 +4,7 @@
 //
 // Where URLs point (germomics invariant). Enclosure/media URLs ALWAYS point at
 // media.germomics.com, never the worker origin. An image's stored URL (a body, a cover) is /media/<key> on this
-// origin, as on dustinedwards.info: the route serves the original and each size (app/lib/images.ts). The old
-// images.germomics.com/<key> redirects to /media/<key>.
+// origin, as on dustinedwards.info: the route serves the original and each size (app/lib/images.ts).
 import { mediaPath } from "~/lib/images";
 import { MEDIA_ORIGIN as MEDIA_BASE } from "~/lib/site";
 

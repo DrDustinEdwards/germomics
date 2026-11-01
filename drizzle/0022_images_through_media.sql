@@ -1,7 +1,6 @@
 -- Pictures through this origin, as dustinedwards.info serves its own: a stored image address becomes /media/<key>
 -- (app/lib/images.ts) instead of the bucket's own address, https://images.germomics.com/<key>. The key after the
--- prefix is the same, so the same file answers; images.germomics.com/<path> 301s to germomics.com/media/<path> (a zone
--- redirect rule), so links already out in feeds and apps keep working.
+-- prefix is the same, so the same file answers. Feeds carry the new addresses from their next fetch.
 -- Hand-written (drizzle-kit is not used). Applied with:
 --   wrangler d1 migrations apply germomics [--local|--remote]
 --
