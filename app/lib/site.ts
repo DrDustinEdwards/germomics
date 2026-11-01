@@ -3,15 +3,12 @@
 // Mirrors the Vault's site-config.md. Postal address is provisional (per Dustin, 2026-06-21).
 
 /**
- * The site and its R2 subdomains. Feed enclosures always point at MEDIA_ORIGIN. A stored image address is
- * /media/<key> on SITE_ORIGIN, the original and each size (app/lib/images.ts). IMAGE_ORIGIN is the bucket's old
- * address, which the site no longer writes or serves from; an address written there before 2026-11-01 (a draft
- * saved earlier) is still read as its key.
+ * The site and its audio subdomain. Feed enclosures always point at MEDIA_ORIGIN. Every picture is /media/<key> on
+ * SITE_ORIGIN, the original and each size (app/lib/images.ts).
  */
 export const SITE_HOST = "germomics.com";
 export const SITE_ORIGIN = `https://${SITE_HOST}`;
 export const MEDIA_ORIGIN = "https://media.germomics.com";
-export const IMAGE_ORIGIN = "https://images.germomics.com";
 /** The show's square cover art: its artwork in the feed until show_config sets one. */
 export const DEFAULT_ARTWORK = `${SITE_ORIGIN}/media/brand/germomics-artwork-1400.jpg`;
 /** The share card of any page without its own image: the wordmark at 1200x630 (public/brand/germomics-card.jpg). */

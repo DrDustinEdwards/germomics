@@ -10,7 +10,7 @@ import { applyMigrations } from "./helpers/d1";
 // BACKUPS buckets, and a stand-in Images binding and Workers AI. carrel.test.ts runs the same group through the HTTP
 // handler and site-api's conformance suite.
 const e = env as unknown as Env;
-const ORIGIN = "https://images.germomics.com";
+const ORIGIN = "/media";
 
 /** A PNG of the given size, with tEXt chunks (the embedded metadata) and a tail that makes each one's bytes its own. */
 function png(width: number, height: number, text: Record<string, string> = {}, tail = 0): Uint8Array<ArrayBuffer> {

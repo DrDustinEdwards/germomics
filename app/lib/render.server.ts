@@ -19,7 +19,7 @@ import { and, eq, inArray, isNotNull, like, ne, sql } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { contentBlocks, media, posts, type Post } from "~/db/schema";
 import { imageKeyOf, images, mediaPath, type ImageUseName } from "~/lib/images";
-import { IMAGE_ORIGIN, SITE_ORIGIN } from "~/lib/site";
+import { SITE_ORIGIN } from "~/lib/site";
 import type { BodyMeta } from "~/lib/types";
 
 /** Prelum's RENDER_VERSION, kept here so a read can compare without loading the pipeline. */
@@ -53,8 +53,8 @@ export function libraryMedia(env: Env): MediaLookup {
 }
 
 const escape = (s: string) => s.replace(/[.]/g, "\\.");
-/** A stored image address in Markdown: /media/<key> (relative or on this origin) or the old images.germomics.com/<key>. */
-const IMAGE_URL = new RegExp(`(?:${escape(IMAGE_ORIGIN)}/|(?:${escape(SITE_ORIGIN)})?/media/)[^\\s"'()<>\\]]+`, "g");
+/** A stored image address in Markdown: /media/<key>, relative or on this origin. */
+const IMAGE_URL = new RegExp(`(?:${escape(SITE_ORIGIN)})?/media/[^\\s"'()<>\\]]+`, "g");
 const FIGURE_LINE = /^:::figure\{(.*)\}\s*$/gm;
 
 /** The srcs of the figures written `width=wide`: the lead illustration, sized for 520px. */
