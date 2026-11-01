@@ -70,7 +70,7 @@ const DATASETS: Record<string, Dataset> = {
       "The deaths John Snow drew at each address on his 1855 map of the Broad Street outbreak, the 13 water pumps on that map, and the fatal attacks and deaths he counted each day.",
     map: {
       title: "Deaths by address, Soho, 1854, with the 13 water pumps on Snow's map",
-      alt: "The deaths cluster around the Broad Street pump. 508 of the 578 are within 200 meters of it, and the address with the most deaths, 18, is 19 metres from it.",
+      alt: "The deaths cluster around the Broad Street pump. 508 of the 578 are within 200 meters of it, and the address with the most deaths, 18, is 19 meters from it.",
       points: cholera.map.points,
       valueLabel: "Deaths",
       landmarks: cholera.pumps.points,
