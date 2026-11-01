@@ -26,22 +26,30 @@ export type Timeline = {
   series: TimelineSeries[];
 };
 
+/** A dot map (app/lib/charts.server.ts dataMap): points sized by count over Snow's streets, with landmarks. */
+export type DataMap = {
+  title: string;
+  /** The finding: what the map shows, as its text alternative. */
+  alt: string;
+  points: DataPoint[];
+  /** What a point's value counts, for the key, hover details and table. */
+  valueLabel: string;
+  landmarks: DataPoint[];
+  /** What the landmarks are. */
+  landmarkLabel: string;
+  marked: string | null;
+  /** How to read the map, under it. */
+  legend: string;
+  source: Source;
+};
+
 export type Dataset = {
   slug: string;
   title: string;
   kind: "virus" | "bacteria";
   summary: string;
   /** Points valued by count, and landmarks (value 0) drawn apart from them; `marked` is the landmark to pick out. */
-  map: {
-    center: [number, number];
-    zoom: number;
-    points: DataPoint[];
-    landmarks: DataPoint[];
-    marked: string | null;
-    /** How to read the map, under it. */
-    legend: string;
-    source: Source;
-  } | null;
+  map: DataMap | null;
   timeline: Timeline | null;
   table: { title: string; columns: string[]; rows: (string | number)[][]; source: Source } | null;
   /** A note on the page, under the chart: how its counts relate to each other. */
@@ -61,12 +69,14 @@ const DATASETS: Record<string, Dataset> = {
     summary:
       "The deaths John Snow drew at each address on his 1855 map of the Broad Street outbreak, the 13 water pumps on that map, and the fatal attacks and deaths he counted each day.",
     map: {
-      center: cholera.map.center as [number, number],
-      zoom: cholera.map.zoom,
+      title: "Deaths by address, Soho, 1854, with the 13 water pumps on Snow's map",
+      alt: "The deaths cluster around the Broad Street pump. 508 of the 578 are within 200 meters of it, and the address with the most deaths, 18, is 19 meters from it.",
       points: cholera.map.points,
+      valueLabel: "Deaths",
       landmarks: cholera.pumps.points,
+      landmarkLabel: "Water pump",
       marked: "Pump 7: Broad Street",
-      legend: "Each dot is an address, its size the deaths Snow drew there (1 to 18). The pins are the 13 water pumps on his map; the larger one is the Broad Street pump.",
+      legend: "Each dot is an address, its size the deaths Snow drew there (1 to 18). The squares are the 13 water pumps on his map; the filled one is the Broad Street pump.",
       source: cholera.map.source,
     },
     timeline: {
