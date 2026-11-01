@@ -41,7 +41,7 @@ export const SNIPPET_DEFAULTS: Record<string, string> = {
   "snippet:empty.soundbites": "No soundbites yet. Create one on the right.",
   "snippet:empty.subscribers": "No subscribers yet.",
   "snippet:meta.home_title": "Germomics · microbiology & history",
-  "snippet:meta.home_description": "A mix of microbiology and history, this series connects different aspects of modern life and society to microbes, bacteria, viruses, and parasites through seemingly unconnected natural events, scientific discoveries, and human inventions.",
+  "snippet:meta.home_description": "A mix of microbiology and history: how microbes, bacteria, viruses, and parasites connect to natural events, discoveries, and human inventions.",
   "snippet:meta.title_template": "{title} · Germomics",
   "snippet:dataset.cholera-soho-1854": "John Snow's map of the Broad Street outbreak: deaths clustered around a single pump, the founding case of epidemiology and a Vibrio cholerae story.",
   "snippet:dataset.influenza-1918": "The three waves of the 1918 H1N1 pandemic: mortality peaked sharply in the deadly autumn wave, a defining example of viral pandemic dynamics.",
