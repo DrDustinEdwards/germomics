@@ -6,7 +6,7 @@ import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 
 export function meta() {
-  return pageHead({ path: "/episodes", title: "Episodes · Germomics", description: "Every Germomics episode, grouped by season.", pageType: "CollectionPage" });
+  return pageHead({ path: "/episodes", title: "Episodes · Germomics", description: "Every episode of Germomics, the podcast about microbiology and history, grouped by season, with audio and a transcript for each.", pageType: "CollectionPage" });
 }
 
 export async function loader({ context }: Route.LoaderArgs) {

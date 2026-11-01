@@ -17,7 +17,7 @@ const TABS = [
 ] as const;
 
 export function meta() {
-  return pageHead({ path: "/archive", title: "Archive · Germomics", description: "Every Germomics episode and post, newest first, with search.", pageType: "CollectionPage" });
+  return pageHead({ path: "/archive", title: "Archive · Germomics", description: "Every Germomics podcast episode and written post in one place, newest first, with search to find any of them quickly.", pageType: "CollectionPage" });
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {

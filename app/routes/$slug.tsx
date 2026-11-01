@@ -6,6 +6,7 @@ import { soundbitesForPost } from "~/lib/soundbites.server";
 import { getShowConfig } from "~/lib/show.server";
 import { buildJsonLd, ogImageFor, pageHead, stripHtml } from "~/lib/seo";
 import { SITE_ORIGIN } from "~/lib/site";
+import { postTrail } from "~/lib/trails";
 import { faqPage, jsonLd } from "@drdustinedwards/site-helpers/schema";
 import type { HeadImage } from "@drdustinedwards/site-helpers/head";
 import { pageToc, storedBody } from "~/lib/render.server";
@@ -21,10 +22,6 @@ export const handle = {
 export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData?.post) return [{ title: "Not found · Germomics" }];
   const { post, author, seriesTitle, guests, hosts, ogImage } = loaderData;
-  const isEpisode = post.kind === "episode";
-  const season = isEpisode && post.seasonNumber
-    ? [{ name: `Season ${post.seasonNumber}`, path: `/season/${post.seasonNumber}` }]
-    : [];
   // The body's :::faq pairs, as Prelum rendered them, are its FAQPage.
   const pairs = post.bodyMeta?.faq ?? [];
   const faq = pairs.length ? faqPage(pairs) : null;
@@ -41,12 +38,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
       noindex: post.noindex,
       type: "article",
       article: { published: post.publishedAt ?? post.publishAt, modified: post.updatedAt, author, tags: post.tags ?? [] },
-      breadcrumbs: [
-        { name: "Germomics", path: "/" },
-        isEpisode ? { name: "Episodes", path: "/episodes" } : { name: "Writing", path: "/writing" },
-        ...season,
-        { name: post.title, path: `/${post.slug}` },
-      ],
+      breadcrumbs: postTrail(post),
     }),
     jsonLd(buildJsonLd({ post, author, seriesTitle, guests, hosts })),
     ...(faq ? [jsonLd(faq)] : []),

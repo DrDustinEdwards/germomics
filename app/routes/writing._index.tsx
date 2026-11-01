@@ -7,7 +7,7 @@ import { imageFor } from "~/lib/images";
 import { imageSet } from "~/lib/images.server";
 
 export function meta() {
-  return pageHead({ path: "/writing", title: "Writing · Germomics", description: "Essays and notes on microbiology and history.", pageType: "CollectionPage" });
+  return pageHead({ path: "/writing", title: "Writing · Germomics", description: "Germomics essays and notes on microbiology and history: outbreaks, microbes and the people who studied them.", pageType: "CollectionPage" });
 }
 
 export async function loader({ context }: Route.LoaderArgs) {

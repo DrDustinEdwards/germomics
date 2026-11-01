@@ -1,5 +1,7 @@
 import { lazy } from "react";
 import { pageHead } from "~/lib/seo";
+import { sectionPageTrail } from "~/lib/trails";
+import { SectionTrail } from "~/components/content/SectionTrail";
 import type { Route } from "./+types/data.$slug";
 import { datasetSummary, getDataset } from "~/lib/datasets.server";
 import { getSnippets } from "~/lib/context.server";
@@ -20,12 +22,16 @@ export const handle = {
   hydrate: (data: unknown) => Boolean((data as { dataset?: { map?: unknown } } | undefined)?.dataset?.map),
 };
 
+const dataTrail = (page: { slug: string; title: string }) =>
+  sectionPageTrail({ name: "Data", path: "/data" }, { name: page.title, path: `/data/${page.slug}` });
+
 export function meta({ loaderData, location }: Route.MetaArgs) {
   if (!loaderData?.dataset) return [{ title: "Data · Germomics" }];
   return pageHead({
     path: location.pathname,
     title: `${loaderData.dataset.title} · Germomics`,
     description: loaderData.dataset.summary,
+    breadcrumbs: dataTrail(loaderData.dataset),
   });
 }
 
@@ -78,6 +84,7 @@ export default function DataDetail({ loaderData }: Route.ComponentProps) {
   const { dataset: d, chart } = loaderData;
   return (
     <article className="mx-auto max-w-3xl">
+      <SectionTrail trail={dataTrail(d)} />
       <p className="font-mono text-xs uppercase tracking-wide text-accent">{d.kind}</p>
       <h1 className="mt-2 font-display text-3xl font-semibold">{d.title}</h1>
       <p className="mt-2 max-w-2xl text-muted">{d.summary}</p>

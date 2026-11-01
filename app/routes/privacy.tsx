@@ -9,7 +9,7 @@ import { SITE_ADDRESS_LINE } from "~/lib/site";
 import { LegalPage } from "~/components/content/Legal";
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return pageHead({ path: "/privacy", title: loaderData?.title ?? "Privacy policy", description: "How Germomics handles your data." });
+  return pageHead({ path: "/privacy", title: loaderData?.title ?? "Privacy policy", description: "The Germomics privacy policy: what data germomics.com collects when you listen, read or subscribe, and how it is used." });
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
