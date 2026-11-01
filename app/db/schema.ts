@@ -364,6 +364,13 @@ export const webmentionTargets = sqliteTable("webmention_targets", {
   sentAt: text("sent_at").notNull(),
 });
 
+// site-api 0.21.0 (migration 0024): the media file each upload's duplicates key became. Only d1SiteApiStore reads it.
+export const mediaUploads = sqliteTable("media_uploads", {
+  sha256: text("sha256").primaryKey(),
+  mediaId: text("media_id").notNull(),
+  at: text("at").notNull(),
+});
+
 // 0014: the caption Carrel set on an image in BLOG_IMAGES, keyed by its R2 key. Since 0015 a caption lives on its
 // `media` row; this table is read only by the backfill that made those rows (app/lib/media/backfill.server.ts).
 export const mediaCaptions = sqliteTable("media_captions", {
