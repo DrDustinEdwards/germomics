@@ -3,6 +3,6 @@
 // spec, app/lib/charts.server.ts). Only a page with a chart loads it (data-island="charts"), so the charts never
 // reach /site.js or the app's shared chunk (hard rule 4). Importing the module starts it and watches for frames
 // added later.
-import "../../node_modules/capsomer/dist/components/chart-frame/chart-enhance.js"; // TEMP
+import "capsomer/behavior/chart-enhance";
 
 export default function charts(): void {}
