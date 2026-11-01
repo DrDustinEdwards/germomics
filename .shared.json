@@ -20,6 +20,11 @@
     "--accent-hover": "same: the /data charts read the site's own palette (app/charts.css)",
     "--series-1": "same: the /data charts read the site's own palette (app/charts.css)",
     "--series-ink-1": "same: the /data charts read the site's own palette (app/charts.css)",
-    "--ui": "same: the /data charts read the site's own palette (app/charts.css)"
+    "--ui": "same: the /data charts read the site's own palette (app/charts.css)",
+    "--line-strong": "same: the error page draws Capsomer's button and Empty in the site's own palette (app/error-page.css), as the /data charts do",
+    "--primary": "same: the error page draws Capsomer's button and Empty in the site's own palette (app/error-page.css), as the /data charts do",
+    "--primary-hover": "same: the error page draws Capsomer's button and Empty in the site's own palette (app/error-page.css), as the /data charts do",
+    "--primary-line": "same: the error page draws Capsomer's button and Empty in the site's own palette (app/error-page.css), as the /data charts do",
+    "--primary-fg": "same: the error page draws Capsomer's button and Empty in the site's own palette (app/error-page.css), as the /data charts do"
   }
 }
