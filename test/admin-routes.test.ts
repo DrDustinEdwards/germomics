@@ -8,6 +8,7 @@ import { getPerson, listPeople, upsertPerson } from "~/lib/people.server";
 import { getShowConfig } from "~/lib/show.server";
 import { loadBlock, loadSettings, upsertBlock } from "~/lib/content.server";
 import { soundbitesForPost } from "~/lib/soundbites.server";
+import { resetDb } from "@dustinedwards/devkit/d1";
 import { applyMigrations } from "./helpers/d1";
 
 // The admin gate as a route (app/routes/admin.tsx) and the admin route actions: what each one stores
@@ -51,7 +52,7 @@ beforeAll(async () => {
 }, 120_000);
 
 beforeEach(async () => {
-  for (const t of ["episode_people", "soundbites", "people", "post_versions", "posts", "show_config", "settings", "content_blocks"]) await e.DB.exec(`DELETE FROM ${t}`);
+  await resetDb(e.DB);
   const { keys } = await e.APP_KV.list();
   await Promise.all(keys.map((k) => e.APP_KV.delete(k.name)));
 });

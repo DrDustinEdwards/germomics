@@ -4,6 +4,7 @@ import { MediaInUseError, NotFoundError, RefusedError, VersionConflictError, typ
 import { createCarrelAdapter } from "~/lib/carrel/adapter.server";
 import { imageSet } from "~/lib/images.server";
 import { backfillMedia, continueMediaBackfill } from "~/lib/media/backfill.server";
+import { resetDb } from "@dustinedwards/devkit/d1";
 import { applyMigrations } from "./helpers/d1";
 
 // The media group (app/lib/carrel/media.server.ts) as site-api calls it, over the real migrations, the BLOG_IMAGES and
@@ -70,7 +71,7 @@ beforeEach(async () => {
   edits = [];
   aiCalls = 0;
   media = build();
-  for (const table of ["posts", "people", "scheduled_updates", "media", "media_revisions", "media_changes", "media_captions"]) await e.DB.exec(`DELETE FROM ${table}`);
+  await resetDb(e.DB);
   for (const bucket of [e.BLOG_IMAGES, e.BACKUPS]) {
     const listed = await bucket.list();
     if (listed.objects.length) await bucket.delete(listed.objects.map((o) => o.key));

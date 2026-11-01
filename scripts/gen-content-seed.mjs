@@ -14,10 +14,9 @@ const SYSTEM_BASE =
   "in the transcript. If something is not in the transcript, leave it out. Produce exactly what " +
   "is asked, with no preamble, apologies, or meta-commentary.";
 
-// germomics' own addition to site-runtime's WRITING_RULES, which app/lib/ai.server.ts puts before it.
-const STYLE_RULE =
-  "Germomics house rule, on top of the writing rules above: no em dashes (the long dash character) anywhere; " +
-  "use commas, periods, parentheses, or colons instead.";
+// germomics' own addition to site-runtime's WRITING_RULES, which a drafting prompt puts before it. None: the dash
+// rule is WRITING_RULES' own, so a second copy here would drift from it (area 11, W5; drizzle/0022).
+const STYLE_RULE = "";
 
 const PROMPT_SHOWNOTES =
   "Write show notes for this episode as clean HTML, optimized to be quoted by search engines " +

@@ -1,0 +1,9 @@
+/* The error page's styles: Capsomer's error page and the failed Empty it shows, on Capsomer's tokens with germomics'
+   palette (the admin's set, app/admin.css). Linked only by the root ErrorBoundary (app/root.tsx), so the public pages
+   keep their own look until the Capsomer move (CLAUDE.md). */
+@import "capsomer/tokens.css";
+@import "capsomer/themes.css" layer(cap.tokens);
+@import "capsomer/site-germomics.css";
+@import "capsomer/button.css";
+@import "capsomer/empty.css";
+@import "capsomer/error-page.css";

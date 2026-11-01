@@ -5,6 +5,7 @@ import { runConformance } from "@dustinedwards/site-api/conformance";
 import { d1SiteApiStore } from "@dustinedwards/site-api/store";
 import { createCarrelAdapter } from "~/lib/carrel/adapter.server";
 import { parseSource } from "~/lib/carrel/source";
+import { resetDb } from "@dustinedwards/devkit/d1";
 import { applyMigrations } from "./helpers/d1";
 
 // Carrel's site API as the Worker mounts it, with site-api's D1 store (safe retries, preview links), against the real
@@ -49,10 +50,7 @@ beforeAll(async () => {
 }, 60_000);
 
 beforeEach(async () => {
-  await e.DB.exec("DELETE FROM post_versions");
-  await e.DB.exec("DELETE FROM posts");
-  await e.DB.exec("DELETE FROM media");
-  await e.DB.exec("DELETE FROM site_api_writes");
+  await resetDb(e.DB);
   heard.length = 0;
   const listed = await e.BLOG_IMAGES.list();
   if (listed.objects.length) await e.BLOG_IMAGES.delete(listed.objects.map((o) => o.key));
