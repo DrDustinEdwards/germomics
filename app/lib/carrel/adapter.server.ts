@@ -55,7 +55,7 @@ import { contentBlocks, episodePeople, people, postRedirects, posts, postVersion
 import { deletePost, generateGuid, snapshotVersion, updatePost } from "~/lib/admin.server";
 import { TEXT_PAGES } from "~/lib/content.server";
 import { setEpisodePeople } from "~/lib/people.server";
-import { libraryMedia, pageFields, postBodyFields, renderMarkdown, RENDER_VERSION } from "~/lib/render.server";
+import { lcpAboveBody, libraryMedia, pageFields, postBodyFields, renderMarkdown, RENDER_VERSION } from "~/lib/render.server";
 import { SITE_ORIGIN } from "~/lib/site";
 import { PAGE_HREF } from "~/components/content/PageHits";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
@@ -229,7 +229,7 @@ export function createCarrelAdapter(
     } catch (err) {
       throw new RefusedError(err instanceof SourceError ? err.message : "The source could not be read.");
     }
-    const fields: Partial<Post> = { ...(await rendered(() => postBodyFields(env, parsed.body))), ...parsed.post };
+    const fields: Partial<Post> = { ...(await rendered(() => postBodyFields(env, parsed.body, lcpAboveBody({ kind, coverImage: parsed.post?.coverImage })))), ...parsed.post };
     if (!parsed.episode) return { fields };
     const { people: refs = [], ...episode } = parsed.episode;
     Object.assign(fields, episode);

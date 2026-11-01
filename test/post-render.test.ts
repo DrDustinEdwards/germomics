@@ -39,7 +39,7 @@ beforeEach(async () => {
 
 describe("a save", () => {
   it("stores the render: figures sized from the media library, the lead at 520px, an unknown image as written", async () => {
-    const fields = await postBodyFields(e, BODY);
+    const fields = await postBodyFields(e, BODY, false);
     expect(fields).toMatchObject({ body: BODY, renderVersion: RENDER_VERSION, readingTime: 1 });
     const html = fields.bodyHtml;
     expect(html).toContain('<figure class="width-wide">');
@@ -50,10 +50,14 @@ describe("a save", () => {
     expect(html).toContain('<span class="figure-credit">© CDC</span>');
     expect(html).toMatch(new RegExp(`<img src="${IMG}/missing.webp" alt="Not in the library" loading="lazy"`));
     expect(fields.bodyMeta.toc).toEqual([{ depth: 2, id: "first-section", text: "First section" }]);
+    // An episode's cover art is its largest picture, above the body: no body image is eager or high.
+    const episode = (await postBodyFields(e, BODY, true)).bodyHtml;
+    expect(episode).not.toContain("fetchpriority");
+    expect(episode).not.toContain('loading="eager"');
   });
 
   it("refuses a figure without alt text, with Prelum's reason", async () => {
-    await expect(postBodyFields(e, `:::figure{src="${IMG}/${PHOTO}"}\nx\n:::`)).rejects.toThrow("requires an alt attribute");
+    await expect(postBodyFields(e, `:::figure{src="${IMG}/${PHOTO}"}\nx\n:::`, false)).rejects.toThrow("requires an alt attribute");
   });
 });
 
