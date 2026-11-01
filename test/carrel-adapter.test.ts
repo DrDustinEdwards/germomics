@@ -4,6 +4,7 @@ import { RefusedError, VersionConflictError } from "@dustinedwards/site-api";
 import { createCarrelAdapter } from "~/lib/carrel/adapter.server";
 import { RENDER_VERSION } from "~/lib/render.server";
 import { carrelApi } from "~/lib/carrel/handler.server";
+import { resetDb } from "@dustinedwards/devkit/d1";
 import { applyMigrations } from "./helpers/d1";
 
 // The adapter as site-api calls it: what Carrel reads back (summaries, versions, revisions), what it
@@ -26,12 +27,7 @@ beforeEach(async () => {
   logged = [];
   adapter = createCarrelAdapter(e, (entry) => logged.push(entry));
   content = adapter.content;
-  await e.DB.exec("DELETE FROM post_versions");
-  await e.DB.exec("DELETE FROM posts");
-  await e.DB.exec("DELETE FROM scheduled_updates");
-  await e.DB.exec("DELETE FROM content_blocks");
-  await e.DB.exec("DELETE FROM episode_people");
-  await e.DB.exec("DELETE FROM people");
+  await resetDb(e.DB);
 });
 
 describe("saving a draft", () => {

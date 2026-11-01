@@ -1,5 +1,4 @@
 import {
-  isRouteErrorResponse,
   Links,
   Meta,
   Outlet,
@@ -34,6 +33,8 @@ import { PlayerDock } from "~/components/player/PlayerDock";
 import { Header } from "~/components/chrome/Header";
 import { LinkPrefetch } from "capsomer/react/link";
 import { Footer } from "~/components/chrome/Footer";
+import { ErrorPage, errorTitle } from "capsomer/react/error-page";
+import errorPageCss from "./error-page.css?url";
 
 export const links: Route.LinksFunction = () => [
   ...iconLinks(),
@@ -43,6 +44,11 @@ export const links: Route.LinksFunction = () => [
   // The LCP font, also sent as the Early Hints `Link` header (lib/preloads.ts).
   ...PRELOADS.links,
 ];
+
+// An unmatched address matches only the root, so the error path's title is set here (WCAG 2.4.2).
+export function meta({ error }: Route.MetaArgs): Route.MetaDescriptors {
+  return error ? [{ title: errorTitle(error, "Germomics") }] : [];
+}
 
 // Site content (settings + snippets) for any loader, read once per request on first use. Nothing is
 // awaited here, so the loaders' own D1 queries run in the same round trip (context.server).
@@ -172,31 +178,13 @@ export default function App() {
   );
 }
 
+// Capsomer's error page: the failed Empty in plain words for 404, 410 and server errors, never indexed, the stack only
+// in development. Its styles load with it alone (app/error-page.css).
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
-  let stack: string | undefined;
-
-  if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message;
-    stack = error.stack;
-  }
-
   return (
-    <main className="mx-auto max-w-3xl px-4 pt-16">
-      <h1 className="font-display text-4xl font-semibold text-brand">{message}</h1>
-      <p className="mt-3 text-muted">{details}</p>
-      {stack && (
-        <pre className="mt-4 w-full overflow-x-auto rounded bg-surface p-4 text-sm">
-          <code>{stack}</code>
-        </pre>
-      )}
-    </main>
+    <>
+      <link rel="stylesheet" href={errorPageCss} precedence="default" />
+      <ErrorPage error={error} home="/" dev={import.meta.env.DEV} />
+    </>
   );
 }

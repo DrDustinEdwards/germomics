@@ -15,6 +15,7 @@ import { deleteSoundbite, soundbitesByEpisode, soundbitesForPost, upsertSoundbit
 import { DEFAULT_SHOW, getShowConfig, upsertShowConfig } from "~/lib/show.server";
 import { createDraft, updatePost } from "~/lib/admin.server";
 import { getPostById } from "~/lib/posts.server";
+import { resetDb } from "@dustinedwards/devkit/d1";
 import { applyMigrations } from "./helpers/d1";
 
 // The admin writers behind people, soundbites and the show row, as the editor, the episode page
@@ -23,7 +24,7 @@ const e = env as unknown as Env;
 
 beforeAll(() => applyMigrations(e.DB));
 beforeEach(async () => {
-  for (const t of ["episode_people", "soundbites", "people", "post_versions", "posts", "show_config"]) await e.DB.exec(`DELETE FROM ${t}`);
+  await resetDb(e.DB);
 });
 
 describe("people", () => {
