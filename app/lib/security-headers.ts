@@ -22,8 +22,8 @@ import { IMAGE_ORIGIN, MEDIA_ORIGIN, OP3_ORIGIN } from "~/lib/site";
 // hosts the data pages' map loads (DataMap.client.tsx, through @googlemaps/js-api-loader), named one by one from the
 // API's own bootstrap rather than Google's wildcard list: its loader, modules and JSONP services at maps.googleapis.com,
 // tiles and map styles from maps.googleapis.com, images from maps.gstatic.com and mts.googleapis.com, its logging at
-// www.google.com/maps/, and the Google Fonts pair for the map's Roboto. No street view, satellite or Google frame is
-// used. Styles keep 'unsafe-inline' for TipTap and the map (so the nonce stays off style-src, which would switch it
+// www.google.com/maps/, and the Google Fonts pair for the map's Roboto. No street view or satellite is used, and the only
+// frames are the post players (`embeds`). Styles keep 'unsafe-inline' for TipTap and the map (so the nonce stays off style-src, which would switch it
 // off). Violations go to CSP_REPORT_PATH, which logs them through site-runtime's receiver, so Workers Logs hold
 // anything the policy blocks. What the registry entry stages (Trusted Types, default-src 'none') goes beside it as
 // Content-Security-Policy-Report-Only (buildStagedPolicy) until the reports are quiet.
@@ -38,6 +38,9 @@ const sitePolicy = (nonce: string | undefined) =>
     nonce,
     nonceStyles: false,
     cloudflareWebAnalytics: true,
+    // The post players a page may frame (YouTube, Spotify and the rest of Dustin's list), loaded only on the reader's click;
+    // the registry entry's `embeds` opt-in delegates their features in the Permissions-Policy.
+    embeds: true,
     sources: {
       script: [`${MAPS}/maps/api/js`, ...MAPS_JSONP.map((service) => `${MAPS}/maps/api/js/${service}`), `${MAPS}/maps-api-v3/`],
       style: ["'unsafe-inline'", "https://fonts.googleapis.com"],
