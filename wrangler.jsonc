@@ -31,20 +31,6 @@
 		"default": { "type": "worker", "cache": { "enabled": false } },
 		"Renderer": { "type": "worker", "cache": { "enabled": true } }
 	},
-	// THE MAPS KEY IS A BUILD-TIME VALUE AND IS DELIBERATELY NOT A `vars` ENTRY HERE.
-	//
-	//   VITE_GOOGLE_MAPS_KEY      the Maps JavaScript API browser key
-	//   VITE_GOOGLE_MAPS_MAP_ID   the Map ID Advanced Markers require
-	//
-	// Vite inlines every VITE_* value into the CLIENT bundle when `react-router build` runs, so
-	// both have to exist as BUILD environment variables (GitHub repo variables, read by CI's deploy,
-	// or .env locally). A Worker runtime var is invisible to a browser bundle and would not feed them.
-	//
-	// Writing them into `vars` would also be actively harmful: `keep_vars` protects only vars
-	// that are ABSENT from this file, so listing them with placeholder values would overwrite
-	// the dashboard values on every deploy. Declared here as documentation instead. Shape and
-	// the referrer-restriction requirement: .env.example.
-
 	"upload_source_maps": true,
 	// Native bindings, reached only via context.cloudflare.env in loaders/actions.
 	"d1_databases": [

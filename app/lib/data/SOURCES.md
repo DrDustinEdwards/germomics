@@ -21,6 +21,13 @@ All data is in `datasets.json`. Every number there was read from one of the sour
   - Independent georeference: Robin Wilson's SnowGIS data (https://www.rtwilson.com/downloads/SnowGIS_KML.zip, digitized from the same map onto Ordnance Survey data, 2011). For each of Wilson's 250 death points, the nearest lindbrook address is a median of 4.9 m away (90th percentile 7.7 m, maximum 21.8 m). Wilson's 8 pumps fall 3.6 to 11.7 m from lindbrook's matching pumps, and his Broad Street pump is 5.4 m from lindbrook's pump 7.
 - **Pumps:** all 13 pumps on Snow's map, with lindbrook's coordinates and street names. Pump 7 is Broad Street.
 
+### Map: the streets
+
+- **Citation:** the streets of Snow's 1855 map as digitized by W. R. Tobler and S. Dodson (1992; HistData `Snow.streets`), with Snow's road names added and georeferenced (WGS 84) by lindbrook in the R package *cholera*, data set `roads`.
+- **Fetched:** https://raw.githubusercontent.com/lindbrook/cholera/master/data/roads.rda (2026-11-01) and its page `man/roads.Rd`.
+- **Converted:** `scripts/soho-streets.py` writes `soho-streets.json`: one GeoJSON feature per road name, a MultiLineString of its segments (206 names, 479 segments), positions rounded to 6 decimals. Snow's map frame ("Map Frame") is left out. The map prints a name without its roman numeral ("Princes Street (I)" reads "Princes Street").
+- **Check:** the streets come from the same georeference as the 321 addresses and 13 pumps, so the dots sit on their streets as on Snow's map. I did not check the street lines against a second source.
+
 ### Not verified, and why the totals differ
 
 - Wilson's file totals 489 deaths at 250 locations, not 578. I used lindbrook/Tobler's 578, the standard count of bars, and used Wilson only to check positions. I did not find out why Wilson's total is lower.

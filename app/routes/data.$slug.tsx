@@ -1,26 +1,16 @@
-import { lazy } from "react";
 import { pageHead } from "~/lib/seo";
 import { sectionPageTrail } from "~/lib/trails";
 import { SectionTrail } from "~/components/content/SectionTrail";
 import type { Route } from "./+types/data.$slug";
 import { datasetSummary, getDataset } from "~/lib/datasets.server";
 import { getSnippets } from "~/lib/context.server";
-import { timelineChart } from "~/lib/charts.server";
-import { ClientOnly } from "~/components/util/ClientOnly";
+import { dataMap, timelineChart } from "~/lib/charts.server";
 import type { Source } from "~/lib/datasets.server";
 import chartsCss from "~/charts.css?url";
 
-// Heavy viz libs are lazy() — Vite code-splits them onto this route only. Charts are drawn on the server, and their
+// The map and the chart are drawn on the server by Enarratio, so a data page sends no React (lib/hydration.ts); their
 // stylesheet and island (app/islands/charts.ts) load on this route alone.
-const DataMap = lazy(() => import("~/components/data/DataMap.client"));
-
 export const links: Route.LinksFunction = () => [{ rel: "stylesheet", href: chartsCss }];
-
-// A map is an app from its first paint, so a data page with one hydrates on load; one with only its chart, drawn on
-// the server, sends no React (lib/hydration.ts).
-export const handle = {
-  hydrate: (data: unknown) => Boolean((data as { dataset?: { map?: unknown } } | undefined)?.dataset?.map),
-};
 
 const dataTrail = (page: { slug: string; title: string }) =>
   sectionPageTrail({ name: "Data", path: "/data" }, { name: page.title, path: `/data/${page.slug}` });
@@ -39,11 +29,13 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const dataset = getDataset(params.slug);
   if (!dataset) throw new Response("Not found", { status: 404 });
   const summary = datasetSummary(await getSnippets(context), dataset.slug, dataset.summary);
+  const map = dataset.map ? dataMap(dataset.slug, dataset.map) : null;
   const chart = dataset.timeline ? timelineChart(dataset.slug, dataset.timeline) : null;
-  return { dataset: { ...dataset, summary }, chart };
+  // The map's points travel as its drawing and table, not again as loader data.
+  return { dataset: { ...dataset, map: null, summary }, map, chart };
 }
 
-/** Where a map's or table's numbers come from, as the chart's own source line reads. */
+/** Where a table's numbers come from, as the chart's own source line reads. */
 function SourceLine({ source }: { source: Source }) {
   return (
     <p className="mt-2 font-display text-xs text-muted">
@@ -81,7 +73,7 @@ function DataTable({ title, columns, rows }: { title: string; columns: string[];
 }
 
 export default function DataDetail({ loaderData }: Route.ComponentProps) {
-  const { dataset: d, chart } = loaderData;
+  const { dataset: d, map, chart } = loaderData;
   return (
     <article className="mx-auto max-w-3xl">
       <SectionTrail trail={dataTrail(d)} />
@@ -89,14 +81,14 @@ export default function DataDetail({ loaderData }: Route.ComponentProps) {
       <h1 className="mt-2 font-display text-3xl font-semibold">{d.title}</h1>
       <p className="mt-2 max-w-2xl text-muted">{d.summary}</p>
 
-      {d.map ? (
-        <div className="mt-8">
-          <ClientOnly fallback={<div className="h-80 w-full animate-pulse rounded-xl bg-surface" />}>
-            <DataMap center={d.map.center} zoom={d.map.zoom} points={d.map.points} landmarks={d.map.landmarks} marked={d.map.marked} />
-          </ClientOnly>
-          <p className="mt-2 font-display text-sm text-muted">{d.map.legend}</p>
-          <SourceLine source={d.map.source} />
-        </div>
+      {map ? (
+        <div
+          className="mt-8 rounded-xl border border-border bg-card p-3"
+          data-island="charts"
+          data-client="visible"
+          data-client-root-margin="200px"
+          dangerouslySetInnerHTML={{ __html: map }}
+        />
       ) : null}
 
       {chart ? (

@@ -123,8 +123,8 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
 
   # A merge to main deploys once both jobs are green: migrations first, then the Worker, so a migration is never a
-  # manual step. Dormant until the repo variable CF_DEPLOY is 'true' (with the variables VITE_GOOGLE_MAPS_KEY and
-  # VITE_GOOGLE_MAPS_MAP_ID and the secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID), so Cloudflare Workers Builds keeps deploying until it is turned off; turn it off before
+  # manual step. Dormant until the repo variable CF_DEPLOY is 'true' (with the secrets CLOUDFLARE_API_TOKEN and
+  # CLOUDFLARE_ACCOUNT_ID), so Cloudflare Workers Builds keeps deploying until it is turned off; turn it off before
   # setting CF_DEPLOY, or both deploy each merge.
   # devkit's shared deploy (worker-deploy.yml): it reads the D1 Time Travel bookmark (`d1-database`), so a bad
   # migration is one restore to undo, applies the pending migrations that only add (devkit-migrations --apply; a
@@ -146,11 +146,7 @@ jobs:
         code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 https://germomics.com/ || true);
         echo "home page answered $code";
         if [ "$code" = 200 ]; then exit 0; elif [ "$code" = 000 ]; then exit 3; else exit 1; fi
-      # The Maps key and Map ID are BUILD-time values Vite inlines into the client bundle (wrangler.jsonc, .env.example),
-      # so they come from repo variables (public by construction, referrer-restricted) and a deploy without the key stops.
       pre-deploy: >-
-        export VITE_GOOGLE_MAPS_KEY='${{ vars.VITE_GOOGLE_MAPS_KEY }}' VITE_GOOGLE_MAPS_MAP_ID='${{ vars.VITE_GOOGLE_MAPS_MAP_ID }}' &&
-        { [ -n "$VITE_GOOGLE_MAPS_KEY" ] || { echo "::error::the repo variable VITE_GOOGLE_MAPS_KEY is not set, so the maps would not render"; exit 1; }; } &&
         npx devkit-migrations drizzle --apply germomics &&
         npm run build
       sha-var: DEPLOY_SHA
