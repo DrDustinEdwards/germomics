@@ -44,6 +44,27 @@ const MAP_ID = (import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as string | undefined) |
 const PIN_LIGHT = { background: "#4f2d7f", borderColor: "#402567", glyphColor: "#ffffff" } as const;
 const PIN_DARK = { background: "#c4aef0", borderColor: "#b29ad9", glyphColor: "#120b1f" } as const;
 
+// A COUNT IS A DOT, A LANDMARK IS A PIN. A map of a few hundred counts (Snow's 321 addresses) draws each as a small
+// violet dot whose area grows with its count, so the cluster reads as Snow's bars did; a pin each would bury the
+// streets. Landmarks (the pumps) keep pins, in the ink colors (app.css --ink, --bg), since the violet is the counts'
+// and the cyan is reserved for interactive states. The marked landmark (Broad Street) is drawn larger.
+const DOT_LIGHT = { fill: "#4f2d7f", edge: "#ffffff" } as const;
+const DOT_DARK = { fill: "#c4aef0", edge: "#120b1f" } as const;
+const LANDMARK_LIGHT = { background: "#14101f", borderColor: "#14101f", glyphColor: "#fbfafd" } as const;
+const LANDMARK_DARK = { background: "#edeaf5", borderColor: "#edeaf5", glyphColor: "#120b1f" } as const;
+
+/** One array for every map without landmarks, so the map effect's dependency stays the same between renders. */
+const NO_LANDMARKS: DataPoint[] = [];
+
+/** A dot whose area follows the count: 1 is 8 px across, 18 (the most at one address) about 21. */
+function dot(value: number, dark: boolean): HTMLElement {
+  const { fill, edge } = dark ? DOT_DARK : DOT_LIGHT;
+  const size = Math.round(5 + 3 * Math.sqrt(Math.max(value, 1)));
+  const el = document.createElement("span");
+  el.style.cssText = `display:block;width:${size}px;height:${size}px;border-radius:50%;background:${fill};border:1px solid ${edge};opacity:0.8;transform:translateY(50%)`;
+  return el;
+}
+
 // THE SITE'S THEME, READ THE WAY app.css DECIDES IT. This is only the pair of DOM reads; the
 // rule that resolves them lives in ~/lib/map as siteIsDark(), where a test can reach it without
 // a browser. Splitting it that way is the whole point: the reads need a document, the rule does
@@ -59,10 +80,17 @@ export default function DataMap({
   center,
   zoom,
   points,
+  landmarks = NO_LANDMARKS,
+  marked = null,
 }: {
   center: [number, number];
   zoom: number;
+  /** Valued points: pins when there are a few, dots sized by value when there are many. */
   points: DataPoint[];
+  /** Places drawn as pins over the points, labeled only by name. */
+  landmarks?: DataPoint[];
+  /** The landmark label to draw larger. */
+  marked?: string | null;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [failed, setFailed] = useState(!API_KEY);
@@ -124,21 +152,24 @@ export default function DataMap({
         });
 
         const info = new InfoWindow();
-        for (const p of points) {
-          const pin = new PinElement(dark ? PIN_DARK : PIN_LIGHT);
-          const marker = new AdvancedMarkerElement({
-            map,
-            position: { lat: p.lat, lng: p.lng },
-            title: `${p.label}: ${p.value}`,
-            content: pin.element,
-          });
+        const add = (text: string, position: google.maps.LatLngLiteral, content: HTMLElement, zIndex: number) => {
+          const marker = new AdvancedMarkerElement({ map, position, title: text, content, zIndex });
           marker.addListener("click", () => {
             // TEXT NODE, NOT A STRING. setContent(string) parses markup; setContent(Node) does
             // not. This is the one line that keeps dataset text out of the DOM as HTML.
-            info.setContent(document.createTextNode(`${p.label}: ${p.value}`));
+            info.setContent(document.createTextNode(text));
             info.open({ map, anchor: marker });
           });
           markers.push(marker);
+        };
+        const dots = points.length > 20;
+        for (const p of points) {
+          const content = dots ? dot(p.value, dark) : new PinElement(dark ? PIN_DARK : PIN_LIGHT).element;
+          add(`${p.label}: ${p.value}`, { lat: p.lat, lng: p.lng }, content, 1);
+        }
+        for (const l of landmarks) {
+          const pin = new PinElement({ ...(dark ? LANDMARK_DARK : LANDMARK_LIGHT), scale: l.label === marked ? 1.3 : 0.8 });
+          add(l.label, { lat: l.lat, lng: l.lng }, pin.element, l.label === marked ? 3 : 2);
         }
       } catch {
         // A blocked script, a bad key, or an offline browser. The data table below is the real
@@ -152,7 +183,7 @@ export default function DataMap({
       for (const marker of markers) marker.map = null;
       markers = [];
     };
-  }, [center, zoom, points, dark]);
+  }, [center, zoom, points, landmarks, marked, dark]);
 
   return (
     <>
@@ -160,7 +191,7 @@ export default function DataMap({
         <div ref={ref} aria-hidden className="h-80 w-full overflow-hidden rounded-xl border border-border" />
       )}
       <p className="mt-1 text-xs text-muted-foreground">
-        {failed ? "Map unavailable. The table below carries the same data." : "Map data © Google."}
+        {failed ? "Map unavailable. The table below gives its totals." : "Map data © Google."}
       </p>
     </>
   );

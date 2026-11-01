@@ -59,6 +59,7 @@ export function Footer() {
     ["/contact", useSnippet("snippet:nav.contact", "Contact")],
     ["/privacy", useSnippet("snippet:nav.privacy", "Privacy")],
     ["/terms", useSnippet("snippet:nav.terms", "Terms")],
+    ["/accessibility", "Accessibility"],
   ];
   const year = new Date().getFullYear();
   const link = "text-muted hover:text-ink";
