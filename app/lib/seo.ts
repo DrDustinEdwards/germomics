@@ -223,14 +223,13 @@ type PageHead = {
   noindex?: boolean;
 };
 
-// Prelum builds each page's WebPage and BreadcrumbList from these sections; a page whose trail is not its URL (a season,
-// an episode under its season) passes its own.
+// Prelum builds each page's WebPage; a page inside a section passes its trail from lib/trails.ts, the one its visible
+// trail (SectionTrail) shows, so the site names no sections here and no page carries a BreadcrumbList it does not show.
 const head = defineHead({
   origin: SITE_ORIGIN,
   siteName: "Germomics",
   suffix: " · Germomics",
   image: DEFAULT_CARD,
-  sections: { "/about": "About", "/episodes": "Episodes", "/writing": "Writing", "/data": "Data", "/games": "Games" },
 });
 
 /**

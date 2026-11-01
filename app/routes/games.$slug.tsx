@@ -2,6 +2,8 @@ import { lazy, useState } from "react";
 import { useFetcher } from "react-router";
 import { Trophy } from "lucide-react";
 import { pageHead } from "~/lib/seo";
+import { sectionPageTrail } from "~/lib/trails";
+import { SectionTrail } from "~/components/content/SectionTrail";
 import type { Route } from "./+types/games.$slug";
 import { getEnv } from "~/lib/context.server";
 import { getGame } from "~/lib/games.server";
@@ -15,12 +17,16 @@ const PhaserGame = lazy(() => import("~/components/game/PhaserGame.client"));
 // A game is an app from its first paint (Phaser, the leaderboard), so it hydrates on load (lib/hydration.ts).
 export const handle = { hydrate: true };
 
+const gameTrail = (page: { slug: string; title: string }) =>
+  sectionPageTrail({ name: "Games", path: "/games" }, { name: page.title, path: `/games/${page.slug}` });
+
 export function meta({ loaderData, location }: Route.MetaArgs) {
   if (!loaderData?.game) return [{ title: "Games · Germomics" }];
   return pageHead({
     path: location.pathname,
     title: `${loaderData.game.title} · Germomics`,
     description: loaderData.game.tagline,
+    breadcrumbs: gameTrail(loaderData.game),
   });
 }
 
@@ -52,6 +58,7 @@ export default function GamePage({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="mx-auto max-w-3xl">
+      <SectionTrail trail={gameTrail(game)} />
       <p className="font-mono text-xs uppercase tracking-wide text-accent">Arcade</p>
       <h1 className="mt-2 font-display text-3xl font-semibold">{game.title}</h1>
       <p className="mt-2 text-muted">{game.instructions}</p>

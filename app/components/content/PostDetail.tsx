@@ -34,6 +34,8 @@ import {
 import { usePlayer } from "~/components/player/player-context";
 import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 import { ExternalCue } from "~/components/ExternalCue";
+import { postTrail } from "~/lib/trails";
+import { SectionTrail } from "./SectionTrail";
 
 export type DetailData = {
   post: Post;
@@ -211,6 +213,7 @@ export function PostDetail({ data }: { data: DetailData }) {
         <ReadingProgress />
         <article className="mx-auto max-w-5xl">
           {data.preview ? <PreviewBanner post={post} /> : null}
+          <SectionTrail trail={postTrail(post)} />
 
           {/* Hero */}
           <header className="grid gap-6 sm:grid-cols-[1fr_12rem] sm:items-start lg:grid-cols-[1fr_14rem]">
@@ -302,6 +305,7 @@ export function PostDetail({ data }: { data: DetailData }) {
   return (
     <article className="mx-auto max-w-3xl">
       {data.preview ? <PreviewBanner post={post} /> : null}
+      <SectionTrail trail={postTrail(post)} />
       {post.coverImage ? (
         // Cover is the article LCP element — load it eagerly with high priority; the fixed aspect
         // ratio reserves space so it doesn't shift layout (CLS).

@@ -4,6 +4,8 @@ import type { Route } from "./+types/season.$num";
 import { getEnv } from "~/lib/context.server";
 import { episodesInSeason, toPlayerTrack } from "~/lib/posts.server";
 import { pageHead } from "~/lib/seo";
+import { seasonTrail } from "~/lib/trails";
+import { SectionTrail } from "~/components/content/SectionTrail";
 import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 
@@ -16,11 +18,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
     socialTitle: `Germomics Season ${num}`,
     description: `Germomics episodes from Season ${num}.`,
     pageType: "CollectionPage",
-    breadcrumbs: [
-      { name: "Germomics", path: "/" },
-      { name: "Episodes", path: "/episodes" },
-      { name: `Season ${num}`, path: `/season/${num}` },
-    ],
+    breadcrumbs: seasonTrail(num),
   });
 }
 
@@ -39,6 +37,7 @@ export default function Season({ loaderData }: Route.ComponentProps) {
   return (
     <div>
       <QueueSeeder tracks={tracks} />
+      <SectionTrail trail={seasonTrail(num)} />
       {/* Teal eyebrow is the only season marker (the page title/meta carries the heading text). */}
       <h1 className="mb-6 font-mono text-sm font-medium uppercase tracking-[0.18em] text-accent">Season {num}</h1>
       <div className="grid gap-3">

@@ -5,6 +5,8 @@
 @import "./fonts.css";
 /* Size-matched local fallbacks (Capsomer), so the swap to each webfont does not move text. Nothing extra downloads. */
 @import "capsomer/fallback-fonts.css";
+/* The visible trail of a page inside a section (components/content/SectionTrail.tsx), in the cap layer. */
+@import "capsomer/breadcrumb.css";
 
 /* ── germomics design system ───────────────────────────────────────────────
    Anchor #4F2D7F (crystal violet). Light + dark are both first-class, switched by
@@ -177,4 +179,32 @@
       display: block;
     }
   }
+}
+
+/* Capsomer's breadcrumb in germomics' own tokens: public pages load no Capsomer tokens (admin.css does), so the block names
+   each value the component reads. The trail is quiet, like the site's other small navigation: JetBrains Mono at the
+   meta size, the levels muted until the pointer reaches them, the current page in ink; focus keeps the site's cyan ring. */
+.cap-breadcrumb {
+  --ui: var(--font-mono);
+  --fs-body: 0.75rem;
+  --text: var(--ink);
+  --dim: var(--muted);
+  --accent-text: var(--muted);
+  --accent-hover: var(--ink);
+  --accent-soft: var(--surface);
+  --ring: var(--accent);
+  --ring-width: 2px;
+  --target: 1.5rem;
+  --space-2: 0.5rem;
+  --space-4: 1rem;
+  --radius-s: 4px;
+  --dur-fast: 150ms;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --line: var(--border);
+  --line-strong: var(--muted);
+  --raised: var(--surface);
+  --sunken: var(--surface);
+  --control: 2rem;
+  /* The first level's text lines up with the page's edge; its hover background reaches into the gutter. */
+  margin-inline-start: calc(-1 * var(--space-2));
 }
