@@ -1,6 +1,7 @@
 -- Pictures through this origin, as dustinedwards.info serves its own: a stored image address becomes /media/<key>
 -- (app/lib/images.ts) instead of the bucket's own address, https://images.germomics.com/<key>. The key after the
--- prefix is the same, so the same file answers; images.germomics.com stays up for links already out in feeds and apps.
+-- prefix is the same, so the same file answers; images.germomics.com/<path> 301s to germomics.com/media/<path> (a zone
+-- redirect rule), so links already out in feeds and apps keep working.
 -- Hand-written (drizzle-kit is not used). Applied with:
 --   wrangler d1 migrations apply germomics [--local|--remote]
 --
@@ -27,3 +28,8 @@ WHERE value LIKE '%https://images.germomics.com/%';
 UPDATE people
 SET photo = replace(photo, 'https://images.germomics.com/', '/media/')
 WHERE photo LIKE 'https://images.germomics.com/%';
+
+-- The show's artwork is read by podcast apps from the feed's itunes:image, which must be an absolute URL.
+UPDATE show_config
+SET artwork = replace(artwork, 'https://images.germomics.com/', 'https://germomics.com/media/')
+WHERE artwork LIKE 'https://images.germomics.com/%';

@@ -2,7 +2,7 @@
 // `defineImages` call, so a page never asks /media for a size or crop the route would refuse.
 // Every picture is served from this origin, as dustinedwards.info serves its own: the original at /media/<key> and
 // each size at /media/<key>?w= (app/routes/media.$.ts), from BLOG_IMAGES. A stored address is /media/<key>; one
-// written before 2026-11-01 at images.germomics.com still names the same key and still loads there.
+// written before 2026-11-01 at images.germomics.com still names the same key, and that address redirects here.
 import { defineImages, type ImageAttributes } from "@dustinedwards/site-runtime/image";
 import { IMAGE_ORIGIN, SITE_ORIGIN } from "~/lib/site";
 
