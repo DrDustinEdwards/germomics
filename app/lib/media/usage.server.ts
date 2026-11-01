@@ -2,19 +2,19 @@
 // the tables (no reference index to fall behind), plus the one image the code itself names. Media's "used by",
 // usage counts, the unattached lens and every delete come from here, so they agree.
 //
-// An image is referenced by its address: the original at images.germomics.com/<key>, or a resized copy at
-// germomics.com/media/<key> (relative or absolute). The key is read out of each address found, query and fragment cut.
+// An image is referenced by its address: germomics.com/media/<key> (relative or absolute), the original or a resized
+// copy. The key is read out of each address found, query and fragment cut.
 import { getDb } from "~/db/index.server";
 import { contentBlocks, people, posts, scheduledUpdates, settings, showConfig } from "~/db/schema";
 import { imageKeyOf } from "~/lib/images";
-import { DEFAULT_ARTWORK, IMAGE_ORIGIN, SITE_ORIGIN } from "~/lib/site";
+import { DEFAULT_ARTWORK, SITE_ORIGIN } from "~/lib/site";
 
 export type MediaPlace = { type: string; id: string; title: string; detail: string; keys: Set<string> };
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
 const PATH = "([^\\s\"'<>()\\\\?#]+)";
 const ADDRESS = new RegExp(
-  `(?:https?:)?${escape(IMAGE_ORIGIN.replace(/^https?:/, ""))}/${PATH}|(?:^|[\\s"'(=,])(?:${escape(SITE_ORIGIN)})?/media/${PATH}`,
+  `(?:^|[\\s"'(=,])(?:${escape(SITE_ORIGIN)})?/media/${PATH}`,
   "g",
 );
 
@@ -23,7 +23,7 @@ function keysIn(text: string | null | undefined): Set<string> {
   const keys = new Set<string>();
   if (!text) return keys;
   for (const m of text.matchAll(ADDRESS)) {
-    const raw = (m[1] ?? m[2] ?? "").replace(/[.,;:]+$/, "");
+    const raw = (m[1] ?? "").replace(/[.,;:]+$/, "");
     try {
       keys.add(decodeURIComponent(raw));
     } catch {

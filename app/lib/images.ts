@@ -1,9 +1,9 @@
 // Responsive images (client-safe): every way the site shows an image, as one site-runtime
 // `defineImages` call, so a page never asks /media for a size or crop the route would refuse.
-// Originals stay in BLOG_IMAGES at images.germomics.com; each resized copy is made on request by
-// the Images binding and served from this origin at /media/<key>?w= (app/routes/media.$.ts).
+// Every picture is served from this origin, as dustinedwards.info serves its own: the original at /media/<key> and
+// each size at /media/<key>?w= (app/routes/media.$.ts), from BLOG_IMAGES. A stored address is /media/<key>.
 import { defineImages, type ImageAttributes } from "@dustinedwards/site-runtime/image";
-import { IMAGE_ORIGIN } from "~/lib/site";
+import { SITE_ORIGIN } from "~/lib/site";
 
 export const images = defineImages({
   uses: {
@@ -36,10 +36,14 @@ export function imageFor(set: ImageSet | undefined, use: ImageUseName, src: stri
   return src ? set?.[imageKey(use, src)] : undefined;
 }
 
-/** The BLOG_IMAGES key behind an images.germomics.com URL, or null for any other URL. */
+/** The prefixes a stored image address starts with: /media, relative or on this origin. */
+const IMAGE_PREFIXES = ["/media/", `${SITE_ORIGIN}/media/`];
+
+/** The BLOG_IMAGES key behind a stored image address (/media/<key>), or null for any other URL. */
 export function imageKeyOf(src: string): string | null {
-  if (!src.startsWith(`${IMAGE_ORIGIN}/`)) return null;
-  const path = src.slice(IMAGE_ORIGIN.length + 1).split(/[?#]/)[0];
+  const prefix = IMAGE_PREFIXES.find((p) => src.startsWith(p));
+  if (!prefix) return null;
+  const path = src.slice(prefix.length).split(/[?#]/)[0];
   if (!path) return null;
   try {
     return decodeURIComponent(path);

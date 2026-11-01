@@ -9,7 +9,7 @@ import { applyMigrations } from "./helpers/d1";
 // A body's figures are sized when it is rendered (test/post-render.test.ts). The widths, formats and refusals are site-runtime's
 // and tested there; this is the site's half, which no other test reaches.
 const e = env as unknown as Env;
-const IMG = "https://images.germomics.com";
+const IMG = "/media";
 const KEY = "a-sky-full-of-sars/coronavirus-795.webp";
 let loader: typeof import("~/routes/media.$").loader;
 
