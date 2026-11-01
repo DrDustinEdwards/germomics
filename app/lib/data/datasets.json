@@ -1,0 +1,3122 @@
+{
+ "_note": "Prepared 2026-10-31 for germomics.com /data. Every number was read from the cited source; see SOURCES.md for what was fetched and how it was checked.",
+ "cholera-soho-1854": {
+  "map": {
+   "center": [
+    -0.1362,
+    51.5133
+   ],
+   "zoom": 16,
+   "source": {
+    "label": "Deaths (bars) on Snow's 1855 map as digitized by Dodson and Tobler (1992), amended and georeferenced (QGIS thin plate spline to OpenStreetMap, WGS 84) in the R package cholera by lindbrook, data set fatalities.anchor",
+    "url": "https://github.com/lindbrook/cholera"
+   },
+   "method": "One point per address (the 321 'anchor' cases, each the base of a stack of bars on Snow's map); value = deaths at that address (case.count), summing to all 578 bars; label = street of the nearest road segment (latlong.ortho.anchor road.segment joined to roads.name).",
+   "points": [
+    {
+     "lng": -0.135798,
+     "lat": 51.513029,
+     "label": "Pulteney Court (I)",
+     "value": 2
+    },
+    {
+     "lng": -0.13448,
+     "lat": 51.512467,
+     "label": "Greens Court",
+     "value": 2
+    },
+    {
+     "lng": -0.136069,
+     "lat": 51.513924,
+     "label": "Bentinck Street",
+     "value": 2
+    },
+    {
+     "lng": -0.137772,
+     "lat": 51.512329,
+     "label": "Silver Street",
+     "value": 1
+    },
+    {
+     "lng": -0.138155,
+     "lat": 51.513405,
+     "label": "South Row",
+     "value": 1
+    },
+    {
+     "lng": -0.135993,
+     "lat": 51.512844,
+     "label": "Little Windmill Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134543,
+     "lat": 51.512497,
+     "label": "Pulteney Court (II)",
+     "value": 9
+    },
+    {
+     "lng": -0.137972,
+     "lat": 51.51242,
+     "label": "Carnaby Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136615,
+     "lat": 51.513441,
+     "label": "Broad Street",
+     "value": 4
+    },
+    {
+     "lng": -0.137203,
+     "lat": 51.513346,
+     "label": "Dufours Place",
+     "value": 1
+    },
+    {
+     "lng": -0.136876,
+     "lat": 51.512688,
+     "label": "Silver Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136815,
+     "lat": 51.513374,
+     "label": "Broad Street",
+     "value": 3
+    },
+    {
+     "lng": -0.137847,
+     "lat": 51.513386,
+     "label": "Marshall Street",
+     "value": 3
+    },
+    {
+     "lng": -0.135792,
+     "lat": 51.514111,
+     "label": "Bentinck Street",
+     "value": 1
+    },
+    {
+     "lng": -0.13798,
+     "lat": 51.513294,
+     "label": "Marshall Street",
+     "value": 2
+    },
+    {
+     "lng": -0.13685,
+     "lat": 51.514257,
+     "label": "Poland Street",
+     "value": 3
+    },
+    {
+     "lng": -0.135501,
+     "lat": 51.514422,
+     "label": "Berwick Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136644,
+     "lat": 51.513265,
+     "label": "Broad Street",
+     "value": 4
+    },
+    {
+     "lng": -0.134097,
+     "lat": 51.51374,
+     "label": "Wardour Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136366,
+     "lat": 51.512444,
+     "label": "Great Pulteney Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136256,
+     "lat": 51.512579,
+     "label": "Great Pulteney Street",
+     "value": 1
+    },
+    {
+     "lng": -0.13571,
+     "lat": 51.513169,
+     "label": "New Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136183,
+     "lat": 51.513038,
+     "label": "Cambridge Street",
+     "value": 3
+    },
+    {
+     "lng": -0.135927,
+     "lat": 51.513023,
+     "label": "Pulteney Court (I)",
+     "value": 1
+    },
+    {
+     "lng": -0.134846,
+     "lat": 51.512168,
+     "label": "William and Mary Yard",
+     "value": 1
+    },
+    {
+     "lng": -0.136029,
+     "lat": 51.51403,
+     "label": "Bentinck Street",
+     "value": 1
+    },
+    {
+     "lng": -0.13512,
+     "lat": 51.51326,
+     "label": "Hopkins Street",
+     "value": 1
+    },
+    {
+     "lng": -0.133844,
+     "lat": 51.514503,
+     "label": "St Anns Court",
+     "value": 1
+    },
+    {
+     "lng": -0.137905,
+     "lat": 51.513468,
+     "label": "Marshall Street",
+     "value": 4
+    },
+    {
+     "lng": -0.134017,
+     "lat": 51.513609,
+     "label": "Wardour Street",
+     "value": 1
+    },
+    {
+     "lng": -0.133382,
+     "lat": 51.514568,
+     "label": "St Anns Court",
+     "value": 2
+    },
+    {
+     "lng": -0.13773,
+     "lat": 51.511811,
+     "label": "Golden Square",
+     "value": 2
+    },
+    {
+     "lng": -0.134062,
+     "lat": 51.513505,
+     "label": "Wardour Street",
+     "value": 2
+    },
+    {
+     "lng": -0.137196,
+     "lat": 51.514968,
+     "label": "Poland Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135319,
+     "lat": 51.513999,
+     "label": "Berwick Street",
+     "value": 5
+    },
+    {
+     "lng": -0.13493,
+     "lat": 51.513895,
+     "label": "Edward Street",
+     "value": 1
+    },
+    {
+     "lng": -0.139224,
+     "lat": 51.512938,
+     "label": "Cross Street",
+     "value": 1
+    },
+    {
+     "lng": -0.132414,
+     "lat": 51.511094,
+     "label": "George Court (II)",
+     "value": 1
+    },
+    {
+     "lng": -0.137696,
+     "lat": 51.514802,
+     "label": "Great Marlborough Street",
+     "value": 2
+    },
+    {
+     "lng": -0.138023,
+     "lat": 51.512474,
+     "label": "Carnaby Street",
+     "value": 1
+    },
+    {
+     "lng": -0.133776,
+     "lat": 51.51446,
+     "label": "St Anns Court",
+     "value": 1
+    },
+    {
+     "lng": -0.138335,
+     "lat": 51.512783,
+     "label": "Carnaby Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135751,
+     "lat": 51.51198,
+     "label": "Great Pulteney Street",
+     "value": 1
+    },
+    {
+     "lng": -0.133978,
+     "lat": 51.514364,
+     "label": "St Anns Court",
+     "value": 2
+    },
+    {
+     "lng": -0.137449,
+     "lat": 51.512849,
+     "label": "Marshall Street",
+     "value": 2
+    },
+    {
+     "lng": -0.134355,
+     "lat": 51.513057,
+     "label": "Berwick Street",
+     "value": 8
+    },
+    {
+     "lng": -0.133962,
+     "lat": 51.513521,
+     "label": "Wardour Street",
+     "value": 1
+    },
+    {
+     "lng": -0.138479,
+     "lat": 51.513453,
+     "label": "West Street",
+     "value": 1
+    },
+    {
+     "lng": -0.133477,
+     "lat": 51.513117,
+     "label": "Meards Court/Street",
+     "value": 1
+    },
+    {
+     "lng": -0.132706,
+     "lat": 51.513038,
+     "label": "Little Dean Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135679,
+     "lat": 51.51192,
+     "label": "Great Pulteney Street",
+     "value": 3
+    },
+    {
+     "lng": -0.137279,
+     "lat": 51.512679,
+     "label": "Marshall Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135157,
+     "lat": 51.513705,
+     "label": "Broad Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134441,
+     "lat": 51.515844,
+     "label": "Great Chapel Street",
+     "value": 2
+    },
+    {
+     "lng": -0.134479,
+     "lat": 51.513212,
+     "label": "Berwick Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134537,
+     "lat": 51.514014,
+     "label": "Edward Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135758,
+     "lat": 51.514024,
+     "label": "Bentinck Street",
+     "value": 2
+    },
+    {
+     "lng": -0.13432,
+     "lat": 51.514035,
+     "label": "Wardour Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134774,
+     "lat": 51.514831,
+     "label": "Little Chapel Street",
+     "value": 1
+    },
+    {
+     "lng": -0.138203,
+     "lat": 51.513286,
+     "label": "South Row",
+     "value": 3
+    },
+    {
+     "lng": -0.138675,
+     "lat": 51.513653,
+     "label": "West Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135369,
+     "lat": 51.512102,
+     "label": "Little Windmill Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135732,
+     "lat": 51.513708,
+     "label": "Broad Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134678,
+     "lat": 51.512404,
+     "label": "Pulteney Court (II)",
+     "value": 1
+    },
+    {
+     "lng": -0.134132,
+     "lat": 51.513611,
+     "label": "Wardour Street",
+     "value": 2
+    },
+    {
+     "lng": -0.13927,
+     "lat": 51.513491,
+     "label": "Carnaby Street",
+     "value": 1
+    },
+    {
+     "lng": -0.140013,
+     "lat": 51.511175,
+     "label": "Heddon Court",
+     "value": 3
+    },
+    {
+     "lng": -0.133267,
+     "lat": 51.513135,
+     "label": "Meards Court/Street",
+     "value": 2
+    },
+    {
+     "lng": -0.139281,
+     "lat": 51.514073,
+     "label": "Carnaby Street",
+     "value": 1
+    },
+    {
+     "lng": -0.139908,
+     "lat": 51.511264,
+     "label": "Heddon Court",
+     "value": 1
+    },
+    {
+     "lng": -0.134371,
+     "lat": 51.512372,
+     "label": "Greens Court",
+     "value": 2
+    },
+    {
+     "lng": -0.135971,
+     "lat": 51.513629,
+     "label": "Broad Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136086,
+     "lat": 51.512358,
+     "label": "Great Pulteney Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135568,
+     "lat": 51.51296,
+     "label": "New Street/Husband Street",
+     "value": 1
+    },
+    {
+     "lng": -0.137581,
+     "lat": 51.512305,
+     "label": "Silver Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135347,
+     "lat": 51.51423,
+     "label": "Berwick Street",
+     "value": 1
+    },
+    {
+     "lng": -0.138259,
+     "lat": 51.513085,
+     "label": "Marlborough Row",
+     "value": 4
+    },
+    {
+     "lng": -0.138425,
+     "lat": 51.512256,
+     "label": "Naylors Yard",
+     "value": 1
+    },
+    {
+     "lng": -0.135892,
+     "lat": 51.513651,
+     "label": "Broad Street",
+     "value": 4
+    },
+    {
+     "lng": -0.134115,
+     "lat": 51.514369,
+     "label": "St Anns Court",
+     "value": 1
+    },
+    {
+     "lng": -0.136042,
+     "lat": 51.513611,
+     "label": "Broad Street",
+     "value": 1
+    },
+    {
+     "lng": -0.13606,
+     "lat": 51.51275,
+     "label": "Little Windmill Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134642,
+     "lat": 51.514474,
+     "label": "Wardour Street",
+     "value": 1
+    },
+    {
+     "lng": -0.137246,
+     "lat": 51.512262,
+     "label": "Upper James Street",
+     "value": 1
+    },
+    {
+     "lng": -0.138136,
+     "lat": 51.512948,
+     "label": "Marlborough Row",
+     "value": 1
+    },
+    {
+     "lng": -0.139167,
+     "lat": 51.513585,
+     "label": "Carnaby Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135058,
+     "lat": 51.513203,
+     "label": "Hopkins Street",
+     "value": 1
+    },
+    {
+     "lng": -0.138106,
+     "lat": 51.513321,
+     "label": "South Row",
+     "value": 2
+    },
+    {
+     "lng": -0.134252,
+     "lat": 51.510592,
+     "label": "Angel Court",
+     "value": 1
+    },
+    {
+     "lng": -0.137228,
+     "lat": 51.512634,
+     "label": "Marshall Street",
+     "value": 1
+    },
+    {
+     "lng": -0.137392,
+     "lat": 51.513031,
+     "label": "Broad Street",
+     "value": 3
+    },
+    {
+     "lng": -0.135868,
+     "lat": 51.514085,
+     "label": "Bentinck Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134269,
+     "lat": 51.513793,
+     "label": "Wardour Street",
+     "value": 1
+    },
+    {
+     "lng": -0.13546,
+     "lat": 51.51284,
+     "label": "New Street/Husband Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134982,
+     "lat": 51.51547,
+     "label": "Hollen Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134382,
+     "lat": 51.514115,
+     "label": "Wardour Street",
+     "value": 2
+    },
+    {
+     "lng": -0.135649,
+     "lat": 51.513058,
+     "label": "New Street/Husband Street",
+     "value": 4
+    },
+    {
+     "lng": -0.138179,
+     "lat": 51.512996,
+     "label": "Marlborough Row",
+     "value": 2
+    },
+    {
+     "lng": -0.134887,
+     "lat": 51.512856,
+     "label": "New Street/Husband Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135273,
+     "lat": 51.513445,
+     "label": "Kemps Court",
+     "value": 2
+    },
+    {
+     "lng": -0.135959,
+     "lat": 51.513434,
+     "label": "Broad Street",
+     "value": 3
+    },
+    {
+     "lng": -0.136611,
+     "lat": 51.512781,
+     "label": "Silver Street",
+     "value": 1
+    },
+    {
+     "lng": -0.13815,
+     "lat": 51.512452,
+     "label": "Carnaby Street",
+     "value": 1
+    },
+    {
+     "lng": -0.138556,
+     "lat": 51.513229,
+     "label": "Cross Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136321,
+     "lat": 51.513327,
+     "label": "Broad Street",
+     "value": 2
+    },
+    {
+     "lng": -0.136901,
+     "lat": 51.512484,
+     "label": "Bridle Street",
+     "value": 2
+    },
+    {
+     "lng": -0.137105,
+     "lat": 51.512603,
+     "label": "Silver Street",
+     "value": 2
+    },
+    {
+     "lng": -0.137473,
+     "lat": 51.513151,
+     "label": "Broad Street",
+     "value": 2
+    },
+    {
+     "lng": -0.134834,
+     "lat": 51.513591,
+     "label": "Berwick Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135425,
+     "lat": 51.513805,
+     "label": "Broad Street",
+     "value": 5
+    },
+    {
+     "lng": -0.136611,
+     "lat": 51.514142,
+     "label": "Poland Street",
+     "value": 3
+    },
+    {
+     "lng": -0.139251,
+     "lat": 51.51366,
+     "label": "Carnaby Street",
+     "value": 1
+    },
+    {
+     "lng": -0.13831,
+     "lat": 51.513133,
+     "label": "Marlborough Row",
+     "value": 1
+    },
+    {
+     "lng": -0.136484,
+     "lat": 51.512075,
+     "label": "Bridle Street",
+     "value": 1
+    },
+    {
+     "lng": -0.139423,
+     "lat": 51.510775,
+     "label": "Leicester Street (I)",
+     "value": 1
+    },
+    {
+     "lng": -0.137693,
+     "lat": 51.51317,
+     "label": "Marshall Street",
+     "value": 4
+    },
+    {
+     "lng": -0.137244,
+     "lat": 51.513077,
+     "label": "Broad Street",
+     "value": 3
+    },
+    {
+     "lng": -0.13571,
+     "lat": 51.514131,
+     "label": "Bentinck Street",
+     "value": 2
+    },
+    {
+     "lng": -0.139522,
+     "lat": 51.515022,
+     "label": "Marlborough Mews",
+     "value": 1
+    },
+    {
+     "lng": -0.133681,
+     "lat": 51.51455,
+     "label": "St Anns Court",
+     "value": 1
+    },
+    {
+     "lng": -0.136376,
+     "lat": 51.513266,
+     "label": "Cambridge Street",
+     "value": 2
+    },
+    {
+     "lng": -0.136478,
+     "lat": 51.512604,
+     "label": "Great Pulteney Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134615,
+     "lat": 51.513357,
+     "label": "Berwick Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135507,
+     "lat": 51.513777,
+     "label": "Broad Street",
+     "value": 3
+    },
+    {
+     "lng": -0.135811,
+     "lat": 51.512025,
+     "label": "Great Pulteney Street",
+     "value": 2
+    },
+    {
+     "lng": -0.136645,
+     "lat": 51.513949,
+     "label": "Poland Street",
+     "value": 1
+    },
+    {
+     "lng": -0.138716,
+     "lat": 51.5137,
+     "label": "West Street",
+     "value": 1
+    },
+    {
+     "lng": -0.132673,
+     "lat": 51.511155,
+     "label": "Rupert Street",
+     "value": 1
+    },
+    {
+     "lng": -0.137759,
+     "lat": 51.513026,
+     "label": "Marshall Street",
+     "value": 2
+    },
+    {
+     "lng": -0.133293,
+     "lat": 51.514592,
+     "label": "St Anns Court",
+     "value": 1
+    },
+    {
+     "lng": -0.13886,
+     "lat": 51.513019,
+     "label": "Cross Street",
+     "value": 1
+    },
+    {
+     "lng": -0.13569,
+     "lat": 51.512529,
+     "label": "Little Windmill Street",
+     "value": 2
+    },
+    {
+     "lng": -0.136143,
+     "lat": 51.513379,
+     "label": "Broad Street",
+     "value": 2
+    },
+    {
+     "lng": -0.134735,
+     "lat": 51.513811,
+     "label": "Duck Lane/Ham Square",
+     "value": 1
+    },
+    {
+     "lng": -0.137802,
+     "lat": 51.513083,
+     "label": "Marshall Street",
+     "value": 4
+    },
+    {
+     "lng": -0.134005,
+     "lat": 51.514399,
+     "label": "St Anns Court",
+     "value": 2
+    },
+    {
+     "lng": -0.136319,
+     "lat": 51.512664,
+     "label": "Great Pulteney Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136812,
+     "lat": 51.513212,
+     "label": "Broad Street",
+     "value": 18
+    },
+    {
+     "lng": -0.138793,
+     "lat": 51.513396,
+     "label": "Marlborough Court",
+     "value": 1
+    },
+    {
+     "lng": -0.136504,
+     "lat": 51.513477,
+     "label": "Broad Street",
+     "value": 1
+    },
+    {
+     "lng": -0.133937,
+     "lat": 51.512112,
+     "label": "Great Crown Court",
+     "value": 1
+    },
+    {
+     "lng": -0.135426,
+     "lat": 51.512152,
+     "label": "Little Windmill Street",
+     "value": 1
+    },
+    {
+     "lng": -0.137807,
+     "lat": 51.513331,
+     "label": "Marshall Street",
+     "value": 2
+    },
+    {
+     "lng": -0.13508,
+     "lat": 51.511834,
+     "label": "Brewer Street",
+     "value": 4
+    },
+    {
+     "lng": -0.138964,
+     "lat": 51.513402,
+     "label": "Carnaby Street",
+     "value": 2
+    },
+    {
+     "lng": -0.13432,
+     "lat": 51.51302,
+     "label": "Berwick Street",
+     "value": 2
+    },
+    {
+     "lng": -0.135105,
+     "lat": 51.513507,
+     "label": "Kemps Court",
+     "value": 1
+    },
+    {
+     "lng": -0.135671,
+     "lat": 51.513127,
+     "label": "New Street",
+     "value": 2
+    },
+    {
+     "lng": -0.137534,
+     "lat": 51.512988,
+     "label": "Broad Street",
+     "value": 4
+    },
+    {
+     "lng": -0.133897,
+     "lat": 51.512074,
+     "label": "Great Crown Court",
+     "value": 1
+    },
+    {
+     "lng": -0.138692,
+     "lat": 51.513438,
+     "label": "Marlborough Court",
+     "value": 2
+    },
+    {
+     "lng": -0.13803,
+     "lat": 51.512356,
+     "label": "Carnaby Street",
+     "value": 1
+    },
+    {
+     "lng": -0.13655,
+     "lat": 51.51327,
+     "label": "Cambridge Street",
+     "value": 1
+    },
+    {
+     "lng": -0.139198,
+     "lat": 51.512851,
+     "label": "Cross Street",
+     "value": 2
+    },
+    {
+     "lng": -0.135592,
+     "lat": 51.51434,
+     "label": "Berwick Street",
+     "value": 2
+    },
+    {
+     "lng": -0.134905,
+     "lat": 51.512475,
+     "label": "Peter Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134434,
+     "lat": 51.51249,
+     "label": "Greens Court",
+     "value": 1
+    },
+    {
+     "lng": -0.135335,
+     "lat": 51.513638,
+     "label": "Broad Street",
+     "value": 1
+    },
+    {
+     "lng": -0.137857,
+     "lat": 51.513138,
+     "label": "Marshall Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136735,
+     "lat": 51.512735,
+     "label": "Silver Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134806,
+     "lat": 51.512513,
+     "label": "Peter Street",
+     "value": 2
+    },
+    {
+     "lng": -0.134589,
+     "lat": 51.514224,
+     "label": "Wardour Street",
+     "value": 1
+    },
+    {
+     "lng": -0.137609,
+     "lat": 51.5124,
+     "label": "Silver Street",
+     "value": 1
+    },
+    {
+     "lng": -0.138266,
+     "lat": 51.513364,
+     "label": "South Row",
+     "value": 2
+    },
+    {
+     "lng": -0.135979,
+     "lat": 51.512218,
+     "label": "Great Pulteney Street",
+     "value": 1
+    },
+    {
+     "lng": -0.138357,
+     "lat": 51.513178,
+     "label": "Marlborough Row",
+     "value": 3
+    },
+    {
+     "lng": -0.134674,
+     "lat": 51.513418,
+     "label": "Berwick Street",
+     "value": 2
+    },
+    {
+     "lng": -0.136762,
+     "lat": 51.514839,
+     "label": "Noel Street",
+     "value": 3
+    },
+    {
+     "lng": -0.136335,
+     "lat": 51.51288,
+     "label": "Silver Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134405,
+     "lat": 51.512087,
+     "label": "Little Pulteney Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134066,
+     "lat": 51.51225,
+     "label": "Little Pulteney Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136137,
+     "lat": 51.514376,
+     "label": "Portland Mews",
+     "value": 2
+    },
+    {
+     "lng": -0.134423,
+     "lat": 51.51349,
+     "label": "Duck Lane/Ham Square",
+     "value": 1
+    },
+    {
+     "lng": -0.136231,
+     "lat": 51.513351,
+     "label": "Broad Street",
+     "value": 1
+    },
+    {
+     "lng": -0.13541,
+     "lat": 51.514107,
+     "label": "Berwick Street",
+     "value": 3
+    },
+    {
+     "lng": -0.136213,
+     "lat": 51.51461,
+     "label": "Portland Street",
+     "value": 1
+    },
+    {
+     "lng": -0.1355,
+     "lat": 51.514738,
+     "label": "Portland Street",
+     "value": 2
+    },
+    {
+     "lng": -0.137921,
+     "lat": 51.512372,
+     "label": "Carnaby Street",
+     "value": 4
+    },
+    {
+     "lng": -0.133806,
+     "lat": 51.514406,
+     "label": "St Anns Court",
+     "value": 1
+    },
+    {
+     "lng": -0.137378,
+     "lat": 51.51359,
+     "label": "Dufours Place",
+     "value": 2
+    },
+    {
+     "lng": -0.138064,
+     "lat": 51.513469,
+     "label": "Marshall Street",
+     "value": 1
+    },
+    {
+     "lng": -0.133242,
+     "lat": 51.513222,
+     "label": "Meards Court/Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136046,
+     "lat": 51.512307,
+     "label": "Great Pulteney Street",
+     "value": 2
+    },
+    {
+     "lng": -0.137298,
+     "lat": 51.51232,
+     "label": "Upper James Street",
+     "value": 1
+    },
+    {
+     "lng": -0.137733,
+     "lat": 51.513224,
+     "label": "Marshall Street",
+     "value": 1
+    },
+    {
+     "lng": -0.138936,
+     "lat": 51.512985,
+     "label": "Cross Street",
+     "value": 2
+    },
+    {
+     "lng": -0.136,
+     "lat": 51.51394,
+     "label": "Bentinck Street",
+     "value": 5
+    },
+    {
+     "lng": -0.134366,
+     "lat": 51.512171,
+     "label": "Little Pulteney Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134402,
+     "lat": 51.511204,
+     "label": "Ham Yard",
+     "value": 1
+    },
+    {
+     "lng": -0.136699,
+     "lat": 51.514284,
+     "label": "Poland Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136914,
+     "lat": 51.513343,
+     "label": "Broad Street",
+     "value": 2
+    },
+    {
+     "lng": -0.134529,
+     "lat": 51.513265,
+     "label": "Berwick Street",
+     "value": 2
+    },
+    {
+     "lng": -0.133592,
+     "lat": 51.51457,
+     "label": "St Anns Court",
+     "value": 4
+    },
+    {
+     "lng": -0.136514,
+     "lat": 51.512813,
+     "label": "Silver Street",
+     "value": 1
+    },
+    {
+     "lng": -0.13824,
+     "lat": 51.513891,
+     "label": "Marshall Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135499,
+     "lat": 51.514211,
+     "label": "Berwick Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136437,
+     "lat": 51.512845,
+     "label": "Silver Street",
+     "value": 2
+    },
+    {
+     "lng": -0.134083,
+     "lat": 51.514336,
+     "label": "St Anns Court",
+     "value": 1
+    },
+    {
+     "lng": -0.135609,
+     "lat": 51.513009,
+     "label": "New Street/Husband Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134369,
+     "lat": 51.513086,
+     "label": "Berwick Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134182,
+     "lat": 51.513857,
+     "label": "Wardour Street",
+     "value": 5
+    },
+    {
+     "lng": -0.137404,
+     "lat": 51.513724,
+     "label": "Dufours Place",
+     "value": 2
+    },
+    {
+     "lng": -0.133657,
+     "lat": 51.512507,
+     "label": "Little Pulteney Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135767,
+     "lat": 51.513078,
+     "label": "Pulteney Court (I)",
+     "value": 1
+    },
+    {
+     "lng": -0.136536,
+     "lat": 51.512673,
+     "label": "Great Pulteney Street",
+     "value": 1
+    },
+    {
+     "lng": -0.137328,
+     "lat": 51.51305,
+     "label": "Broad Street",
+     "value": 2
+    },
+    {
+     "lng": -0.139576,
+     "lat": 51.512996,
+     "label": "King Street (I)",
+     "value": 1
+    },
+    {
+     "lng": -0.136222,
+     "lat": 51.513095,
+     "label": "Cambridge Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135,
+     "lat": 51.513576,
+     "label": "Kemps Court",
+     "value": 2
+    },
+    {
+     "lng": -0.138278,
+     "lat": 51.513255,
+     "label": "South Row",
+     "value": 1
+    },
+    {
+     "lng": -0.136116,
+     "lat": 51.513586,
+     "label": "Broad Street",
+     "value": 4
+    },
+    {
+     "lng": -0.138742,
+     "lat": 51.513594,
+     "label": "West Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136421,
+     "lat": 51.513868,
+     "label": "Poland Street",
+     "value": 1
+    },
+    {
+     "lng": -0.137396,
+     "lat": 51.512271,
+     "label": "Upper James Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135744,
+     "lat": 51.513215,
+     "label": "New Street",
+     "value": 3
+    },
+    {
+     "lng": -0.137215,
+     "lat": 51.51424,
+     "label": "Poland Street",
+     "value": 5
+    },
+    {
+     "lng": -0.139629,
+     "lat": 51.513528,
+     "label": "Tyler Street",
+     "value": 2
+    },
+    {
+     "lng": -0.13481,
+     "lat": 51.514468,
+     "label": "Wardour Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135132,
+     "lat": 51.513975,
+     "label": "Berwick Street",
+     "value": 2
+    },
+    {
+     "lng": -0.134407,
+     "lat": 51.51313,
+     "label": "Tylers Court",
+     "value": 2
+    },
+    {
+     "lng": -0.139364,
+     "lat": 51.513124,
+     "label": "George Place (?)",
+     "value": 1
+    },
+    {
+     "lng": -0.138079,
+     "lat": 51.511948,
+     "label": "Upper John Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134694,
+     "lat": 51.512543,
+     "label": "Peter Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136058,
+     "lat": 51.513406,
+     "label": "Broad Street",
+     "value": 2
+    },
+    {
+     "lng": -0.135173,
+     "lat": 51.513445,
+     "label": "Kemps Court",
+     "value": 2
+    },
+    {
+     "lng": -0.13702,
+     "lat": 51.514715,
+     "label": "Poland Street",
+     "value": 2
+    },
+    {
+     "lng": -0.135781,
+     "lat": 51.513259,
+     "label": "New Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135953,
+     "lat": 51.51297,
+     "label": "Pulteney Court (I)",
+     "value": 2
+    },
+    {
+     "lng": -0.136568,
+     "lat": 51.513843,
+     "label": "Poland Street",
+     "value": 2
+    },
+    {
+     "lng": -0.134218,
+     "lat": 51.514512,
+     "label": "St Anns Place",
+     "value": 2
+    },
+    {
+     "lng": -0.137038,
+     "lat": 51.513142,
+     "label": "Broad Street",
+     "value": 1
+    },
+    {
+     "lng": -0.13558,
+     "lat": 51.514511,
+     "label": "Berwick Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136126,
+     "lat": 51.512411,
+     "label": "Great Pulteney Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135458,
+     "lat": 51.51437,
+     "label": "Berwick Street",
+     "value": 1
+    },
+    {
+     "lng": -0.137635,
+     "lat": 51.512881,
+     "label": "Marshall Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135812,
+     "lat": 51.513679,
+     "label": "Broad Street",
+     "value": 5
+    },
+    {
+     "lng": -0.134833,
+     "lat": 51.513412,
+     "label": "Berwick Street",
+     "value": 3
+    },
+    {
+     "lng": -0.136271,
+     "lat": 51.512959,
+     "label": "Cambridge Street",
+     "value": 2
+    },
+    {
+     "lng": -0.134803,
+     "lat": 51.514034,
+     "label": "Edward Street",
+     "value": 1
+    },
+    {
+     "lng": -0.13875,
+     "lat": 51.513746,
+     "label": "West Street",
+     "value": 3
+    },
+    {
+     "lng": -0.135362,
+     "lat": 51.512773,
+     "label": "New Street/Husband Street",
+     "value": 2
+    },
+    {
+     "lng": -0.133752,
+     "lat": 51.514525,
+     "label": "St Anns Court",
+     "value": 5
+    },
+    {
+     "lng": -0.134916,
+     "lat": 51.512557,
+     "label": "Peter Street",
+     "value": 3
+    },
+    {
+     "lng": -0.139552,
+     "lat": 51.513565,
+     "label": "Tyler Street",
+     "value": 2
+    },
+    {
+     "lng": -0.138191,
+     "lat": 51.513634,
+     "label": "Marshall Street",
+     "value": 2
+    },
+    {
+     "lng": -0.139955,
+     "lat": 51.513308,
+     "label": "King Street (I)",
+     "value": 1
+    },
+    {
+     "lng": -0.136713,
+     "lat": 51.514051,
+     "label": "Poland Street",
+     "value": 1
+    },
+    {
+     "lng": -0.133294,
+     "lat": 51.511673,
+     "label": "Plough Yard",
+     "value": 1
+    },
+    {
+     "lng": -0.134174,
+     "lat": 51.51112,
+     "label": "Great Windmill Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135261,
+     "lat": 51.512721,
+     "label": "New Street/Husband Street",
+     "value": 7
+    },
+    {
+     "lng": -0.138822,
+     "lat": 51.51368,
+     "label": "West Street",
+     "value": 1
+    },
+    {
+     "lng": -0.133808,
+     "lat": 51.512446,
+     "label": "Little Pulteney Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135069,
+     "lat": 51.512002,
+     "label": "Little Windmill Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135007,
+     "lat": 51.513145,
+     "label": "Hopkins Street",
+     "value": 5
+    },
+    {
+     "lng": -0.135646,
+     "lat": 51.514405,
+     "label": "Berwick Street",
+     "value": 1
+    },
+    {
+     "lng": -0.133638,
+     "lat": 51.514501,
+     "label": "St Anns Court",
+     "value": 1
+    },
+    {
+     "lng": -0.136342,
+     "lat": 51.514566,
+     "label": "Portland Street",
+     "value": 2
+    },
+    {
+     "lng": -0.137336,
+     "lat": 51.513531,
+     "label": "Dufours Place",
+     "value": 1
+    },
+    {
+     "lng": -0.139072,
+     "lat": 51.512915,
+     "label": "Cross Street",
+     "value": 8
+    },
+    {
+     "lng": -0.134106,
+     "lat": 51.513223,
+     "label": "Tylers Court",
+     "value": 1
+    },
+    {
+     "lng": -0.135243,
+     "lat": 51.513673,
+     "label": "Broad Street",
+     "value": 1
+    },
+    {
+     "lng": -0.13528,
+     "lat": 51.514149,
+     "label": "Berwick Street",
+     "value": 2
+    },
+    {
+     "lng": -0.13746,
+     "lat": 51.512703,
+     "label": "Marshall Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134659,
+     "lat": 51.512666,
+     "label": "Peter Street",
+     "value": 1
+    },
+    {
+     "lng": -0.137067,
+     "lat": 51.514519,
+     "label": "Poland Street",
+     "value": 3
+    },
+    {
+     "lng": -0.135913,
+     "lat": 51.511936,
+     "label": "Great Pulteney Street",
+     "value": 4
+    },
+    {
+     "lng": -0.137829,
+     "lat": 51.515651,
+     "label": "Norris's Place",
+     "value": 1
+    },
+    {
+     "lng": -0.135331,
+     "lat": 51.512202,
+     "label": "Little Windmill Street",
+     "value": 1
+    },
+    {
+     "lng": -0.13625,
+     "lat": 51.512299,
+     "label": "Great Pulteney Street",
+     "value": 1
+    },
+    {
+     "lng": -0.137771,
+     "lat": 51.513279,
+     "label": "Marshall Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134524,
+     "lat": 51.511845,
+     "label": "Queens Head Court",
+     "value": 1
+    },
+    {
+     "lng": -0.135972,
+     "lat": 51.512675,
+     "label": "Little Windmill Street",
+     "value": 3
+    },
+    {
+     "lng": -0.133771,
+     "lat": 51.512898,
+     "label": "Peter Street",
+     "value": 1
+    },
+    {
+     "lng": -0.133494,
+     "lat": 51.514597,
+     "label": "St Anns Court",
+     "value": 1
+    },
+    {
+     "lng": -0.136539,
+     "lat": 51.514906,
+     "label": "Noel Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136056,
+     "lat": 51.512898,
+     "label": "Little Windmill Street",
+     "value": 1
+    },
+    {
+     "lng": -0.138551,
+     "lat": 51.51283,
+     "label": "Carnaby Street",
+     "value": 1
+    },
+    {
+     "lng": -0.134195,
+     "lat": 51.513697,
+     "label": "Wardour Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136112,
+     "lat": 51.512798,
+     "label": "Little Windmill Street",
+     "value": 4
+    },
+    {
+     "lng": -0.13559,
+     "lat": 51.51375,
+     "label": "Broad Street",
+     "value": 3
+    },
+    {
+     "lng": -0.136322,
+     "lat": 51.512392,
+     "label": "Great Pulteney Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135944,
+     "lat": 51.514591,
+     "label": "Portland Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136931,
+     "lat": 51.513175,
+     "label": "Broad Street",
+     "value": 4
+    },
+    {
+     "lng": -0.1386,
+     "lat": 51.513141,
+     "label": "Cross Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136037,
+     "lat": 51.51456,
+     "label": "Portland Street",
+     "value": 1
+    },
+    {
+     "lng": -0.138242,
+     "lat": 51.513698,
+     "label": "Marshall Street",
+     "value": 1
+    },
+    {
+     "lng": -0.137887,
+     "lat": 51.514748,
+     "label": "Great Marlborough Street",
+     "value": 3
+    },
+    {
+     "lng": -0.136006,
+     "lat": 51.512995,
+     "label": "Pulteney Court (I)",
+     "value": 1
+    },
+    {
+     "lng": -0.136131,
+     "lat": 51.514532,
+     "label": "Portland Street",
+     "value": 1
+    },
+    {
+     "lng": -0.137327,
+     "lat": 51.512721,
+     "label": "Marshall Street",
+     "value": 2
+    },
+    {
+     "lng": -0.135826,
+     "lat": 51.512527,
+     "label": "Little Windmill Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135894,
+     "lat": 51.513973,
+     "label": "Bentinck Street",
+     "value": 4
+    },
+    {
+     "lng": -0.138082,
+     "lat": 51.513691,
+     "label": "Marshall Street",
+     "value": 2
+    },
+    {
+     "lng": -0.136856,
+     "lat": 51.514498,
+     "label": "Poland Street",
+     "value": 3
+    },
+    {
+     "lng": -0.13484,
+     "lat": 51.51209,
+     "label": "William and Mary Yard",
+     "value": 1
+    },
+    {
+     "lng": -0.13368,
+     "lat": 51.512424,
+     "label": "Little Pulteney Street",
+     "value": 1
+    },
+    {
+     "lng": -0.137322,
+     "lat": 51.513752,
+     "label": "Dufours Place",
+     "value": 1
+    },
+    {
+     "lng": -0.139019,
+     "lat": 51.513287,
+     "label": "Carnaby Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136,
+     "lat": 51.514813,
+     "label": "Berwick Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135715,
+     "lat": 51.515071,
+     "label": "Noel Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135923,
+     "lat": 51.512625,
+     "label": "Little Windmill Street",
+     "value": 2
+    },
+    {
+     "lng": -0.136322,
+     "lat": 51.515409,
+     "label": "Berwick Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136427,
+     "lat": 51.51314,
+     "label": "Cambridge Street",
+     "value": 5
+    },
+    {
+     "lng": -0.139237,
+     "lat": 51.513061,
+     "label": "George Place (?)",
+     "value": 1
+    },
+    {
+     "lng": -0.134227,
+     "lat": 51.512931,
+     "label": "Berwick Street",
+     "value": 1
+    },
+    {
+     "lng": -0.13626,
+     "lat": 51.512821,
+     "label": "Silver Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135054,
+     "lat": 51.512799,
+     "label": "New Street/Husband Street",
+     "value": 3
+    },
+    {
+     "lng": -0.139104,
+     "lat": 51.513,
+     "label": "Cross Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135847,
+     "lat": 51.513049,
+     "label": "Pulteney Court (I)",
+     "value": 1
+    },
+    {
+     "lng": -0.13587,
+     "lat": 51.513002,
+     "label": "Pulteney Court (I)",
+     "value": 2
+    },
+    {
+     "lng": -0.135219,
+     "lat": 51.515208,
+     "label": "Wardour Street",
+     "value": 1
+    },
+    {
+     "lng": -0.135363,
+     "lat": 51.515156,
+     "label": "Wardour Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136236,
+     "lat": 51.514344,
+     "label": "Portland Mews",
+     "value": 1
+    },
+    {
+     "lng": -0.134329,
+     "lat": 51.514302,
+     "label": "St Anns Court",
+     "value": 1
+    },
+    {
+     "lng": -0.13753,
+     "lat": 51.512429,
+     "label": "Silver Street",
+     "value": 3
+    },
+    {
+     "lng": -0.134417,
+     "lat": 51.514176,
+     "label": "Wardour Street",
+     "value": 2
+    },
+    {
+     "lng": -0.136725,
+     "lat": 51.51324,
+     "label": "Broad Street",
+     "value": 3
+    },
+    {
+     "lng": -0.136984,
+     "lat": 51.51265,
+     "label": "Silver Street",
+     "value": 1
+    },
+    {
+     "lng": -0.132893,
+     "lat": 51.513237,
+     "label": "Meards Court/Street",
+     "value": 1
+    },
+    {
+     "lng": -0.136716,
+     "lat": 51.513406,
+     "label": "Broad Street",
+     "value": 1
+    },
+    {
+     "lng": -0.13465,
+     "lat": 51.51369,
+     "label": "Duck Lane/Ham Square",
+     "value": 1
+    }
+   ]
+  },
+  "pumps": {
+   "source": {
+    "label": "Water pumps on Snow's 1855 map, georeferenced, R package cholera by lindbrook, data set pumps (street names from Snow's map)",
+    "url": "https://github.com/lindbrook/cholera"
+   },
+   "method": "All 13 pumps on Snow's map with lindbrook's longitude and latitude; value 0 so they can share the DataPoint shape. Pump 7 is the Broad Street pump.",
+   "points": [
+    {
+     "lng": -0.13968,
+     "lat": 51.516339,
+     "label": "Pump 1: Market Place",
+     "value": 0
+    },
+    {
+     "lng": -0.13778,
+     "lat": 51.516623,
+     "label": "Pump 2: Adam and Eve Court",
+     "value": 0
+    },
+    {
+     "lng": -0.13588,
+     "lat": 51.516076,
+     "label": "Pump 3: Berners Street",
+     "value": 0
+    },
+    {
+     "lng": -0.134697,
+     "lat": 51.516268,
+     "label": "Pump 4: Newman Street",
+     "value": 0
+    },
+    {
+     "lng": -0.139612,
+     "lat": 51.51491,
+     "label": "Pump 5: Marlborough Mews",
+     "value": 0
+    },
+    {
+     "lng": -0.139492,
+     "lat": 51.513863,
+     "label": "Pump 6: Little Marlborough Street",
+     "value": 0
+    },
+    {
+     "lng": -0.1366,
+     "lat": 51.513318,
+     "label": "Pump 7: Broad Street",
+     "value": 0
+    },
+    {
+     "lng": -0.138169,
+     "lat": 51.511269,
+     "label": "Pump 8: Warwick Street",
+     "value": 0
+    },
+    {
+     "lng": -0.135878,
+     "lat": 51.511503,
+     "label": "Pump 9: Bridle Street",
+     "value": 0
+    },
+    {
+     "lng": -0.133544,
+     "lat": 51.512122,
+     "label": "Pump 10: Rupert Street",
+     "value": 0
+    },
+    {
+     "lng": -0.131605,
+     "lat": 51.512315,
+     "label": "Pump 11: Dean Street",
+     "value": 0
+    },
+    {
+     "lng": -0.134043,
+     "lat": 51.510111,
+     "label": "Pump 12: Tichborne Street",
+     "value": 0
+    },
+    {
+     "lng": -0.139492,
+     "lat": 51.510171,
+     "label": "Pump 13: Vigo Street",
+     "value": 0
+    }
+   ]
+  },
+  "timelines": [
+   {
+    "title": "Fatal cholera attacks per day, Soho, 19 August to 30 September 1854",
+    "alt": "Fatal attacks were one a day or fewer until 30 August, jumped to 56 on 31 August and peaked at 143 on 1 September, then fell below 10 a day by 10 September. Another 45 attacks had no known date.",
+    "xLabel": "Day",
+    "yLabel": "Fatal attacks",
+    "source": {
+     "label": "John Snow, On the Mode of Communication of Cholera, 2nd ed. (London: John Churchill, 1855), Table I, p. 49; data via HistData Snow.dates, checked against the Wellcome Library scan",
+     "url": "https://archive.org/details/b28985266"
+    },
+    "method": "Snow's Table I 'No. of Fatal Attacks' column for 19 Aug to 30 Sep 1854, as printed; the 45 attacks with 'Date unknown' are left out of the line (571 dated + 45 undated = 616).",
+    "points": [
+     {
+      "date": "1854-08-19",
+      "label": "19 August",
+      "value": 1
+     },
+     {
+      "date": "1854-08-20",
+      "label": "20 August",
+      "value": 1
+     },
+     {
+      "date": "1854-08-21",
+      "label": "21 August",
+      "value": 1
+     },
+     {
+      "date": "1854-08-22",
+      "label": "22 August",
+      "value": 0
+     },
+     {
+      "date": "1854-08-23",
+      "label": "23 August",
+      "value": 1
+     },
+     {
+      "date": "1854-08-24",
+      "label": "24 August",
+      "value": 1
+     },
+     {
+      "date": "1854-08-25",
+      "label": "25 August",
+      "value": 0
+     },
+     {
+      "date": "1854-08-26",
+      "label": "26 August",
+      "value": 1
+     },
+     {
+      "date": "1854-08-27",
+      "label": "27 August",
+      "value": 1
+     },
+     {
+      "date": "1854-08-28",
+      "label": "28 August",
+      "value": 1
+     },
+     {
+      "date": "1854-08-29",
+      "label": "29 August",
+      "value": 1
+     },
+     {
+      "date": "1854-08-30",
+      "label": "30 August",
+      "value": 8
+     },
+     {
+      "date": "1854-08-31",
+      "label": "31 August",
+      "value": 56
+     },
+     {
+      "date": "1854-09-01",
+      "label": "1 September",
+      "value": 143
+     },
+     {
+      "date": "1854-09-02",
+      "label": "2 September",
+      "value": 116
+     },
+     {
+      "date": "1854-09-03",
+      "label": "3 September",
+      "value": 54
+     },
+     {
+      "date": "1854-09-04",
+      "label": "4 September",
+      "value": 46
+     },
+     {
+      "date": "1854-09-05",
+      "label": "5 September",
+      "value": 36
+     },
+     {
+      "date": "1854-09-06",
+      "label": "6 September",
+      "value": 20
+     },
+     {
+      "date": "1854-09-07",
+      "label": "7 September",
+      "value": 28
+     },
+     {
+      "date": "1854-09-08",
+      "label": "8 September",
+      "value": 12
+     },
+     {
+      "date": "1854-09-09",
+      "label": "9 September",
+      "value": 11
+     },
+     {
+      "date": "1854-09-10",
+      "label": "10 September",
+      "value": 5
+     },
+     {
+      "date": "1854-09-11",
+      "label": "11 September",
+      "value": 5
+     },
+     {
+      "date": "1854-09-12",
+      "label": "12 September",
+      "value": 1
+     },
+     {
+      "date": "1854-09-13",
+      "label": "13 September",
+      "value": 3
+     },
+     {
+      "date": "1854-09-14",
+      "label": "14 September",
+      "value": 0
+     },
+     {
+      "date": "1854-09-15",
+      "label": "15 September",
+      "value": 1
+     },
+     {
+      "date": "1854-09-16",
+      "label": "16 September",
+      "value": 4
+     },
+     {
+      "date": "1854-09-17",
+      "label": "17 September",
+      "value": 2
+     },
+     {
+      "date": "1854-09-18",
+      "label": "18 September",
+      "value": 3
+     },
+     {
+      "date": "1854-09-19",
+      "label": "19 September",
+      "value": 0
+     },
+     {
+      "date": "1854-09-20",
+      "label": "20 September",
+      "value": 0
+     },
+     {
+      "date": "1854-09-21",
+      "label": "21 September",
+      "value": 2
+     },
+     {
+      "date": "1854-09-22",
+      "label": "22 September",
+      "value": 1
+     },
+     {
+      "date": "1854-09-23",
+      "label": "23 September",
+      "value": 1
+     },
+     {
+      "date": "1854-09-24",
+      "label": "24 September",
+      "value": 1
+     },
+     {
+      "date": "1854-09-25",
+      "label": "25 September",
+      "value": 1
+     },
+     {
+      "date": "1854-09-26",
+      "label": "26 September",
+      "value": 1
+     },
+     {
+      "date": "1854-09-27",
+      "label": "27 September",
+      "value": 1
+     },
+     {
+      "date": "1854-09-28",
+      "label": "28 September",
+      "value": 0
+     },
+     {
+      "date": "1854-09-29",
+      "label": "29 September",
+      "value": 0
+     },
+     {
+      "date": "1854-09-30",
+      "label": "30 September",
+      "value": 0
+     }
+    ]
+   },
+   {
+    "title": "Cholera deaths per day, Soho, 19 August to 30 September 1854",
+    "alt": "Deaths peaked at 127 on 2 September, the day after attacks peaked, and fell to 18 by 10 September and 6 on 12 September; all 616 deaths are dated.",
+    "xLabel": "Day",
+    "yLabel": "Deaths",
+    "source": {
+     "label": "John Snow, On the Mode of Communication of Cholera, 2nd ed. (London: John Churchill, 1855), Table I, p. 49; data via HistData Snow.dates, checked against the Wellcome Library scan",
+     "url": "https://archive.org/details/b28985266"
+    },
+    "method": "Snow's Table I 'Deaths' column for 19 Aug to 30 Sep 1854, as printed; it sums to 616 with no undated deaths.",
+    "points": [
+     {
+      "date": "1854-08-19",
+      "label": "19 August",
+      "value": 1
+     },
+     {
+      "date": "1854-08-20",
+      "label": "20 August",
+      "value": 0
+     },
+     {
+      "date": "1854-08-21",
+      "label": "21 August",
+      "value": 2
+     },
+     {
+      "date": "1854-08-22",
+      "label": "22 August",
+      "value": 0
+     },
+     {
+      "date": "1854-08-23",
+      "label": "23 August",
+      "value": 0
+     },
+     {
+      "date": "1854-08-24",
+      "label": "24 August",
+      "value": 2
+     },
+     {
+      "date": "1854-08-25",
+      "label": "25 August",
+      "value": 0
+     },
+     {
+      "date": "1854-08-26",
+      "label": "26 August",
+      "value": 0
+     },
+     {
+      "date": "1854-08-27",
+      "label": "27 August",
+      "value": 1
+     },
+     {
+      "date": "1854-08-28",
+      "label": "28 August",
+      "value": 0
+     },
+     {
+      "date": "1854-08-29",
+      "label": "29 August",
+      "value": 1
+     },
+     {
+      "date": "1854-08-30",
+      "label": "30 August",
+      "value": 2
+     },
+     {
+      "date": "1854-08-31",
+      "label": "31 August",
+      "value": 3
+     },
+     {
+      "date": "1854-09-01",
+      "label": "1 September",
+      "value": 70
+     },
+     {
+      "date": "1854-09-02",
+      "label": "2 September",
+      "value": 127
+     },
+     {
+      "date": "1854-09-03",
+      "label": "3 September",
+      "value": 76
+     },
+     {
+      "date": "1854-09-04",
+      "label": "4 September",
+      "value": 71
+     },
+     {
+      "date": "1854-09-05",
+      "label": "5 September",
+      "value": 45
+     },
+     {
+      "date": "1854-09-06",
+      "label": "6 September",
+      "value": 37
+     },
+     {
+      "date": "1854-09-07",
+      "label": "7 September",
+      "value": 32
+     },
+     {
+      "date": "1854-09-08",
+      "label": "8 September",
+      "value": 30
+     },
+     {
+      "date": "1854-09-09",
+      "label": "9 September",
+      "value": 24
+     },
+     {
+      "date": "1854-09-10",
+      "label": "10 September",
+      "value": 18
+     },
+     {
+      "date": "1854-09-11",
+      "label": "11 September",
+      "value": 15
+     },
+     {
+      "date": "1854-09-12",
+      "label": "12 September",
+      "value": 6
+     },
+     {
+      "date": "1854-09-13",
+      "label": "13 September",
+      "value": 13
+     },
+     {
+      "date": "1854-09-14",
+      "label": "14 September",
+      "value": 6
+     },
+     {
+      "date": "1854-09-15",
+      "label": "15 September",
+      "value": 8
+     },
+     {
+      "date": "1854-09-16",
+      "label": "16 September",
+      "value": 6
+     },
+     {
+      "date": "1854-09-17",
+      "label": "17 September",
+      "value": 5
+     },
+     {
+      "date": "1854-09-18",
+      "label": "18 September",
+      "value": 2
+     },
+     {
+      "date": "1854-09-19",
+      "label": "19 September",
+      "value": 3
+     },
+     {
+      "date": "1854-09-20",
+      "label": "20 September",
+      "value": 0
+     },
+     {
+      "date": "1854-09-21",
+      "label": "21 September",
+      "value": 0
+     },
+     {
+      "date": "1854-09-22",
+      "label": "22 September",
+      "value": 2
+     },
+     {
+      "date": "1854-09-23",
+      "label": "23 September",
+      "value": 3
+     },
+     {
+      "date": "1854-09-24",
+      "label": "24 September",
+      "value": 0
+     },
+     {
+      "date": "1854-09-25",
+      "label": "25 September",
+      "value": 0
+     },
+     {
+      "date": "1854-09-26",
+      "label": "26 September",
+      "value": 2
+     },
+     {
+      "date": "1854-09-27",
+      "label": "27 September",
+      "value": 0
+     },
+     {
+      "date": "1854-09-28",
+      "label": "28 September",
+      "value": 2
+     },
+     {
+      "date": "1854-09-29",
+      "label": "29 September",
+      "value": 1
+     },
+     {
+      "date": "1854-09-30",
+      "label": "30 September",
+      "value": 0
+     }
+    ]
+   }
+  ],
+  "table": {
+   "columns": [
+    "Street",
+    "Addresses",
+    "Deaths"
+   ],
+   "rows": [
+    [
+     "Broad Street",
+     32,
+     95
+    ],
+    [
+     "Berwick Street",
+     23,
+     44
+    ],
+    [
+     "Marshall Street",
+     21,
+     39
+    ],
+    [
+     "Poland Street",
+     12,
+     26
+    ],
+    [
+     "St Anns Court",
+     15,
+     25
+    ],
+    [
+     "Wardour Street",
+     16,
+     24
+    ],
+    [
+     "Great Pulteney Street",
+     15,
+     22
+    ],
+    [
+     "New Street/Husband Street",
+     8,
+     20
+    ],
+    [
+     "Little Windmill Street",
+     12,
+     19
+    ],
+    [
+     "Bentinck Street",
+     8,
+     18
+    ],
+    [
+     "Silver Street",
+     13,
+     17
+    ],
+    [
+     "Carnaby Street",
+     13,
+     17
+    ],
+    [
+     "Cross Street",
+     8,
+     17
+    ],
+    [
+     "Cambridge Street",
+     6,
+     14
+    ],
+    [
+     "Marlborough Row",
+     5,
+     11
+    ],
+    [
+     "Other streets (47)",
+     114,
+     170
+    ],
+    [
+     "Total",
+     321,
+     578
+    ]
+   ],
+   "source": {
+    "label": "Deaths (bars) on Snow's 1855 map as digitized by Dodson and Tobler (1992), amended and georeferenced (QGIS thin plate spline to OpenStreetMap, WGS 84) in the R package cholera by lindbrook, data set fatalities.anchor",
+    "url": "https://github.com/lindbrook/cholera"
+   },
+   "method": "The 321 addresses grouped by the street name lindbrook gives their road segment; the 15 streets with the most deaths, then all other streets together; roman numerals and slashes are lindbrook's names for streets that share a name or changed name."
+  }
+ },
+ "influenza-1918": {
+  "map": null,
+  "timelines": [
+   {
+    "title": "Influenza deaths per week, London, June 1918 to May 1919",
+    "alt": "Three waves of civilian influenza deaths in London: a summer peak of 279 in the week ending 13 July 1918, an autumn peak of 2,651 in the week ending 2 November 1918, and a late-winter peak of 825 in the week ending 1 March 1919.",
+    "xLabel": "Week ending",
+    "yLabel": "Deaths",
+    "source": {
+     "label": "Registrar-General, Report on the Mortality from Influenza in England and Wales during the Epidemic of 1918-19, Supplement to the 81st Annual Report (London: HMSO, 1920, Cmd. 700), Table XX, pp. 48-50, London (Administrative County)",
+     "url": "https://archive.org/details/sid14156800"
+    },
+    "method": "Deaths of civilians in the Administrative County of London certified to influenza, for each of the 46 weeks ending 29 Jun 1918 to 10 May 1919, as printed; they sum to the table's wave totals (997, 12,330, 3,786) and whole-period total (17,113).",
+    "points": [
+     {
+      "date": "1918-06-29",
+      "label": "Week ending 29 Jun 1918",
+      "value": 93
+     },
+     {
+      "date": "1918-07-06",
+      "label": "Week ending 6 Jul 1918",
+      "value": 258
+     },
+     {
+      "date": "1918-07-13",
+      "label": "Week ending 13 Jul 1918",
+      "value": 279
+     },
+     {
+      "date": "1918-07-20",
+      "label": "Week ending 20 Jul 1918",
+      "value": 165
+     },
+     {
+      "date": "1918-07-27",
+      "label": "Week ending 27 Jul 1918",
+      "value": 75
+     },
+     {
+      "date": "1918-08-03",
+      "label": "Week ending 3 Aug 1918",
+      "value": 30
+     },
+     {
+      "date": "1918-08-10",
+      "label": "Week ending 10 Aug 1918",
+      "value": 28
+     },
+     {
+      "date": "1918-08-17",
+      "label": "Week ending 17 Aug 1918",
+      "value": 16
+     },
+     {
+      "date": "1918-08-24",
+      "label": "Week ending 24 Aug 1918",
+      "value": 15
+     },
+     {
+      "date": "1918-08-31",
+      "label": "Week ending 31 Aug 1918",
+      "value": 10
+     },
+     {
+      "date": "1918-09-07",
+      "label": "Week ending 7 Sep 1918",
+      "value": 13
+     },
+     {
+      "date": "1918-09-14",
+      "label": "Week ending 14 Sep 1918",
+      "value": 15
+     },
+     {
+      "date": "1918-09-21",
+      "label": "Week ending 21 Sep 1918",
+      "value": 13
+     },
+     {
+      "date": "1918-09-28",
+      "label": "Week ending 28 Sep 1918",
+      "value": 17
+     },
+     {
+      "date": "1918-10-05",
+      "label": "Week ending 5 Oct 1918",
+      "value": 25
+     },
+     {
+      "date": "1918-10-12",
+      "label": "Week ending 12 Oct 1918",
+      "value": 110
+     },
+     {
+      "date": "1918-10-19",
+      "label": "Week ending 19 Oct 1918",
+      "value": 519
+     },
+     {
+      "date": "1918-10-26",
+      "label": "Week ending 26 Oct 1918",
+      "value": 1579
+     },
+     {
+      "date": "1918-11-02",
+      "label": "Week ending 2 Nov 1918",
+      "value": 2651
+     },
+     {
+      "date": "1918-11-09",
+      "label": "Week ending 9 Nov 1918",
+      "value": 2413
+     },
+     {
+      "date": "1918-11-16",
+      "label": "Week ending 16 Nov 1918",
+      "value": 1588
+     },
+     {
+      "date": "1918-11-23",
+      "label": "Week ending 23 Nov 1918",
+      "value": 1160
+     },
+     {
+      "date": "1918-11-30",
+      "label": "Week ending 30 Nov 1918",
+      "value": 918
+     },
+     {
+      "date": "1918-12-07",
+      "label": "Week ending 7 Dec 1918",
+      "value": 597
+     },
+     {
+      "date": "1918-12-14",
+      "label": "Week ending 14 Dec 1918",
+      "value": 262
+     },
+     {
+      "date": "1918-12-21",
+      "label": "Week ending 21 Dec 1918",
+      "value": 165
+     },
+     {
+      "date": "1918-12-28",
+      "label": "Week ending 28 Dec 1918",
+      "value": 102
+     },
+     {
+      "date": "1919-01-04",
+      "label": "Week ending 4 Jan 1919",
+      "value": 72
+     },
+     {
+      "date": "1919-01-11",
+      "label": "Week ending 11 Jan 1919",
+      "value": 59
+     },
+     {
+      "date": "1919-01-18",
+      "label": "Week ending 18 Jan 1919",
+      "value": 44
+     },
+     {
+      "date": "1919-01-25",
+      "label": "Week ending 25 Jan 1919",
+      "value": 36
+     },
+     {
+      "date": "1919-02-01",
+      "label": "Week ending 1 Feb 1919",
+      "value": 68
+     },
+     {
+      "date": "1919-02-08",
+      "label": "Week ending 8 Feb 1919",
+      "value": 123
+     },
+     {
+      "date": "1919-02-15",
+      "label": "Week ending 15 Feb 1919",
+      "value": 368
+     },
+     {
+      "date": "1919-02-22",
+      "label": "Week ending 22 Feb 1919",
+      "value": 729
+     },
+     {
+      "date": "1919-03-01",
+      "label": "Week ending 1 Mar 1919",
+      "value": 825
+     },
+     {
+      "date": "1919-03-08",
+      "label": "Week ending 8 Mar 1919",
+      "value": 590
+     },
+     {
+      "date": "1919-03-15",
+      "label": "Week ending 15 Mar 1919",
+      "value": 359
+     },
+     {
+      "date": "1919-03-22",
+      "label": "Week ending 22 Mar 1919",
+      "value": 216
+     },
+     {
+      "date": "1919-03-29",
+      "label": "Week ending 29 Mar 1919",
+      "value": 119
+     },
+     {
+      "date": "1919-04-05",
+      "label": "Week ending 5 Apr 1919",
+      "value": 106
+     },
+     {
+      "date": "1919-04-12",
+      "label": "Week ending 12 Apr 1919",
+      "value": 91
+     },
+     {
+      "date": "1919-04-19",
+      "label": "Week ending 19 Apr 1919",
+      "value": 81
+     },
+     {
+      "date": "1919-04-26",
+      "label": "Week ending 26 Apr 1919",
+      "value": 44
+     },
+     {
+      "date": "1919-05-03",
+      "label": "Week ending 3 May 1919",
+      "value": 40
+     },
+     {
+      "date": "1919-05-10",
+      "label": "Week ending 10 May 1919",
+      "value": 27
+     }
+    ]
+   },
+   {
+    "title": "Influenza death rate, London, June 1918 to May 1919",
+    "alt": "London's weekly influenza death rate, expressed as an annual rate, reached 3.7 per 1,000 in July 1918, 35.0 per 1,000 in the week ending 2 November 1918 and 10.9 per 1,000 in the week ending 1 March 1919.",
+    "xLabel": "Week ending",
+    "yLabel": "Death rate",
+    "yUnit": "per 1,000 a year",
+    "source": {
+     "label": "Registrar-General, Report on the Mortality from Influenza in England and Wales during the Epidemic of 1918-19, Supplement to the 81st Annual Report (London: HMSO, 1920, Cmd. 700), Table XX, pp. 48-50, London (Administrative County)",
+     "url": "https://archive.org/details/sid14156800"
+    },
+    "method": "Same table, the italic row: each week's civilian influenza deaths as an annual death rate per 1,000 civilians living in the Administrative County of London, as printed.",
+    "points": [
+     {
+      "date": "1918-06-29",
+      "label": "Week ending 29 Jun 1918",
+      "value": 1.2
+     },
+     {
+      "date": "1918-07-06",
+      "label": "Week ending 6 Jul 1918",
+      "value": 3.4
+     },
+     {
+      "date": "1918-07-13",
+      "label": "Week ending 13 Jul 1918",
+      "value": 3.7
+     },
+     {
+      "date": "1918-07-20",
+      "label": "Week ending 20 Jul 1918",
+      "value": 2.2
+     },
+     {
+      "date": "1918-07-27",
+      "label": "Week ending 27 Jul 1918",
+      "value": 1.0
+     },
+     {
+      "date": "1918-08-03",
+      "label": "Week ending 3 Aug 1918",
+      "value": 0.4
+     },
+     {
+      "date": "1918-08-10",
+      "label": "Week ending 10 Aug 1918",
+      "value": 0.4
+     },
+     {
+      "date": "1918-08-17",
+      "label": "Week ending 17 Aug 1918",
+      "value": 0.2
+     },
+     {
+      "date": "1918-08-24",
+      "label": "Week ending 24 Aug 1918",
+      "value": 0.2
+     },
+     {
+      "date": "1918-08-31",
+      "label": "Week ending 31 Aug 1918",
+      "value": 0.1
+     },
+     {
+      "date": "1918-09-07",
+      "label": "Week ending 7 Sep 1918",
+      "value": 0.2
+     },
+     {
+      "date": "1918-09-14",
+      "label": "Week ending 14 Sep 1918",
+      "value": 0.2
+     },
+     {
+      "date": "1918-09-21",
+      "label": "Week ending 21 Sep 1918",
+      "value": 0.2
+     },
+     {
+      "date": "1918-09-28",
+      "label": "Week ending 28 Sep 1918",
+      "value": 0.2
+     },
+     {
+      "date": "1918-10-05",
+      "label": "Week ending 5 Oct 1918",
+      "value": 0.3
+     },
+     {
+      "date": "1918-10-12",
+      "label": "Week ending 12 Oct 1918",
+      "value": 1.5
+     },
+     {
+      "date": "1918-10-19",
+      "label": "Week ending 19 Oct 1918",
+      "value": 6.8
+     },
+     {
+      "date": "1918-10-26",
+      "label": "Week ending 26 Oct 1918",
+      "value": 20.8
+     },
+     {
+      "date": "1918-11-02",
+      "label": "Week ending 2 Nov 1918",
+      "value": 35.0
+     },
+     {
+      "date": "1918-11-09",
+      "label": "Week ending 9 Nov 1918",
+      "value": 31.8
+     },
+     {
+      "date": "1918-11-16",
+      "label": "Week ending 16 Nov 1918",
+      "value": 20.9
+     },
+     {
+      "date": "1918-11-23",
+      "label": "Week ending 23 Nov 1918",
+      "value": 15.3
+     },
+     {
+      "date": "1918-11-30",
+      "label": "Week ending 30 Nov 1918",
+      "value": 12.1
+     },
+     {
+      "date": "1918-12-07",
+      "label": "Week ending 7 Dec 1918",
+      "value": 7.9
+     },
+     {
+      "date": "1918-12-14",
+      "label": "Week ending 14 Dec 1918",
+      "value": 3.5
+     },
+     {
+      "date": "1918-12-21",
+      "label": "Week ending 21 Dec 1918",
+      "value": 2.2
+     },
+     {
+      "date": "1918-12-28",
+      "label": "Week ending 28 Dec 1918",
+      "value": 1.3
+     },
+     {
+      "date": "1919-01-04",
+      "label": "Week ending 4 Jan 1919",
+      "value": 0.9
+     },
+     {
+      "date": "1919-01-11",
+      "label": "Week ending 11 Jan 1919",
+      "value": 0.8
+     },
+     {
+      "date": "1919-01-18",
+      "label": "Week ending 18 Jan 1919",
+      "value": 0.6
+     },
+     {
+      "date": "1919-01-25",
+      "label": "Week ending 25 Jan 1919",
+      "value": 0.5
+     },
+     {
+      "date": "1919-02-01",
+      "label": "Week ending 1 Feb 1919",
+      "value": 0.9
+     },
+     {
+      "date": "1919-02-08",
+      "label": "Week ending 8 Feb 1919",
+      "value": 1.6
+     },
+     {
+      "date": "1919-02-15",
+      "label": "Week ending 15 Feb 1919",
+      "value": 4.9
+     },
+     {
+      "date": "1919-02-22",
+      "label": "Week ending 22 Feb 1919",
+      "value": 9.6
+     },
+     {
+      "date": "1919-03-01",
+      "label": "Week ending 1 Mar 1919",
+      "value": 10.9
+     },
+     {
+      "date": "1919-03-08",
+      "label": "Week ending 8 Mar 1919",
+      "value": 7.8
+     },
+     {
+      "date": "1919-03-15",
+      "label": "Week ending 15 Mar 1919",
+      "value": 4.7
+     },
+     {
+      "date": "1919-03-22",
+      "label": "Week ending 22 Mar 1919",
+      "value": 2.8
+     },
+     {
+      "date": "1919-03-29",
+      "label": "Week ending 29 Mar 1919",
+      "value": 1.6
+     },
+     {
+      "date": "1919-04-05",
+      "label": "Week ending 5 Apr 1919",
+      "value": 1.4
+     },
+     {
+      "date": "1919-04-12",
+      "label": "Week ending 12 Apr 1919",
+      "value": 1.2
+     },
+     {
+      "date": "1919-04-19",
+      "label": "Week ending 19 Apr 1919",
+      "value": 1.1
+     },
+     {
+      "date": "1919-04-26",
+      "label": "Week ending 26 Apr 1919",
+      "value": 0.6
+     },
+     {
+      "date": "1919-05-03",
+      "label": "Week ending 3 May 1919",
+      "value": 0.5
+     },
+     {
+      "date": "1919-05-10",
+      "label": "Week ending 10 May 1919",
+      "value": 0.4
+     }
+    ]
+   }
+  ],
+  "table": {
+   "columns": [
+    "Wave",
+    "Weeks",
+    "Deaths",
+    "Annual death rate per 1,000"
+   ],
+   "rows": [
+    [
+     "First wave, 23 Jun to 14 Sep 1918",
+     12,
+     997,
+     1.1
+    ],
+    [
+     "Second wave, 15 Sep 1918 to 25 Jan 1919",
+     19,
+     12330,
+     8.6
+    ],
+    [
+     "Third wave, 26 Jan to 10 May 1919",
+     15,
+     3786,
+     3.3
+    ],
+    [
+     "Whole epidemic, 23 Jun 1918 to 10 May 1919",
+     46,
+     17113,
+     4.9
+    ]
+   ],
+   "source": {
+    "label": "Registrar-General, Report on the Mortality from Influenza in England and Wales during the Epidemic of 1918-19, Supplement to the 81st Annual Report (London: HMSO, 1920, Cmd. 700), Table XX, pp. 48-50, London (Administrative County)",
+    "url": "https://archive.org/details/sid14156800"
+   },
+   "method": "The table's own wave and whole-period columns for London (Administrative County), civilians, as printed; the weekly rows sum to these totals."
+  },
+  "cases": null,
+  "cases_note": "The Registrar-General's report tabulates deaths only and gives no weekly count of influenza cases for London; I found no case series for the same place and measure, so none is included."
+ }
+}

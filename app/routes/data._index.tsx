@@ -2,9 +2,8 @@ import { Link } from "capsomer/react/link";
 import { Activity, Dna } from "lucide-react";
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/data._index";
-import { listDatasets } from "~/lib/datasets.server";
+import { datasetSummary, listDatasets } from "~/lib/datasets.server";
 import { getSnippets } from "~/lib/context.server";
-import { snippet } from "~/lib/content.server";
 
 export function meta() {
   return pageHead({ path: "/data", title: "Data · Germomics", description: "Interactive maps and charts from Germomics on viruses and bacteria, each with a data table that carries the same numbers.", pageType: "CollectionPage" });
@@ -12,11 +11,7 @@ export function meta() {
 
 export async function loader({ context }: Route.LoaderArgs) {
   const snippets = await getSnippets(context);
-  const datasets = listDatasets().map((d) => ({
-    ...d,
-    summary: snippet(snippets, `snippet:dataset.${d.slug}`, d.summary),
-  }));
-  return { datasets };
+  return { datasets: listDatasets().map((d) => ({ ...d, summary: datasetSummary(snippets, d.slug, d.summary) })) };
 }
 
 export default function DataHub({ loaderData }: Route.ComponentProps) {

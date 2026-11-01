@@ -1,0 +1,26 @@
+/* The /data charts' stylesheet, linked by that route alone (routes/data.$slug.tsx). Capsomer's chart path is the
+   whole look: its tokens, capsomer/enarratio.css (Enarratio's base rules, the token mapping, gridlines, series inks)
+   and the chart frame. Nothing here is a color: germomics' own tokens (app.css) stand in for the Capsomer names the
+   charts read, so the chart follows the site's palette in both themes. Capsomer's tokens are layered (cap.tokens), so
+   the site's same-named tokens (--surface, --muted, --accent and the rest) keep winning everywhere on the page. */
+@layer theme, base, cap, components, utilities;
+@import "capsomer/tokens.css";
+@import "capsomer/enarratio.css";
+@import "capsomer/chart-frame.css";
+
+:root {
+  --text: var(--ink);
+  --line: var(--border);
+  --ring: var(--accent);
+  --accent-text: var(--accent);
+  --accent-hover: var(--brand);
+  --series-1: var(--brand);
+  --series-ink-1: var(--brand);
+  --ui: var(--font-display);
+}
+
+/* The chart sits on a card, not on the site's surface: the tooltip and scroll shadows take the card's color.
+   (Capsomer resolves --enarratio-background from --surface at :root, where the site's --surface is its own.) */
+.cap-chart {
+  --enarratio-background: var(--card);
+}

@@ -12,7 +12,6 @@ export default [
   route("search", "routes/search.tsx"),
   route("data", "routes/data._index.tsx"),
   route("data/:slug", "routes/data.$slug.tsx"),
-  route("charts.css", "routes/charts-css.ts"),
   route("games", "routes/games._index.tsx"),
   route("games/assets/*", "routes/games.assets.$.ts"),
   // resized images from BLOG_IMAGES (app/lib/images.ts)
@@ -26,6 +25,7 @@ export default [
   route("about/dustin-edwards", "routes/about.dustin-edwards.tsx"),
   route("privacy", "routes/privacy.tsx"),
   route("terms", "routes/terms.tsx"),
+  route("accessibility", "routes/accessibility.tsx"),
   route("contact", "routes/contact.tsx"),
   route("txasm", "routes/txasm.tsx"),
 
