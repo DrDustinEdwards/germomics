@@ -7,7 +7,7 @@
 #   python3 scripts/soho-streets.py roads.rda
 #
 # One feature per street name, a MultiLineString of its segments in segment order. The map's frame ("Map Frame")
-# is left out. Positions are rounded to 6 decimals (about 0.1 m).
+# is left out. Positions are rounded to 5 decimals (about 1 m, under a pixel at the drawn size).
 import json
 import sys
 from collections import OrderedDict
@@ -19,7 +19,7 @@ streets = OrderedDict()
 for (segment, name), rows in roads.groupby(["street", "name"], sort=True):
     if name == "Map Frame":
         continue
-    line = [[round(float(lon), 6), round(float(lat), 6)] for lon, lat in zip(rows["lon"], rows["lat"])]
+    line = [[round(float(lon), 5), round(float(lat), 5)] for lon, lat in zip(rows["lon"], rows["lat"])]
     if len(line) >= 2:
         streets.setdefault(str(name), []).append(line)
 
