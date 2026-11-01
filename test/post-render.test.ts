@@ -20,7 +20,8 @@ const BODY = [
   "",
   "Some words here.",
   "",
-  `:::figure{src="${IMG}/${PHOTO}" alt="Coronavirus" credit="© CDC"}`,
+  // A stored address is /media/<key>; one written before 2026-11-01 (the lead) names the bucket and still renders.
+  `:::figure{src="/media/${PHOTO}" alt="Coronavirus" credit="© CDC"}`,
   "Coronavirus",
   ":::",
   "",
@@ -48,6 +49,10 @@ describe("a save", () => {
     expect(html).toContain(`srcset="/media/${PHOTO}.avif?w=400 400w`);
     expect(html).toMatch(/alt="Coronavirus"[^>]* width="400" height="300"/);
     expect(html).toContain('<span class="figure-credit">© CDC</span>');
+    // Both open their original through /media, never the bucket's own address.
+    expect(html).toContain(`href="/media/${LEAD}`);
+    expect(html).toContain(`href="/media/${PHOTO}`);
+    expect(html).not.toContain(`href="${IMG}/${LEAD}`);
     expect(html).toMatch(new RegExp(`<img src="${IMG}/missing.webp" alt="Not in the library" loading="lazy"`));
     expect(fields.bodyMeta.toc).toEqual([{ depth: 2, id: "first-section", text: "First section" }]);
     // An episode's cover art is its largest picture, above the body: no body image is eager or high.

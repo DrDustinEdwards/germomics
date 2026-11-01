@@ -214,7 +214,7 @@ describe("media", () => {
 
   it("uploads, lists, and deletes an unused image", async () => {
     const made = await json(await upload());
-    expect(made.url).toMatch(/^https:\/\/images\.germomics\.com\/carrel\//);
+    expect(made.url).toMatch(/^\/media\/carrel\//);
     expect(made.alt).toBe("A pixel");
     const list = await json(await call("/api/carrel/v1/media"));
     expect(list.items.map((i: { id: string }) => i.id)).toContain(made.id);

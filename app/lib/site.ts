@@ -3,8 +3,9 @@
 // Mirrors the Vault's site-config.md. Postal address is provisional (per Dustin, 2026-06-21).
 
 /**
- * The site and the two R2 subdomains it serves media from. Feed enclosures always point at MEDIA_ORIGIN. Stored image
- * URLs are originals at IMAGE_ORIGIN; the resized copies pages show come from SITE_ORIGIN/media (app/lib/images.ts).
+ * The site and its two R2 subdomains. Feed enclosures always point at MEDIA_ORIGIN. A stored image address is
+ * /media/<key> on SITE_ORIGIN, the original and each size (app/lib/images.ts); IMAGE_ORIGIN is the bucket's own
+ * address, where links written before 2026-11-01 and the podcast feed's artwork still load.
  */
 export const SITE_HOST = "germomics.com";
 export const SITE_ORIGIN = `https://${SITE_HOST}`;

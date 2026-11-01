@@ -5,8 +5,9 @@
 //
 // IMAGES. A picture's size comes from the media library (D1 `media`), so the HTML carries its width and height, and
 // its srcset and AVIF and WebP sources are /media copies (site-runtime ./image, app/lib/images.ts). A figure is shown
-// at most 400px wide, the lead illustration (width=wide) at most 520px, as before. An image the library does not
-// hold is written as it is, unsized.
+// at most 400px wide, the lead illustration (width=wide) at most 520px, as before. The link around a picture opens
+// its original at /media, versioned like its sizes, as dustinedwards.info's pipeline writes it. An image the library
+// does not hold is written as it is, unsized.
 //
 // NOT CONVERTED YET. A row whose renderVersion is NULL predates the move (drizzle/0016): its body is still the
 // sanitized HTML the TipTap editor saved, and it is served as it is until the conversion or a save gives it Markdown.
@@ -18,7 +19,7 @@ import { and, eq, inArray, isNotNull, like, ne, sql } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { contentBlocks, media, posts, type Post } from "~/db/schema";
 import { imageKeyOf, images, mediaPath, type ImageUseName } from "~/lib/images";
-import { IMAGE_ORIGIN } from "~/lib/site";
+import { IMAGE_ORIGIN, SITE_ORIGIN } from "~/lib/site";
 import type { BodyMeta } from "~/lib/types";
 
 /** Prelum's RENDER_VERSION, kept here so a read can compare without loading the pipeline. */
@@ -51,7 +52,9 @@ export function libraryMedia(env: Env): MediaLookup {
           .where(inArray(media.key, keys));
 }
 
-const IMAGE_URL = new RegExp(`${IMAGE_ORIGIN.replace(/[.]/g, "\\.")}/[^\\s"'()<>\\]]+`, "g");
+const escape = (s: string) => s.replace(/[.]/g, "\\.");
+/** A stored image address in Markdown: /media/<key> (relative or on this origin) or the old images.germomics.com/<key>. */
+const IMAGE_URL = new RegExp(`(?:${escape(IMAGE_ORIGIN)}/|(?:${escape(SITE_ORIGIN)})?/media/)[^\\s"'()<>\\]]+`, "g");
 const FIGURE_LINE = /^:::figure\{(.*)\}\s*$/gm;
 
 /** The srcs of the figures written `width=wide`: the lead illustration, sized for 520px. */
@@ -107,8 +110,11 @@ export async function renderMarkdown(body: string, lookup: MediaLookup, { lcpAbo
         imageProps(src) {
           const attrs = attributesOf(src);
           if (!attrs?.srcset) return null;
-          // The link around a picture opens the original, which the lightbox shows instead when script runs.
-          return { srcSet: attrs.srcset, sizes: attrs.sizes, href: src, sources: attrs.sources.map((s) => ({ type: s.type, srcSet: s.srcset })) };
+          // The link around a picture opens the original at /media, versioned like its sizes so it is never a stale
+          // copy (the lightbox shows it instead when script runs).
+          const row = rows.get(imageKeyOf(src) ?? "");
+          const href = row ? images.url(mediaPath(row.key), { version: row.sha256 }) : src;
+          return { srcSet: attrs.srcset, sizes: attrs.sizes, href, sources: attrs.sources.map((s) => ({ type: s.type, srcSet: s.srcset })) };
         },
       },
     },

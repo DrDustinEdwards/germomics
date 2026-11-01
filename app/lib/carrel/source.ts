@@ -7,7 +7,7 @@
 //   title: "Notes on the Broad Street Pump"
 //   excerpt: "..."
 //   tags: ["cholera","history"]
-//   coverImage: "https://images.germomics.com/..."
+//   coverImage: "/media/..."
 //   searchTitle: "..."
 //   featured: true
 //   sources: [{"type":"book","title":"..."}]

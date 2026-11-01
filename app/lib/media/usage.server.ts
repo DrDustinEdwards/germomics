@@ -2,8 +2,8 @@
 // the tables (no reference index to fall behind), plus the one image the code itself names. Media's "used by",
 // usage counts, the unattached lens and every delete come from here, so they agree.
 //
-// An image is referenced by its address: the original at images.germomics.com/<key>, or a resized copy at
-// germomics.com/media/<key> (relative or absolute). The key is read out of each address found, query and fragment cut.
+// An image is referenced by its address: germomics.com/media/<key> (relative or absolute), the original or a resized
+// copy, or the bucket address written before 2026-11-01, images.germomics.com/<key>. The key is read out of each address found, query and fragment cut.
 import { getDb } from "~/db/index.server";
 import { contentBlocks, people, posts, scheduledUpdates, settings, showConfig } from "~/db/schema";
 import { imageKeyOf } from "~/lib/images";

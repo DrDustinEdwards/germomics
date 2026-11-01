@@ -85,7 +85,8 @@ export async function shareImage(env: Env, own: { src: string; alt: string | nul
   const stored = await storedImage(env, own.src, 1);
   if (stored?.width && stored.height && stored.width / stored.height < WIDE) return DEFAULT_CARD;
   const card = stored ? images.attributes(stored, "share") : null;
-  if (!card?.sources.length) return { url: own.src, alt };
+  // A stored address may be a site path (/media/<key>); a share tag needs an absolute URL.
+  if (!card?.sources.length) return { url: new URL(own.src, SITE_ORIGIN).href, alt };
   return { url: `${SITE_ORIGIN}${card.src}`, width: card.width, height: card.height, alt };
 }
 

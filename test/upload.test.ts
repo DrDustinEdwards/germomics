@@ -39,8 +39,8 @@ describe("admin upload", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as Record<string, any>;
     expect(body).toMatchObject({ ok: true, contentType: "image/png", name: "My Pic.png", size: 8 });
-    expect(body.url).toMatch(/^https:\/\/images\.germomics\.com\/posts\/12\/\d+-My_Pic\.png$/);
-    const key = body.url.replace("https://images.germomics.com/", "");
+    expect(body.url).toMatch(/^\/media\/posts\/12\/\d+-My_Pic\.png$/);
+    const key = body.url.replace("/media/", "");
     expect((await e.BLOG_IMAGES.head(key))?.httpMetadata?.contentType).toBe("image/png");
     // And into the media library, where Carrel's media page lists it.
     expect(await e.DB.prepare("SELECT filename, content_type, bytes FROM media WHERE key = ?").bind(key).first()).toEqual({ filename: "My Pic.png", content_type: "image/png", bytes: 8 });
