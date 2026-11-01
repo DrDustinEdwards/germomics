@@ -53,7 +53,8 @@ const images = {
   },
 };
 let aiCalls = 0;
-const ai = { run: async () => (aiCalls++, { response: 'Here: {"alt": "A rod-shaped bacterium under a microscope.", "tags": ["bacterium", "Microscope", "rod shaped"]}' }) };
+// JSON mode's answer: an object (site-api 0.20 reads nothing out of prose).
+const ai = { run: async () => (aiCalls++, { response: { alt: "A rod-shaped bacterium under a microscope.", tags: ["bacterium", "Microscope", "rod shaped"] } }) };
 
 let logged: Record<string, unknown>[] = [];
 let media: MediaAdapter;
