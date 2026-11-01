@@ -17,15 +17,15 @@ type Props = Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "srcSet" | "sizes
 };
 
 export function Picture({ src, image, width, height, alt, className, priority, ...rest }: Props) {
-  const attrs = image ?? { src, srcset: undefined, sizes: undefined, sources: [], width, height };
+  const attrs = image ?? { src, srcset: undefined, sizes: undefined, sources: [], width, height, background: undefined };
   const { sources, img } = pictureProps(attrs, { alt, priority, className });
-  if (sources.length === 0) return <img {...img} {...rest} />;
+  if (sources.length === 0) return <img {...img} {...rest} style={{ ...img.style, ...rest.style }} />;
   return (
     <picture className="contents">
       {sources.map((s) => (
         <source key={s.type + (s.media ?? "")} {...s} />
       ))}
-      <img {...img} {...rest} />
+      <img {...img} {...rest} style={{ ...img.style, ...rest.style }} />
     </picture>
   );
 }

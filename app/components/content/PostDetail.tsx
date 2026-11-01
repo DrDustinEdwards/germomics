@@ -100,15 +100,14 @@ function SubscribeRow({ links }: { links: Record<string, string> }) {
           const d = SUBSCRIBE_DESTINATIONS[k];
           const Icon = d.icon;
           return (
-            <a key={k} href={links[k]} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-accent hover:text-accent">
+            <a key={k} href={links[k]} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-accent hover:text-accent">
               <Icon size={14} aria-hidden /> {d.label}
               <ExternalCue />
             </a>
           );
         })}
-        <a href="/feed/podcast/" target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-accent hover:text-accent">
+        <a href="/feed/podcast/" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-accent hover:text-accent">
           <Rss size={14} aria-hidden /> RSS
-          <ExternalCue />
         </a>
         <Link to="/subscribe" className="inline-flex items-center rounded-full px-3 py-1.5 text-sm text-muted hover:text-ink">
           More ways to listen →
@@ -154,7 +153,7 @@ export function PostDetail({ data }: { data: DetailData }) {
               {(g.links ?? []).length ? (
                 <div className="mt-1.5 flex flex-wrap gap-2 font-mono text-[11px]">
                   {(g.links ?? []).map((l) => (
-                    <a key={l.url} href={l.url} className="text-accent hover:underline" target="_blank" rel="noopener noreferrer">{l.label || "link"}</a>
+                    <a key={l.url} href={l.url} className="text-accent hover:underline">{l.label || "link"}</a>
                   ))}
                 </div>
               ) : null}

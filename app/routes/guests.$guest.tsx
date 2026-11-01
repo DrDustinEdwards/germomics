@@ -71,7 +71,7 @@ export default function GuestPage({ loaderData }: Route.ComponentProps) {
           {links.length ? (
             <div className="mt-2 flex flex-wrap gap-3 font-mono text-xs">
               {links.map((l) => (
-                <a key={l.url} href={l.url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">{l.label || "link"}</a>
+                <a key={l.url} href={l.url} className="text-accent hover:underline">{l.label || "link"}</a>
               ))}
             </div>
           ) : null}

@@ -54,6 +54,10 @@ export default [
   route(":slug/transcript.vtt", "routes/transcript.ts"),
   route(":slug/chapters.json", "routes/chapters.ts"),
 
+  // The hashed admin list for the Access drift check: under /admin so Access covers it, outside the layout because
+  // the caller is a service token, not a person. The route answers only that token.
+  route("admin/access-drift", "routes/admin.access-drift.ts"),
+
   // admin: Cloudflare Access signs people in; admin.tsx middleware re-verifies its JWT once for the
   // whole subtree.
   route("admin", "routes/admin.tsx", [

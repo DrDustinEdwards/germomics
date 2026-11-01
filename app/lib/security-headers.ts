@@ -2,7 +2,13 @@
 // routes, redirects, errors; workers/app.ts applies it), and the Content-Security-Policy built from what the site
 // really loads. Server-only.
 
-import { buildContentSecurityPolicy, reportingEndpoints } from "@dustinedwards/site-runtime/csp";
+import {
+  buildContentSecurityPolicy,
+  buildStagedPolicy,
+  CSP_REPORT_GROUP,
+  CSP_REPORT_PATH,
+  reportingEndpoints,
+} from "@dustinedwards/site-runtime/csp";
 import { receiveCspReport } from "@dustinedwards/site-runtime/csp-report";
 import { applyHeaderSet, corpFor } from "@dustinedwards/site-runtime/headers";
 
@@ -16,24 +22,25 @@ import { IMAGE_ORIGIN, MEDIA_ORIGIN, OP3_ORIGIN } from "~/lib/site";
 // hosts the data pages' map loads (DataMap.client.tsx, through @googlemaps/js-api-loader), named one by one from the
 // API's own bootstrap rather than Google's wildcard list: its loader, modules and JSONP services at maps.googleapis.com,
 // tiles and map styles from maps.googleapis.com, images from maps.gstatic.com and mts.googleapis.com, its logging at
-// www.google.com/maps/, and the Google Fonts pair for the map's Roboto. No street view, satellite or Google frame is
-// used. Styles keep 'unsafe-inline' for TipTap and the map (so the nonce stays off style-src, which would switch it
+// www.google.com/maps/, and the Google Fonts pair for the map's Roboto. No street view or satellite is used, and the only
+// frames are the post players (`embeds`). Styles keep 'unsafe-inline' for TipTap and the map (so the nonce stays off style-src, which would switch it
 // off). Violations go to CSP_REPORT_PATH, which logs them through site-runtime's receiver, so Workers Logs hold
-// anything the policy blocks.
-export const CSP_REPORT_PATH = "/csp-report";
-const CSP_ENDPOINT = "csp-endpoint";
+// anything the policy blocks. What the registry entry stages (Trusted Types, default-src 'none') goes beside it as
+// Content-Security-Policy-Report-Only (buildStagedPolicy) until the reports are quiet.
+export { CSP_REPORT_PATH };
 const MAPS = "https://maps.googleapis.com";
 // The JSONP services the API calls, each at its exact path: the prefix /maps/api/js/ also serves GeoPhotoService, a
 // known allowlist bypass, which street view alone would need.
 const MAPS_JSONP = ["AuthenticationService.Authenticate", "QuotaService.RecordEvent", "ApplicationService.GetEntityDetails", "StaticMapService.GetMapImage"];
 const MAPS_DATA = [MAPS, "https://maps.gstatic.com", "https://mts.googleapis.com", "https://www.google.com/maps/"];
-const csp = (nonce: string | undefined) =>
-  buildContentSecurityPolicy({
+const sitePolicy = (nonce: string | undefined) =>
+  ({
     nonce,
     nonceStyles: false,
     cloudflareWebAnalytics: true,
-    reportUri: CSP_REPORT_PATH,
-    reportTo: CSP_ENDPOINT,
+    // The post players a page may frame (YouTube, Spotify and the rest of Dustin's list), loaded only on the reader's click;
+    // the registry entry's `embeds` opt-in delegates their features in the Permissions-Policy.
+    embeds: true,
     sources: {
       script: [`${MAPS}/maps/api/js`, ...MAPS_JSONP.map((service) => `${MAPS}/maps/api/js/${service}`), `${MAPS}/maps-api-v3/`],
       style: ["'unsafe-inline'", "https://fonts.googleapis.com"],
@@ -43,7 +50,14 @@ const csp = (nonce: string | undefined) =>
       connect: [IMAGE_ORIGIN, MEDIA_ORIGIN, OP3_ORIGIN, ...MAPS_DATA, "blob:"],
     },
     extraDirectives: ["worker-src 'self' blob:", "child-src 'self' blob:", "manifest-src 'self'", "upgrade-insecure-requests"],
-  });
+  }) as const;
+const csp = (nonce: string | undefined) => buildContentSecurityPolicy(sitePolicy(nonce));
+// upgrade-insecure-requests stays in the enforced policy only: a browser ignores it in a Report-Only one, and says so.
+const staged = (nonce: string | undefined) => {
+  const site = sitePolicy(nonce);
+  const extraDirectives = site.extraDirectives.filter((directive) => directive !== "upgrade-insecure-requests");
+  return buildStagedPolicy({ ...site, extraDirectives }, { trustedTypes: true, denyUnlisted: true });
+};
 
 /**
  * Return a copy of `response` with the security headers added. Never clobbers headers a route
@@ -58,12 +72,11 @@ export function withSecurityHeaders(response: Response, url: string, nonce?: str
   // The Reporting API's endpoint for report-to. reportingEndpoints refuses plain http off localhost
   // (a dev server on a LAN address), which a browser would ignore anyway, so that origin gets none.
   if (!headers.has("Reporting-Endpoints") && !/^http:\/\/(?!localhost|127\.0\.0\.1|\[::1\])/.test(origin)) {
-    headers.set("Reporting-Endpoints", reportingEndpoints(CSP_ENDPOINT, new URL(CSP_REPORT_PATH, origin)));
+    headers.set("Reporting-Endpoints", reportingEndpoints(CSP_REPORT_GROUP, new URL(CSP_REPORT_PATH, origin)));
   }
   // A route that declared its own policy keeps it.
   if (!headers.has("Content-Security-Policy") && !headers.has("Content-Security-Policy-Report-Only")) {
-    const policy = csp(nonce);
-    headers.set(policy.name, policy.value);
+    for (const policy of [csp(nonce), staged(nonce)]) headers.set(policy.name, policy.value);
   }
   return new Response(response.body, {
     status: response.status,

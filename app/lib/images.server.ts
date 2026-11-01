@@ -9,6 +9,9 @@
 // unsized, is better than a guess (site-runtime's rule).
 import { FOCUS_METADATA, type StoredImage } from "@dustinedwards/site-runtime/image";
 import type { HeadImage } from "@drdustinedwards/site-helpers/head";
+import { inArray } from "drizzle-orm";
+import { getDb } from "~/db/index.server";
+import { media } from "~/db/schema";
 import { DEFAULT_CARD, SITE_ORIGIN } from "~/lib/site";
 import { imageKey, imageKeyOf, images, mediaPath, type ImageSet, type ImageUseName } from "~/lib/images";
 
@@ -31,7 +34,19 @@ async function storedImage(env: Env, src: string, aspect?: number): Promise<Stor
   const meta = head.customMetadata ?? {};
   const width = positive(meta.width) ?? positive(NAMED_WIDTH.exec(key)?.[1]);
   const height = positive(meta.height) ?? (width && aspect ? Math.round(width * aspect) : null);
-  return { src: mediaPath(key), width, height, focus: meta[FOCUS_METADATA] ?? null };
+  // The object's etag (its bytes' MD5) is the version its size URLs carry (`v=`), so a replaced or turned file is a new
+  // URL and never the year-old copy a browser holds.
+  return { src: mediaPath(key), width, height, focus: meta[FOCUS_METADATA] ?? null, version: head.etag };
+}
+
+/** The placeholder and main color site-api stored for each library key (D1 `media`), shown while a picture loads. */
+async function placeholders(env: Env, keys: string[]): Promise<Map<string, { placeholder: string | null; color: string | null }>> {
+  if (keys.length === 0) return new Map();
+  const rows = await getDb(env)
+    .select({ key: media.key, placeholder: media.placeholder, color: media.color })
+    .from(media)
+    .where(inArray(media.key, keys));
+  return new Map(rows.map((r) => [r.key, { placeholder: r.placeholder, color: r.color }]));
 }
 
 /**
@@ -41,12 +56,16 @@ async function storedImage(env: Env, src: string, aspect?: number): Promise<Stor
  */
 export async function imageSet(env: Env, wanted: Array<[ImageUseName, string | null | undefined]>): Promise<ImageSet> {
   const srcs = [...new Set(wanted.map(([, src]) => src).filter((s): s is string => Boolean(s)))];
-  const stored = new Map(await Promise.all(srcs.map(async (src) => [src, await storedImage(env, src, 1)] as const)));
+  const [stored, held] = await Promise.all([
+    Promise.all(srcs.map(async (src) => [src, await storedImage(env, src, 1)] as const)).then((pairs) => new Map(pairs)),
+    placeholders(env, srcs.map(imageKeyOf).filter((k): k is string => k !== null)),
+  ]);
   const set: ImageSet = {};
   for (const [use, src] of wanted) {
     const image = src ? stored.get(src) : null;
     if (!src || !image) continue;
-    const attrs = images.attributes(image, use);
+    const key = imageKeyOf(src);
+    const attrs = images.attributes({ ...image, ...(key ? held.get(key) : undefined) }, use);
     if (attrs.sources.length) set[imageKey(use, src)] = attrs;
   }
   return set;
