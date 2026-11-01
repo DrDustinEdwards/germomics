@@ -7,7 +7,7 @@ import { getSnippets } from "~/lib/context.server";
 import { snippet } from "~/lib/content.server";
 
 export function meta() {
-  return pageHead({ path: "/data", title: "Data · Germomics", description: "Interactive maps and charts on viruses and bacteria.", pageType: "CollectionPage" });
+  return pageHead({ path: "/data", title: "Data · Germomics", description: "Interactive maps and charts from Germomics on viruses and bacteria, each with a data table that carries the same numbers.", pageType: "CollectionPage" });
 }
 
 export async function loader({ context }: Route.LoaderArgs) {

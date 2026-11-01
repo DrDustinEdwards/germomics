@@ -14,7 +14,7 @@ import { SITE_HOST } from "~/lib/site";
 import { PUBLIC_FORM, readForm } from "~/lib/body.server";
 
 export function meta() {
-  return pageHead({ path: "/subscribe", title: "Subscribe · Germomics", description: "Follow Germomics in any podcast app, by email, or by RSS." });
+  return pageHead({ path: "/subscribe", title: "Subscribe · Germomics", description: "Follow Germomics, the podcast about microbiology and history, in any podcast app, by email, or with its RSS feed." });
 }
 
 export async function loader({ context }: Route.LoaderArgs) {

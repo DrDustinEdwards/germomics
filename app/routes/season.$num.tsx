@@ -16,7 +16,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
     path: `/season/${num}`,
     title: `Season ${num} · Germomics`,
     socialTitle: `Germomics Season ${num}`,
-    description: `Germomics episodes from Season ${num}.`,
+    description: `Every episode from Season ${num} of Germomics, the podcast about microbiology and history, in order, with audio and transcripts.`,
     pageType: "CollectionPage",
     breadcrumbs: seasonTrail(num),
   });
