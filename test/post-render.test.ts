@@ -8,7 +8,7 @@ import { applyMigrations } from "./helpers/d1";
 // (app/lib/render.server.ts). Prelum's own output is tested in Prelum; this is the site's half: the media
 // library's sizes, the lead figure's width, which rows a read renders, and the page's heading demotion.
 const e = env as unknown as Env;
-const IMG = "https://images.germomics.com";
+const IMG = "/media";
 const PHOTO = "a-sky-full-of-sars/coronavirus-795.webp";
 const LEAD = "antitoxin-togo-please/antitoxin-togo-pls-795.webp";
 const BODY = [
@@ -48,6 +48,8 @@ describe("a save", () => {
     expect(html).toContain(`srcset="/media/${PHOTO}.avif?w=400 400w`);
     expect(html).toMatch(/alt="Coronavirus"[^>]* width="400" height="300"/);
     expect(html).toContain('<span class="figure-credit">© CDC</span>');
+    // The link opens the original, versioned like its sizes.
+    expect(html).toContain(`href="/media/${PHOTO}`);
     expect(html).toMatch(new RegExp(`<img src="${IMG}/missing.webp" alt="Not in the library" loading="lazy"`));
     expect(fields.bodyMeta.toc).toEqual([{ depth: 2, id: "first-section", text: "First section" }]);
     // An episode's cover art is its largest picture, above the body: no body image is eager or high.

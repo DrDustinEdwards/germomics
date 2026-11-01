@@ -13,7 +13,7 @@ import { receiveCspReport } from "@dustinedwards/site-runtime/csp-report";
 import { applyHeaderSet, corpFor } from "@dustinedwards/site-runtime/headers";
 
 import { SECURITY_HEADERS } from "~/lib/header-set";
-import { IMAGE_ORIGIN, MEDIA_ORIGIN, OP3_ORIGIN } from "~/lib/site";
+import { MEDIA_ORIGIN, OP3_ORIGIN } from "~/lib/site";
 
 // Content-Security-Policy, enforced, built by site-runtime's buildContentSecurityPolicy. Inline scripts run by the
 // page's nonce: React Router puts it on its hydration and streaming scripts, React on its own, root.tsx on the theme
@@ -44,10 +44,10 @@ const sitePolicy = (nonce: string | undefined) =>
     sources: {
       script: [`${MAPS}/maps/api/js`, ...MAPS_JSONP.map((service) => `${MAPS}/maps/api/js/${service}`), `${MAPS}/maps-api-v3/`],
       style: ["'unsafe-inline'", "https://fonts.googleapis.com"],
-      img: ["data:", "blob:", IMAGE_ORIGIN, MEDIA_ORIGIN, ...MAPS_DATA],
+      img: ["data:", "blob:", MEDIA_ORIGIN, ...MAPS_DATA],
       media: ["blob:", MEDIA_ORIGIN, OP3_ORIGIN],
       font: ["data:", "https://fonts.gstatic.com"],
-      connect: [IMAGE_ORIGIN, MEDIA_ORIGIN, OP3_ORIGIN, ...MAPS_DATA, "blob:"],
+      connect: [MEDIA_ORIGIN, OP3_ORIGIN, ...MAPS_DATA, "blob:"],
     },
     extraDirectives: ["worker-src 'self' blob:", "child-src 'self' blob:", "manifest-src 'self'", "upgrade-insecure-requests"],
   }) as const;

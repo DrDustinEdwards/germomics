@@ -3,16 +3,17 @@
 // only, never over HTTP.
 //
 // Where URLs point (germomics invariant). Enclosure/media URLs ALWAYS point at
-// media.germomics.com, never the worker origin. An image's stored URL (a body, a cover, a feed) is
-// its original at images.germomics.com; the resized copies a page shows come from germomics.com,
-// /media/<key>?w= (app/lib/images.ts, Dustin 2026-10-29), made from that original on request.
-import { IMAGE_ORIGIN as IMAGE_BASE, MEDIA_ORIGIN as MEDIA_BASE } from "~/lib/site";
+// media.germomics.com, never the worker origin. An image's stored URL (a body, a cover) is /media/<key> on this
+// origin, as on dustinedwards.info: the route serves the original and each size (app/lib/images.ts).
+import { mediaPath } from "~/lib/images";
+import { MEDIA_ORIGIN as MEDIA_BASE } from "~/lib/site";
 
 function mediaUrl(key: string): string {
   return `${MEDIA_BASE}/${key.replace(/^\/+/, "")}`;
 }
+/** The address an uploaded image is stored and shown at: /media/<key>. */
 export function imageUrl(key: string): string {
-  return `${IMAGE_BASE}/${key.replace(/^\/+/, "")}`;
+  return mediaPath(key.replace(/^\/+/, ""));
 }
 
 /** Build a collision-resistant, filesystem-safe object key under a folder. */

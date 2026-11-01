@@ -163,7 +163,7 @@ describe("the nightly jobs", () => {
     expect(h.backup).toHaveBeenCalledWith(e);
     expect(h.audio).toHaveBeenCalledWith(e);
     const ok = await e.DB.prepare("SELECT name FROM cron_runs WHERE last_ok_at IS NOT NULL ORDER BY name").all<{ name: string }>();
-    expect(ok.results.map((r) => r.name)).toEqual(["audio-backup", "backup", "images-backup", "prune-404", "rerender-stale"]);
+    expect(ok.results.map((r) => r.name)).toEqual(["audio-backup", "backup", "images-backup", "prune-404"]);
   });
 
   it("runs the rest after a failed backup, then fails the invocation", async () => {

@@ -1,5 +1,5 @@
 // Carrel's media group (site-api v0.13.1) over the images in BLOG_IMAGES and their rows in D1 (app/lib/media/): the
-// object is the bytes and the public address (images.germomics.com/<key>), the `media` row is everything else, and the
+// object is the bytes and the public address (/media/<key>, app/lib/images.ts), the `media` row is everything else, and the
 // row's `rev` is the file's version, checked and moved in the same statement as every write (writeAtRev), so a stale
 // write is a 409 and never a lost update. Used by comes from the content itself (app/lib/media/usage.server.ts).
 //
