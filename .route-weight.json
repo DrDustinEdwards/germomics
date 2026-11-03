@@ -20,7 +20,7 @@
       "routes/writing._index": 159816,
       "routes/about.dustin-edwards": 159346,
       "routes/archive": 158948,
-      "routes/games.$slug": 158307,
+      "routes/games.$slug": 158662,
       "routes/episodes._index": 158205,
       "routes/privacy": 158134,
       "routes/terms": 158128,
