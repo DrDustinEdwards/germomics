@@ -30,7 +30,7 @@
     "@dustinedwards/d1-dump": "github:DrDustinEdwards/d1-dump#v0.10.0",
     "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.21.0",
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.72.0",
-    "capsomer": "github:DrDustinEdwards/capsomer#v0.63.1",
+    "capsomer": "github:DrDustinEdwards/capsomer#v0.64.0",
     "drizzle-orm": "0.45.4",
     "enarratio": "0.7.2",
     "hast-util-to-string": "3.0.1",
