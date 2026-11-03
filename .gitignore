@@ -14,7 +14,6 @@
 worker-configuration.d.ts
 
 !.dev.vars.example
-!.env.example
 scripts/_generated/
 
 # Project MCP config: carries a driver bearer token

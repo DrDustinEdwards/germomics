@@ -3,7 +3,10 @@
 // charts island (app/islands/charts.ts) enhances them and swaps in the narrow drawing on a phone.
 import { frameHtml } from "capsomer/behavior/chart-frame";
 import { type LineChartOptions, lineChart } from "enarratio/lite/line";
+import { type DotMapOptions, dotMap, type GeoFeatureCollection } from "enarratio/map";
+import type { DataMap } from "~/lib/datasets.server";
 import type { Timeline } from "~/lib/datasets.server";
+import streets from "~/lib/data/soho-streets.json";
 
 /**
  * The phone drawing's width: a 320 px screen leaves the frame about 262 px, so its text stays near 12 px. A full
@@ -40,4 +43,43 @@ export function timelineChart(slug: string, t: Timeline): string {
     formatX: (v: number | Date) => labels.get(Number(v)) ?? String(v),
   } satisfies LineChartOptions<(typeof data)[number]>;
   return frameHtml(lineChart(options), { redraw: { narrow: drawingOf(lineChart({ ...options, width: NARROW_WIDTH })) } });
+}
+
+/**
+ * Snow's streets under the map, from lindbrook's cholera package (app/lib/data/SOURCES.md, scripts/soho-streets.py). A
+ * name's roman numeral (Princes Street (I) and (II), two streets of one name) parts the rows of the table, not the
+ * streets on the map, so the printed name leaves it out.
+ */
+const SOHO_STREETS: GeoFeatureCollection = {
+  ...(streets as GeoFeatureCollection),
+  features: (streets as GeoFeatureCollection).features.map((f) => ({
+    ...f,
+    properties: { name: String(f.properties?.name ?? "").replace(/ \([IVX]+\)$/, "") },
+  })),
+};
+
+/**
+ * A /data map, drawn on the server by Enarratio's dotMap (design record 0028): a dot per address sized by its count
+ * over Snow's streets, the landmarks as squares with the marked one named, a key, the data table and a keyboard walk.
+ * It replaces the Google Maps map, which was decorative, drawn only in the browser and outside Enarratio (A15).
+ */
+export function dataMap(slug: string, m: DataMap): string {
+  const options = {
+    id: `${slug}-map`,
+    data: m.points,
+    longitude: "lng",
+    latitude: "lat",
+    value: "value",
+    label: "label",
+    labelHeader: "Street",
+    valueLabel: m.valueLabel,
+    basemap: [{ geometry: SOHO_STREETS, labels: "name" }],
+    landmarks: m.landmarks.map((l) => ({ name: l.label, longitude: l.lng, latitude: l.lat, highlight: l.label === m.marked })),
+    landmarkLabel: m.landmarkLabel,
+    caption: m.legend,
+    source: { name: m.source.label, href: m.source.url },
+    title: m.title,
+    alt: m.alt,
+  } satisfies DotMapOptions<(typeof m.points)[number]>;
+  return frameHtml(dotMap(options), { redraw: { narrow: drawingOf(dotMap({ ...options, width: NARROW_WIDTH })) } });
 }

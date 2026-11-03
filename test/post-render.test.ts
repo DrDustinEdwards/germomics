@@ -28,7 +28,12 @@ const BODY = [
   "",
 ].join("\n");
 
-beforeAll(() => applyMigrations(e.DB));
+// The pipeline is imported on first use; load it here so its cold import (several seconds in workerd) is not
+// counted against the first test's timeout.
+beforeAll(async () => {
+  await applyMigrations(e.DB);
+  await import("@drdustinedwards/site-helpers/render/nomath");
+}, 60_000);
 
 beforeEach(async () => {
   await e.DB.exec("DELETE FROM posts; DELETE FROM media;");

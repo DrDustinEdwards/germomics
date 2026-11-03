@@ -18,21 +18,13 @@ import { MEDIA_ORIGIN, OP3_ORIGIN } from "~/lib/site";
 // Content-Security-Policy, enforced, built by site-runtime's buildContentSecurityPolicy. Inline scripts run by the
 // page's nonce: React Router puts it on its hydration and streaming scripts, React on its own, root.tsx on the theme
 // script, and the edge cache gives every reader a fresh one (renewNonce, edge-cache.server.ts). Allowlist: self, the
-// media/images subdomains, Cloudflare's Web Analytics beacon (which reports to this origin's /cdn-cgi/rum), and the
-// hosts the data pages' map loads (DataMap.client.tsx, through @googlemaps/js-api-loader), named one by one from the
-// API's own bootstrap rather than Google's wildcard list: its loader, modules and JSONP services at maps.googleapis.com,
-// tiles and map styles from maps.googleapis.com, images from maps.gstatic.com and mts.googleapis.com, its logging at
-// www.google.com/maps/, and the Google Fonts pair for the map's Roboto. No street view or satellite is used, and the only
-// frames are the post players (`embeds`). Styles keep 'unsafe-inline' for TipTap and the map (so the nonce stays off style-src, which would switch it
-// off). Violations go to CSP_REPORT_PATH, which logs them through site-runtime's receiver, so Workers Logs hold
-// anything the policy blocks. What the registry entry stages (Trusted Types, default-src 'none') goes beside it as
+// media/images subdomains and Cloudflare's Web Analytics beacon (which reports to this origin's /cdn-cgi/rum). The data
+// pages' map is Enarratio's, drawn on the server, so no map host is listed. The only frames are the post players
+// (`embeds`). Styles keep 'unsafe-inline' for TipTap (so the nonce stays off style-src, which would switch it off).
+// Violations go to CSP_REPORT_PATH, which logs them through site-runtime's receiver, so Workers Logs hold anything the
+// policy blocks. What the registry entry stages (Trusted Types, default-src 'none') goes beside it as
 // Content-Security-Policy-Report-Only (buildStagedPolicy) until the reports are quiet.
 export { CSP_REPORT_PATH };
-const MAPS = "https://maps.googleapis.com";
-// The JSONP services the API calls, each at its exact path: the prefix /maps/api/js/ also serves GeoPhotoService, a
-// known allowlist bypass, which street view alone would need.
-const MAPS_JSONP = ["AuthenticationService.Authenticate", "QuotaService.RecordEvent", "ApplicationService.GetEntityDetails", "StaticMapService.GetMapImage"];
-const MAPS_DATA = [MAPS, "https://maps.gstatic.com", "https://mts.googleapis.com", "https://www.google.com/maps/"];
 const sitePolicy = (nonce: string | undefined) =>
   ({
     nonce,
@@ -42,12 +34,11 @@ const sitePolicy = (nonce: string | undefined) =>
     // the registry entry's `embeds` opt-in delegates their features in the Permissions-Policy.
     embeds: true,
     sources: {
-      script: [`${MAPS}/maps/api/js`, ...MAPS_JSONP.map((service) => `${MAPS}/maps/api/js/${service}`), `${MAPS}/maps-api-v3/`],
-      style: ["'unsafe-inline'", "https://fonts.googleapis.com"],
-      img: ["data:", "blob:", MEDIA_ORIGIN, ...MAPS_DATA],
+      style: ["'unsafe-inline'"],
+      img: ["data:", "blob:", MEDIA_ORIGIN],
       media: ["blob:", MEDIA_ORIGIN, OP3_ORIGIN],
-      font: ["data:", "https://fonts.gstatic.com"],
-      connect: [MEDIA_ORIGIN, OP3_ORIGIN, ...MAPS_DATA, "blob:"],
+      font: ["data:"],
+      connect: [MEDIA_ORIGIN, OP3_ORIGIN, "blob:"],
     },
     extraDirectives: ["worker-src 'self' blob:", "child-src 'self' blob:", "manifest-src 'self'", "upgrade-insecure-requests"],
   }) as const;
