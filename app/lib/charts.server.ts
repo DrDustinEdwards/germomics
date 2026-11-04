@@ -9,11 +9,14 @@ import type { Timeline } from "~/lib/datasets.server";
 import streets from "~/lib/data/soho-streets.json";
 
 /**
- * The phone drawing's width: a 320 px screen leaves the frame about 262 px, so its text stays near 12 px. A full
- * redraw spec (`{ chart: "line", options }`) would fit every width, but it travels as JSON and would lose formatX,
- * which names each point by its label ("Autumn 1918") in the hover details.
+ * The phone drawing's width: a 320 px screen leaves the frame 262 px. An SVG never grows past its width, so the phone
+ * drawing shows at exactly this size in every phone's column, its text near 12 px, and the page can reserve its height
+ * (D5). A full redraw spec (`{ chart: "line", options }`) would fit every width, but it travels as JSON and would lose
+ * formatX, which names each point by its label ("Autumn 1918") in the hover details.
  */
-const NARROW_WIDTH = 280;
+const NARROW_WIDTH = 262;
+/** 30rem at the default 16 px rem: a drawing this wide or wider keeps that width in a narrower column and scrolls (A13). */
+const WIDE_PX = 480;
 
 /** The `.enarratio-frame` (the drawing alone) of a chart's markup, what enarratio/redraw swaps in. */
 function drawingOf(html: string): string {
@@ -21,6 +24,24 @@ function drawingOf(html: string): string {
   const end = html.indexOf("</svg></div>", start);
   if (start === -1 || end === -1) throw new Error("timelineChart: no drawing in Enarratio's output");
   return html.slice(start, end + "</svg></div>".length);
+}
+
+/** A drawing's viewBox size. */
+function viewBox(markup: string): { width: number; height: number } {
+  const box = /<svg\b[^>]*?\sviewBox="[\d.-]+ [\d.-]+ ([\d.]+) ([\d.]+)"/.exec(markup);
+  if (!box) throw new Error("charts: no viewBox in Enarratio's drawing");
+  return { width: Number(box[1]), height: Number(box[2]) };
+}
+
+/**
+ * The height the server's drawing shows at in a phone's column (NARROW_WIDTH): a wide drawing keeps 30rem and scrolls,
+ * so it shows H * 480 / W; a narrower one scales to the column. The phone drawing is drawn at this height, so swapping it
+ * in does not move the page (D5, Enarratio's narrowChart docs).
+ */
+function shownHeight(markup: string): number {
+  const { width, height } = viewBox(markup);
+  const shown = width >= WIDE_PX ? WIDE_PX : Math.min(width, NARROW_WIDTH);
+  return Math.round(((height * shown) / width) * 100) / 100;
 }
 
 export function timelineChart(slug: string, t: Timeline): string {
@@ -42,7 +63,9 @@ export function timelineChart(slug: string, t: Timeline): string {
     alt: t.alt,
     formatX: (v: number | Date) => labels.get(Number(v)) ?? String(v),
   } satisfies LineChartOptions<(typeof data)[number]>;
-  return frameHtml(lineChart(options), { redraw: { narrow: drawingOf(lineChart({ ...options, width: NARROW_WIDTH })) } });
+  const wide = lineChart(options);
+  const narrow = drawingOf(lineChart({ ...options, width: NARROW_WIDTH, height: shownHeight(wide) }));
+  return frameHtml(wide, { redraw: { narrow } });
 }
 
 /**
@@ -81,5 +104,13 @@ export function dataMap(slug: string, m: DataMap): string {
     title: m.title,
     alt: m.alt,
   } satisfies DotMapOptions<(typeof m.points)[number]>;
-  return frameHtml(dotMap(options), { redraw: { narrow: drawingOf(dotMap({ ...options, width: NARROW_WIDTH })) } });
+  // A map keeps its shape, so its phone drawing is far shorter than the wide one shows at 30rem (about 340 against 615
+  // px). The wide map carries the phone drawing's height, and under 30rem it scales into the column at that height
+  // (app/charts.css) until the phone drawing replaces it, so the swap does not move the page (D5).
+  const narrow = drawingOf(dotMap({ ...options, width: NARROW_WIDTH }));
+  const wide = dotMap(options).replace(
+    /(<div class="enarratio-frame enarratio-frame-wide"[^>]*>\s*<svg\b)/,
+    `$1 style="--narrow-height: ${viewBox(narrow).height}px"`,
+  );
+  return frameHtml(wide, { redraw: { narrow } });
 }

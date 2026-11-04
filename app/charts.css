@@ -24,3 +24,17 @@
 .cap-chart {
   --enarratio-background: var(--card);
 }
+
+/* A map's phone drawing keeps the map's shape, so it is far shorter than the wide map shows at 30rem. Under 30rem the
+   wide map scales into the column at the phone drawing's height (--narrow-height, app/lib/charts.server.ts) until the
+   phone drawing replaces it, so the swap does not move the page (D5). Without scripts nothing is swapped, and the wide
+   map keeps 30rem and scrolls with readable text. */
+@media (scripting: enabled) {
+  @container (width < 30rem) {
+    .enarratio-frame-wide > svg[style*="--narrow-height"] {
+      min-width: 0;
+      width: 100%;
+      height: var(--narrow-height);
+    }
+  }
+}
