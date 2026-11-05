@@ -11,7 +11,7 @@
 import type { CronJob } from "@dustinedwards/site-runtime/cron";
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { pruneNotFound } from "@dustinedwards/site-runtime/not-found";
-import { runAudioBackup, runBackup, runImagesBackup } from "~/lib/backup.server";
+import { runAudioBackup, runBackup, runGameAssetsBackup, runImagesBackup } from "~/lib/backup.server";
 import { runCarrelSchedules } from "~/lib/carrel/handler.server";
 import { continueMediaBackfill } from "~/lib/media/backfill.server";
 import { rerenderStale } from "~/lib/render.server";
@@ -43,6 +43,7 @@ export function cronJobs(env: Env, scheduledTime: Date): Record<string, CronJob[
       { name: "backup", everyMinutes: DAY, timeoutMs: 4 * MINUTE, run: () => runBackup(env) },
       { name: "audio-backup", everyMinutes: DAY, timeoutMs: 4 * MINUTE, run: () => runAudioBackup(env) },
       { name: "images-backup", everyMinutes: DAY, timeoutMs: 4 * MINUTE, run: () => runImagesBackup(env) },
+      { name: "game-assets-backup", everyMinutes: DAY, timeoutMs: 4 * MINUTE, run: () => runGameAssetsBackup(env) },
       { name: "prune-404", everyMinutes: DAY, timeoutMs: MINUTE, run: () => pruneNotFound(env.DB, { days: 90 }) },
     ],
   };

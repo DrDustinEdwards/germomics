@@ -16,7 +16,7 @@ vi.mock("react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react-router")>()),
   createRequestHandler: () => h.render,
 }));
-vi.mock("~/lib/backup.server", () => ({ runBackup: h.backup, runAudioBackup: h.audio, runImagesBackup: async () => {} }));
+vi.mock("~/lib/backup.server", () => ({ runBackup: h.backup, runAudioBackup: h.audio, runImagesBackup: async () => {}, runGameAssetsBackup: async () => {} }));
 
 const e = env as unknown as Env;
 const ORIGIN = "https://germomics.com";
@@ -163,7 +163,7 @@ describe("the nightly jobs", () => {
     expect(h.backup).toHaveBeenCalledWith(e);
     expect(h.audio).toHaveBeenCalledWith(e);
     const ok = await e.DB.prepare("SELECT name FROM cron_runs WHERE last_ok_at IS NOT NULL ORDER BY name").all<{ name: string }>();
-    expect(ok.results.map((r) => r.name)).toEqual(["audio-backup", "backup", "images-backup", "prune-404"]);
+    expect(ok.results.map((r) => r.name)).toEqual(["audio-backup", "backup", "game-assets-backup", "images-backup", "prune-404"]);
   });
 
   it("runs the rest after a failed backup, then fails the invocation", async () => {
