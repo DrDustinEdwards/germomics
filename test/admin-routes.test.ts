@@ -35,8 +35,13 @@ const thrown = async (p: unknown) => {
   throw new Error("expected a thrown response");
 };
 
-type Mod = Record<string, any>;
-let gate: Mod, episodes: Mod, episode: Mod, people: Mod, settings: Mod, content: Mod, soundbites: Mod;
+let gate: typeof import("~/routes/admin");
+let episodes: typeof import("~/routes/admin.episodes._index");
+let episode: typeof import("~/routes/admin.episodes.$id");
+let people: typeof import("~/routes/admin.people._index");
+let settings: typeof import("~/routes/admin.settings._index");
+let content: typeof import("~/routes/admin.content.$key");
+let soundbites: typeof import("~/routes/admin.soundbites._index");
 
 beforeAll(async () => {
   await applyMigrations(e.DB);
@@ -78,6 +83,7 @@ describe("the admin gate", () => {
   it("passes the admin through to the route, the answer private, no-store and noindex", async () => {
     const { reached, result } = run("http://localhost/admin", admin);
     const res = await result;
+    if (!res) throw new Error("the gate answered nothing");
     expect(await res.text()).toBe("admin page");
     expect(reached()).toBe(true);
     expect(res.headers.get("Cache-Control")).toBe("private, no-store");

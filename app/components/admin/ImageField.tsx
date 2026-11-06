@@ -41,7 +41,6 @@ export function ImageField({
 
       {url ? (
         <div className="flex items-start gap-3 rounded-xl border border-border bg-surface p-3">
-          {/* eslint-disable-next-line jsx-a11y/img-redundant-alt */}
           <img src={url} alt={alt || "preview"} className="h-20 w-20 shrink-0 rounded-lg border border-border object-cover" />
           <div className="min-w-0 flex-1">
             <p className="truncate font-mono text-[11px] text-muted">{url}</p>

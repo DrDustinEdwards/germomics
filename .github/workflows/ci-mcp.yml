@@ -42,6 +42,9 @@ jobs:
         run: cp wrangler.jsonc.example wrangler.jsonc
       - name: Typecheck
         run: npm run typecheck
+      # Oxlint with devkit's shared config (mcp/oxlint.config.ts), type-aware, after the typegen it reads.
+      - name: Lint
+        run: npm run lint
       - name: Tests
         run: npm test
       # Typecheck is not a build: the dry run bundles, so a runtime dependency

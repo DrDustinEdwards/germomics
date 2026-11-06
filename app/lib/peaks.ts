@@ -8,7 +8,7 @@
 export function computePeaks(channels: Float32Array[], N = 400): number[] {
   const len = channels[0].length;
   const bucket = Math.max(1, Math.floor(len / N));
-  const peaks = new Array(N).fill(0);
+  const peaks = Array.from({ length: N }, () => 0);
   for (let b = 0; b < N; b++) {
     const start = b * bucket;
     const end = b === N - 1 ? len : start + bucket;

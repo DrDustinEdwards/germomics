@@ -14,6 +14,16 @@ import type { PlayerTrack } from "~/lib/types";
 // "jump to current" affordance appears. Search filters the transcript; copy adds attribution + a
 // timestamp deep link (tied to share-at-timestamp via ?t=).
 
+/** The start of the last cue at or before t (cues sorted by start), or null. */
+function playheadCue(cues: { start: number }[], t: number): number | null {
+  let active: number | null = null;
+  for (const c of cues) {
+    if (c.start <= t) active = c.start;
+    else break;
+  }
+  return active;
+}
+
 function highlightTerm(text: string, q: string): React.ReactNode {
   if (!q) return text;
   const lower = text.toLowerCase();
@@ -42,7 +52,8 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
   const chapters = track.chapters ?? [];
   const isThis = p.current?.id === track.id;
 
-  const [activeStart, setActiveStart] = useState<number | null>(null);
+  // The cue the native TextTrack reports active (set from its cuechange events).
+  const [nativeStart, setNativeStart] = useState<number | null>(null);
   const [following, setFollowing] = useState(true);
   const [query, setQuery] = useState("");
   const [copied, setCopied] = useState(false);
@@ -57,10 +68,7 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
   // cuechange. Only while this episode is the one playing.
   useEffect(() => {
     const audio = p.audioRef.current;
-    if (!isThis || !audio || !hasNativeCue || !cues.length) {
-      if (!isThis) setActiveStart(null);
-      return;
-    }
+    if (!isThis || !audio || !hasNativeCue || !cues.length) return;
     let tt: TextTrack | null = null;
     for (let i = 0; i < audio.textTracks.length; i++) {
       if (audio.textTracks[i].label === "germomics-transcript") tt = audio.textTracks[i];
@@ -81,7 +89,7 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
     const onChange = () => {
       const list = tt?.activeCues;
       const last = list && list.length ? list[list.length - 1] : null;
-      setActiveStart(last ? last.startTime : null);
+      setNativeStart(last ? last.startTime : null);
     };
     tt.addEventListener("cuechange", onChange);
     onChange();
@@ -92,20 +100,8 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
     };
   }, [isThis, cues, hasNativeCue, p.audioRef]);
 
-  // Fallback highlight from the playhead when VTTCue is unavailable.
-  useEffect(() => {
-    if (hasNativeCue) return;
-    if (!isThis) {
-      setActiveStart(null);
-      return;
-    }
-    let active: number | null = null;
-    for (const c of cues) {
-      if (c.start <= p.currentTime) active = c.start;
-      else break;
-    }
-    setActiveStart(active);
-  }, [hasNativeCue, isThis, cues, p.currentTime]);
+  // The active cue: the native track's while this episode plays, else (no VTTCue) the last cue the playhead passed.
+  const activeStart = !isThis ? null : hasNativeCue ? nativeStart : playheadCue(cues, p.currentTime);
 
   // Center the active cue WITHIN the transcript's own scroll box. Scrolls the container element only
   // (scrollBy on it), so the document/window is never moved; a no-op when the box can't scroll or the
@@ -177,7 +173,7 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
     if (words.length > 200) text = words.slice(0, 200).join(" ") + "…";
     // Timestamp = the cue the selection starts in, else the current playhead.
     let t = Math.floor(isThis ? p.currentTime : 0);
-    let node: Node | null = sel?.anchorNode ?? null;
+    const node: Node | null = sel?.anchorNode ?? null;
     let el = node instanceof Element ? node : node?.parentElement ?? null;
     while (el && !el.getAttribute("data-cue")) el = el.parentElement;
     if (el) t = Math.floor(Number(el.getAttribute("data-cue")));
@@ -204,8 +200,19 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
     ? paragraphs.reduce((n, para) => n + para.filter((c) => c.text.toLowerCase().includes(q)).length, 0)
     : 0;
 
+  // Each paragraph's chapter and speaker heading, shown only where they change.
+  const heads: { chap: number; showChapter: boolean; speaker: string | null; showSpeaker: boolean }[] = [];
   let lastChapter = -1;
   let lastSpeaker: string | null = null;
+  for (const para of shown) {
+    const chap = activeChapterIndex(chapters, para[0].start);
+    const showChapter = !q && chap !== -1 && chap !== lastChapter;
+    if (showChapter) lastChapter = chap;
+    const speaker = parseCueText(para[0].text).speaker;
+    const showSpeaker = !!speaker && speaker !== lastSpeaker;
+    if (speaker) lastSpeaker = speaker;
+    heads.push({ chap, showChapter, speaker, showSpeaker });
+  }
 
   return (
     <div>
@@ -230,7 +237,7 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
         ) : null}
         <button
           type="button"
-          onClick={copyQuote}
+          onClick={() => void copyQuote()}
           className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 font-mono text-xs hover:border-accent hover:text-accent"
         >
           {copied ? <Check size={14} aria-hidden /> : <Copy size={14} aria-hidden />}
@@ -244,13 +251,7 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
       >
         {shown.map((para, pi) => {
           const startSec = para[0].start;
-          const chap = activeChapterIndex(chapters, startSec);
-          const showChapter = !q && chap !== -1 && chap !== lastChapter;
-          if (showChapter) lastChapter = chap;
-          const firstParsed = parseCueText(para[0].text);
-          const speaker = firstParsed.speaker;
-          const showSpeaker = speaker && speaker !== lastSpeaker;
-          if (speaker) lastSpeaker = speaker;
+          const { chap, showChapter, speaker, showSpeaker } = heads[pi];
 
           return (
             <div key={pi}>

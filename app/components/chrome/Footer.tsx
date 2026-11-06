@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useRouteLoaderData } from "react-router";
 import { Rss, Lock } from "lucide-react";
 import { Link } from "capsomer/react/link";
@@ -61,7 +62,7 @@ export function Footer() {
     ["/terms", useSnippet("snippet:nav.terms", "Terms")],
     ["/accessibility", "Accessibility"],
   ];
-  const year = new Date().getFullYear();
+  const [year] = useState(() => new Date().getFullYear());
   const link = "text-muted hover:text-ink";
   // Below sm the three lists go 3-up; give each link a 44px tappable row there. Inert at sm+.
   const tap = "max-sm:flex max-sm:min-h-11 max-sm:items-center";

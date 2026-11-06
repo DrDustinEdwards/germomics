@@ -14,13 +14,15 @@ const e = env as unknown as Env;
 const ORIGIN = "/media";
 
 /** A PNG of the given size, with tEXt chunks (the embedded metadata) and a tail that makes each one's bytes its own. */
+const ascii = (text: string) => [...new TextEncoder().encode(text)];
+
 function png(width: number, height: number, text: Record<string, string> = {}, tail = 0): Uint8Array<ArrayBuffer> {
   const chunk = (type: string, data: number[]) => {
     const len = data.length;
-    return [len >>> 24, (len >>> 16) & 255, (len >>> 8) & 255, len & 255, ...[...type].map((c) => c.charCodeAt(0)), ...data, 0, 0, 0, 0];
+    return [len >>> 24, (len >>> 16) & 255, (len >>> 8) & 255, len & 255, ...ascii(type), ...data, 0, 0, 0, 0];
   };
   const be = (n: number) => [n >>> 24, (n >>> 16) & 255, (n >>> 8) & 255, n & 255];
-  const texts = Object.entries(text).flatMap(([k, v]) => chunk("tEXt", [...[...k].map((c) => c.charCodeAt(0)), 0, ...[...v].map((c) => c.charCodeAt(0))]));
+  const texts = Object.entries(text).flatMap(([k, v]) => chunk("tEXt", [...ascii(k), 0, ...ascii(v)]));
   return new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, ...chunk("IHDR", [...be(width), ...be(height), 8, 6, 0, 0, 0]), ...texts, ...chunk("IDAT", [tail]), ...chunk("IEND", [])]);
 }
 const sizeOf = (b: Uint8Array) => {
@@ -59,7 +61,7 @@ const ai = { run: async () => (aiCalls++, { response: { alt: "A rod-shaped bacte
 let logged: Record<string, unknown>[] = [];
 let media: MediaAdapter;
 const build = (extra: Partial<Env> = {}) => createCarrelAdapter({ ...e, IMAGES: images, AI: ai, ...extra } as unknown as Env, (x) => logged.push(x)).media!;
-const row = (key: string) => e.DB.prepare("SELECT * FROM media WHERE key = ?").bind(key).first<Record<string, any>>();
+const row = (key: string) => e.DB.prepare("SELECT * FROM media WHERE key = ?").bind(key).first<Record<string, unknown>>();
 const upload = (bytes = png(800, 600), more: Partial<Parameters<MediaAdapter["upload"]>[0]> = {}) =>
   media.upload({ bytes, contentType: "image/png", filename: "Vibrio.png", alt: "", changeId: "chg_u", ...more });
 const usePost = (slug: string, html: string) =>
@@ -88,7 +90,7 @@ describe("an upload", () => {
     expect(item.url).toBe(`/media/${item.id}`);
     // The size rides on the object, where every page reads it.
     expect((await e.BLOG_IMAGES.head(item.id))!.customMetadata).toMatchObject({ width: "800", height: "600" });
-    expect((await row(item.id))!.sha256).toMatch(/^[0-9a-f]{64}$/);
+    expect(String((await row(item.id))!.sha256)).toMatch(/^[0-9a-f]{64}$/);
     // The placeholder and main color prepareUpload made, kept on the row.
     expect(item.placeholder).toMatch(/^data:image\//);
     expect(logged).toEqual([{ event: "carrel.media.upload", id: item.id, version: "r0", changeId: "chg_u" }]);
@@ -100,7 +102,7 @@ describe("an upload", () => {
     expect(item).toMatchObject({ width: 4096, height: 2048, resizedFrom: { width: 8192, height: 4096, bytes: big.byteLength } });
     const history = (await media.history!(item.id))!;
     expect(history.map((r) => [r.reason, r.width, r.current])).toEqual([["resize", 4096, true], ["upload", 8192, false]]);
-    expect(await media.findByHash!((await row(item.id))!.sha256)).toMatchObject({ id: item.id });
+    expect(await media.findByHash!(String((await row(item.id))!.sha256))).toMatchObject({ id: item.id });
     // The same original sent again is the same file.
     const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", big))].map((b) => b.toString(16).padStart(2, "0")).join("");
     expect(await media.findByHash!(digest)).toMatchObject({ id: item.id });

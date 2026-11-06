@@ -31,7 +31,7 @@ export const TOOLS = {
 type ToolName = keyof typeof TOOLS;
 const isToolName = (name: unknown): name is ToolName => typeof name === "string" && Object.hasOwn(TOOLS, name);
 
-const json = (body: unknown, status = 200, headers: HeadersInit = {}) =>
+const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body, null, 2), {
     status,
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex, nofollow", ...headers },

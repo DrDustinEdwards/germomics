@@ -69,7 +69,7 @@ describe("computePeaks", () => {
   });
 
   it("returns all zeros for silence", () => {
-    expect(computePeaks([new Float32Array(1000)], 10)).toEqual(new Array(10).fill(0));
+    expect(computePeaks([new Float32Array(1000)], 10)).toEqual(Array.from({ length: 10 }, () => 0));
   });
 
   it("takes the peak of the absolute value, so negative swings count", () => {

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import type Phaser from "phaser";
 import { createPhageDefense } from "./phage-defense";
 
@@ -15,13 +15,12 @@ export default function PhaserGame({
   onScore: (score: number) => void;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const cb = useRef(onScore);
-  cb.current = onScore;
+  const score = useEffectEvent((s: number) => onScore(s));
 
   useEffect(() => {
     const factory = FACTORIES[slug];
     if (!ref.current || !factory) return;
-    const game = factory(ref.current, (s) => cb.current(s));
+    const game = factory(ref.current, (s) => score(s));
     return () => game.destroy(true);
   }, [slug]);
 

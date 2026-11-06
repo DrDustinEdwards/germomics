@@ -45,7 +45,7 @@ function isoDuration(totalSeconds?: number | null): string | undefined {
   const h = Math.floor(totalSeconds / 3600);
   const m = Math.floor((totalSeconds % 3600) / 60);
   const s = totalSeconds % 60;
-  return `PT${h ? `${h}H` : ""}${m ? `${m}M` : ""}${s ? `${s}S` : ""}` || "PT0S";
+  return `PT${h ? `${h}H` : ""}${m ? `${m}M` : ""}${s ? `${s}S` : ""}`;
 }
 
 /** A post's own share image and its alt text: the social image, else the episode artwork, else the cover. */

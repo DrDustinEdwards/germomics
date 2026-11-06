@@ -8,7 +8,7 @@ import { formatDuration } from "~/lib/format";
 function ShareButton({ path, label, share = false }: { path: string; label: string; share?: boolean }) {
   const [copied, setCopied] = useState(false);
 
-  const onClick = async () => {
+  const copy = async () => {
     const url = `${window.location.origin}${path}`;
     try {
       if (share && navigator.share) {
@@ -26,7 +26,7 @@ function ShareButton({ path, label, share = false }: { path: string; label: stri
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={() => void copy()}
       className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 font-mono text-xs hover:border-accent hover:text-accent"
     >
       {copied ? <Check size={14} aria-hidden /> : <Share2 size={14} aria-hidden />}

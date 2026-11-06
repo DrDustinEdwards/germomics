@@ -178,7 +178,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
     audio.addEventListener("loadedmetadata", onMeta, { once: true });
     return () => audio.removeEventListener("loadedmetadata", onMeta);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps -- runs once per loaded track, not on each state it reads
   }, [current?.id]);
 
   // Apply play/pause intent.
@@ -187,7 +187,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     if (!audio || !current) return;
     if (isPlaying) void audio.play().catch(() => setIsPlaying(false));
     else audio.pause();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps -- applies a play or pause intent only, not a track change
   }, [isPlaying]);
 
   const next = useCallback(() => {

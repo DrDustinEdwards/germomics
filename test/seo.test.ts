@@ -124,14 +124,14 @@ describe("site-level JSON-LD", () => {
   const show = { title: "Germomics", description: "About microbes", author: "Dustin Edwards", artwork: "https://img/cover.jpg" };
 
   it("describes the Organization and the PodcastSeries, with a default address and optional sameAs", () => {
-    const org = buildOrganizationLd(show) as Record<string, any>;
+    const org = buildOrganizationLd(show) as Record<string, unknown>;
     expect(org).toMatchObject({ "@type": "Organization", name: "Germomics", url: `${ORIGIN}/`, logo: show.artwork, founder: { name: "Dustin Edwards" } });
     expect(org.address).toMatchObject({ "@type": "PostalAddress", addressLocality: "Stephenville" });
     expect(org).not.toHaveProperty("sameAs");
-    const withLinks = buildOrganizationLd(show, { sameAs: ["https://x.com/t"], address: { locality: "Elsewhere" } }) as Record<string, any>;
+    const withLinks = buildOrganizationLd(show, { sameAs: ["https://x.com/t"], address: { locality: "Elsewhere" } }) as Record<string, unknown>;
     expect(withLinks.sameAs).toEqual(["https://x.com/t"]);
-    expect(withLinks.address.addressLocality).toBe("Elsewhere");
-    const series = buildPodcastSeriesLd(show, { sameAs: ["https://x.com/t"] }) as Record<string, any>;
+    expect(withLinks.address).toMatchObject({ addressLocality: "Elsewhere" });
+    const series = buildPodcastSeriesLd(show, { sameAs: ["https://x.com/t"] }) as Record<string, unknown>;
     expect(series).toMatchObject({ "@type": "PodcastSeries", webFeed: `${ORIGIN}/feed/podcast/`, image: show.artwork, sameAs: ["https://x.com/t"] });
     expect(buildPodcastSeriesLd(show)).not.toHaveProperty("sameAs");
   });

@@ -33,7 +33,9 @@ async function call(path: string, init: RequestInit = {}, headers: Record<string
 }
 /** A fresh change id: with the store, one id on two different requests is refused. */
 const cid = () => `chg_${crypto.randomUUID()}`;
-const json = async (r: Response) => (await r.json()) as Record<string, any>;
+// The fields of a Carrel API reply the tests read; the rest stay unknown.
+type Reply = { version: string; source: string; id: string; url: string; items: { id: string }[]; usedBy: unknown[]; [field: string]: unknown };
+const json = async (r: Response) => (await r.json()) as Reply;
 
 const put = (id: string, source: string, expectedVersion: string | null) =>
   call(`/api/carrel/v1/content/${id}/draft`, {

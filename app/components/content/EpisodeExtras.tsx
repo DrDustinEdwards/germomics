@@ -393,7 +393,7 @@ export function FigureLightbox({
         img.removeEventListener("keydown", onKey as EventListener);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps -- the caller's deps name the body this watches
   }, deps);
 
   // While open: lock scroll, focus the close button, trap Tab, Esc closes; restore focus on close.
@@ -429,13 +429,12 @@ export function FigureLightbox({
       role="dialog"
       aria-modal="true"
       aria-label={open.alt || "Enlarged image"}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) setOpen(null);
-      }}
       className={`fixed inset-0 z-[60] grid place-items-center bg-black/80 p-4 backdrop-blur-sm motion-safe:transition-opacity motion-safe:duration-150 ${
         shown ? "opacity-100" : "opacity-0"
       }`}
     >
+      {/* The backdrop: a click outside the image closes it (Esc does too, above). */}
+      <div aria-hidden="true" className="absolute inset-0" onClick={() => setOpen(null)} />
       <button
         ref={closeBtnRef}
         type="button"
@@ -448,7 +447,7 @@ export function FigureLightbox({
       <img
         src={open.src}
         alt={open.alt}
-        className="max-h-[90vh] max-w-full rounded-lg border border-white/20 object-contain shadow-2xl"
+        className="relative max-h-[90vh] max-w-full rounded-lg border border-white/20 object-contain shadow-2xl"
       />
     </div>
   );
@@ -476,6 +475,6 @@ export function useHideBrokenFigures(ref: React.RefObject<HTMLElement | null>, d
       }
     }
     return () => imgs.forEach((img) => img.removeEventListener("error", onErr));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps -- the caller's deps name the body this watches
   }, deps);
 }
