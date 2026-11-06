@@ -56,6 +56,12 @@ jobs:
       - name: Type-check
         run: npm run typecheck
 
+      # Type-aware Oxlint loads every tsconfig.json in the tree, mcp/'s too, though mcp/ is ignored, and that one
+      # names mcp/worker-configuration.d.ts, which is gitignored. The root wrangler writes it from the example config.
+      - name: Stage admin MCP types
+        working-directory: mcp
+        run: cp wrangler.jsonc.example wrangler.jsonc && ../node_modules/.bin/wrangler types
+
       # Oxlint with devkit's shared config (oxlint.config.ts), type-aware, so after the typecheck that writes the
       # wrangler and React Router types it reads.
       - name: Lint
