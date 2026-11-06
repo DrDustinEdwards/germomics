@@ -371,6 +371,24 @@ export const mediaUploads = sqliteTable("media_uploads", {
   at: text("at").notNull(),
 });
 
+// site-api 0.22.0 (migration 0026): the public path of each post Carrel deleted or trashed (gone_paths) and each publish
+// hook's run (hook_runs). Only d1SiteApiStore reads them.
+export const gonePaths = sqliteTable("gone_paths", {
+  path: text("path").primaryKey(),
+  goneAt: text("gone_at").notNull(),
+});
+
+export const hookRuns = sqliteTable(
+  "hook_runs",
+  {
+    changeId: text("change_id").notNull(),
+    hook: text("hook").notNull(),
+    ok: integer("ok").notNull(),
+    at: text("at").notNull(),
+  },
+  (t) => [index("hook_runs_change").on(t.changeId), index("hook_runs_at").on(t.at)],
+);
+
 // 0014: the caption Carrel set on an image in BLOG_IMAGES, keyed by its R2 key. Since 0015 a caption lives on its
 // `media` row; this table is read only by the backfill that made those rows (app/lib/media/backfill.server.ts).
 export const mediaCaptions = sqliteTable("media_captions", {

@@ -186,7 +186,8 @@ describe("content", () => {
     expect(await page.text()).toContain("A sample draft.");
     const [{ id }] = (await json(await call("/api/carrel/v1/preview-links?id=draft-only"))).items;
     await call(`/api/carrel/v1/preview-links/${id}?changeId=${cid()}`, { method: "DELETE" });
-    expect((await open()).status).toBe(410);
+    // A revoked link answers 404, as if it never was; only an expired one, or one whose post is in the trash, answers 410 (site-api 0.22.0).
+    expect((await open()).status).toBe(404);
   });
 
   it("lets the hooks hear a scheduled post go live once, when its time comes", async () => {
