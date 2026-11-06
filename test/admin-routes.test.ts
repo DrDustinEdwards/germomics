@@ -167,9 +167,16 @@ describe("settings actions", () => {
     });
   });
 
-  it("falls back to episodic, Science and no hosts when those fields are missing or broken", async () => {
-    await settings.action(args(form("/admin/settings", { title: "G", itunesType: "weird", categories: "{bad", hosts: "{bad" })));
-    expect(await getShowConfig(e)).toMatchObject({ itunesType: "episodic", explicit: false, appleCategory: "Science", categories: [], hosts: null });
+  it("answers categories or hosts it cannot read with a form error and keeps the stored ones", async () => {
+    const saved = { title: "G", categories: JSON.stringify([{ category: "History" }]), hosts: JSON.stringify([{ name: "Dustin" }]) };
+    await settings.action(args(form("/admin/settings", saved)));
+    for (const broken of [{ categories: "{bad" }, { hosts: "{bad" }, { hosts: JSON.stringify({ name: "Dustin" }) }, { categories: JSON.stringify([{}]) }]) {
+      const res = await settings.action(args(form("/admin/settings", { ...saved, title: "Changed", ...broken })));
+      expect(res).toEqual({ ok: false, message: expect.stringContaining("nothing was saved") });
+    }
+    const missing = Object.fromEntries(Object.entries(saved).filter(([k]) => k !== "hosts"));
+    expect(await settings.action(args(form("/admin/settings", { ...missing, title: "Changed" })))).toMatchObject({ ok: false });
+    expect(await getShowConfig(e)).toMatchObject({ title: "G", categories: [{ category: "History" }], appleCategory: "History", hosts: [{ name: "Dustin" }] });
   });
 });
 
