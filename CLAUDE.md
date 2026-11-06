@@ -30,6 +30,8 @@ React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-pl
 
 ## Admin MCP: back up now
 
+Checking the backups and backing up now are Capsid Admin's, for every site (Dustin, 2026-11-06): Capsid calls `backup_status` and `backup_media` on `POST /api/operator`, the door every site serves through site-runtime's `./operator`. Until Germomics Admin is retired, it reaches the same door.
+
 `mcp/` is Germomics Admin, its own Worker (`germomics-admin-mcp`, https://admin-mcp.germomics.com/mcp), built like Foxing's: Access sign-in, a wrapper with no policy and no data binding that reaches the site only over a service binding to `POST /api/operator` (`app/routes/api.operator.ts`, the `OPERATOR_TOKEN` bearer, 30 requests a minute). Two tools: `germomics_check_backup` (the backup state read now, uncached) and `germomics_backup_media` (the three files passes run now, copy only, the same `backupFilesNow` as the nightly jobs). `mcp/CLAUDE.md` has the rest; `.github/workflows/ci-mcp.yml` tests it and deploys it on a merge to main while `CF_DEPLOY` is `true`.
 
 ## Hard rules

@@ -4,8 +4,8 @@ import { RouterContextProvider } from "react-router";
 import { cloudflareContext } from "~/lib/context.server";
 import { action } from "~/routes/api.operator";
 
-// The operator API (app/routes/api.operator.ts): the bearer is the whole boundary, and a good call runs the files
-// backup passes into BACKUPS (copy only). Fake token, fake data.
+// The operator API (app/routes/api.operator.ts): a good call runs the files backup passes into BACKUPS (copy only)
+// and backup_status reads them back. The bearer is site-runtime's ./operator, tested where it lives. Fake token, fake data.
 const TOKEN = "t".repeat(40);
 
 function call(headers: Record<string, string>, over: Partial<Env> = {}, tool = "backup_media") {
@@ -20,12 +20,6 @@ function call(headers: Record<string, string>, over: Partial<Env> = {}, tool = "
 }
 
 describe("operator API", () => {
-  it("refuses a missing or wrong bearer, and a deployment with no token", async () => {
-    expect((await call({})).status).toBe(401);
-    expect((await call({ authorization: `Bearer ${"x".repeat(40)}` })).status).toBe(401);
-    expect((await call({ authorization: `Bearer ${TOKEN}` }, { OPERATOR_TOKEN: undefined })).status).toBe(503);
-  });
-
   it("runs the three files passes for the right bearer and copies a file", async () => {
     await (env as unknown as Env).GAME_ASSETS.put("sample/level.json", "{}");
     const res = await call({ authorization: `Bearer ${TOKEN}` });
