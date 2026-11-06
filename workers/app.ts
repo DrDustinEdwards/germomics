@@ -26,7 +26,7 @@ import { cloudflareContext, cspNonceContext } from "../app/lib/context.server";
 import { enforceRateLimit } from "../app/lib/security.server";
 import { CSP_REPORT_PATH, handleCspReport, withSecurityHeaders } from "../app/lib/security-headers";
 import { carrelApi, isCarrelRequest } from "../app/lib/carrel/handler.server";
-import { d1SiteApiStore } from "@dustinedwards/site-api/store";
+import { d1SiteApiStore, tombstoned } from "@dustinedwards/site-api/store";
 import { cronJobs } from "../app/lib/cron.server";
 import { nextPublishAt } from "../app/lib/posts.server";
 import { FONT_PRELOADS } from "../app/lib/preloads";
@@ -89,18 +89,6 @@ function hasSessionCookie(request: Request): boolean {
 function counted(response: Response, request: Request, env: Env, ctx: ExecutionContext): Response {
   if (!new URL(request.url).pathname.startsWith("/preview/")) countNotFound(env.DB, request, response, ctx);
   return response;
-}
-
-// A post Carrel deleted or trashed leaves a tombstone (site-api 0.22.0, gone_paths, drizzle/0026), and its address answers
-// 410 Gone instead of 404, so a search engine drops it rather than retrying it (RFC 9110, section 15.5.11). The reader sees
-// the same not-found page: only the status changes, it is never stored, and it is kept out of the index. Asked only on a
-// 404, so a page that answers costs no query; isGone answers false when the store cannot be read.
-async function tombstoned(response: Response, url: URL, env: Env): Promise<Response> {
-  if (response.status !== 404 || !(await d1SiteApiStore(env.DB).isGone(url.pathname))) return response;
-  const gone = new Response(response.body, { status: 410, statusText: "Gone", headers: response.headers });
-  gone.headers.set("Cache-Control", "no-store");
-  gone.headers.set("X-Robots-Tag", "noindex");
-  return gone;
 }
 
 // A game page shows its leaderboard, so it carries its own tag too and a score purges only that page.
@@ -192,9 +180,9 @@ const site = {
         if (tag && !read && live.status < 400) ctx.waitUntil(ctx.exports.Renderer.purgePages(`score ${url.pathname}`, [tag]));
         // A public page rendered for the admin is theirs alone; a response naming no Cache-Control would otherwise be
         // cached by the platform's heuristics.
-        if (signedIn && !livePath(url.pathname)) return counted(await tombstoned(privateRender(live), url, env), request, env, ctx);
+        if (signedIn && !livePath(url.pathname)) return counted(await tombstoned(privateRender(live), url.pathname, d1SiteApiStore(env.DB)), request, env, ctx);
         if (!live.headers.has("Cache-Control")) live.headers.set("Cache-Control", UNCACHED);
-        return counted(await tombstoned(live, url, env), request, env, ctx);
+        return counted(await tombstoned(live, url.pathname, d1SiteApiStore(env.DB)), request, env, ctx);
       }
 
       // The key is the path and the query without tracking parameters. The Worker version stays in the key (no
@@ -202,7 +190,7 @@ const site = {
       // reader who already holds the page gets a 304. A HEAD reaches the Renderer as a GET, so its answer is a whole page
       // that may be stored; the reader still gets no body.
       const page = await ctx.exports.Renderer.fetch(forRenderer(request), { cf: { cacheKey: cacheKey(url) } });
-      return counted(await tombstoned(forReader(renewNonce(page), request), url, env), request, env, ctx);
+      return counted(await tombstoned(forReader(renewNonce(page), request), url.pathname, d1SiteApiStore(env.DB)), request, env, ctx);
     } catch (error) {
       // Prod error hygiene: never leak a stack trace or internal detail to the client. The error
       // goes to Workers Logs.
