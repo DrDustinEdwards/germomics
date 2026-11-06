@@ -30,7 +30,7 @@
 // slug of a post ever live redirects (301) to the new one (post_redirects, app/lib/posts.server.ts). Trash takes a live
 // post off the site (a draft, trashed_at set); a restore is a draft; only a trashed post is deleted, and site-api's
 // cron deletes one trashed 30 days.
-import { and, eq, inArray, isNotNull, isNull, lte, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, lte } from "drizzle-orm";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
@@ -52,7 +52,7 @@ import { d1ScheduledUpdates, utc } from "@dustinedwards/site-api/schedules";
 import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
 import { getDb } from "~/db/index.server";
 import { contentBlocks, episodePeople, people, postRedirects, posts, postVersions, type ContentBlock, type Post } from "~/db/schema";
-import { deletePost, generateGuid, snapshotVersion, updatePost } from "~/lib/admin.server";
+import { deletePost, generateGuid, nextUpdatedAt, snapshotVersion, updatePost } from "~/lib/admin.server";
 import { TEXT_PAGES } from "~/lib/content.server";
 import { setEpisodePeople } from "~/lib/people.server";
 import { lcpAboveBody, libraryMedia, pageFields, postBodyFields, renderMarkdown, RENDER_VERSION } from "~/lib/render.server";
@@ -120,26 +120,6 @@ const versionOf = (p: Item, update: Waiting = null): Promise<string> =>
   ]);
 
 const waitingOf = (u: ScheduledUpdate | null): Waiting => (u ? { publishAt: u.publishAt, changeId: u.changeId } : null);
-
-/**
- * The row is still the one whose version was checked. updated_at has one-second steps, so the
- * fields the version is made of are compared too: a save landing in the same second still differs
- * in them. Used in the UPDATE itself, so of two saves from one version only the first can write
- * (EmDash 1.4.0 fixed the same race, emdash-cms/emdash PR 4286).
- */
-function unchangedSince(p: Post) {
-  const same = <T,>(column: Parameters<typeof eq>[0], value: T | null) => (value === null ? isNull(column) : eq(column, value));
-  return and(
-    eq(posts.id, p.id),
-    eq(posts.updatedAt, p.updatedAt),
-    eq(posts.status, p.status),
-    eq(posts.title, p.title),
-    eq(posts.body, p.body),
-    same(posts.excerpt, p.excerpt),
-    same(posts.publishAt, p.publishAt),
-    same(posts.trashedAt, p.trashedAt),
-  );
-}
 
 async function summaryOf(p: Item, update: Waiting = null): Promise<ContentSummary> {
   return {
@@ -281,8 +261,11 @@ export function createCarrelAdapter(
     if (current) {
       const written = await db
         .update(posts)
-        .set({ ...fields, updatedAt: sql`(datetime('now'))` })
-        .where(unchangedSince(current))
+        .set({ ...fields, updatedAt: nextUpdatedAt })
+        // Only while the row is the one whose version was checked: every post write moves updated_at
+        // (nextUpdatedAt), so of two saves from one version only the first can write (EmDash 1.4.0
+        // fixed the same race, emdash-cms/emdash PR 4286).
+        .where(and(eq(posts.id, current.id), eq(posts.updatedAt, current.updatedAt)))
         .returning({ id: posts.id });
       if (written.length === 0) {
         const now = await findPost(slug);

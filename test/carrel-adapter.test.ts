@@ -91,6 +91,16 @@ describe("saving a draft", () => {
     expect(err).toBeInstanceOf(VersionConflictError);
     expect(err.currentVersion).toBe(created.version);
   });
+  it("lets only one of two saves from the same version write, refusing the other with the version it lost to", async () => {
+    const created = await save("race", "<p>v1</p>");
+    const results = await Promise.allSettled([save("race", "<p>a</p>", created.version, "chg_a"), save("race", "<p>b</p>", created.version, "chg_b")]);
+    const won = results.filter((r) => r.status === "fulfilled");
+    const lost = results.filter((r) => r.status === "rejected");
+    expect(won).toHaveLength(1);
+    expect(lost).toHaveLength(1);
+    expect(lost[0].reason).toBeInstanceOf(VersionConflictError);
+    expect(lost[0].reason.currentVersion).toBe(won[0].value.version);
+  });
 });
 
 describe("publishing, scheduling and unpublishing", () => {
