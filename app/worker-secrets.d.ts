@@ -16,9 +16,9 @@ interface Env {
   OPERATOR_TOKEN?: string;
   /** Hex HMAC key for the newsletter's confirmation links (site-runtime ./signed-token). Unset closes newsletter signup. */
   SUBSCRIBE_LINK_KEY?: string;
-  /** The address the site's mail is sent from. Unset, with SEND_EMAIL, means no mail is sent (app/lib/email.server.ts). */
+  /** The address the site's mail is sent from. Unset, with SEND_EMAIL, means no mail is sent (app/lib/newsletter.server.ts). */
   EMAIL_FROM?: string;
-  /** Cloudflare Email Service's send_email binding, once wrangler.jsonc declares it (app/lib/email.server.ts). */
+  /** Cloudflare Email Service's send_email binding, once wrangler.jsonc declares it (app/lib/newsletter.server.ts). */
   SEND_EMAIL?: SendEmail;
   /** Keys site-runtime's admin idle cookie (withAdminIdle `secret`). Minted by the deploy (devkit worker-deploy `generated-secrets`), never shown; unset, the admin paths fail (site-runtime 0.82 requires it). */
   ADMIN_IDLE_SECRET: string;
