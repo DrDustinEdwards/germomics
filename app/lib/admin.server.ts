@@ -16,10 +16,17 @@ export async function createDraft(env: Env, kind: "episode" | "article"): Promis
   return rows[0].id;
 }
 
+/**
+ * The updated_at a post write sets: now, or one second past the stored value when that is not
+ * earlier. datetime('now') has one-second steps, so without the step two saves in the same second
+ * would leave updated_at unchanged and the Carrel save guard (which compares it) would miss one.
+ */
+export const nextUpdatedAt = sql`max(datetime('now'), datetime(updated_at, '+1 second'))`;
+
 export async function updatePost(env: Env, id: number, fields: Partial<Post>): Promise<void> {
   await getDb(env)
     .update(posts)
-    .set({ ...fields, updatedAt: sql`(datetime('now'))` })
+    .set({ ...fields, updatedAt: nextUpdatedAt })
     .where(eq(posts.id, id));
 }
 

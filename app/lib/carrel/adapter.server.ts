@@ -52,7 +52,7 @@ import { d1ScheduledUpdates, utc } from "@dustinedwards/site-api/schedules";
 import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
 import { getDb } from "~/db/index.server";
 import { contentBlocks, episodePeople, people, postRedirects, posts, postVersions, type ContentBlock, type Post } from "~/db/schema";
-import { deletePost, generateGuid, snapshotVersion, updatePost } from "~/lib/admin.server";
+import { deletePost, generateGuid, nextUpdatedAt, snapshotVersion, updatePost } from "~/lib/admin.server";
 import { TEXT_PAGES } from "~/lib/content.server";
 import { setEpisodePeople } from "~/lib/people.server";
 import { lcpAboveBody, libraryMedia, pageFields, postBodyFields, renderMarkdown, RENDER_VERSION } from "~/lib/render.server";
@@ -259,8 +259,19 @@ export function createCarrelAdapter(
     const { fields, people: links } = await build(current);
     let id: number;
     if (current) {
+      const written = await db
+        .update(posts)
+        .set({ ...fields, updatedAt: nextUpdatedAt })
+        // Only while the row is the one whose version was checked: every post write moves updated_at
+        // (nextUpdatedAt), so of two saves from one version only the first can write (EmDash 1.4.0
+        // fixed the same race, emdash-cms/emdash PR 4286).
+        .where(and(eq(posts.id, current.id), eq(posts.updatedAt, current.updatedAt)))
+        .returning({ id: posts.id });
+      if (written.length === 0) {
+        const now = await findPost(slug);
+        throw new VersionConflictError(now ? await versionOf(now, await waiting(slug)) : null);
+      }
       await snapshotVersion(env, current);
-      await updatePost(env, current.id, fields);
       id = current.id;
     } else {
       const created = await db
