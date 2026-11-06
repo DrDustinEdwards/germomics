@@ -3,8 +3,7 @@
 // URL-only fields here. Emits { url, alt } upward.
 import { useState } from "react";
 import { ImageUp, Link2, X } from "lucide-react";
-import { Tabs, Field, Button } from "./ui";
-import { inputCx } from "./input-cx";
+import { Tabs, Field, inputCx, Button } from "./ui";
 import { UploadDropzone } from "./UploadDropzone";
 
 export function ImageField({

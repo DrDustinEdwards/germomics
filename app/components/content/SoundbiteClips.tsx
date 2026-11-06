@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { Scissors, Play } from "lucide-react";
 import type { PlayerTrack, SoundbiteView } from "~/lib/types";
 import { formatDuration } from "~/lib/format";
-import { usePlayer } from "~/components/player/use-player";
+import { usePlayer } from "~/components/player/player-context";
 
 export function SoundbiteClips({ track, clips }: { track: PlayerTrack; clips: SoundbiteView[] }) {
   const player = usePlayer();

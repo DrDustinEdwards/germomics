@@ -1,5 +1,5 @@
 import { Play, Pause } from "lucide-react";
-import { usePlayer } from "~/components/player/use-player";
+import { usePlayer } from "~/components/player/player-context";
 import type { PlayerTrack } from "~/lib/types";
 
 // Plays a track. If a queue is supplied (a listing/home), it starts the whole queue at this

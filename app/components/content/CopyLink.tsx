@@ -1,6 +1,6 @@
 import { useState, type ComponentType } from "react";
 import { Share2, Check } from "lucide-react";
-import { usePlayer } from "~/components/player/use-player";
+import { usePlayer } from "~/components/player/player-context";
 import { formatDuration } from "~/lib/format";
 
 // One share button: `share` offers the Web Share sheet where the device has one, else (or always,

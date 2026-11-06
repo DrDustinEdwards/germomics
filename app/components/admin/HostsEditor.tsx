@@ -2,8 +2,7 @@
 // Persists as Host[] on show_config and maps to <podcast:person> in the feed. Add / reorder /
 // delete, mirroring the other repeatable-row editors.
 import { Plus, Trash2, ArrowUp, ArrowDown } from "lucide-react";
-import { Button, EmptyState } from "./ui";
-import { inputCx } from "./input-cx";
+import { Button, inputCx, EmptyState } from "./ui";
 import type { Host } from "~/db/schema";
 
 export function HostsEditor({

@@ -1,5 +1,16 @@
 import { Link } from "capsomer/react/link";
-import { PAGE_HREF } from "~/lib/page-href";
+
+/** A content page's key to its public URL: site-search page hits and the admin Preview link. */
+export const PAGE_HREF: Record<string, string> = {
+  "page:about": "/about",
+  "page:dustin-edwards": "/about/dustin-edwards",
+  "page:privacy": "/privacy",
+  "page:terms": "/terms",
+  "page:contact": "/contact",
+  "page:txasm": "/txasm",
+  "page:llms": "/llms.txt",
+  "page:ai-txt": "/ai.txt",
+};
 
 // The content pages a site search matched (about, privacy, terms...), as one row of links.
 // `as` and `className` keep each listing's own wrapper.

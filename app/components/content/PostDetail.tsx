@@ -28,10 +28,10 @@ import {
   Sources,
   Hosts,
   ChapterList,
+  useHideBrokenFigures,
   FigureLightbox,
 } from "./EpisodeExtras";
-import { useHideBrokenFigures } from "./use-hide-broken-figures";
-import { usePlayer } from "~/components/player/use-player";
+import { usePlayer } from "~/components/player/player-context";
 import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 import { ExternalCue } from "~/components/ExternalCue";
 import { postTrail } from "~/lib/trails";

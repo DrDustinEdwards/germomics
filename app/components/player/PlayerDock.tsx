@@ -10,7 +10,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "capsomer/react/link";
 import { ChevronUp, X, AlertCircle, Loader2, ListTree } from "lucide-react";
-import { usePlayer, activeChapterIndex } from "./use-player";
+import { usePlayer, activeChapterIndex } from "./player-context";
 import { formatDuration } from "~/lib/format";
 import {
   PlayPauseButton, SkipButton, NextButton, Scrubber, SpeedControl, VolumeControl,

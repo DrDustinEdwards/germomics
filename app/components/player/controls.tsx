@@ -18,7 +18,7 @@ import {
   Play, Pause, RotateCcw, RotateCw, SkipForward, Volume2, VolumeX,
   Timer, ListTree, Captions, Check,
 } from "lucide-react";
-import { usePlayer, activeChapterIndex, type SleepMode } from "./use-player";
+import { usePlayer, activeChapterIndex, type SleepMode } from "./player-context";
 import { formatDuration, spokenTime } from "~/lib/format";
 import type { PlayerTrack } from "~/lib/types";
 

@@ -3,8 +3,7 @@
 // value returned by R2; duration + peaks are computed in the browser from the decoded file.
 import { useState } from "react";
 import { FileAudio2, Link2, Loader2 } from "lucide-react";
-import { Tabs, Field } from "./ui";
-import { inputCx } from "./input-cx";
+import { Tabs, Field, inputCx } from "./ui";
 import { UploadDropzone } from "./UploadDropzone";
 import { Waveform } from "./Waveform";
 import { computePeaks, probeDuration } from "~/lib/waveform-client";

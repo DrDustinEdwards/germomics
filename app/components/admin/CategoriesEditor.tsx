@@ -1,6 +1,6 @@
 // iTunes categories editor — up to 3 slots, each a category select + a dependent subcategory
 // select from the official Apple taxonomy. Empty slots are dropped. Writes PodcastCategory[].
-import { inputCx } from "./input-cx";
+import { inputCx } from "./ui";
 import { APPLE_CATEGORIES, APPLE_TOP_CATEGORIES } from "~/lib/apple-categories";
 import type { PodcastCategory } from "~/lib/types";
 

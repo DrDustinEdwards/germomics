@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search, Copy, Check, ArrowDownToLine } from "lucide-react";
-import { usePlayer, activeChapterIndex } from "~/components/player/use-player";
+import { usePlayer, activeChapterIndex } from "~/components/player/player-context";
 import { formatDuration } from "~/lib/format";
 import { parseVtt, toParagraphs, parseCueText } from "~/lib/vtt";
 import type { PlayerTrack } from "~/lib/types";

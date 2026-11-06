@@ -47,13 +47,11 @@ function asCards(
 // Carrel's trash is a draft already; trashedAt is checked as well, so no stray row can show one.
 function publiclyVisible(): SQL {
   const now = new Date().toISOString();
-  const visible = and(
+  return and(
     eq(posts.status, "published"),
     isNull(posts.trashedAt),
     or(isNull(posts.publishAt), lte(posts.publishAt, now)),
-  );
-  if (!visible) throw new Error("publiclyVisible built no condition");
-  return visible;
+  )!;
 }
 
 /** When the next scheduled post goes live: it needs no write, so no purge, and a stored page stays fresh no later. */
@@ -236,7 +234,7 @@ export async function searchPosts(env: Env, rawQuery: string): Promise<Post[]> {
     .from(posts)
     .where(and(publiclyVisible(), inArray(posts.id, ids)));
   const order = new Map(ids.map((id, i) => [id, i]));
-  return asCards(found.sort((a, b) => ((order.get(a.id) ?? 0) - (order.get(b.id) ?? 0))));
+  return asCards(found.sort((a, b) => (order.get(a.id)! - order.get(b.id)!)));
 }
 
 // FTS5 has its own query syntax. Punctuation becomes a space, then every word is a quoted

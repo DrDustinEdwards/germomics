@@ -96,5 +96,5 @@ export async function mediaPlaces(env: Env): Promise<Array<MediaPlace & { fields
 export function usesOfKey(places: Awaited<ReturnType<typeof mediaPlaces>>, key: string) {
   return places
     .filter((p) => p.keys.has(key))
-    .map((p) => ({ type: p.type, id: p.id.slice(0, 300), title: p.title.slice(0, 1000), detail: (p.detail || (p.fields.get(key) ?? []).join(", ")).slice(0, 500) }));
+    .map((p) => ({ type: p.type, id: p.id.slice(0, 300), title: p.title.slice(0, 1000), detail: (p.detail || p.fields.get(key)!.join(", ")).slice(0, 500) }));
 }

@@ -57,7 +57,7 @@ import { TEXT_PAGES } from "~/lib/content.server";
 import { setEpisodePeople } from "~/lib/people.server";
 import { lcpAboveBody, libraryMedia, pageFields, postBodyFields, renderMarkdown, RENDER_VERSION } from "~/lib/render.server";
 import { SITE_ORIGIN } from "~/lib/site";
-import { PAGE_HREF } from "~/lib/page-href";
+import { PAGE_HREF } from "~/components/content/PageHits";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { carrelMedia } from "./media.server";
 import { parsePageSource, parseSource, renderPageSource, renderSource, SourceError, type PersonRef } from "./source";
@@ -65,10 +65,7 @@ import { parsePageSource, parseSource, renderPageSource, renderSource, SourceErr
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/;
 // A page's id: content_blocks' `page:about` is Carrel's `page.about` (a colon is not an id character).
 const PAGE_ID = /^page\.([a-z0-9-]+)$/;
-const pageKeyOf = (id: string) => {
-  const m = PAGE_ID.exec(id);
-  return m ? `page:${m[1]}` : null;
-};
+const pageKeyOf = (id: string) => (PAGE_ID.test(id) ? `page:${PAGE_ID.exec(id)![1]}` : null);
 const pageIdOf = (key: string) => key.replace(/^page:/, "page.");
 
 type Status = ContentSummary["status"];
@@ -241,10 +238,7 @@ export function createCarrelAdapter(
     const ids = new Map(found.map((p) => [p.slug, p.id]));
     const unknown = slugs.filter((s) => !ids.has(s));
     if (unknown.length) throw new RefusedError(`No one in the germomics People list (/admin/people) has the slug ${unknown.join(", ")}.`);
-    return { fields, people: refs.flatMap((r, sort) => {
-      const personId = ids.get(r.slug);
-      return personId === undefined ? [] : [{ personId, role: r.role, sort }];
-    }) };
+    return { fields, people: refs.map((r, sort) => ({ personId: ids.get(r.slug)!, role: r.role, sort })) };
   }
 
   // `dropUpdate`: a publish, an unpublish or a trash drops an update waiting on the post, so the cron
@@ -290,8 +284,7 @@ export function createCarrelAdapter(
     const finalSlug = fields.slug ?? slug;
     if (update && dropUpdate) await updates.remove(finalSlug).run();
     const left = dropUpdate ? null : update;
-    const row = await findPost(finalSlug);
-    if (!row) throw new Error(`${finalSlug} is gone after its write`);
+    const row = (await findPost(finalSlug))!;
     const next = await versionOf(row, left);
     recordChange(event, finalSlug, next, changeId);
     return { id: finalSlug, version: next, status: statusOf(row), changeId, scheduledUpdate: left };
@@ -399,7 +392,7 @@ export function createCarrelAdapter(
       // Only the page shown is read in full: its episodes' people and its waiting updates.
       const full = new Map((await withPeople(shown.flatMap((i) => (i.post ? [i.post] : [])))).map((p) => [p.id, p]));
       const items = await Promise.all(
-        shown.map(async (i) => (i.post ? summaryOf(full.get(i.post.id) ?? i.post, await waiting(i.post.slug)) : pageSummary(i.page))),
+        shown.map(async (i) => (i.post ? summaryOf(full.get(i.post.id)!, await waiting(i.post.slug)) : pageSummary(i.page!))),
       );
       return { items, nextCursor: start + limit < all.length ? String(start + limit) : null, total: all.length, sorted: { sort, dir } };
     },
@@ -594,7 +587,7 @@ export function createCarrelAdapter(
         .limit(limit);
       const due: DueSchedule[] = [
         ...(await updates.due(now, limit)),
-        ...firsts.flatMap((p) => (p.publishAt && p.changeId ? [{ id: p.slug, kind: "publish" as const, publishAt: utc(p.publishAt), changeId: p.changeId }] : [])),
+        ...firsts.map((p) => ({ id: p.slug, kind: "publish" as const, publishAt: utc(p.publishAt!), changeId: p.changeId! })),
       ];
       return due.sort((a, b) => a.publishAt.localeCompare(b.publishAt)).slice(0, limit);
     },
@@ -624,9 +617,7 @@ export function createCarrelAdapter(
       await updatePost(env, current.id, fields);
       if (links) await setEpisodePeople(env, current.id, links);
       await updates.remove(id, match).run();
-      const applied = await findPost(id);
-      if (!applied) throw new Error(`${id} is gone after its scheduled update`);
-      const version = await versionOf(applied, null);
+      const version = await versionOf((await findPost(id))!, null);
       recordChange("schedule.apply", id, version, changeId);
       return { id, version, status: "published", changeId, scheduledUpdate: null };
     },
