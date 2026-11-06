@@ -31,6 +31,8 @@ export default [
 
   // ops
   route("health", "routes/health.ts"),
+  // The operator API the admin MCP Worker (mcp/) calls over a service binding: a bearer, not Access.
+  route("api/operator", "routes/api.operator.ts"),
 
   // feeds — resource routes. The podcast feed is matched at /feed/podcast/ (trailing slash,
   // the immutable URL directories poll) with no redirect to/from a non-slash variant.

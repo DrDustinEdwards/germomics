@@ -44,6 +44,26 @@ export async function runGameAssetsBackup(env: Env): Promise<void> {
   await backupFiles(env.GAME_ASSETS, env.BACKUPS, GAME_ASSETS_BACKUP);
 }
 
+/**
+ * The three file passes now, for the operator API's "back up now" (the admin MCP). The same backupFiles calls as the
+ * nightly jobs, each going on where its last stopped. Copy only: nothing is written or deleted in the source buckets.
+ * A failed pass throws after the others have run.
+ */
+export async function backupFilesNow(env: Env) {
+  const passes = [
+    { name: AUDIO_BACKUP.name, run: () => backupFiles(env.MEDIA, env.BACKUPS, AUDIO_BACKUP) },
+    { name: IMAGES_BACKUP.name, run: () => backupFiles(env.BLOG_IMAGES, env.BACKUPS, IMAGES_BACKUP) },
+    { name: GAME_ASSETS_BACKUP.name, run: () => backupFiles(env.GAME_ASSETS, env.BACKUPS, GAME_ASSETS_BACKUP) },
+  ];
+  const results = await Promise.allSettled(passes.map((p) => p.run()));
+  const failed = results.flatMap((r, i) => (r.status === "rejected" ? [`${passes[i]?.name}: ${String(r.reason)}`] : []));
+  if (failed.length > 0) throw new Error(`files backup failed: ${failed.join("; ")}`);
+  return results.map((r) => {
+    const run = (r as PromiseFulfilledResult<Awaited<ReturnType<typeof backupFiles>>>).value;
+    return { name: run.name, complete: run.complete, ...run.counts };
+  });
+}
+
 /** The newest complete dump and all three file passes, for /health's backup check: it warns when any is stale. Never throws. */
 export async function backupStatus(env: Env) {
   const [dump, audio, images, gameAssets] = await Promise.all([

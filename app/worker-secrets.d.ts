@@ -12,6 +12,8 @@ interface Env {
   ACCESS_AUD?: string;
   /** "1" in .dev.vars only: treats a localhost request as the admin. Ignored on any other host. */
   ACCESS_DEV_BYPASS?: string;
+  /** The bearer for /api/operator (32 characters or more), the admin MCP Worker's API leg. Unset or short closes the route. */
+  OPERATOR_TOKEN?: string;
   /** The deployed commit, written into the built config by vite.config.ts; empty for a local build. */
   DEPLOY_SHA?: string;
 }

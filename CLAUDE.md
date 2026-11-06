@@ -28,6 +28,10 @@ React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-pl
 - `/health` reports `backup: { last_ok, age_hours, warning?, files }`; it warns past 26 hours for the dump or either file pass, and its `cron` check warns on a job that failed or stopped.
 - Restore and the drill: the d1-dump README ("Restore" and "Restore drill"). Download a run with `npx wrangler r2 object get germomics-backups/backups/json/<run id>/<file> --remote`, then `npx d1-dump drill --dir <dir>` (Node 24). `.github/workflows/restore-drill.yml` drills the newest dump weekly, straight from the bucket (a token with R2 read only).
 
+## Admin MCP: back up now
+
+`mcp/` is Germomics Admin, its own Worker (`germomics-admin-mcp`, https://admin-mcp.germomics.com/mcp), built like Foxing's: Access sign-in, a wrapper with no policy and no data binding that reaches the site only over a service binding to `POST /api/operator` (`app/routes/api.operator.ts`, the `OPERATOR_TOKEN` bearer, 30 requests a minute). Two tools: `germomics_check_backup` (the backup state read now, uncached) and `germomics_backup_media` (the three files passes run now, copy only, the same `backupFilesNow` as the nightly jobs). `mcp/CLAUDE.md` has the rest; `.github/workflows/ci-mcp.yml` tests it and deploys it on a merge to main while `CF_DEPLOY` is `true`.
+
 ## Hard rules
 
 A rule stays here only if it stops a real, costly mistake that nothing else catches. Earlier rulings are in the version history of Capsid `germomics/decisions.md` (retired 2026-10-29).

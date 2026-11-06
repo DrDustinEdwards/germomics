@@ -21,3 +21,8 @@ export async function readForm(request: Request, max: number): Promise<FormData>
   const bytes = await readBytes(request, max);
   return new Response(bytes as Uint8Array<ArrayBuffer>, { headers: { "Content-Type": request.headers.get("Content-Type") ?? "" } }).formData();
 }
+
+/** The request's JSON, parsed from at most `max` bytes; throws on a body that is not JSON. */
+export async function readJson(request: Request, max: number): Promise<unknown> {
+  return JSON.parse(new TextDecoder().decode(await readBytes(request, max)));
+}
