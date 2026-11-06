@@ -2,15 +2,14 @@
  * The no-second-path guarantees, read from the files themselves:
  * - the Worker's bindings are exactly the allowlist (no D1, no site bucket, no
  *   binding that reaches Germomics' data; SITE is the only service binding),
- * - nothing in src/ imports the site's app, so the operator API is the only way in,
- * - apiHandler refuses a token minted for another audience or another person.
+ * - nothing in src/ imports the site's app, so the operator API is the only way in.
+ *
+ * The door (audience, administrator, scope list, rate limit) is site-runtime's adminMcpWorker, tested there.
  */
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, test } from "node:test";
 
-import { apiHandler } from "../src/api-handler.ts";
-import { WRITER, fakeSite, fakeLog, freshEnv } from "./fakes.ts";
 
 const config = JSON.parse(
   readFileSync(new URL("../wrangler.jsonc.example", import.meta.url), "utf8")
@@ -54,7 +53,7 @@ describe("imports", () => {
   test("src/ reaches nothing outside mcp/: no @foxing package, no ../../ path", () => {
     const dir = new URL("../src/", import.meta.url);
     const files = readdirSync(dir).filter((f) => f.endsWith(".ts"));
-    assert.ok(files.length >= 6, `read ${files.length} source files`);
+    assert.ok(files.length >= 5, `read ${files.length} source files`);
     let read = 0;
     for (const file of files) {
       const source = readFileSync(new URL(file, dir), "utf8");
@@ -70,48 +69,5 @@ describe("imports", () => {
     }
     // Pair the check with what it read, so "no violations" cannot mean "nothing read".
     assert.ok(read >= 15, `read only ${read} import specifiers`);
-  });
-});
-
-describe("apiHandler", () => {
-  const ORIGIN = "https://admin-mcp.test";
-  const env = () => ({
-    ...freshEnv(fakeSite(), fakeLog()),
-    PUBLIC_ORIGIN: ORIGIN,
-    OAUTH_KV: {} as KVNamespace,
-  });
-  const request = () => new Request(`${ORIGIN}/mcp`, { method: "POST", body: "{}" });
-  const ctxWith = (audience: string, props = WRITER.props) =>
-    ({
-      waitUntil() {},
-      passThroughOnException() {},
-      props,
-      auth: { audience, scope: ["germomics.read"] },
-    }) as unknown as ExecutionContext;
-
-  test("PLANT 12.2: a token issued for another resource is refused", async () => {
-    const response = await apiHandler.fetch(request(), env(), ctxWith("https://other.example/mcp"));
-    assert.equal(response.status, 401);
-    assert.match(response.headers.get("www-authenticate") ?? "", /invalid_token/);
-  });
-
-  test("PLANT 12.1: a grant for another email is refused at the door", async () => {
-    const response = await apiHandler.fetch(
-      request(),
-      env(),
-      ctxWith(`${ORIGIN}/mcp`, { email: "someone-else@example.com" }),
-    );
-    assert.equal(response.status, 403);
-    assert.match(await response.text(), /does not belong to its administrator/);
-  });
-
-  test("with the right audience and administrator, it reaches the rate limiter, which fails closed unbound and logs the refusal", async () => {
-    const log = fakeLog();
-    const response = await apiHandler.fetch(request(), { ...env(), TOOL_CALL_LOG: log.binding }, ctxWith(`${ORIGIN}/mcp`));
-    assert.equal(response.status, 429);
-    assert.deepEqual(
-      log.rows.map((row) => [row.phase, row.caller]),
-      [["rate-limited", `access:${WRITER.props.email}`]],
-    );
   });
 });
