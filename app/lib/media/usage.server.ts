@@ -98,10 +98,3 @@ export function usesOfKey(places: Awaited<ReturnType<typeof mediaPlaces>>, key: 
     .filter((p) => p.keys.has(key))
     .map((p) => ({ type: p.type, id: p.id.slice(0, 300), title: p.title.slice(0, 1000), detail: (p.detail || p.fields.get(key)!.join(", ")).slice(0, 500) }));
 }
-
-/** How many places use each key. */
-export function usageCounts(places: Awaited<ReturnType<typeof mediaPlaces>>): Map<string, number> {
-  const counts = new Map<string, number>();
-  for (const p of places) for (const key of p.keys) counts.set(key, (counts.get(key) ?? 0) + 1);
-  return counts;
-}

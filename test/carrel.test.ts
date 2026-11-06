@@ -16,7 +16,8 @@ const e = env as unknown as Env;
 /** What the publish hooks heard, as IndexNow, the page purge and the webmentions would. */
 const heard: PublishEvent[] = [];
 const api = createSiteApi({
-  adapter: createCarrelAdapter(e, () => {}),
+  // site-api 0.24 refuses a picture the Images binding cannot measure; this stand-in measures the one-pixel PNG.
+  adapter: createCarrelAdapter({ ...e, IMAGES: { info: async () => ({ width: 1, height: 1, format: "image/png", fileSize: 0 }) } } as unknown as Env, () => {}),
   key: KEY,
   limiter: { limit: async () => ({ success: true }) },
   store: d1SiteApiStore(e.DB),
