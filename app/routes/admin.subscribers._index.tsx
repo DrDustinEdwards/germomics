@@ -26,11 +26,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   if (new URL(request.url).searchParams.get("export") === "csv") {
     const header = "email,consented_at,status,created_at";
     const body = rows
-      .map((r) =>
-        [r.email, r.consentedAt ?? "", statusOf(r), r.createdAt]
-          .map(csvCell)
-          .join(","),
-      )
+      .map((r) => [r.email, r.consentedAt ?? "", statusOf(r), r.createdAt].map(csvCell).join(","))
       .join("\n");
     return new Response(`${header}\n${body}\n`, {
       headers: {
@@ -81,9 +77,15 @@ export default function SubscribersAdmin({ loaderData }: Route.ComponentProps) {
             <caption className="sr-only">Newsletter subscribers</caption>
             <thead>
               <tr className="border-b border-border text-left font-display text-muted">
-                <th scope="col" className="px-4 py-2">Email</th>
-                <th scope="col" className="px-4 py-2">Consented</th>
-                <th scope="col" className="px-4 py-2">Status</th>
+                <th scope="col" className="px-4 py-2">
+                  Email
+                </th>
+                <th scope="col" className="px-4 py-2">
+                  Consented
+                </th>
+                <th scope="col" className="px-4 py-2">
+                  Status
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -92,7 +94,9 @@ export default function SubscribersAdmin({ loaderData }: Route.ComponentProps) {
                   <td className="px-4 py-2 font-mono text-xs">{r.email}</td>
                   <td className="px-4 py-2 text-muted">{formatDate(r.consentedAt) || "(none)"}</td>
                   <td className="px-4 py-2">
-                    <span className={r.status === "active" ? "text-accent" : "text-muted"}>{r.status}</span>
+                    <span className={r.status === "active" ? "text-accent" : "text-muted"}>
+                      {r.status}
+                    </span>
                   </td>
                 </tr>
               ))}

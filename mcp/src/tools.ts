@@ -30,7 +30,11 @@ const record = z.looseObject({});
 /** A failure on this side, named so it cannot be mistaken for the API refusing something. The client gets only its kind (S4). */
 function wrapperFailure(cause: unknown): ToolOutput {
   const kind = cause instanceof ApiLegError ? cause.kind : "unexpected";
-  logEvent("tool_failure", { kind, error: cause instanceof Error ? cause.message : String(cause) }, { level: "error" });
+  logEvent(
+    "tool_failure",
+    { kind, error: cause instanceof Error ? cause.message : String(cause) },
+    { level: "error" },
+  );
   const message =
     cause instanceof ApiLegError
       ? `The MCP server could not complete its request to the Germomics operator API (${kind}). Nothing more is shown here; the detail is in the server's log.`
@@ -45,12 +49,17 @@ async function operate(env: ToolEnv, tool: string, signal?: AbortSignal): Promis
     if (!result.ok) {
       return {
         isError: true,
-        content: [{ type: "text", text: result.error ?? "The Germomics operator API refused the request." }],
+        content: [
+          { type: "text", text: result.error ?? "The Germomics operator API refused the request." },
+        ],
         structuredContent: { status: result.status, error: result.error ?? null },
       };
     }
     const data = (result.data ?? {}) as Record<string, unknown>;
-    return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }], structuredContent: data };
+    return {
+      content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+      structuredContent: data,
+    };
   } catch (cause) {
     return wrapperFailure(cause);
   }
@@ -64,9 +73,18 @@ export interface ToolDefinition {
     description: string;
     inputSchema: z.ZodType;
     outputSchema: z.ZodType;
-    annotations: { readOnlyHint: boolean; destructiveHint: boolean; idempotentHint: boolean; openWorldHint: boolean };
+    annotations: {
+      readOnlyHint: boolean;
+      destructiveHint: boolean;
+      idempotentHint: boolean;
+      openWorldHint: boolean;
+    };
   };
-  handler: (env: ToolEnv, args: Record<string, unknown>, signal?: AbortSignal) => Promise<ToolOutput>;
+  handler: (
+    env: ToolEnv,
+    args: Record<string, unknown>,
+    signal?: AbortSignal,
+  ) => Promise<ToolOutput>;
 }
 
 export const TOOLS: ToolDefinition[] = [
@@ -81,7 +99,12 @@ export const TOOLS: ToolDefinition[] = [
         "fields but caches the read for an hour; this does not. Run germomics_backup_media to back up now.",
       inputSchema: z.strictObject({}),
       outputSchema: z.looseObject({ files: record }),
-      annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
     },
     handler: (env, _args, signal) => operate(env, "backup_status", signal),
   },
@@ -100,7 +123,12 @@ export const TOOLS: ToolDefinition[] = [
         "read for an hour, so its backup fields may take up to an hour to show this run.",
       inputSchema: z.strictObject({}),
       outputSchema: z.looseObject({ files: z.array(record) }),
-      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
     },
     handler: (env, _args, signal) => operate(env, "backup_media", signal),
   },

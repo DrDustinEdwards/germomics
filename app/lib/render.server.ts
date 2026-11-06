@@ -47,7 +47,13 @@ export function libraryMedia(env: Env): MediaLookup {
     keys.length === 0
       ? []
       : getDb(env)
-          .select({ key: media.key, width: media.width, height: media.height, focus: media.focus, sha256: media.sha256 })
+          .select({
+            key: media.key,
+            width: media.width,
+            height: media.height,
+            focus: media.focus,
+            sha256: media.sha256,
+          })
           .from(media)
           .where(inArray(media.key, keys));
 }
@@ -67,7 +73,12 @@ function wideSources(body: string): Set<string> {
   return wide;
 }
 
-export type Rendered = { html: string; meta: BodyMeta; renderVersion: string; readingMinutes: number };
+export type Rendered = {
+  html: string;
+  meta: BodyMeta;
+  renderVersion: string;
+  readingMinutes: number;
+};
 
 /**
  * Whether a post's largest picture sits above its body, so no body image is the page's LCP: an episode's cover art
@@ -81,9 +92,19 @@ export function lcpAboveBody(post: { kind?: string | null; coverImage?: string |
 }
 
 /** Markdown to the HTML the site stores. Throws Prelum's ContentError (with the line and the fix) on a source it refuses. */
-export async function renderMarkdown(body: string, lookup: MediaLookup, { lcpAbove = false }: { lcpAbove?: boolean } = {}): Promise<Rendered> {
+export async function renderMarkdown(
+  body: string,
+  lookup: MediaLookup,
+  { lcpAbove = false }: { lcpAbove?: boolean } = {},
+): Promise<Rendered> {
   const { render } = await import("@drdustinedwards/site-helpers/render/nomath");
-  const keys = [...new Set([...body.matchAll(IMAGE_URL)].map(([url]) => imageKeyOf(url)).filter((k): k is string => k !== null))];
+  const keys = [
+    ...new Set(
+      [...body.matchAll(IMAGE_URL)]
+        .map(([url]) => imageKeyOf(url))
+        .filter((k): k is string => k !== null),
+    ),
+  ];
   const rows = new Map((await lookup(keys)).map((row) => [row.key, row]));
   const wide = wideSources(body);
   const attributesOf = (src: string) => {
@@ -91,7 +112,16 @@ export async function renderMarkdown(body: string, lookup: MediaLookup, { lcpAbo
     const row = key ? rows.get(key) : undefined;
     if (!row) return null;
     const use: ImageUseName = wide.has(src) ? "leadFigure" : "figure";
-    return images.attributes({ src: mediaPath(row.key), width: row.width, height: row.height, focus: row.focus, version: row.sha256 }, use);
+    return images.attributes(
+      {
+        src: mediaPath(row.key),
+        width: row.width,
+        height: row.height,
+        focus: row.focus,
+        version: row.sha256,
+      },
+      use,
+    );
   };
   const out = await render({
     file: "body.md",
@@ -114,7 +144,12 @@ export async function renderMarkdown(body: string, lookup: MediaLookup, { lcpAbo
           // copy (the lightbox shows it instead when script runs).
           const row = rows.get(imageKeyOf(src) ?? "");
           const href = row ? images.url(mediaPath(row.key), { version: row.sha256 }) : src;
-          return { srcSet: attrs.srcset, sizes: attrs.sizes, href, sources: attrs.sources.map((s) => ({ type: s.type, srcSet: s.srcset })) };
+          return {
+            srcSet: attrs.srcset,
+            sizes: attrs.sizes,
+            href,
+            sources: attrs.sources.map((s) => ({ type: s.type, srcSet: s.srcset })),
+          };
         },
       },
     },
@@ -130,7 +165,13 @@ export async function renderMarkdown(body: string, lookup: MediaLookup, { lcpAbo
 /** What a save writes for a post body: the Markdown, its render and the reading time. */
 export async function postBodyFields(env: Env, body: string, lcpAbove: boolean) {
   const r = await renderMarkdown(body, libraryMedia(env), { lcpAbove });
-  return { body, bodyHtml: r.html, bodyMeta: r.meta, renderVersion: r.renderVersion, readingTime: r.readingMinutes } satisfies Partial<Post>;
+  return {
+    body,
+    bodyHtml: r.html,
+    bodyMeta: r.meta,
+    renderVersion: r.renderVersion,
+    readingTime: r.readingMinutes,
+  } satisfies Partial<Post>;
 }
 
 /** What a save writes for a page: the Markdown and its render. */
@@ -139,7 +180,14 @@ export async function pageFields(env: Env, value: string) {
   return { value, bodyHtml: r.html, renderVersion: r.renderVersion };
 }
 
-type Stored = { body: string; bodyHtml: string | null; bodyMeta?: BodyMeta | null; renderVersion: string | null; kind?: string | null; coverImage?: string | null };
+type Stored = {
+  body: string;
+  bodyHtml: string | null;
+  bodyMeta?: BodyMeta | null;
+  renderVersion: string | null;
+  kind?: string | null;
+  coverImage?: string | null;
+};
 
 /**
  * The HTML a public read shows: the stored render while it is current, else a render in memory (the cron stores it
@@ -148,13 +196,22 @@ type Stored = { body: string; bodyHtml: string | null; bodyMeta?: BodyMeta | nul
  */
 export async function storedBody(env: Env, row: Stored): Promise<{ html: string; meta: BodyMeta }> {
   if (row.renderVersion === null) return { html: row.body, meta: EMPTY_META };
-  const shown = (html: string, version: string, meta: BodyMeta) => ({ html: html && `<div data-render-version="${version}">${html}</div>`, meta });
-  if (row.renderVersion === RENDER_VERSION && row.bodyHtml !== null) return shown(row.bodyHtml, RENDER_VERSION, row.bodyMeta ?? EMPTY_META);
+  const shown = (html: string, version: string, meta: BodyMeta) => ({
+    html: html && `<div data-render-version="${version}">${html}</div>`,
+    meta,
+  });
+  if (row.renderVersion === RENDER_VERSION && row.bodyHtml !== null)
+    return shown(row.bodyHtml, RENDER_VERSION, row.bodyMeta ?? EMPTY_META);
   try {
     const r = await renderMarkdown(row.body, libraryMedia(env), { lcpAbove: lcpAboveBody(row) });
     return shown(r.html, r.renderVersion, r.meta);
   } catch (err) {
-    console.error(JSON.stringify({ event: "render.failed", error: err instanceof Error ? err.message : String(err) }));
+    console.error(
+      JSON.stringify({
+        event: "render.failed",
+        error: err instanceof Error ? err.message : String(err),
+      }),
+    );
     return shown(row.bodyHtml ?? "", row.renderVersion, row.bodyMeta ?? EMPTY_META);
   }
 }
@@ -174,28 +231,60 @@ export async function rerenderUsing(env: Env, key: string): Promise<number> {
   const db = getDb(env);
   const lookup = libraryMedia(env);
   const pattern = `%${key.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
-  const names = (col: typeof posts.body | typeof contentBlocks.value) => sql`${like(col, pattern)} ESCAPE '\\'`;
+  const names = (col: typeof posts.body | typeof contentBlocks.value) =>
+    sql`${like(col, pattern)} ESCAPE '\\'`;
   const [postRows, pageRows] = await Promise.all([
-    db.select({ id: posts.id, body: posts.body, kind: posts.kind, coverImage: posts.coverImage }).from(posts).where(and(isNotNull(posts.renderVersion), names(posts.body))),
-    db.select({ key: contentBlocks.key, value: contentBlocks.value }).from(contentBlocks).where(and(eq(contentBlocks.kind, "page"), isNotNull(contentBlocks.renderVersion), names(contentBlocks.value))),
+    db
+      .select({ id: posts.id, body: posts.body, kind: posts.kind, coverImage: posts.coverImage })
+      .from(posts)
+      .where(and(isNotNull(posts.renderVersion), names(posts.body))),
+    db
+      .select({ key: contentBlocks.key, value: contentBlocks.value })
+      .from(contentBlocks)
+      .where(
+        and(
+          eq(contentBlocks.kind, "page"),
+          isNotNull(contentBlocks.renderVersion),
+          names(contentBlocks.value),
+        ),
+      ),
   ]);
   let done = 0;
   for (const p of postRows) {
     try {
       const r = await renderMarkdown(p.body, lookup, { lcpAbove: lcpAboveBody(p) });
-      await db.update(posts).set({ bodyHtml: r.html, bodyMeta: r.meta, renderVersion: r.renderVersion, readingTime: r.readingMinutes }).where(eq(posts.id, p.id));
+      await db
+        .update(posts)
+        .set({
+          bodyHtml: r.html,
+          bodyMeta: r.meta,
+          renderVersion: r.renderVersion,
+          readingTime: r.readingMinutes,
+        })
+        .where(eq(posts.id, p.id));
       done += 1;
     } catch (err) {
-      logEvent("render.media-failed", { what: `post ${p.id}`, key, error: err instanceof Error ? err.message : String(err) }, { level: "error" });
+      logEvent(
+        "render.media-failed",
+        { what: `post ${p.id}`, key, error: err instanceof Error ? err.message : String(err) },
+        { level: "error" },
+      );
     }
   }
   for (const b of pageRows) {
     try {
       const r = await renderMarkdown(b.value, lookup);
-      await db.update(contentBlocks).set({ bodyHtml: r.html, renderVersion: r.renderVersion }).where(eq(contentBlocks.key, b.key));
+      await db
+        .update(contentBlocks)
+        .set({ bodyHtml: r.html, renderVersion: r.renderVersion })
+        .where(eq(contentBlocks.key, b.key));
       done += 1;
     } catch (err) {
-      logEvent("render.media-failed", { what: b.key, key, error: err instanceof Error ? err.message : String(err) }, { level: "error" });
+      logEvent(
+        "render.media-failed",
+        { what: b.key, key, error: err instanceof Error ? err.message : String(err) },
+        { level: "error" },
+      );
     }
   }
   return done;
@@ -205,13 +294,22 @@ export async function rerenderUsing(env: Env, key: string): Promise<number> {
  * Re-renders every converted post and page whose render is older than Prelum's, from the every-minute cron. Rows that
  * no longer render are logged and left as they are. The updated_at stays: nothing a writer did changed.
  */
-export async function rerenderStale(env: Env): Promise<{ posts: number; pages: number; failed: number }> {
+export async function rerenderStale(
+  env: Env,
+): Promise<{ posts: number; pages: number; failed: number }> {
   const db = getDb(env);
   const lookup = libraryMedia(env);
-  const stale = (col: typeof posts.renderVersion | typeof contentBlocks.renderVersion) => and(isNotNull(col), ne(col, RENDER_VERSION));
+  const stale = (col: typeof posts.renderVersion | typeof contentBlocks.renderVersion) =>
+    and(isNotNull(col), ne(col, RENDER_VERSION));
   const [postRows, pageRows] = await Promise.all([
-    db.select({ id: posts.id, body: posts.body, kind: posts.kind, coverImage: posts.coverImage }).from(posts).where(stale(posts.renderVersion)),
-    db.select({ key: contentBlocks.key, value: contentBlocks.value }).from(contentBlocks).where(and(eq(contentBlocks.kind, "page"), stale(contentBlocks.renderVersion))),
+    db
+      .select({ id: posts.id, body: posts.body, kind: posts.kind, coverImage: posts.coverImage })
+      .from(posts)
+      .where(stale(posts.renderVersion)),
+    db
+      .select({ key: contentBlocks.key, value: contentBlocks.value })
+      .from(contentBlocks)
+      .where(and(eq(contentBlocks.kind, "page"), stale(contentBlocks.renderVersion))),
   ]);
   let failed = 0;
   const attempt = async (what: string, run: () => Promise<unknown>) => {
@@ -219,19 +317,36 @@ export async function rerenderStale(env: Env): Promise<{ posts: number; pages: n
       await run();
     } catch (err) {
       failed += 1;
-      console.error(JSON.stringify({ event: "render.stale-failed", what, error: err instanceof Error ? err.message : String(err) }));
+      console.error(
+        JSON.stringify({
+          event: "render.stale-failed",
+          what,
+          error: err instanceof Error ? err.message : String(err),
+        }),
+      );
     }
   };
   for (const p of postRows) {
     await attempt(`post ${p.id}`, async () => {
       const r = await renderMarkdown(p.body, lookup, { lcpAbove: lcpAboveBody(p) });
-      await db.update(posts).set({ bodyHtml: r.html, bodyMeta: r.meta, renderVersion: r.renderVersion, readingTime: r.readingMinutes }).where(eq(posts.id, p.id));
+      await db
+        .update(posts)
+        .set({
+          bodyHtml: r.html,
+          bodyMeta: r.meta,
+          renderVersion: r.renderVersion,
+          readingTime: r.readingMinutes,
+        })
+        .where(eq(posts.id, p.id));
     });
   }
   for (const b of pageRows) {
     await attempt(b.key, async () => {
       const r = await renderMarkdown(b.value, lookup);
-      await db.update(contentBlocks).set({ bodyHtml: r.html, renderVersion: r.renderVersion }).where(eq(contentBlocks.key, b.key));
+      await db
+        .update(contentBlocks)
+        .set({ bodyHtml: r.html, renderVersion: r.renderVersion })
+        .where(eq(contentBlocks.key, b.key));
     });
   }
   return { posts: postRows.length, pages: pageRows.length, failed };

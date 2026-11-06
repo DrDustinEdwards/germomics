@@ -21,7 +21,8 @@ export function TranscriptField({
 
   async function readFile(file: File) {
     const text = await file.text();
-    const isSrt = file.name.toLowerCase().endsWith(".srt") || (!isProbablyVtt(text) && /-->/.test(text));
+    const isSrt =
+      file.name.toLowerCase().endsWith(".srt") || (!isProbablyVtt(text) && /-->/.test(text));
     const vtt = isSrt ? srtToVtt(text) : text;
     onChange(vtt);
     setNote(isSrt ? "Converted SRT → VTT." : "Loaded VTT.");
@@ -83,12 +84,15 @@ export function TranscriptField({
         cues.length ? (
           <div className="rounded-xl border border-border bg-surface p-3">
             <p className="mb-2 font-mono text-[11px] text-muted">
-              Parsed {cues.length} cues · {formatDuration(Math.round(cues[cues.length - 1]?.end ?? 0))}
+              Parsed {cues.length} cues ·{" "}
+              {formatDuration(Math.round(cues[cues.length - 1]?.end ?? 0))}
             </p>
             <ul className="space-y-1 text-xs text-ink">
               {cues.slice(0, 4).map((c, i) => (
                 <li key={i} className="flex gap-2">
-                  <span className="font-mono text-[11px] text-accent">{formatDuration(Math.floor(c.start))}</span>
+                  <span className="font-mono text-[11px] text-accent">
+                    {formatDuration(Math.floor(c.start))}
+                  </span>
                   <span className="line-clamp-1">{c.text}</span>
                 </li>
               ))}

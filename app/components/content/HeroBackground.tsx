@@ -34,10 +34,54 @@ type Blob = {
 // fill, so the center opacities are set higher to compensate. Tune positions/opacity by eye here
 // (never the text). Durations 26s to 38s with varied negative delays so the drift never syncs.
 const BLOBS: Blob[] = [
-  { color: "var(--brand)", op: 0.55, top: "-40%", left: "2%", size: "26rem", dx: "26px", dy: "20px", s: "1.12", dur: "30s", delay: "-4s" },
-  { color: "var(--brand)", op: 0.5, top: "-44%", left: "48%", size: "30rem", dx: "-30px", dy: "16px", s: "1.10", dur: "36s", delay: "-12s" },
-  { color: "var(--brand)", op: 0.42, top: "-28%", left: "26%", size: "24rem", dx: "18px", dy: "-22px", s: "1.14", dur: "26s", delay: "-8s" },
-  { color: "var(--accent)", op: 0.38, top: "-36%", left: "70%", size: "26rem", dx: "-20px", dy: "-18px", s: "1.08", dur: "38s", delay: "-2s" },
+  {
+    color: "var(--brand)",
+    op: 0.55,
+    top: "-40%",
+    left: "2%",
+    size: "26rem",
+    dx: "26px",
+    dy: "20px",
+    s: "1.12",
+    dur: "30s",
+    delay: "-4s",
+  },
+  {
+    color: "var(--brand)",
+    op: 0.5,
+    top: "-44%",
+    left: "48%",
+    size: "30rem",
+    dx: "-30px",
+    dy: "16px",
+    s: "1.10",
+    dur: "36s",
+    delay: "-12s",
+  },
+  {
+    color: "var(--brand)",
+    op: 0.42,
+    top: "-28%",
+    left: "26%",
+    size: "24rem",
+    dx: "18px",
+    dy: "-22px",
+    s: "1.14",
+    dur: "26s",
+    delay: "-8s",
+  },
+  {
+    color: "var(--accent)",
+    op: 0.38,
+    top: "-36%",
+    left: "70%",
+    size: "26rem",
+    dx: "-20px",
+    dy: "-18px",
+    s: "1.08",
+    dur: "38s",
+    delay: "-2s",
+  },
 ];
 
 export function HeroBackground() {

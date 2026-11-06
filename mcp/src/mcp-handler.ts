@@ -6,7 +6,12 @@
  * shim's removal condition: drop `isLegacyRequest` below to go modern-only.
  */
 
-import { mcpCacheHints, registerTools, routeMcpEra, type McpServerInfo } from "@dustinedwards/site-runtime/mcp-server";
+import {
+  mcpCacheHints,
+  registerTools,
+  routeMcpEra,
+  type McpServerInfo,
+} from "@dustinedwards/site-runtime/mcp-server";
 import { isLegacyRequest, McpServer } from "@modelcontextprotocol/server";
 import { createMcpHandler } from "agents/mcp/server";
 
@@ -24,7 +29,12 @@ export const SERVER_INFO = {
 };
 
 /** This server as refusals, the step-up challenge and the tool-call log name it. */
-export const SERVER: McpServerInfo = { site: "germomics.com", scopes: SCOPES, name: SERVER_INFO.name, version: SERVER_INFO.version };
+export const SERVER: McpServerInfo = {
+  site: "germomics.com",
+  scopes: SCOPES,
+  name: SERVER_INFO.name,
+  version: SERVER_INFO.version,
+};
 
 const INSTRUCTIONS =
   "Runs germomics.com for its administrator. Today it covers the site's backups: check their state now, and back up the " +
@@ -45,7 +55,12 @@ function buildServer(env: ToolEnv, caller: Caller | undefined) {
     // site-runtime's registerTools: only the tools the grant can call are listed (T7), each with the server's icon
     // (T9), the 403 step-up before a tool runs, and invokeTool, which still checks the scope (for a caller with no OAuth
     // grant behind it), logs the call and hands the handler the request's abort signal (P11).
-    registerTools(server as unknown as Parameters<typeof registerTools>[0], TOOLS, { env, server: SERVER, caller, icons: SERVER_INFO.icons });
+    registerTools(server as unknown as Parameters<typeof registerTools>[0], TOOLS, {
+      env,
+      server: SERVER,
+      caller,
+      icons: SERVER_INFO.icons,
+    });
     return server;
   };
 }

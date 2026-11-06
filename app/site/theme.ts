@@ -4,7 +4,8 @@ import { applyTheme, effectiveTheme } from "../lib/theme";
 
 function syncLabels() {
   const label = `Switch to ${effectiveTheme() === "dark" ? "light" : "dark"} theme`;
-  for (const button of document.querySelectorAll("[data-theme-toggle]")) button.setAttribute("aria-label", label);
+  for (const button of document.querySelectorAll("[data-theme-toggle]"))
+    button.setAttribute("aria-label", label);
 }
 
 export function enhanceTheme() {

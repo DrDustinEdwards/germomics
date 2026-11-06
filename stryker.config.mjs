@@ -22,7 +22,12 @@ const CHUNKS = {
     "app/lib/vtt.ts",
   ],
 };
-CHUNKS.rest = [...ALL, ...Object.values(CHUNKS).flat().map((glob) => `!${glob}`)];
+CHUNKS.rest = [
+  ...ALL,
+  ...Object.values(CHUNKS)
+    .flat()
+    .map((glob) => `!${glob}`),
+];
 
 const chunk = process.env.STRYKER_CHUNK;
 if (chunk && !CHUNKS[chunk]) {

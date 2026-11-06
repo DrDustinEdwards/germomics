@@ -53,11 +53,18 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
       <ul className="divide-y divide-border rounded-xl border border-border bg-card">
         {recent.map((p) => (
           <li key={p.id}>
-            <a href={carrelEditUrl(p.slug)} className="flex items-center justify-between px-4 py-2.5 hover:bg-surface">
-              <span className="flex min-w-0 items-center gap-1.5 truncate font-display">{p.title} <ExternalLink size={12} aria-hidden /></span>
+            <a
+              href={carrelEditUrl(p.slug)}
+              className="flex items-center justify-between px-4 py-2.5 hover:bg-surface"
+            >
+              <span className="flex min-w-0 items-center gap-1.5 truncate font-display">
+                {p.title} <ExternalLink size={12} aria-hidden />
+              </span>
               <span className="ml-3 flex shrink-0 items-center gap-2 font-mono text-[11px] uppercase text-muted">
                 <span>{p.kind}</span>
-                <span className={p.status === "published" ? "text-accent" : "text-brand"}>{p.status}</span>
+                <span className={p.status === "published" ? "text-accent" : "text-brand"}>
+                  {p.status}
+                </span>
                 {p.publishedAt ? <span>{formatDate(p.publishedAt)}</span> : null}
               </span>
             </a>

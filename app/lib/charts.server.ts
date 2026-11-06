@@ -22,7 +22,8 @@ const WIDE_PX = 480;
 function drawingOf(html: string): string {
   const start = html.indexOf('<div class="enarratio-frame');
   const end = html.indexOf("</svg></div>", start);
-  if (start === -1 || end === -1) throw new Error("timelineChart: no drawing in Enarratio's output");
+  if (start === -1 || end === -1)
+    throw new Error("timelineChart: no drawing in Enarratio's output");
   return html.slice(start, end + "</svg></div>".length);
 }
 
@@ -64,7 +65,9 @@ export function timelineChart(slug: string, t: Timeline): string {
     formatX: (v: number | Date) => labels.get(Number(v)) ?? String(v),
   } satisfies LineChartOptions<(typeof data)[number]>;
   const wide = lineChart(options);
-  const narrow = drawingOf(lineChart({ ...options, width: NARROW_WIDTH, height: shownHeight(wide) }));
+  const narrow = drawingOf(
+    lineChart({ ...options, width: NARROW_WIDTH, height: shownHeight(wide) }),
+  );
   return frameHtml(wide, { redraw: { narrow } });
 }
 
@@ -97,7 +100,12 @@ export function dataMap(slug: string, m: DataMap): string {
     labelHeader: "Street",
     valueLabel: m.valueLabel,
     basemap: [{ geometry: SOHO_STREETS, labels: "name" }],
-    landmarks: m.landmarks.map((l) => ({ name: l.label, longitude: l.lng, latitude: l.lat, highlight: l.label === m.marked })),
+    landmarks: m.landmarks.map((l) => ({
+      name: l.label,
+      longitude: l.lng,
+      latitude: l.lat,
+      highlight: l.label === m.marked,
+    })),
     landmarkLabel: m.landmarkLabel,
     caption: m.legend,
     source: { name: m.source.label, href: m.source.url },

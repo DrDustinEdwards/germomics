@@ -44,10 +44,19 @@ function EpisodesMenu({ seasons }: { seasons: number[] }) {
         {label}
         <ChevronDown size={14} aria-hidden className="transition-transform" data-menu-chevron />
       </button>
-      <ul role="menu" aria-label={label} hidden className="absolute left-0 top-full z-40 mt-1 min-w-48 rounded-lg border border-border bg-card p-1 shadow-lg">
+      <ul
+        role="menu"
+        aria-label={label}
+        hidden
+        className="absolute left-0 top-full z-40 mt-1 min-w-48 rounded-lg border border-border bg-card p-1 shadow-lg"
+      >
         {items.map((it) => (
           <li key={it.to} role="none">
-            <Link role="menuitem" to={it.to} className="block rounded px-3 py-2 text-sm text-muted hover:bg-surface hover:text-ink">
+            <Link
+              role="menuitem"
+              to={it.to}
+              className="block rounded px-3 py-2 text-sm text-muted hover:bg-surface hover:text-ink"
+            >
               {it.label}
             </Link>
           </li>
@@ -67,11 +76,16 @@ export function Header() {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-bg/85 backdrop-blur">
       <div className="mx-auto flex h-15 max-w-5xl items-center justify-between gap-4 px-4 py-3 max-[374px]:gap-1">
-        <Link to="/" className="flex items-center gap-2 font-display text-xl font-semibold tracking-tight text-ink">
+        <Link
+          to="/"
+          className="flex items-center gap-2 font-display text-xl font-semibold tracking-tight text-ink"
+        >
           {/* Hexagon G brand mark (themes via currentColor: brand purple light / lavender dark). Sized
               near the wordmark cap height and a touch under the old mic since the hexagon reads heavier. */}
           <GMark className="h-5 w-auto" />
-          <span>germ<span className="text-brand">omics</span></span>
+          <span>
+            germ<span className="text-brand">omics</span>
+          </span>
         </Link>
 
         {/* Desktop nav */}
@@ -82,7 +96,9 @@ export function Header() {
               <NavLabel snippetKey={item.key} fallback={item.fallback} />
             </NavLink>
           ))}
-          <Link to="/subscribe" className={subscribeCta}>{subscribeLabel}</Link>
+          <Link to="/subscribe" className={subscribeCta}>
+            {subscribeLabel}
+          </Link>
           <Link
             to="/search"
             aria-label="Search"
@@ -106,7 +122,12 @@ export function Header() {
           >
             <Search size={16} aria-hidden />
           </Link>
-          <Link to="/subscribe" className={`${subscribeCta} max-[374px]:px-1.5 max-[374px]:text-xs`}>{subscribeLabel}</Link>
+          <Link
+            to="/subscribe"
+            className={`${subscribeCta} max-[374px]:px-1.5 max-[374px]:text-xs`}
+          >
+            {subscribeLabel}
+          </Link>
           {/* /site.js opens and closes it (app/site/menus.ts), swapping the label and the icon. */}
           <button
             type="button"
@@ -122,15 +143,34 @@ export function Header() {
       </div>
 
       {/* Mobile menu */}
-      <nav id="mobile-menu" aria-label="Mobile" hidden className="border-t border-border bg-bg px-4 py-3 md:hidden">
+      <nav
+        id="mobile-menu"
+        aria-label="Mobile"
+        hidden
+        className="border-t border-border bg-bg px-4 py-3 md:hidden"
+      >
         <ul className="space-y-1">
-          <li><Link to="/episodes" className="block rounded px-2 py-2 font-display text-sm text-ink">All Episodes</Link></li>
+          <li>
+            <Link to="/episodes" className="block rounded px-2 py-2 font-display text-sm text-ink">
+              All Episodes
+            </Link>
+          </li>
           {seasons.map((s) => (
-            <li key={s}><Link to={`/season/${s}`} className="block rounded px-2 py-2 pl-5 text-sm text-muted hover:text-ink">Season {s}</Link></li>
+            <li key={s}>
+              <Link
+                to={`/season/${s}`}
+                className="block rounded px-2 py-2 pl-5 text-sm text-muted hover:text-ink"
+              >
+                Season {s}
+              </Link>
+            </li>
           ))}
           {NAV.map((item) => (
             <li key={item.to}>
-              <Link to={item.to} className="block rounded px-2 py-2 font-display text-sm text-muted hover:text-ink">
+              <Link
+                to={item.to}
+                className="block rounded px-2 py-2 font-display text-sm text-muted hover:text-ink"
+              >
                 <NavLabel snippetKey={item.key} fallback={item.fallback} />
               </Link>
             </li>

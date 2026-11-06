@@ -47,13 +47,21 @@ export const middleware: Route.MiddlewareFunction[] = [
     const response = await next();
     const headers = new Headers(response.headers);
     for (const [name, value] of Object.entries(PRIVATE)) headers.set(name, value);
-    return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
   },
 ];
 
 // No email or token in the line: accessAdmin says only yes or no, and the log scrubs any address.
 function logRefusal(request: Request, reason: string, status: number) {
-  logEvent(OWASP_EVENTS.authorizationFailure, { ...requestFields(request), reason, status }, { level: "warn" });
+  logEvent(
+    OWASP_EVENTS.authorizationFailure,
+    { ...requestFields(request), reason, status },
+    { level: "warn" },
+  );
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -65,12 +73,54 @@ const icon = (Icon: typeof LayoutDashboard) => <Icon className="cap-admin-icon" 
 
 // The admin's pages, grouped as the menu shows them. `match` decides which entry is current.
 const ENTRIES: Array<AdminEntry & { match: (path: string) => boolean }> = [
-  { id: "dashboard", label: "Dashboard", href: "/admin", group: "Overview", icon: icon(LayoutDashboard), match: (p) => p === "/admin" },
-  { id: "episodes", label: "Episode audio", href: "/admin/episodes", group: "Content", icon: icon(FileAudio), match: (p) => p.startsWith("/admin/episodes") },
-  { id: "people", label: "People", href: "/admin/people", group: "Content", icon: icon(Users), match: (p) => p.startsWith("/admin/people") },
-  { id: "soundbites", label: "Soundbites", href: "/admin/soundbites", group: "Content", icon: icon(Scissors), match: (p) => p.startsWith("/admin/soundbites") },
-  { id: "subscribers", label: "Subscribers", href: "/admin/subscribers", group: "Audience", icon: icon(Mail), match: (p) => p.startsWith("/admin/subscribers") },
-  { id: "settings", label: "Settings", href: "/admin/settings", group: "Site", icon: icon(Settings), match: (p) => p.startsWith("/admin/settings") || p.startsWith("/admin/content") },
+  {
+    id: "dashboard",
+    label: "Dashboard",
+    href: "/admin",
+    group: "Overview",
+    icon: icon(LayoutDashboard),
+    match: (p) => p === "/admin",
+  },
+  {
+    id: "episodes",
+    label: "Episode audio",
+    href: "/admin/episodes",
+    group: "Content",
+    icon: icon(FileAudio),
+    match: (p) => p.startsWith("/admin/episodes"),
+  },
+  {
+    id: "people",
+    label: "People",
+    href: "/admin/people",
+    group: "Content",
+    icon: icon(Users),
+    match: (p) => p.startsWith("/admin/people"),
+  },
+  {
+    id: "soundbites",
+    label: "Soundbites",
+    href: "/admin/soundbites",
+    group: "Content",
+    icon: icon(Scissors),
+    match: (p) => p.startsWith("/admin/soundbites"),
+  },
+  {
+    id: "subscribers",
+    label: "Subscribers",
+    href: "/admin/subscribers",
+    group: "Audience",
+    icon: icon(Mail),
+    match: (p) => p.startsWith("/admin/subscribers"),
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    href: "/admin/settings",
+    group: "Site",
+    icon: icon(Settings),
+    match: (p) => p.startsWith("/admin/settings") || p.startsWith("/admin/content"),
+  },
 ];
 
 // Capsomer's tokens are keyed on data-cap-theme; the site's own switch is data-theme on <html>
@@ -81,7 +131,10 @@ function useCapTheme(): Theme {
     const sync = () => setTheme(effectiveTheme());
     sync();
     const observer = new MutationObserver(sync);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     mq.addEventListener("change", sync);
     return () => {
@@ -103,11 +156,18 @@ export default function AdminLayout({ loaderData }: Route.ComponentProps) {
   const email = loaderData.email;
 
   return (
-    <div data-cap-theme={theme} data-cap-site="germomics" suppressHydrationWarning style={{ display: "contents" }}>
+    <div
+      data-cap-theme={theme}
+      data-cap-site="germomics"
+      suppressHydrationWarning
+      style={{ display: "contents" }}
+    >
       <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
       <AdminShell
         title="Germomics"
-        apps={[{ id: "germomics", label: "Germomics admin", href: "/admin", mono: "G", current: true }]}
+        apps={[
+          { id: "germomics", label: "Germomics admin", href: "/admin", mono: "G", current: true },
+        ]}
         nav={nav}
         renderLink={({ href, children, ...rest }) => (
           <Link to={href} {...rest}>

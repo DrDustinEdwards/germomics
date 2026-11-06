@@ -11,9 +11,12 @@ export function SoundbiteClips({ track, clips }: { track: PlayerTrack; clips: So
   const player = usePlayer();
   const stopAt = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => () => {
-    if (stopAt.current) clearTimeout(stopAt.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (stopAt.current) clearTimeout(stopAt.current);
+    },
+    [],
+  );
 
   if (!clips.length) return null;
 
@@ -43,7 +46,9 @@ export function SoundbiteClips({ track, clips }: { track: PlayerTrack; clips: So
                 <Play size={16} aria-hidden />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-display text-sm text-ink">{c.title || "Clip"}</span>
+                <span className="block truncate font-display text-sm text-ink">
+                  {c.title || "Clip"}
+                </span>
                 <span className="font-mono text-[11px] text-muted">
                   {formatDuration(c.start)} · {c.duration}s
                 </span>

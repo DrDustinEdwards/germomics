@@ -36,7 +36,9 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     .filter((e) => (seen.has(e.id) ? false : (seen.add(e.id), true)))
     .sort((a, b) => String(b.publishedAt ?? "").localeCompare(String(a.publishedAt ?? "")));
 
-  const legacy = episodes.flatMap((e) => e.guests ?? []).find((g) => slugifyGuest(g.name) === params.guest);
+  const legacy = episodes
+    .flatMap((e) => e.guests ?? [])
+    .find((g) => slugifyGuest(g.name) === params.guest);
   const name = person?.name ?? legacy?.name ?? params.guest;
   const photo = person?.photo ? { src: person.photo, alt: person.photoAlt ?? name } : null;
 
@@ -62,7 +64,12 @@ export default function GuestPage({ loaderData }: Route.ComponentProps) {
       <p className="font-mono text-xs uppercase tracking-wide text-accent">Guest</p>
       <div className="mb-6 mt-2 flex items-start gap-4">
         {photo ? (
-          <Picture src={photo} image={imageFor(images, "portrait", photo)} alt={photoAlt ?? name} className="h-16 w-16 rounded-full border border-border object-cover" />
+          <Picture
+            src={photo}
+            image={imageFor(images, "portrait", photo)}
+            alt={photoAlt ?? name}
+            className="h-16 w-16 rounded-full border border-border object-cover"
+          />
         ) : null}
         <div>
           <h1 className="font-display text-3xl font-semibold">{name}</h1>
@@ -71,7 +78,9 @@ export default function GuestPage({ loaderData }: Route.ComponentProps) {
           {links.length ? (
             <div className="mt-2 flex flex-wrap gap-3 font-mono text-xs">
               {links.map((l) => (
-                <a key={l.url} href={l.url} className="text-accent hover:underline">{l.label || "link"}</a>
+                <a key={l.url} href={l.url} className="text-accent hover:underline">
+                  {l.label || "link"}
+                </a>
               ))}
             </div>
           ) : null}

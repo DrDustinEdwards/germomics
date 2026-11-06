@@ -13,7 +13,10 @@ export function sectionPageTrail(section: Crumb, page: Crumb): Crumb[] {
 }
 
 export function seasonTrail(num: number): Crumb[] {
-  return sectionPageTrail({ name: "Episodes", path: "/episodes" }, { name: `Season ${num}`, path: `/season/${num}` });
+  return sectionPageTrail(
+    { name: "Episodes", path: "/episodes" },
+    { name: `Season ${num}`, path: `/season/${num}` },
+  );
 }
 
 /** An episode runs through its season, when it has one; an article through Writing. */

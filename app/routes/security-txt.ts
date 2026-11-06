@@ -3,5 +3,9 @@ import { securityTxtResponse } from "@dustinedwards/site-runtime/security-txt";
 import { SECURITY_CONTACT, SECURITY_TXT_EXPIRES, SITE_ORIGIN } from "~/lib/site";
 
 export function loader() {
-  return securityTxtResponse({ origin: SITE_ORIGIN, contact: SECURITY_CONTACT, expires: SECURITY_TXT_EXPIRES });
+  return securityTxtResponse({
+    origin: SITE_ORIGIN,
+    contact: SECURITY_CONTACT,
+    expires: SECURITY_TXT_EXPIRES,
+  });
 }

@@ -12,7 +12,11 @@ import { getDb } from "~/db/index.server";
 import { subscribers } from "~/db/schema";
 import { PUBLIC_FORM, readForm } from "~/lib/body.server";
 
-type Result = { status: "confirm" | "done" | "already" | "invalid"; email?: string; token?: string };
+type Result = {
+  status: "confirm" | "done" | "already" | "invalid";
+  email?: string;
+  token?: string;
+};
 
 async function lookup(env: Env, token: string | null) {
   if (!token) return null;
@@ -64,7 +68,11 @@ export default function Unsubscribe({ loaderData, actionData }: Route.ComponentP
   return (
     <div className="mx-auto max-w-md py-16 text-center">
       <h1 className="font-display text-2xl font-semibold">
-        {status === "invalid" ? "Link not recognized" : status === "confirm" ? "Unsubscribe?" : "Unsubscribed"}
+        {status === "invalid"
+          ? "Link not recognized"
+          : status === "confirm"
+            ? "Unsubscribe?"
+            : "Unsubscribed"}
       </h1>
       <p className="mt-3 text-muted">
         {status === "confirm" && (
@@ -75,8 +83,8 @@ export default function Unsubscribe({ loaderData, actionData }: Route.ComponentP
         )}
         {status === "done" && (
           <>
-            {email ? <strong className="text-ink">{email}</strong> : "You"} has been removed from the
-            Germomics newsletter. Sorry to see you go.
+            {email ? <strong className="text-ink">{email}</strong> : "You"} has been removed from
+            the Germomics newsletter. Sorry to see you go.
           </>
         )}
         {status === "already" && "You’re already unsubscribed. No further emails will be sent."}

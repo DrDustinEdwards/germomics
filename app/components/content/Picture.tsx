@@ -6,7 +6,10 @@ import type { ImgHTMLAttributes } from "react";
 import { pictureProps } from "@dustinedwards/site-runtime/image";
 import type { ImageAttributes } from "~/lib/images";
 
-type Props = Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "srcSet" | "sizes" | "width" | "height" | "loading" | "fetchPriority" | "decoding"> & {
+type Props = Omit<
+  ImgHTMLAttributes<HTMLImageElement>,
+  "src" | "srcSet" | "sizes" | "width" | "height" | "loading" | "fetchPriority" | "decoding"
+> & {
   src: string;
   alt: string;
   image?: ImageAttributes;
@@ -17,9 +20,18 @@ type Props = Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "srcSet" | "sizes
 };
 
 export function Picture({ src, image, width, height, alt, className, priority, ...rest }: Props) {
-  const attrs = image ?? { src, srcset: undefined, sizes: undefined, sources: [], width, height, background: undefined };
+  const attrs = image ?? {
+    src,
+    srcset: undefined,
+    sizes: undefined,
+    sources: [],
+    width,
+    height,
+    background: undefined,
+  };
   const { sources, img } = pictureProps(attrs, { alt, priority, className });
-  if (sources.length === 0) return <img {...img} alt={alt} {...rest} style={{ ...img.style, ...rest.style }} />;
+  if (sources.length === 0)
+    return <img {...img} alt={alt} {...rest} style={{ ...img.style, ...rest.style }} />;
   return (
     <picture className="contents">
       {sources.map((s) => (

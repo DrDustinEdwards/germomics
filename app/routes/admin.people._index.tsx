@@ -45,7 +45,15 @@ export async function action({ request, context }: Route.ActionArgs) {
   return { ok: true as const, message: "Saved." };
 }
 
-const blank = { id: 0, name: "", role: "", bio: "", photo: "", photoAlt: "", links: [] as PersonLink[] };
+const blank = {
+  id: 0,
+  name: "",
+  role: "",
+  bio: "",
+  photo: "",
+  photoAlt: "",
+  links: [] as PersonLink[],
+};
 
 export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
   const save = useFetcher<{ ok: boolean; message?: string }>();
@@ -71,7 +79,9 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
       <h1 className="flex items-center gap-2 font-display text-2xl font-semibold">
         <Users size={22} aria-hidden /> People
       </h1>
-      <p className="mt-1 text-sm text-muted">Reusable guests. Link them to episodes from the editor.</p>
+      <p className="mt-1 text-sm text-muted">
+        Reusable guests. Link them to episodes from the editor.
+      </p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_22rem]">
         {/* List */}
@@ -83,19 +93,43 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
               {loaderData.people.map((p) => (
                 <li key={p.id} className="flex items-center gap-3 px-4 py-3">
                   {p.photo ? (
-                    <img src={p.photo} alt={p.photoAlt ?? ""} className="h-10 w-10 rounded-full border border-border object-cover" />
+                    <img
+                      src={p.photo}
+                      alt={p.photoAlt ?? ""}
+                      className="h-10 w-10 rounded-full border border-border object-cover"
+                    />
                   ) : (
-                    <span className="grid h-10 w-10 place-items-center rounded-full bg-surface text-brand"><Users size={16} aria-hidden /></span>
+                    <span className="grid h-10 w-10 place-items-center rounded-full bg-surface text-brand">
+                      <Users size={16} aria-hidden />
+                    </span>
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-display font-medium text-ink">{p.name}</p>
-                    {p.role ? <p className="truncate font-mono text-[11px] text-muted">{p.role}</p> : null}
+                    {p.role ? (
+                      <p className="truncate font-mono text-[11px] text-muted">{p.role}</p>
+                    ) : null}
                   </div>
-                  <button type="button" onClick={() => load(p)} className="rounded px-2 py-1 font-mono text-xs text-accent hover:underline">edit</button>
-                  <del.Form method="post" onSubmit={(e) => { if (!confirm(`Delete ${p.name}?`)) e.preventDefault(); }}>
+                  <button
+                    type="button"
+                    onClick={() => load(p)}
+                    className="rounded px-2 py-1 font-mono text-xs text-accent hover:underline"
+                  >
+                    edit
+                  </button>
+                  <del.Form
+                    method="post"
+                    onSubmit={(e) => {
+                      if (!confirm(`Delete ${p.name}?`)) e.preventDefault();
+                    }}
+                  >
                     <input type="hidden" name="intent" value="delete" />
                     <input type="hidden" name="id" value={p.id} />
-                    <button aria-label={`Delete ${p.name}`} className="grid h-7 w-7 place-items-center rounded text-muted hover:text-brand"><Trash2 size={14} aria-hidden /></button>
+                    <button
+                      aria-label={`Delete ${p.name}`}
+                      className="grid h-7 w-7 place-items-center rounded text-muted hover:text-brand"
+                    >
+                      <Trash2 size={14} aria-hidden />
+                    </button>
                   </del.Form>
                 </li>
               ))}
@@ -105,8 +139,21 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
 
         {/* Editor */}
         <aside>
-          <Card title={editing ? "Edit person" : "New person"} icon={editing ? undefined : <UserPlus size={15} aria-hidden />}
-            actions={editing ? <button type="button" onClick={() => setDraft(blank)} className="font-mono text-xs text-muted hover:text-ink">+ new</button> : undefined}>
+          <Card
+            title={editing ? "Edit person" : "New person"}
+            icon={editing ? undefined : <UserPlus size={15} aria-hidden />}
+            actions={
+              editing ? (
+                <button
+                  type="button"
+                  onClick={() => setDraft(blank)}
+                  className="font-mono text-xs text-muted hover:text-ink"
+                >
+                  + new
+                </button>
+              ) : undefined
+            }
+          >
             <save.Form method="post" className="space-y-4">
               {editing ? <input type="hidden" name="id" value={draft.id} /> : null}
               <input type="hidden" name="photo" value={draft.photo} />
@@ -114,13 +161,39 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
               <input type="hidden" name="links" value={JSON.stringify(draft.links)} />
 
               <Field label="Name" required>
-                {({ id }) => <input id={id} name="name" value={draft.name} onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))} className={inputCx} required />}
+                {({ id }) => (
+                  <input
+                    id={id}
+                    name="name"
+                    value={draft.name}
+                    onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
+                    className={inputCx}
+                    required
+                  />
+                )}
               </Field>
               <Field label="Role / title">
-                {({ id }) => <input id={id} name="role" value={draft.role} onChange={(e) => setDraft((d) => ({ ...d, role: e.target.value }))} className={inputCx} />}
+                {({ id }) => (
+                  <input
+                    id={id}
+                    name="role"
+                    value={draft.role}
+                    onChange={(e) => setDraft((d) => ({ ...d, role: e.target.value }))}
+                    className={inputCx}
+                  />
+                )}
               </Field>
               <Field label="Bio">
-                {({ id }) => <textarea id={id} name="bio" value={draft.bio} rows={3} onChange={(e) => setDraft((d) => ({ ...d, bio: e.target.value }))} className={inputCx} />}
+                {({ id }) => (
+                  <textarea
+                    id={id}
+                    name="bio"
+                    value={draft.bio}
+                    rows={3}
+                    onChange={(e) => setDraft((d) => ({ ...d, bio: e.target.value }))}
+                    className={inputCx}
+                  />
+                )}
               </Field>
 
               <ImageField
@@ -136,19 +209,66 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                 <div className="mt-2 space-y-2">
                   {draft.links.map((l, i) => (
                     <div key={i} className="flex gap-2">
-                      <input aria-label="Link label" placeholder="label" value={l.label} onChange={(e) => setDraft((d) => ({ ...d, links: d.links.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x) }))} className={`${inputCx} w-28 text-xs`} />
-                      <input aria-label="Link URL" placeholder="https://" value={l.url} onChange={(e) => setDraft((d) => ({ ...d, links: d.links.map((x, idx) => idx === i ? { ...x, url: e.target.value } : x) }))} className={`${inputCx} flex-1 text-xs`} />
-                      <button type="button" aria-label="Remove link" onClick={() => setDraft((d) => ({ ...d, links: d.links.filter((_, idx) => idx !== i) }))} className="grid h-8 w-8 place-items-center rounded text-muted hover:text-brand"><X size={14} aria-hidden /></button>
+                      <input
+                        aria-label="Link label"
+                        placeholder="label"
+                        value={l.label}
+                        onChange={(e) =>
+                          setDraft((d) => ({
+                            ...d,
+                            links: d.links.map((x, idx) =>
+                              idx === i ? { ...x, label: e.target.value } : x,
+                            ),
+                          }))
+                        }
+                        className={`${inputCx} w-28 text-xs`}
+                      />
+                      <input
+                        aria-label="Link URL"
+                        placeholder="https://"
+                        value={l.url}
+                        onChange={(e) =>
+                          setDraft((d) => ({
+                            ...d,
+                            links: d.links.map((x, idx) =>
+                              idx === i ? { ...x, url: e.target.value } : x,
+                            ),
+                          }))
+                        }
+                        className={`${inputCx} flex-1 text-xs`}
+                      />
+                      <button
+                        type="button"
+                        aria-label="Remove link"
+                        onClick={() =>
+                          setDraft((d) => ({ ...d, links: d.links.filter((_, idx) => idx !== i) }))
+                        }
+                        className="grid h-8 w-8 place-items-center rounded text-muted hover:text-brand"
+                      >
+                        <X size={14} aria-hidden />
+                      </button>
                     </div>
                   ))}
-                  <Button type="button" variant="ghost" onClick={() => setDraft((d) => ({ ...d, links: [...d.links, { label: "", url: "" }] }))}><Plus size={13} aria-hidden /> Add link</Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() =>
+                      setDraft((d) => ({ ...d, links: [...d.links, { label: "", url: "" }] }))
+                    }
+                  >
+                    <Plus size={13} aria-hidden /> Add link
+                  </Button>
                 </div>
               </div>
 
               <input type="hidden" name="intent" value="upsert" />
               <div className="flex items-center gap-3">
-                <Button type="submit" variant="primary" disabled={save.state !== "idle"}>{editing ? "Save" : "Create"}</Button>
-                {save.data?.ok ? <span className="font-mono text-xs text-accent">{save.data.message}</span> : null}
+                <Button type="submit" variant="primary" disabled={save.state !== "idle"}>
+                  {editing ? "Save" : "Create"}
+                </Button>
+                {save.data?.ok ? (
+                  <span className="font-mono text-xs text-accent">{save.data.message}</span>
+                ) : null}
               </div>
             </save.Form>
           </Card>

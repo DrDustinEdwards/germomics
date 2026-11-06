@@ -6,4 +6,7 @@ import { buildSecurityHeaders } from "@dustinedwards/site-runtime/headers";
 import { germomics } from "@dustinedwards/site-runtime/sites";
 import { TDM_RESERVATION_HEADERS } from "@drdustinedwards/site-helpers/robots";
 
-export const SECURITY_HEADERS: Record<string, string> = { ...buildSecurityHeaders({ site: germomics }), ...TDM_RESERVATION_HEADERS };
+export const SECURITY_HEADERS: Record<string, string> = {
+  ...buildSecurityHeaders({ site: germomics }),
+  ...TDM_RESERVATION_HEADERS,
+};

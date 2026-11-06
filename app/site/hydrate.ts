@@ -6,7 +6,13 @@
 // focus where it was. A pointer resting on a play button, or the focus reaching one, starts the work early. From then
 // on the page is the app, as every page was before. A page that hydrates on load has no <noscript>, and this stays
 // out of its way.
-import { AUDIO_STARTED_ATTRIBUTE, HYDRATED_ATTRIBUTE, HYDRATED_EVENT, HYDRATE_ON_INTENT_ID, STREAM_BUFFER } from "../lib/hydration";
+import {
+  AUDIO_STARTED_ATTRIBUTE,
+  HYDRATED_ATTRIBUTE,
+  HYDRATED_EVENT,
+  HYDRATE_ON_INTENT_ID,
+  STREAM_BUFFER,
+} from "../lib/hydration";
 import { resumeAt, storedRate, storedVolume } from "../lib/player-storage";
 
 const INTENT = "[data-play-intent]";
@@ -69,7 +75,8 @@ function start(nonce: string) {
     if (!(node instanceof HTMLScriptElement)) continue;
     // A script parsed as markup never runs; a new element with the same text does.
     const script = document.createElement("script");
-    for (const { name, value } of Array.from(node.attributes)) if (name !== "nonce") script.setAttribute(name, value);
+    for (const { name, value } of Array.from(node.attributes))
+      if (name !== "nonce") script.setAttribute(name, value);
     if (nonce) script.nonce = nonce;
     script.textContent = node.textContent;
     document.body.appendChild(script);
@@ -146,7 +153,10 @@ export function enhanceHydrateOnIntent(nonce: string) {
       event.preventDefault();
       event.stopImmediatePropagation();
       pending = playNow(button)
-        ? { index: Array.from(document.querySelectorAll(INTENT)).indexOf(button), focused: document.activeElement === button }
+        ? {
+            index: Array.from(document.querySelectorAll(INTENT)).indexOf(button),
+            focused: document.activeElement === button,
+          }
         : null;
       start(nonce);
     },

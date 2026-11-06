@@ -40,14 +40,24 @@ const sitePolicy = (nonce: string | undefined) =>
       font: ["data:"],
       connect: [MEDIA_ORIGIN, OP3_ORIGIN, "blob:"],
     },
-    extraDirectives: ["worker-src 'self' blob:", "child-src 'self' blob:", "manifest-src 'self'", "upgrade-insecure-requests"],
+    extraDirectives: [
+      "worker-src 'self' blob:",
+      "child-src 'self' blob:",
+      "manifest-src 'self'",
+      "upgrade-insecure-requests",
+    ],
   }) as const;
 const csp = (nonce: string | undefined) => buildContentSecurityPolicy(sitePolicy(nonce));
 // upgrade-insecure-requests stays in the enforced policy only: a browser ignores it in a Report-Only one, and says so.
 const staged = (nonce: string | undefined) => {
   const site = sitePolicy(nonce);
-  const extraDirectives = site.extraDirectives.filter((directive) => directive !== "upgrade-insecure-requests");
-  return buildStagedPolicy({ ...site, extraDirectives }, { trustedTypes: true, denyUnlisted: true });
+  const extraDirectives = site.extraDirectives.filter(
+    (directive) => directive !== "upgrade-insecure-requests",
+  );
+  return buildStagedPolicy(
+    { ...site, extraDirectives },
+    { trustedTypes: true, denyUnlisted: true },
+  );
 };
 
 /**
@@ -59,14 +69,27 @@ const staged = (nonce: string | undefined) => {
 export function withSecurityHeaders(response: Response, url: string, nonce?: string): Response {
   const { origin } = new URL(url);
   const headers = new Headers(response.headers);
-  applyHeaderSet(headers, { ...SECURITY_HEADERS, "Cross-Origin-Resource-Policy": corpFor(headers.get("Content-Type")) }, { overwrite: false });
+  applyHeaderSet(
+    headers,
+    { ...SECURITY_HEADERS, "Cross-Origin-Resource-Policy": corpFor(headers.get("Content-Type")) },
+    { overwrite: false },
+  );
   // The Reporting API's endpoint for report-to. reportingEndpoints refuses plain http off localhost
   // (a dev server on a LAN address), which a browser would ignore anyway, so that origin gets none.
-  if (!headers.has("Reporting-Endpoints") && !/^http:\/\/(?!localhost|127\.0\.0\.1|\[::1\])/.test(origin)) {
-    headers.set("Reporting-Endpoints", reportingEndpoints(CSP_REPORT_GROUP, new URL(CSP_REPORT_PATH, origin)));
+  if (
+    !headers.has("Reporting-Endpoints") &&
+    !/^http:\/\/(?!localhost|127\.0\.0\.1|\[::1\])/.test(origin)
+  ) {
+    headers.set(
+      "Reporting-Endpoints",
+      reportingEndpoints(CSP_REPORT_GROUP, new URL(CSP_REPORT_PATH, origin)),
+    );
   }
   // A route that declared its own policy keeps it.
-  if (!headers.has("Content-Security-Policy") && !headers.has("Content-Security-Policy-Report-Only")) {
+  if (
+    !headers.has("Content-Security-Policy") &&
+    !headers.has("Content-Security-Policy-Report-Only")
+  ) {
     for (const policy of [csp(nonce), staged(nonce)]) headers.set(policy.name, policy.value);
   }
   return new Response(response.body, {
@@ -85,6 +108,7 @@ export function withSecurityHeaders(response: Response, url: string, nonce?: str
 export function handleCspReport(request: Request, env: Env): Promise<Response> {
   const allow = async (r: Request) =>
     Boolean(env.CSP_REPORT_RATE_LIMIT) &&
-    (await env.CSP_REPORT_RATE_LIMIT.limit({ key: r.headers.get("cf-connecting-ip") || "anon" })).success;
+    (await env.CSP_REPORT_RATE_LIMIT.limit({ key: r.headers.get("cf-connecting-ip") || "anon" }))
+      .success;
   return receiveCspReport(request, { allow });
 }

@@ -70,12 +70,14 @@ export function EpisodePlayerSurface({
     else p.playTrackAt(track, Math.max(0, s));
   };
   const region: [number, number] | null =
-    chapter && dur > 0
-      ? [chapter.start / dur, (chapters[chapIdx + 1]?.start ?? dur) / dur]
-      : null;
+    chapter && dur > 0 ? [chapter.start / dur, (chapters[chapIdx + 1]?.start ?? dur) / dur] : null;
 
   return (
-    <section ref={sectionRef} aria-label="Player" className="rounded-2xl border border-border bg-surface p-4">
+    <section
+      ref={sectionRef}
+      aria-label="Player"
+      className="rounded-2xl border border-border bg-surface p-4"
+    >
       {chapter ? (
         <p className="mb-2 truncate font-display text-sm text-ink" title={chapter.title}>
           {chapter.title}

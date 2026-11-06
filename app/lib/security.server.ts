@@ -3,7 +3,13 @@
 // suggestions so spend can't run away. Cloudflare's WAF managed ruleset and bot rules are the primary perimeter
 // defense; this is the in-Worker layer. Security headers are security-headers.ts.
 
-import { ipKey, limit, limitedResponse, matchRule, mustStop } from "@dustinedwards/site-runtime/rate-limit";
+import {
+  ipKey,
+  limit,
+  limitedResponse,
+  matchRule,
+  mustStop,
+} from "@dustinedwards/site-runtime/rate-limit";
 import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runtime/log";
 import { loadSettings, settingNum } from "~/lib/content.server";
 
@@ -12,11 +18,24 @@ import { loadSettings, settingNum } from "~/lib/content.server";
 // Per-minute limits are tunable live via the settings table (ratelimit.*), falling back to these
 // defaults. A counter that is down lets the request through (logged by site-runtime): /admin sits
 // behind Access, the AI suggestions have their own daily cap, and a signup is one row.
-const RULES: Array<{ path: string; prefix?: boolean; methods?: string[]; bucket: string; settingKey: string; def: number }> = [
+const RULES: Array<{
+  path: string;
+  prefix?: boolean;
+  methods?: string[];
+  bucket: string;
+  settingKey: string;
+  def: number;
+}> = [
   { path: "/admin", prefix: true, bucket: "admin", settingKey: "ratelimit.admin", def: 150 },
   // A signup stores an address, so a script could fill the list (Grok audit 2026-10-21, GE-6).
   // Only the POST is metered; reading the page is not. /subscribe.data is the same action.
-  ...["/subscribe", "/subscribe.data"].map((path) => ({ path, methods: ["POST"], bucket: "subscribe", settingKey: "ratelimit.subscribe", def: 5 })),
+  ...["/subscribe", "/subscribe.data"].map((path) => ({
+    path,
+    methods: ["POST"],
+    bucket: "subscribe",
+    settingKey: "ratelimit.subscribe",
+    def: 5,
+  })),
 ];
 
 /** Returns a 429 Response if this request is rate-limited, otherwise null. A refusal writes one OWASP `excess_rate_limit_exceeded` line. */
@@ -24,9 +43,18 @@ export async function enforceRateLimit(env: Env, request: Request): Promise<Resp
   const match = matchRule(request, RULES);
   if (!match) return null;
   const max = settingNum(await loadSettings(env), match.settingKey, match.def);
-  const verdict = await limit(env.RATE_LIMITER, ipKey(match.bucket, request).key, [{ limit: max, windowSeconds: 60 }], { onUnavailable: "allow" });
+  const verdict = await limit(
+    env.RATE_LIMITER,
+    ipKey(match.bucket, request).key,
+    [{ limit: max, windowSeconds: 60 }],
+    { onUnavailable: "allow" },
+  );
   if (!mustStop(verdict, "allow")) return null;
-  logEvent(OWASP_EVENTS.rateLimitExceeded, { ...requestFields(request, { status: 429 }), bucket: match.bucket }, { level: "warn" });
+  logEvent(
+    OWASP_EVENTS.rateLimitExceeded,
+    { ...requestFields(request, { status: 429 }), bucket: match.bucket },
+    { level: "warn" },
+  );
   return limitedResponse(verdict);
 }
 

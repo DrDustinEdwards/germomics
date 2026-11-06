@@ -8,7 +8,11 @@ const noSubscribe = () => () => {};
 // client chunk — the fallback doubles as the accessible text equivalent.
 export function ClientOnly({ children, fallback }: { children: ReactNode; fallback: ReactNode }) {
   // False on the server and while hydrating, true once hydrated (React's server snapshot, then the client's).
-  const mounted = useSyncExternalStore(noSubscribe, () => true, () => false);
+  const mounted = useSyncExternalStore(
+    noSubscribe,
+    () => true,
+    () => false,
+  );
   if (!mounted) return <>{fallback}</>;
   return <Suspense fallback={fallback}>{children}</Suspense>;
 }

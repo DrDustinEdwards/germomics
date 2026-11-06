@@ -32,8 +32,10 @@ function setMobileOpen(open: boolean) {
   if (!button || !nav) return;
   button.setAttribute("aria-expanded", String(open));
   button.setAttribute("aria-label", open ? "Close menu" : "Open menu");
-  for (const icon of button.querySelectorAll("[data-menu-closed]")) icon.classList.toggle("hidden", open);
-  for (const icon of button.querySelectorAll("[data-menu-open]")) icon.classList.toggle("hidden", !open);
+  for (const icon of button.querySelectorAll("[data-menu-closed]"))
+    icon.classList.toggle("hidden", open);
+  for (const icon of button.querySelectorAll("[data-menu-open]"))
+    icon.classList.toggle("hidden", !open);
   nav.hidden = !open;
 }
 
@@ -49,7 +51,9 @@ function onClick(event: MouseEvent) {
   if (menu && target.closest("[data-menu-button]")) return setOpen(menu, !isOpen(menu));
   if (menu && target.closest('[role="menuitem"]')) return setOpen(menu, false);
   if (target.closest(MOBILE_BUTTON)) {
-    return setMobileOpen(document.querySelector(MOBILE_BUTTON)?.getAttribute("aria-expanded") !== "true");
+    return setMobileOpen(
+      document.querySelector(MOBILE_BUTTON)?.getAttribute("aria-expanded") !== "true",
+    );
   }
   if (target.closest("#mobile-menu a")) setMobileOpen(false);
 }
@@ -72,7 +76,8 @@ function onKeydown(event: KeyboardEvent) {
   }
   const at = items.indexOf(target as HTMLElement);
   if (at < 0) return;
-  const focusItem = (i: number) => items[((i % items.length) + items.length) % items.length]?.focus();
+  const focusItem = (i: number) =>
+    items[((i % items.length) + items.length) % items.length]?.focus();
   const close = () => {
     setOpen(menu, false);
     button?.focus();
@@ -98,7 +103,8 @@ function onKeydown(event: KeyboardEvent) {
 
 function onPointerdown(event: PointerEvent) {
   for (const menu of document.querySelectorAll(DROPDOWN)) {
-    if (isOpen(menu) && !(event.target instanceof Node && menu.contains(event.target))) setOpen(menu, false);
+    if (isOpen(menu) && !(event.target instanceof Node && menu.contains(event.target)))
+      setOpen(menu, false);
   }
 }
 

@@ -8,9 +8,7 @@ import { BodyRenderer } from "~/components/content/BodyRenderer";
 const LEGAL_LAST_UPDATED = "June 22, 2026";
 
 function LegalDate() {
-  return (
-    <p className="mt-2 font-mono text-xs text-muted">Last updated: {LEGAL_LAST_UPDATED}</p>
-  );
+  return <p className="mt-2 font-mono text-xs text-muted">Last updated: {LEGAL_LAST_UPDATED}</p>;
 }
 
 function ReviewBanner() {

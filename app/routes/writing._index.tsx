@@ -7,13 +7,25 @@ import { imageFor } from "~/lib/images";
 import { imageSet } from "~/lib/images.server";
 
 export function meta() {
-  return pageHead({ path: "/writing", title: "Writing · Germomics", description: "Germomics essays and notes on microbiology and history: outbreaks, microbes and the people who studied them.", pageType: "CollectionPage" });
+  return pageHead({
+    path: "/writing",
+    title: "Writing · Germomics",
+    description:
+      "Germomics essays and notes on microbiology and history: outbreaks, microbes and the people who studied them.",
+    pageType: "CollectionPage",
+  });
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const articles = await listArticles(env);
-  return { articles, images: await imageSet(env, articles.map((a) => ["card", a.coverImage] as const)) };
+  return {
+    articles,
+    images: await imageSet(
+      env,
+      articles.map((a) => ["card", a.coverImage] as const),
+    ),
+  };
 }
 
 export default function Writing({ loaderData }: Route.ComponentProps) {
@@ -28,7 +40,11 @@ export default function Writing({ loaderData }: Route.ComponentProps) {
       ) : (
         <div className="grid gap-5 sm:grid-cols-2">
           {loaderData.articles.map((post) => (
-            <ArticleCard key={post.id} post={post} image={imageFor(loaderData.images, "card", post.coverImage)} />
+            <ArticleCard
+              key={post.id}
+              post={post}
+              image={imageFor(loaderData.images, "card", post.coverImage)}
+            />
           ))}
         </div>
       )}

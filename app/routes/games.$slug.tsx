@@ -18,7 +18,10 @@ const PhaserGame = lazy(() => import("~/components/game/PhaserGame.client"));
 export const handle = { hydrate: true };
 
 const gameTrail = (page: { slug: string; title: string }) =>
-  sectionPageTrail({ name: "Games", path: "/games" }, { name: page.title, path: `/games/${page.slug}` });
+  sectionPageTrail(
+    { name: "Games", path: "/games" },
+    { name: page.title, path: `/games/${page.slug}` },
+  );
 
 export function meta({ loaderData, location }: Route.MetaArgs) {
   if (!loaderData?.game) return [{ title: "Games · Germomics" }];
@@ -65,16 +68,22 @@ export default function GamePage({ loaderData }: Route.ComponentProps) {
 
       <div className="mt-6">
         <ClientOnly
-          fallback={<div className="mx-auto aspect-[4/3] w-full max-w-[800px] animate-pulse rounded-xl bg-surface" />}
+          fallback={
+            <div className="mx-auto aspect-[4/3] w-full max-w-[800px] animate-pulse rounded-xl bg-surface" />
+          }
         >
           <PhaserGame slug={game.slug} onScore={setLastScore} />
         </ClientOnly>
       </div>
 
       {lastScore != null && !submitted ? (
-        <fetcher.Form method="post" className="mt-4 flex flex-col gap-2 rounded-xl border border-border bg-surface p-4 sm:flex-row sm:items-center">
+        <fetcher.Form
+          method="post"
+          className="mt-4 flex flex-col gap-2 rounded-xl border border-border bg-surface p-4 sm:flex-row sm:items-center"
+        >
           <p className="font-display text-sm">
-            Run over. <span className="text-brand">{lastScore}</span> bacteria stopped. Save your score:
+            Run over. <span className="text-brand">{lastScore}</span> bacteria stopped. Save your
+            score:
           </p>
           <input type="hidden" name="score" value={lastScore} />
           <input

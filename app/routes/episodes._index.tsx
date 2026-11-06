@@ -6,7 +6,13 @@ import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 
 export function meta() {
-  return pageHead({ path: "/episodes", title: "Episodes · Germomics", description: "Every episode of Germomics, the podcast about microbiology and history, grouped by season, with audio and a transcript for each.", pageType: "CollectionPage" });
+  return pageHead({
+    path: "/episodes",
+    title: "Episodes · Germomics",
+    description:
+      "Every episode of Germomics, the podcast about microbiology and history, grouped by season, with audio and a transcript for each.",
+    pageType: "CollectionPage",
+  });
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -49,7 +55,9 @@ export default function Episodes({ loaderData }: Route.ComponentProps) {
         return (
           <section key={s} id={`season-${s}`} className="mb-10 scroll-mt-24">
             {/* Teal eyebrow divider (same style as /season/:num), one per season group. */}
-            <h2 className="mb-4 font-mono text-sm font-medium uppercase tracking-[0.18em] text-accent">Season {s}</h2>
+            <h2 className="mb-4 font-mono text-sm font-medium uppercase tracking-[0.18em] text-accent">
+              Season {s}
+            </h2>
             <div className="grid gap-3">{eps.map(card)}</div>
           </section>
         );

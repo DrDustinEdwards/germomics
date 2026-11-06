@@ -3,7 +3,10 @@ import type Phaser from "phaser";
 import { createPhageDefense } from "./phage-defense";
 
 // Lazy() target — keeps Phaser off every other route. Maps a game slug to its scene factory.
-const FACTORIES: Record<string, (parent: HTMLElement, onScore: (s: number) => void) => Phaser.Game> = {
+const FACTORIES: Record<
+  string,
+  (parent: HTMLElement, onScore: (s: number) => void) => Phaser.Game
+> = {
   "phage-defense": createPhageDefense,
 };
 
@@ -24,5 +27,10 @@ export default function PhaserGame({
     return () => game.destroy(true);
   }, [slug]);
 
-  return <div ref={ref} className="mx-auto w-full max-w-[800px] overflow-hidden rounded-xl border border-border" />;
+  return (
+    <div
+      ref={ref}
+      className="mx-auto w-full max-w-[800px] overflow-hidden rounded-xl border border-border"
+    />
+  );
 }

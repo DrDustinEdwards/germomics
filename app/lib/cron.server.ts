@@ -11,7 +11,12 @@
 import type { CronJob } from "@dustinedwards/site-runtime/cron";
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { pruneNotFound } from "@dustinedwards/site-runtime/not-found";
-import { runAudioBackup, runBackup, runGameAssetsBackup, runImagesBackup } from "~/lib/backup.server";
+import {
+  runAudioBackup,
+  runBackup,
+  runGameAssetsBackup,
+  runImagesBackup,
+} from "~/lib/backup.server";
 import { runCarrelSchedules } from "~/lib/carrel/handler.server";
 import { continueMediaBackfill } from "~/lib/media/backfill.server";
 import { rerenderStale } from "~/lib/render.server";
@@ -25,8 +30,18 @@ const DAY = 1440;
 export function cronJobs(env: Env, scheduledTime: Date): Record<string, CronJob[]> {
   return {
     [SCHEDULES_CRON]: [
-      { name: "schedules", everyMinutes: 1, timeoutMs: 50_000, run: () => runCarrelSchedules(env, scheduledTime) },
-      { name: "media-backfill", everyMinutes: 1, timeoutMs: 50_000, run: () => continueMediaBackfill(env) },
+      {
+        name: "schedules",
+        everyMinutes: 1,
+        timeoutMs: 50_000,
+        run: () => runCarrelSchedules(env, scheduledTime),
+      },
+      {
+        name: "media-backfill",
+        everyMinutes: 1,
+        timeoutMs: 50_000,
+        run: () => continueMediaBackfill(env),
+      },
       // A render a Prelum upgrade or a migration left stale is stored within a minute of the deploy, not the next
       // night, so the sitemap's pictures and the feeds read current HTML. With nothing stale it is two indexed reads.
       {
@@ -41,10 +56,30 @@ export function cronJobs(env: Env, scheduledTime: Date): Record<string, CronJob[
     ],
     [NIGHTLY_CRON]: [
       { name: "backup", everyMinutes: DAY, timeoutMs: 4 * MINUTE, run: () => runBackup(env) },
-      { name: "audio-backup", everyMinutes: DAY, timeoutMs: 4 * MINUTE, run: () => runAudioBackup(env) },
-      { name: "images-backup", everyMinutes: DAY, timeoutMs: 4 * MINUTE, run: () => runImagesBackup(env) },
-      { name: "game-assets-backup", everyMinutes: DAY, timeoutMs: 4 * MINUTE, run: () => runGameAssetsBackup(env) },
-      { name: "prune-404", everyMinutes: DAY, timeoutMs: MINUTE, run: () => pruneNotFound(env.DB, { days: 90 }) },
+      {
+        name: "audio-backup",
+        everyMinutes: DAY,
+        timeoutMs: 4 * MINUTE,
+        run: () => runAudioBackup(env),
+      },
+      {
+        name: "images-backup",
+        everyMinutes: DAY,
+        timeoutMs: 4 * MINUTE,
+        run: () => runImagesBackup(env),
+      },
+      {
+        name: "game-assets-backup",
+        everyMinutes: DAY,
+        timeoutMs: 4 * MINUTE,
+        run: () => runGameAssetsBackup(env),
+      },
+      {
+        name: "prune-404",
+        everyMinutes: DAY,
+        timeoutMs: MINUTE,
+        run: () => pruneNotFound(env.DB, { days: 90 }),
+      },
     ],
   };
 }

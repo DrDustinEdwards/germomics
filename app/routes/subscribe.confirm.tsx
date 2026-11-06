@@ -42,9 +42,15 @@ export default function ConfirmSubscription({ loaderData, actionData }: Route.Co
       <h1 className="font-display text-2xl font-semibold">{TITLES[status]}</h1>
       <p className="mt-3 text-muted">
         {status === "confirm" && <>Send the Germomics newsletter to {who}?</>}
-        {status === "done" && <>The Germomics newsletter will be sent to {who}. Every email has a link to unsubscribe.</>}
-        {status === "expired" && "Confirmation links work for 7 days. Sign up again and we’ll send a new one."}
-        {status === "invalid" && "This confirmation link is missing, already used or replaced by a newer one. Sign up again for a new link."}
+        {status === "done" && (
+          <>
+            The Germomics newsletter will be sent to {who}. Every email has a link to unsubscribe.
+          </>
+        )}
+        {status === "expired" &&
+          "Confirmation links work for 7 days. Sign up again and we’ll send a new one."}
+        {status === "invalid" &&
+          "This confirmation link is missing, already used or replaced by a newer one. Sign up again for a new link."}
       </p>
       {status === "confirm" && (
         <Form method="post" className="mt-6">

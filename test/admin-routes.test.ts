@@ -69,12 +69,19 @@ describe("the admin gate", () => {
       reached = true;
       return new Response("admin page");
     };
-    return { reached: () => reached, result: gate.middleware[0](args(new Request(url, init), {}, over), next) };
+    return {
+      reached: () => reached,
+      result: gate.middleware[0](args(new Request(url, init), {}, over), next),
+    };
   };
   const admin = { ADMIN_EMAIL: "admin@example.com", ACCESS_DEV_BYPASS: "1" };
 
   it("answers 403 and never reaches the admin route without a verified session", async () => {
-    const { reached, result } = run("https://germomics.com/admin", { ACCESS_TEAM_DOMAIN: undefined, ACCESS_AUD: undefined, ACCESS_DEV_BYPASS: undefined });
+    const { reached, result } = run("https://germomics.com/admin", {
+      ACCESS_TEAM_DOMAIN: undefined,
+      ACCESS_AUD: undefined,
+      ACCESS_DEV_BYPASS: undefined,
+    });
     const res = await thrown(result);
     expect(res.status).toBe(403);
     expect(reached()).toBe(false);
@@ -91,7 +98,10 @@ describe("the admin gate", () => {
   });
 
   it("refuses a cross-origin write, even from the admin, before any admin route runs", async () => {
-    const { reached, result } = run("http://localhost/admin/upload", admin, { method: "POST", headers: { Origin: "https://evil.example" } });
+    const { reached, result } = run("http://localhost/admin/upload", admin, {
+      method: "POST",
+      headers: { Origin: "https://evil.example" },
+    });
     expect((await thrown(result)).status).toBe(403);
     expect(reached()).toBe(false);
   });
@@ -103,8 +113,17 @@ describe("episode audio", () => {
     const id = Number(made.headers.get("Location")!.split("/").pop());
     expect((await getPostById(e, id))!).toMatchObject({ kind: "episode", status: "draft" });
     await updatePost(e, id, { guid: "urn:germomics:sample" });
-    const payload = JSON.stringify({ audioUrl: " https://media.example.com/ep.mp3 ", audioDuration: 61.9, audioByteSize: 1000, audioMimeType: "", audioPeaks: [1, 2], transcript: "WEBVTT\n" });
-    expect(await episode.action(args(form(`/admin/episodes/${id}`, { payload }), { id: String(id) }))).toMatchObject({ ok: true });
+    const payload = JSON.stringify({
+      audioUrl: " https://media.example.com/ep.mp3 ",
+      audioDuration: 61.9,
+      audioByteSize: 1000,
+      audioMimeType: "",
+      audioPeaks: [1, 2],
+      transcript: "WEBVTT\n",
+    });
+    expect(
+      await episode.action(args(form(`/admin/episodes/${id}`, { payload }), { id: String(id) })),
+    ).toMatchObject({ ok: true });
     expect((await getPostById(e, id))!).toMatchObject({
       audioUrl: "https://media.example.com/ep.mp3",
       audioDuration: 61,
@@ -114,32 +133,73 @@ describe("episode audio", () => {
       transcript: "WEBVTT",
       guid: "urn:germomics:sample",
     });
-    expect((await e.DB.prepare("SELECT COUNT(*) AS n FROM post_versions").first<{ n: number }>())!.n).toBe(1);
+    expect(
+      (await e.DB.prepare("SELECT COUNT(*) AS n FROM post_versions").first<{ n: number }>())!.n,
+    ).toBe(1);
     // An article is not an episode here.
     const article = await createDraft(e, "article");
-    expect((await thrown(episode.loader(args(new Request(`https://germomics.com/admin/episodes/${article}`), { id: String(article) })))).status).toBe(404);
+    expect(
+      (
+        await thrown(
+          episode.loader(
+            args(new Request(`https://germomics.com/admin/episodes/${article}`), {
+              id: String(article),
+            }),
+          ),
+        )
+      ).status,
+    ).toBe(404);
   });
 });
 
 describe("people actions", () => {
   it("saves a person with only the links that have a URL, and ignores links that are not JSON", async () => {
-    await people.action(args(form("/admin/people", { name: " Ada ", role: "Guest", links: JSON.stringify([{ label: "Site", url: "https://a.example" }, { label: "Empty", url: "  " }]) })));
+    await people.action(
+      args(
+        form("/admin/people", {
+          name: " Ada ",
+          role: "Guest",
+          links: JSON.stringify([
+            { label: "Site", url: "https://a.example" },
+            { label: "Empty", url: "  " },
+          ]),
+        }),
+      ),
+    );
     const [ada] = await listPeople(e);
-    expect(ada).toMatchObject({ name: "Ada", role: "Guest", links: [{ label: "Site", url: "https://a.example" }] });
-    expect(await people.action(args(form("/admin/people", { id: String(ada.id), name: "Ada L", links: "{broken" })))).toEqual({ ok: true, message: "Saved." });
+    expect(ada).toMatchObject({
+      name: "Ada",
+      role: "Guest",
+      links: [{ label: "Site", url: "https://a.example" }],
+    });
+    expect(
+      await people.action(
+        args(form("/admin/people", { id: String(ada.id), name: "Ada L", links: "{broken" })),
+      ),
+    ).toEqual({ ok: true, message: "Saved." });
     expect(await getPerson(e, ada.id)).toMatchObject({ name: "Ada L", links: [] });
   });
 
   it("deletes a person", async () => {
     const id = await upsertPerson(e, { name: "Gone" });
-    expect(await people.action(args(form("/admin/people", { intent: "delete", id: String(id) })))).toEqual({ ok: true, message: "Deleted." });
+    expect(
+      await people.action(args(form("/admin/people", { intent: "delete", id: String(id) }))),
+    ).toEqual({ ok: true, message: "Deleted." });
     expect(await getPerson(e, id)).toBeNull();
   });
 });
 
 describe("settings actions", () => {
   it("saves only the s:-prefixed site settings", async () => {
-    const res = await settings.action(args(form("/admin/settings", { _form: "settings", "s:site.tagline": "New tagline", title: "Not a setting" })));
+    const res = await settings.action(
+      args(
+        form("/admin/settings", {
+          _form: "settings",
+          "s:site.tagline": "New tagline",
+          title: "Not a setting",
+        }),
+      ),
+    );
     expect(res).toEqual({ ok: true, message: "Site settings saved." });
     const map = await loadSettings(e);
     expect(map["site.tagline"]).toBe("New tagline");
@@ -174,27 +234,69 @@ describe("settings actions", () => {
   });
 
   it("answers categories or hosts it cannot read with a form error and keeps the stored ones", async () => {
-    const saved = { title: "G", categories: JSON.stringify([{ category: "History" }]), hosts: JSON.stringify([{ name: "Dustin" }]) };
+    const saved = {
+      title: "G",
+      categories: JSON.stringify([{ category: "History" }]),
+      hosts: JSON.stringify([{ name: "Dustin" }]),
+    };
     await settings.action(args(form("/admin/settings", saved)));
-    for (const broken of [{ categories: "{bad" }, { hosts: "{bad" }, { hosts: JSON.stringify({ name: "Dustin" }) }, { categories: JSON.stringify([{}]) }]) {
-      const res = await settings.action(args(form("/admin/settings", { ...saved, title: "Changed", ...broken })));
+    for (const broken of [
+      { categories: "{bad" },
+      { hosts: "{bad" },
+      { hosts: JSON.stringify({ name: "Dustin" }) },
+      { categories: JSON.stringify([{}]) },
+    ]) {
+      const res = await settings.action(
+        args(form("/admin/settings", { ...saved, title: "Changed", ...broken })),
+      );
       expect(res).toEqual({ ok: false, message: expect.stringContaining("nothing was saved") });
     }
     const missing = Object.fromEntries(Object.entries(saved).filter(([k]) => k !== "hosts"));
-    expect(await settings.action(args(form("/admin/settings", { ...missing, title: "Changed" })))).toMatchObject({ ok: false });
-    expect(await getShowConfig(e)).toMatchObject({ title: "G", categories: [{ category: "History" }], appleCategory: "History", hosts: [{ name: "Dustin" }] });
+    expect(
+      await settings.action(args(form("/admin/settings", { ...missing, title: "Changed" }))),
+    ).toMatchObject({ ok: false });
+    expect(await getShowConfig(e)).toMatchObject({
+      title: "G",
+      categories: [{ category: "History" }],
+      appleCategory: "History",
+      hosts: [{ name: "Dustin" }],
+    });
   });
 });
 
 describe("content block action", () => {
   it("saves a Markdown page's title and status but never its text, which Carrel writes, and a snippet always published", async () => {
-    await upsertBlock(e, { key: "page:about", kind: "page", title: "Old", value: "Carrel's *text*", status: "draft" });
+    await upsertBlock(e, {
+      key: "page:about",
+      kind: "page",
+      title: "Old",
+      value: "Carrel's *text*",
+      status: "draft",
+    });
     const before = "Carrel's *text*";
-    await content.action(args(form("/admin/content/page:about", { title: "About", value: "<p>v</p>" }), { key: "page:about" }));
-    expect(await loadBlock(e, "page:about", { includeDrafts: true })).toMatchObject({ title: "About", status: "draft", value: before });
-    await content.action(args(form("/admin/content/page:about", { status: "published" }), { key: "page:about" }));
-    expect(await loadBlock(e, "page:about")).toMatchObject({ status: "published", title: "", value: before });
-    await content.action(args(form("/admin/content/snippet:x", { value: "Hi", status: "draft" }), { key: "snippet:x" }));
+    await content.action(
+      args(form("/admin/content/page:about", { title: "About", value: "<p>v</p>" }), {
+        key: "page:about",
+      }),
+    );
+    expect(await loadBlock(e, "page:about", { includeDrafts: true })).toMatchObject({
+      title: "About",
+      status: "draft",
+      value: before,
+    });
+    await content.action(
+      args(form("/admin/content/page:about", { status: "published" }), { key: "page:about" }),
+    );
+    expect(await loadBlock(e, "page:about")).toMatchObject({
+      status: "published",
+      title: "",
+      value: before,
+    });
+    await content.action(
+      args(form("/admin/content/snippet:x", { value: "Hi", status: "draft" }), {
+        key: "snippet:x",
+      }),
+    );
     expect(await loadBlock(e, "snippet:x")).toMatchObject({ status: "published" });
   });
 });
@@ -202,12 +304,39 @@ describe("content block action", () => {
 describe("soundbite actions", () => {
   it("saves, updates and deletes a soundbite", async () => {
     const ep = await createDraft(e, "episode");
-    await soundbites.action(args(form("/admin/soundbites", { postId: String(ep), startSeconds: "12", durationSeconds: "30", title: "Clip" })));
+    await soundbites.action(
+      args(
+        form("/admin/soundbites", {
+          postId: String(ep),
+          startSeconds: "12",
+          durationSeconds: "30",
+          title: "Clip",
+        }),
+      ),
+    );
     const [clip] = await soundbitesForPost(e, ep);
     expect(clip).toMatchObject({ startSeconds: 12, durationSeconds: 30, title: "Clip" });
-    await soundbites.action(args(form("/admin/soundbites", { id: String(clip.id), postId: String(ep), startSeconds: "5", durationSeconds: "10", title: "" })));
-    expect((await soundbitesForPost(e, ep))[0]).toMatchObject({ id: clip.id, startSeconds: 5, title: null });
-    expect(await soundbites.action(args(form("/admin/soundbites", { intent: "delete", id: String(clip.id) })))).toEqual({ ok: true, message: "Deleted." });
+    await soundbites.action(
+      args(
+        form("/admin/soundbites", {
+          id: String(clip.id),
+          postId: String(ep),
+          startSeconds: "5",
+          durationSeconds: "10",
+          title: "",
+        }),
+      ),
+    );
+    expect((await soundbitesForPost(e, ep))[0]).toMatchObject({
+      id: clip.id,
+      startSeconds: 5,
+      title: null,
+    });
+    expect(
+      await soundbites.action(
+        args(form("/admin/soundbites", { intent: "delete", id: String(clip.id) })),
+      ),
+    ).toEqual({ ok: true, message: "Deleted." });
     expect(await soundbitesForPost(e, ep)).toEqual([]);
   });
 });

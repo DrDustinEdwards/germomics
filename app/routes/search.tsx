@@ -35,8 +35,15 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
       <QueueSeeder tracks={tracks} />
       <h1 className="font-display text-3xl font-semibold">Search</h1>
 
-      <Form role="search" method="get" data-keep-focus className="mt-4 flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2">
-        <label htmlFor="q" className="sr-only">Search Germomics</label>
+      <Form
+        role="search"
+        method="get"
+        data-keep-focus
+        className="mt-4 flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2"
+      >
+        <label htmlFor="q" className="sr-only">
+          Search Germomics
+        </label>
         <input
           id="q"
           type="search"
@@ -45,7 +52,10 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
           placeholder="Search episodes, writing, and pages"
           className="w-full bg-transparent outline-none"
         />
-        <button type="submit" className="rounded-full bg-brand px-3 py-1 font-display text-sm text-white hover:bg-brand-strong">
+        <button
+          type="submit"
+          className="rounded-full bg-brand px-3 py-1 font-display text-sm text-white hover:bg-brand-strong"
+        >
           Go
         </button>
       </Form>
@@ -64,7 +74,9 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
         ))}
       </div>
 
-      {q && total === 0 ? <p className="mt-6 text-muted">Nothing matched. Try different words.</p> : null}
+      {q && total === 0 ? (
+        <p className="mt-6 text-muted">Nothing matched. Try different words.</p>
+      ) : null}
     </div>
   );
 }

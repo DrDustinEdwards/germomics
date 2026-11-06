@@ -14,7 +14,10 @@ export function enhanceSearch() {
     const active = document.activeElement;
     const at = Array.from(form.elements).findIndex((el) => el === active);
     try {
-      sessionStorage.setItem(KEY, JSON.stringify({ path: new URL(form.action, location.href).pathname, at }));
+      sessionStorage.setItem(
+        KEY,
+        JSON.stringify({ path: new URL(form.action, location.href).pathname, at }),
+      );
     } catch {
       /* storage blocked: the page loads without the focus, as any plain form would */
     }
@@ -26,9 +29,12 @@ export function enhanceSearch() {
   } catch {
     return;
   }
-  if (!saved || saved.path !== location.pathname || typeof saved.at !== "number" || saved.at < 0) return;
-  const target = document.querySelector<HTMLFormElement>("form[data-keep-focus]")?.elements[saved.at];
+  if (!saved || saved.path !== location.pathname || typeof saved.at !== "number" || saved.at < 0)
+    return;
+  const target =
+    document.querySelector<HTMLFormElement>("form[data-keep-focus]")?.elements[saved.at];
   if (!(target instanceof HTMLElement)) return;
   target.focus();
-  if (target instanceof HTMLInputElement && target.type === "search") target.setSelectionRange(target.value.length, target.value.length);
+  if (target instanceof HTMLInputElement && target.type === "search")
+    target.setSelectionRange(target.value.length, target.value.length);
 }

@@ -52,11 +52,19 @@ export async function runGameAssetsBackup(env: Env): Promise<void> {
 export async function backupFilesNow(env: Env) {
   const passes = [
     { name: AUDIO_BACKUP.name, run: () => backupFiles(env.MEDIA, env.BACKUPS, AUDIO_BACKUP) },
-    { name: IMAGES_BACKUP.name, run: () => backupFiles(env.BLOG_IMAGES, env.BACKUPS, IMAGES_BACKUP) },
-    { name: GAME_ASSETS_BACKUP.name, run: () => backupFiles(env.GAME_ASSETS, env.BACKUPS, GAME_ASSETS_BACKUP) },
+    {
+      name: IMAGES_BACKUP.name,
+      run: () => backupFiles(env.BLOG_IMAGES, env.BACKUPS, IMAGES_BACKUP),
+    },
+    {
+      name: GAME_ASSETS_BACKUP.name,
+      run: () => backupFiles(env.GAME_ASSETS, env.BACKUPS, GAME_ASSETS_BACKUP),
+    },
   ];
   const results = await Promise.allSettled(passes.map((p) => p.run()));
-  const failed = results.flatMap((r, i) => (r.status === "rejected" ? [`${passes[i]?.name}: ${String(r.reason)}`] : []));
+  const failed = results.flatMap((r, i) =>
+    r.status === "rejected" ? [`${passes[i]?.name}: ${String(r.reason)}`] : [],
+  );
   if (failed.length > 0) throw new Error(`files backup failed: ${failed.join("; ")}`);
   return results.map((r) => {
     const run = (r as PromiseFulfilledResult<Awaited<ReturnType<typeof backupFiles>>>).value;
@@ -72,5 +80,9 @@ export async function backupStatus(env: Env) {
     filesHealth(env.BACKUPS, IMAGES_BACKUP),
     filesHealth(env.BACKUPS, GAME_ASSETS_BACKUP),
   ]);
-  return { ...dump, files: { audio, images, gameAssets }, warning: dump.warning ?? audio.warning ?? images.warning ?? gameAssets.warning };
+  return {
+    ...dump,
+    files: { audio, images, gameAssets },
+    warning: dump.warning ?? audio.warning ?? images.warning ?? gameAssets.warning,
+  };
 }

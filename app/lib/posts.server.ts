@@ -2,7 +2,21 @@
 // (CLAUDE.md rule #4); the one raw statement is the FTS5 MATCH, which Drizzle's DSL can't
 // express. Tag/guest filters parse the JSON columns in JS (the catalog is small), keeping
 // everything type-safe and camelCase.
-import { and, asc, desc, eq, getTableColumns, gt, inArray, isNull, lte, min, or, sql, type SQL } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  getTableColumns,
+  gt,
+  inArray,
+  isNull,
+  lte,
+  min,
+  or,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 import { toMatchExpression } from "@drdustinedwards/site-helpers/search";
 import { getDb } from "~/db/index.server";
 import { postRedirects, posts, type Post } from "~/db/schema";
@@ -33,10 +47,25 @@ const {
 // readingTime stays in the projection: listing cards show it without loading the body.
 
 function asCards(
-  rows: Array<Omit<Post, "body" | "bodyHtml" | "bodyMeta" | "transcript" | "audioPeaks" | "sources" | "keyMoments">>,
+  rows: Array<
+    Omit<
+      Post,
+      "body" | "bodyHtml" | "bodyMeta" | "transcript" | "audioPeaks" | "sources" | "keyMoments"
+    >
+  >,
 ): Post[] {
   return rows.map(
-    (r) => ({ ...r, body: "", bodyHtml: null, bodyMeta: null, transcript: null, audioPeaks: null, sources: null, keyMoments: null }) as Post,
+    (r) =>
+      ({
+        ...r,
+        body: "",
+        bodyHtml: null,
+        bodyMeta: null,
+        transcript: null,
+        audioPeaks: null,
+        sources: null,
+        keyMoments: null,
+      }) as Post,
   );
 }
 
@@ -95,7 +124,13 @@ export async function listPosts(
  */
 export async function listPostImages(env: Env): Promise<Map<string, string[]>> {
   const rows = await getDb(env)
-    .select({ slug: posts.slug, coverImage: posts.coverImage, body: posts.body, bodyHtml: posts.bodyHtml, renderVersion: posts.renderVersion })
+    .select({
+      slug: posts.slug,
+      coverImage: posts.coverImage,
+      body: posts.body,
+      bodyHtml: posts.bodyHtml,
+      renderVersion: posts.renderVersion,
+    })
     .from(posts)
     .where(publiclyVisible());
   const out = new Map<string, string[]>();
@@ -104,7 +139,12 @@ export async function listPostImages(env: Env): Promise<Map<string, string[]>> {
     const found = new Set<string>(row.coverImage ? [row.coverImage] : []);
     for (const [tag] of html.matchAll(/<img\b[^>]*>/g)) {
       const src = /\ssrc="([^"]+)"/.exec(tag)?.[1];
-      if (src && !src.startsWith("data:") && !/\bdark\b/.test(/\sclass="([^"]*)"/.exec(tag)?.[1] ?? "")) found.add(src.replace(/&amp;/g, "&"));
+      if (
+        src &&
+        !src.startsWith("data:") &&
+        !/\bdark\b/.test(/\sclass="([^"]*)"/.exec(tag)?.[1] ?? "")
+      )
+        found.add(src.replace(/&amp;/g, "&"));
     }
     if (found.size > 0) out.set(row.slug, [...found]);
   }
@@ -171,14 +211,20 @@ export async function getPostBySlug(
  * under the slug it has now; null when the slug was never renamed or the post is not publicly visible, so a redirect
  * never names a draft's address.
  */
-export async function renamedPostRedirect(env: Env, slug: string, suffix = ""): Promise<Response | null> {
+export async function renamedPostRedirect(
+  env: Env,
+  slug: string,
+  suffix = "",
+): Promise<Response | null> {
   const [row] = await getDb(env)
     .select({ slug: posts.slug })
     .from(postRedirects)
     .innerJoin(posts, eq(posts.id, postRedirects.postId))
     .where(and(eq(postRedirects.fromSlug, slug), publiclyVisible()))
     .limit(1);
-  return row ? new Response(null, { status: 301, headers: { Location: `/${row.slug}${suffix}` } }) : null;
+  return row
+    ? new Response(null, { status: 301, headers: { Location: `/${row.slug}${suffix}` } })
+    : null;
 }
 
 export async function getPostById(env: Env, id: number): Promise<Post | null> {
@@ -201,7 +247,10 @@ export async function postsByGuest(env: Env, guestSlug: string): Promise<Post[]>
 // once, in the same round trip as the post itself.
 
 /** Previous / next published post of the same kind, by publish date (for article/episode nav). */
-export function adjacentPosts(visible: Post[], post: Post): { prev: Post | null; next: Post | null } {
+export function adjacentPosts(
+  visible: Post[],
+  post: Post,
+): { prev: Post | null; next: Post | null } {
   const all = visible.filter((p) => p.kind === post.kind); // newest-first, visible only
   const i = all.findIndex((p) => p.id === post.id);
   if (i === -1) return { prev: null, next: null };
@@ -234,14 +283,17 @@ export async function searchPosts(env: Env, rawQuery: string): Promise<Post[]> {
     .from(posts)
     .where(and(publiclyVisible(), inArray(posts.id, ids)));
   const order = new Map(ids.map((id, i) => [id, i]));
-  return asCards(found.sort((a, b) => (order.get(a.id)! - order.get(b.id)!)));
+  return asCards(found.sort((a, b) => order.get(a.id)! - order.get(b.id)!));
 }
 
 // FTS5 has its own query syntax. Punctuation becomes a space, then every word is a quoted
 // literal (Prelum's toMatchExpression), all ANDed, the last one also matching as a prefix.
 // Site search over pages (content.server) builds its MATCH here too.
 export function toFtsMatch(raw: string): string | null {
-  const terms = raw.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
+  const terms = raw
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .split(/\s+/)
+    .filter(Boolean);
   return toMatchExpression({ terms }, true);
 }
-

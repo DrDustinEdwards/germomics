@@ -13,7 +13,14 @@ import { inArray } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { media } from "~/db/schema";
 import { DEFAULT_CARD, SITE_ORIGIN } from "~/lib/site";
-import { imageKey, imageKeyOf, images, mediaPath, type ImageSet, type ImageUseName } from "~/lib/images";
+import {
+  imageKey,
+  imageKeyOf,
+  images,
+  mediaPath,
+  type ImageSet,
+  type ImageUseName,
+} from "~/lib/images";
 
 const NAMED_WIDTH = /-(\d{2,4})\.(?:webp|jpe?g|png|avif|gif)$/i;
 
@@ -36,11 +43,20 @@ async function storedImage(env: Env, src: string, aspect?: number): Promise<Stor
   const height = positive(meta.height) ?? (width && aspect ? Math.round(width * aspect) : null);
   // The object's etag (its bytes' MD5) is the version its size URLs carry (`v=`), so a replaced or turned file is a new
   // URL and never the year-old copy a browser holds.
-  return { src: mediaPath(key), width, height, focus: meta[FOCUS_METADATA] ?? null, version: head.etag };
+  return {
+    src: mediaPath(key),
+    width,
+    height,
+    focus: meta[FOCUS_METADATA] ?? null,
+    version: head.etag,
+  };
 }
 
 /** The placeholder and main color site-api stored for each library key (D1 `media`), shown while a picture loads. */
-async function placeholders(env: Env, keys: string[]): Promise<Map<string, { placeholder: string | null; color: string | null }>> {
+async function placeholders(
+  env: Env,
+  keys: string[],
+): Promise<Map<string, { placeholder: string | null; color: string | null }>> {
   if (keys.length === 0) return new Map();
   const rows = await getDb(env)
     .select({ key: media.key, placeholder: media.placeholder, color: media.color })
@@ -54,11 +70,19 @@ async function placeholders(env: Env, keys: string[]): Promise<Map<string, { pla
  * (every use but the figures has a ratio) fixes the shape, so only the width bounds its sizes.
  * Images the site cannot size are left out, and the page shows them as they are.
  */
-export async function imageSet(env: Env, wanted: Array<[ImageUseName, string | null | undefined]>): Promise<ImageSet> {
+export async function imageSet(
+  env: Env,
+  wanted: Array<[ImageUseName, string | null | undefined]>,
+): Promise<ImageSet> {
   const srcs = [...new Set(wanted.map(([, src]) => src).filter((s): s is string => Boolean(s)))];
   const [stored, held] = await Promise.all([
-    Promise.all(srcs.map(async (src) => [src, await storedImage(env, src, 1)] as const)).then((pairs) => new Map(pairs)),
-    placeholders(env, srcs.map(imageKeyOf).filter((k): k is string => k !== null)),
+    Promise.all(srcs.map(async (src) => [src, await storedImage(env, src, 1)] as const)).then(
+      (pairs) => new Map(pairs),
+    ),
+    placeholders(
+      env,
+      srcs.map(imageKeyOf).filter((k): k is string => k !== null),
+    ),
   ]);
   const set: ImageSet = {};
   for (const [use, src] of wanted) {
@@ -79,7 +103,10 @@ const WIDE = 1.5;
  * square or tall image (the show art, a portrait) would lose its subject in that strip, so it and no image share the
  * site's wordmark card; an image the site cannot size or crop (not in BLOG_IMAGES) is sent as it is.
  */
-export async function shareImage(env: Env, own: { src: string; alt: string | null } | null | undefined): Promise<HeadImage> {
+export async function shareImage(
+  env: Env,
+  own: { src: string; alt: string | null } | null | undefined,
+): Promise<HeadImage> {
   if (!own?.src) return DEFAULT_CARD;
   const alt = own.alt ?? undefined;
   const stored = await storedImage(env, own.src, 1);

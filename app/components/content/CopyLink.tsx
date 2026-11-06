@@ -5,7 +5,15 @@ import { formatDuration } from "~/lib/format";
 
 // One share button: `share` offers the Web Share sheet where the device has one, else (or always,
 // without it) the link goes to the clipboard and the label reads "Copied" for a moment.
-function ShareButton({ path, label, share = false }: { path: string; label: string; share?: boolean }) {
+function ShareButton({
+  path,
+  label,
+  share = false,
+}: {
+  path: string;
+  label: string;
+  share?: boolean;
+}) {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -54,7 +62,12 @@ export function CopyButton({
   className: string;
 }) {
   return (
-    <button type="button" data-copy={path} data-share={share ? "" : undefined} className={className}>
+    <button
+      type="button"
+      data-copy={path}
+      data-share={share ? "" : undefined}
+      className={className}
+    >
       <span className="contents" data-copy-idle>
         <Icon size={14} aria-hidden />
         {label}

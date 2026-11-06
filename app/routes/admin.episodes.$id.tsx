@@ -18,7 +18,8 @@ import { Button, Card } from "~/components/admin/ui";
 import { ADMIN_FORM, readForm } from "~/lib/body.server";
 
 const text = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v.trim() : null);
-const whole = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) && v >= 0 ? Math.floor(v) : null);
+const whole = (v: unknown): number | null =>
+  typeof v === "number" && Number.isFinite(v) && v >= 0 ? Math.floor(v) : null;
 
 async function episode(env: Env, id: string) {
   const post = await getPostById(env, Number(id));
@@ -60,7 +61,10 @@ export async function action({ params, request, context }: Route.ActionArgs) {
     audioDuration: whole(payload.audioDuration),
     audioByteSize: whole(payload.audioByteSize),
     audioMimeType: text(payload.audioMimeType) ?? "audio/mpeg",
-    audioPeaks: Array.isArray(peaks) && peaks.every((n) => typeof n === "number") ? (peaks as number[]) : null,
+    audioPeaks:
+      Array.isArray(peaks) && peaks.every((n) => typeof n === "number")
+        ? (peaks as number[])
+        : null,
     transcript: text(payload.transcript),
   });
   return { ok: true as const, message: "Saved." };
@@ -81,12 +85,19 @@ export default function EpisodeAudio({ loaderData }: Route.ComponentProps) {
     <div className="max-w-3xl space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <Link to="/admin/episodes" className="font-mono text-xs text-muted hover:text-ink">← Episode audio</Link>
+          <Link to="/admin/episodes" className="font-mono text-xs text-muted hover:text-ink">
+            ← Episode audio
+          </Link>
           <h1 className="mt-1 font-display text-2xl font-semibold">{loaderData.title}</h1>
-          <p className="font-mono text-[11px] text-muted">GUID (locked): {loaderData.guid ?? "set on first publish"}</p>
+          <p className="font-mono text-[11px] text-muted">
+            GUID (locked): {loaderData.guid ?? "set on first publish"}
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <a href={carrelEditUrl(loaderData.slug)} className="inline-flex items-center gap-1.5 font-display text-sm text-muted hover:text-ink">
+          <a
+            href={carrelEditUrl(loaderData.slug)}
+            className="inline-flex items-center gap-1.5 font-display text-sm text-muted hover:text-ink"
+          >
             <ExternalLink size={14} aria-hidden /> Write in Carrel
           </a>
           <Button type="button" disabled={fetcher.state !== "idle"} onClick={save}>
@@ -100,7 +111,11 @@ export default function EpisodeAudio({ loaderData }: Route.ComponentProps) {
         </p>
       ) : null}
       <Card>
-        <AudioField postId={loaderData.id} value={audio} onChange={(patch) => setAudio((a) => ({ ...a, ...patch }))} />
+        <AudioField
+          postId={loaderData.id}
+          value={audio}
+          onChange={(patch) => setAudio((a) => ({ ...a, ...patch }))}
+        />
       </Card>
       <Card>
         <TranscriptField value={transcript} onChange={setTranscript} />

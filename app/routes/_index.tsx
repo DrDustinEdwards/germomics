@@ -29,7 +29,13 @@ export function meta({ loaderData }: Route.MetaArgs) {
     ...head,
     jsonLd(buildOrganizationLd(show, { address, sameAs })),
     jsonLd(buildPodcastSeriesLd(show, { address, sameAs })),
-    jsonLd(website({ origin: SITE_ORIGIN, name: show.title, searchUrl: `${SITE_ORIGIN}/search?q={search_term_string}` })),
+    jsonLd(
+      website({
+        origin: SITE_ORIGIN,
+        name: show.title,
+        searchUrl: `${SITE_ORIGIN}/search?q={search_term_string}`,
+      }),
+    ),
   ];
 }
 
@@ -84,12 +90,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <HeroBackground />
         <div className="relative lg:col-span-3">
           <h1 className="max-w-3xl font-display text-5xl font-semibold leading-[1.05] sm:text-6xl">
-            A mix of <span className="text-brand">microbiology</span> and <span className="text-brand">history</span>.
+            A mix of <span className="text-brand">microbiology</span> and{" "}
+            <span className="text-brand">history</span>.
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
-            This series connects different aspects of modern life and society to microbes, bacteria, viruses,
-            and parasites through seemingly unconnected natural events, scientific discoveries, and human
-            inventions.
+            This series connects different aspects of modern life and society to microbes, bacteria,
+            viruses, and parasites through seemingly unconnected natural events, scientific
+            discoveries, and human inventions.
           </p>
         </div>
         <div className="relative flex flex-col items-center gap-3 lg:col-span-2">

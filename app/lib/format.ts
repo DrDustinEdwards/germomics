@@ -16,7 +16,9 @@ export function formatDuration(totalSeconds?: number | null): string {
 
 /** "HH:MM:SS" — the form iTunes wants for <itunes:duration>. */
 export function formatHMS(totalSeconds?: number | null): string {
-  return splitSeconds(totalSeconds).map((n) => String(n).padStart(2, "0")).join(":");
+  return splitSeconds(totalSeconds)
+    .map((n) => String(n).padStart(2, "0"))
+    .join(":");
 }
 
 /** "June 21, 2026" from an ISO/date string. */

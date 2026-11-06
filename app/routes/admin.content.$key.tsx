@@ -20,7 +20,13 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   // loadBlock omits kind/description; fetch them is unnecessary here, infer kind from the key.
   const kind = params.key.startsWith("page:") ? "page" : "snippet";
   const markdown = kind === "page" && !TEXT_PAGES.has(params.key);
-  return { block, kind, markdown, previewHref: PAGE_HREF[params.key] ?? null, carrelUrl: markdown ? carrelEditUrl(params.key.replace(/^page:/, "page.")) : null };
+  return {
+    block,
+    kind,
+    markdown,
+    previewHref: PAGE_HREF[params.key] ?? null,
+    carrelUrl: markdown ? carrelEditUrl(params.key.replace(/^page:/, "page.")) : null,
+  };
 }
 
 export async function action({ params, request, context }: Route.ActionArgs) {
@@ -51,7 +57,10 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <a href="/admin/settings" className="inline-flex items-center gap-1 font-mono text-xs text-muted hover:text-ink">
+      <a
+        href="/admin/settings"
+        className="inline-flex items-center gap-1 font-mono text-xs text-muted hover:text-ink"
+      >
         <ArrowLeft size={12} aria-hidden /> Settings
       </a>
       <h1 className="mt-3 font-display text-2xl font-semibold">{block.title || block.key}</h1>
@@ -64,13 +73,23 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
         <Card title="Content">
           <div className="space-y-4">
             <Field label="Title">
-              {({ id }) => <input id={id} name="title" defaultValue={block.title} className={inputCx} />}
+              {({ id }) => (
+                <input id={id} name="title" defaultValue={block.title} className={inputCx} />
+              )}
             </Field>
             {markdown && carrelUrl ? (
               <div className="space-y-2">
                 <p className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted">
-                  <span>Written in Carrel. {"{{email}}"} and {"{{address_line}}"} are filled in on the legal and contact pages.</span>
-                  <a href={carrelUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-mono text-xs text-accent hover:underline">
+                  <span>
+                    Written in Carrel. {"{{email}}"} and {"{{address_line}}"} are filled in on the
+                    legal and contact pages.
+                  </span>
+                  <a
+                    href={carrelUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-mono text-xs text-accent hover:underline"
+                  >
                     <ExternalLink size={13} aria-hidden /> Edit in Carrel
                     <span className="sr-only"> (opens in a new tab)</span>
                   </a>
@@ -80,14 +99,26 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
                 </div>
               </div>
             ) : (
-              <Field label={isPage ? "Body (plain text)" : "Value"} hint={isPage ? "Served as plain text, as written." : undefined}>
+              <Field
+                label={isPage ? "Body (plain text)" : "Value"}
+                hint={isPage ? "Served as plain text, as written." : undefined}
+              >
                 {({ id }) => (
-                  <textarea id={id} name="value" defaultValue={block.value} rows={isPage ? 18 : 4} className={`${inputCx} font-mono text-xs`} />
+                  <textarea
+                    id={id}
+                    name="value"
+                    defaultValue={block.value}
+                    rows={isPage ? 18 : 4}
+                    className={`${inputCx} font-mono text-xs`}
+                  />
                 )}
               </Field>
             )}
             {isPage ? (
-              <Field label="Status" hint="Only published pages render publicly. Drafts are visible via Preview.">
+              <Field
+                label="Status"
+                hint="Only published pages render publicly. Drafts are visible via Preview."
+              >
                 {({ id }) => (
                   <select id={id} name="status" defaultValue={block.status} className={inputCx}>
                     <option value="draft">draft</option>
@@ -100,15 +131,24 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
         </Card>
 
         <div className="flex items-center gap-3">
-          <Button type="submit" variant="primary" disabled={fetcher.state !== "idle"}>Save</Button>
+          <Button type="submit" variant="primary" disabled={fetcher.state !== "idle"}>
+            Save
+          </Button>
           {isPage && previewHref ? (
-            <a href={`${previewHref}?preview=1`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-mono text-sm text-accent hover:underline">
+            <a
+              href={`${previewHref}?preview=1`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 font-mono text-sm text-accent hover:underline"
+            >
               <ExternalLink size={13} aria-hidden /> Preview
               <span className="sr-only"> (opens in a new tab)</span>
             </a>
           ) : null}
           {fetcher.data?.ok ? (
-            <span role="status" className="font-mono text-xs text-accent">{fetcher.data.message}</span>
+            <span role="status" className="font-mono text-xs text-accent">
+              {fetcher.data.message}
+            </span>
           ) : null}
         </div>
       </fetcher.Form>
