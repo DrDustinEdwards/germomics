@@ -10,4 +10,4 @@ npm run dev        # Vite in workerd, bindings local
 npm run typecheck && npm test
 ```
 
-A merge to `main` deploys to production (Cloudflare Workers Builds).
+A merge to `main` applies its D1 migrations and deploys to production (`.github/workflows/ci.yml`, `deploy`).

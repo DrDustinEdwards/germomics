@@ -15,6 +15,12 @@ export type Source = {
   license?: string;
 };
 
+/** Prelum's outline of a rendered body, stored beside its HTML: the h2 and h3 headings and the :::faq pairs. */
+export type BodyMeta = {
+  toc: Array<{ depth: number; id: string; text: string }>;
+  faq: Array<{ question: string; answer: string }>;
+};
+
 /** A curated, scannable "In this episode" moment. Distinct from player chapters; both seek the player. */
 export type KeyMoment = { seconds: number; label: string };
 

@@ -8,7 +8,7 @@ import { AUTHOR } from "~/lib/about";
 const ORIGIN = "https://germomics.com";
 const show = { title: "Germomics", description: "A podcast about <b>microbes</b>.", author: "Dustin Edwards", ownerEmail: "owner@example.com" } as ShowConfig;
 const post = (over: Partial<Post>): Post =>
-  ({ slug: "s", title: "T", body: "<p>Body</p>", excerpt: null, seoDescription: null, publishedAt: "2024-03-05T00:00:00.000Z", ...over }) as Post;
+  ({ slug: "s", title: "T", bodyHtml: "<p>Body</p>", excerpt: null, seoDescription: null, publishedAt: "2024-03-05T00:00:00.000Z", ...over }) as Post;
 
 describe("buildLlmsTxt", () => {
   it("opens with the show, a plain one-line description, the default intro and the about links", () => {
@@ -33,7 +33,7 @@ describe("buildLlmsTxt", () => {
     const txt = buildLlmsTxt(
       show,
       [post({ slug: "ep", title: "Episode", excerpt: "Ex" })],
-      [post({ slug: "a", title: "A", seoDescription: "Seo" }), post({ slug: "b", title: "B", body: "<p>From <i>body</i></p>" }), post({ slug: "c", title: "C", body: "" })],
+      [post({ slug: "a", title: "A", seoDescription: "Seo" }), post({ slug: "b", title: "B", bodyHtml: "<p>From <i>body</i></p>" }), post({ slug: "c", title: "C", bodyHtml: "" })],
       ORIGIN,
     );
     expect(txt).toContain(`## Episodes\n- [Episode](${ORIGIN}/ep): Ex\n`);
@@ -57,7 +57,7 @@ describe("buildLlmsTxt", () => {
 
 describe("buildLlmsFullTxt", () => {
   it("includes the about text, the author, and each post with its URL, date and body", () => {
-    const txt = buildLlmsFullTxt(show, [post({ slug: "ep", title: "Episode", body: "<p>Show <b>notes</b></p>" })], [post({ slug: "a", title: "Essay", body: "<p>Essay text</p>" })], ORIGIN);
+    const txt = buildLlmsFullTxt(show, [post({ slug: "ep", title: "Episode", bodyHtml: "<p>Show <b>notes</b></p>" })], [post({ slug: "a", title: "Essay", bodyHtml: "<p>Essay text</p>" })], ORIGIN);
     expect(txt.startsWith("# Germomics: full content index\n")).toBe(true);
     expect(txt).toContain("It is not exhaustive and omits audio transcripts.");
     expect(txt).toContain("# About Germomics");
@@ -67,7 +67,7 @@ describe("buildLlmsFullTxt", () => {
   });
 
   it("falls back to the summary for an empty body, and caps a long body at 6000 characters", () => {
-    const txt = buildLlmsFullTxt(show, [post({ title: "Short", body: "", excerpt: "Only an excerpt" })], [post({ slug: "long", title: "Long", body: `<p>${"w".repeat(7000)}</p>` })], ORIGIN);
+    const txt = buildLlmsFullTxt(show, [post({ title: "Short", bodyHtml: "", excerpt: "Only an excerpt" })], [post({ slug: "long", title: "Long", bodyHtml: `<p>${"w".repeat(7000)}</p>` })], ORIGIN);
     expect(txt).toContain("## Short\nURL: https://germomics.com/s\nPublished: March 5, 2024\n\nOnly an excerpt");
     const body = txt.split("## Long\n")[1].split("\n")[3];
     expect(body).toHaveLength(6000);

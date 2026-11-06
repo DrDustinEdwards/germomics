@@ -13,6 +13,7 @@ import { Card, Field, Button, Badge, inputCx } from "~/components/admin/ui";
 import { CategoriesEditor } from "~/components/admin/CategoriesEditor";
 import { HostsEditor } from "~/components/admin/HostsEditor";
 import type { PodcastCategory, Host } from "~/db/schema";
+import { ADMIN_FORM, readForm } from "~/lib/body.server";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
@@ -26,7 +27,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 
 export async function action({ request, context }: Route.ActionArgs) {
   const env = getEnv(context);
-  const form = await request.formData();
+  const form = await readForm(request, ADMIN_FORM);
 
   // Site settings (key/value) save — fields are prefixed s: so they don't collide with show_config.
   if (form.get("_form") === "settings") {

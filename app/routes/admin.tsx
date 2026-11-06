@@ -1,8 +1,12 @@
-// Admin layout: the SINGLE gate for the whole admin.* subtree. RR v8 middleware runs once
-// per request before any admin loader/action, so the auth check is not repeated per route
-// (per the v8_middleware instruction). Cloudflare Access signs people in before a request gets
-// here; this re-verifies its JWT (app/lib/access.server.ts) and answers 403 to anything else, so
-// a request that bypassed Access, or an Access setup that is wrong, never reaches an admin route.
+// Admin layout: the SINGLE gate for the whole admin.* subtree, resource routes included. RR v8
+// middleware runs once per request before any admin loader/action, so the checks are not repeated
+// per route (per the v8_middleware instruction). Cloudflare Access signs people in before a request
+// gets here; this re-verifies its JWT and the one admin email (site-runtime's accessAdmin) and
+// answers 403 to anything else, so a request that bypassed Access, or an Access setup that is wrong,
+// never reaches an admin route. A cross-site write is refused first (site-runtime's
+// refuseCrossSite), since the framework's own Origin check never sees a resource route, and every
+// admin answer is private, no-store and noindex. Each refusal writes one OWASP `authz_fail` line
+// (site-runtime's ./log), so a run of them shows in Workers Logs.
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { Link } from "capsomer/react/link";
@@ -11,20 +15,49 @@ import { AdminShell, type AdminEntry } from "capsomer/react/admin-shell";
 import "~/admin.css";
 import type { Route } from "./+types/admin";
 import { getEnv } from "~/lib/context.server";
-import { getAdminSession } from "~/lib/access.server";
+import { accessAdmin } from "@dustinedwards/site-runtime/access";
+import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runtime/log";
+import { isolationVerdict, refuseCrossSite } from "@dustinedwards/site-runtime/origin";
 import { applyTheme, effectiveTheme } from "~/lib/theme";
 import type { Theme } from "~/lib/types";
 
+const PRIVATE = { "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex, nofollow" };
+
+// The admin is an app: it and every page under it hydrate on load (lib/hydration.ts).
+export const handle = { hydrate: true };
+
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ request, context }, next) => {
-    const session = await getAdminSession(getEnv(context), request);
-    if (!session) throw new Response("Forbidden", { status: 403 });
-    return next();
+    const refused = refuseCrossSite(request, PRIVATE);
+    if (refused) {
+      logRefusal(request, "cross-site", refused.status);
+      throw refused;
+    }
+    // Resource isolation (site-runtime isolationVerdict): another site may link to an admin page and nothing more, so
+    // no page elsewhere loads an admin response as an image, script, frame or fetch with the Access cookie.
+    if (!isolationVerdict(request).ok) {
+      logRefusal(request, "cross-site-resource", 403);
+      throw new Response("Forbidden", { status: 403, headers: PRIVATE });
+    }
+    if (!(await accessAdmin(request, getEnv(context)))) {
+      logRefusal(request, "not-admin", 403);
+      throw new Response("Forbidden", { status: 403, headers: PRIVATE });
+    }
+    // A copy: a redirect's headers are immutable.
+    const response = await next();
+    const headers = new Headers(response.headers);
+    for (const [name, value] of Object.entries(PRIVATE)) headers.set(name, value);
+    return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
   },
 ];
 
+// No email or token in the line: accessAdmin says only yes or no, and the log scrubs any address.
+function logRefusal(request: Request, reason: string, status: number) {
+  logEvent(OWASP_EVENTS.authorizationFailure, { ...requestFields(request), reason, status }, { level: "warn" });
+}
+
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const session = await getAdminSession(getEnv(context), request);
+  const session = await accessAdmin(request, getEnv(context));
   return { email: session?.email ?? "" };
 }
 
@@ -33,7 +66,7 @@ const icon = (Icon: typeof LayoutDashboard) => <Icon className="cap-admin-icon" 
 // The admin's pages, grouped as the menu shows them. `match` decides which entry is current.
 const ENTRIES: Array<AdminEntry & { match: (path: string) => boolean }> = [
   { id: "dashboard", label: "Dashboard", href: "/admin", group: "Overview", icon: icon(LayoutDashboard), match: (p) => p === "/admin" },
-  { id: "posts", label: "Posts", href: "/admin/posts", group: "Content", icon: icon(FileAudio), match: (p) => p.startsWith("/admin/posts") },
+  { id: "episodes", label: "Episode audio", href: "/admin/episodes", group: "Content", icon: icon(FileAudio), match: (p) => p.startsWith("/admin/episodes") },
   { id: "people", label: "People", href: "/admin/people", group: "Content", icon: icon(Users), match: (p) => p.startsWith("/admin/people") },
   { id: "soundbites", label: "Soundbites", href: "/admin/soundbites", group: "Content", icon: icon(Scissors), match: (p) => p.startsWith("/admin/soundbites") },
   { id: "subscribers", label: "Subscribers", href: "/admin/subscribers", group: "Audience", icon: icon(Mail), match: (p) => p.startsWith("/admin/subscribers") },

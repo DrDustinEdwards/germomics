@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import { useRouteLoaderData, useLocation } from "react-router";
+import { useRouteLoaderData } from "react-router";
 import { Link, NavLink } from "capsomer/react/link";
 import { ChevronDown, Menu, Search, X } from "lucide-react";
 import { GMark } from "../brand/GMark";
@@ -23,90 +22,37 @@ function useSeasons(): number[] {
 }
 
 // Accessible Episodes dropdown: a disclosure button + menu of links (All Episodes + one per season),
-// data-driven from the distinct season numbers. Arrow keys move between items, Esc closes and returns
-// focus to the button, outside-click/route-change closes.
+// data-driven from the distinct season numbers. The markup only: /site.js opens and closes it (app/site/menus.ts),
+// on a page that sends no React as on one that hydrates. Arrow keys move between items, Esc closes and returns
+// focus to the button, an outside press or a followed link closes.
 function EpisodesMenu({ seasons }: { seasons: number[] }) {
   const label = useSnippet("snippet:nav.episodes", "Episodes");
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement | null>(null);
-  const btnRef = useRef<HTMLButtonElement | null>(null);
-  const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
-  const loc = useLocation();
-
   const items = [
     { to: "/episodes", label: "All Episodes" },
     ...seasons.map((s) => ({ to: `/season/${s}`, label: `Season ${s}` })),
   ];
 
-  useEffect(() => setOpen(false), [loc.pathname]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: PointerEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("pointerdown", onDoc);
-    return () => document.removeEventListener("pointerdown", onDoc);
-  }, [open]);
-
-  const focusItem = (i: number) => {
-    const n = items.length;
-    itemRefs.current[((i % n) + n) % n]?.focus();
-  };
-  const openAndFocus = () => {
-    setOpen(true);
-    requestAnimationFrame(() => itemRefs.current[0]?.focus());
-  };
-  const close = () => {
-    setOpen(false);
-    btnRef.current?.focus();
-  };
-
   return (
-    <div ref={wrapRef} className="relative">
+    <div className="relative" data-menu>
       <button
-        ref={btnRef}
         type="button"
         aria-haspopup="true"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-        onKeyDown={(e) => {
-          if (e.key === "ArrowDown") {
-            e.preventDefault();
-            openAndFocus();
-          } else if (e.key === "Escape") {
-            setOpen(false);
-          }
-        }}
+        aria-expanded="false"
+        data-menu-button
         className="flex items-center gap-1 rounded px-2 py-1.5 font-display text-sm text-muted hover:text-ink"
       >
         {label}
-        <ChevronDown size={14} aria-hidden className={open ? "rotate-180 transition-transform" : "transition-transform"} />
+        <ChevronDown size={14} aria-hidden className="transition-transform" data-menu-chevron />
       </button>
-      {open && (
-        <ul role="menu" aria-label={label} className="absolute left-0 top-full z-40 mt-1 min-w-48 rounded-lg border border-border bg-card p-1 shadow-lg">
-          {items.map((it, i) => (
-            <li key={it.to} role="none">
-              <Link
-                role="menuitem"
-                to={it.to}
-                ref={(el) => { itemRefs.current[i] = el; }}
-                onClick={() => setOpen(false)}
-                onKeyDown={(e) => {
-                  if (e.key === "ArrowDown") { e.preventDefault(); focusItem(i + 1); }
-                  else if (e.key === "ArrowUp") { e.preventDefault(); if (i === 0) close(); else focusItem(i - 1); }
-                  else if (e.key === "Home") { e.preventDefault(); focusItem(0); }
-                  else if (e.key === "End") { e.preventDefault(); focusItem(items.length - 1); }
-                  else if (e.key === "Escape") { e.preventDefault(); close(); }
-                }}
-                className="block rounded px-3 py-2 text-sm text-muted hover:bg-surface hover:text-ink"
-              >
-                {it.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul role="menu" aria-label={label} hidden className="absolute left-0 top-full z-40 mt-1 min-w-48 rounded-lg border border-border bg-card p-1 shadow-lg">
+        {items.map((it) => (
+          <li key={it.to} role="none">
+            <Link role="menuitem" to={it.to} className="block rounded px-3 py-2 text-sm text-muted hover:bg-surface hover:text-ink">
+              {it.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -114,9 +60,6 @@ function EpisodesMenu({ seasons }: { seasons: number[] }) {
 export function Header() {
   const seasons = useSeasons();
   const subscribeLabel = useSnippet("snippet:nav.subscribe", "Subscribe");
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const loc = useLocation();
-  useEffect(() => setMobileOpen(false), [loc.pathname]);
 
   const subscribeCta =
     "rounded-full bg-brand px-3 py-1.5 font-display text-sm font-medium text-white hover:bg-brand-strong";
@@ -164,37 +107,36 @@ export function Header() {
             <Search size={16} aria-hidden />
           </Link>
           <Link to="/subscribe" className={`${subscribeCta} max-[374px]:px-1.5 max-[374px]:text-xs`}>{subscribeLabel}</Link>
+          {/* /site.js opens and closes it (app/site/menus.ts), swapping the label and the icon. */}
           <button
             type="button"
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
-            aria-expanded={mobileOpen}
+            aria-label="Open menu"
+            aria-expanded="false"
             aria-controls="mobile-menu"
-            onClick={() => setMobileOpen((o) => !o)}
             className="grid h-11 w-11 place-items-center rounded text-muted hover:text-ink"
           >
-            {mobileOpen ? <X size={20} aria-hidden /> : <Menu size={20} aria-hidden />}
+            <Menu size={20} aria-hidden data-menu-closed />
+            <X size={20} aria-hidden className="hidden" data-menu-open />
           </button>
         </div>
       </div>
 
       {/* Mobile menu */}
-      {mobileOpen && (
-        <nav id="mobile-menu" aria-label="Mobile" className="border-t border-border bg-bg px-4 py-3 md:hidden">
-          <ul className="space-y-1">
-            <li><Link to="/episodes" className="block rounded px-2 py-2 font-display text-sm text-ink">All Episodes</Link></li>
-            {seasons.map((s) => (
-              <li key={s}><Link to={`/season/${s}`} className="block rounded px-2 py-2 pl-5 text-sm text-muted hover:text-ink">Season {s}</Link></li>
-            ))}
-            {NAV.map((item) => (
-              <li key={item.to}>
-                <Link to={item.to} className="block rounded px-2 py-2 font-display text-sm text-muted hover:text-ink">
-                  <NavLabel snippetKey={item.key} fallback={item.fallback} />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      )}
+      <nav id="mobile-menu" aria-label="Mobile" hidden className="border-t border-border bg-bg px-4 py-3 md:hidden">
+        <ul className="space-y-1">
+          <li><Link to="/episodes" className="block rounded px-2 py-2 font-display text-sm text-ink">All Episodes</Link></li>
+          {seasons.map((s) => (
+            <li key={s}><Link to={`/season/${s}`} className="block rounded px-2 py-2 pl-5 text-sm text-muted hover:text-ink">Season {s}</Link></li>
+          ))}
+          {NAV.map((item) => (
+            <li key={item.to}>
+              <Link to={item.to} className="block rounded px-2 py-2 font-display text-sm text-muted hover:text-ink">
+                <NavLabel snippetKey={item.key} fallback={item.fallback} />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </header>
   );
 }

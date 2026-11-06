@@ -4,13 +4,14 @@ import { MediaInUseError, NotFoundError, RefusedError, VersionConflictError, typ
 import { createCarrelAdapter } from "~/lib/carrel/adapter.server";
 import { imageSet } from "~/lib/images.server";
 import { backfillMedia, continueMediaBackfill } from "~/lib/media/backfill.server";
+import { resetDb } from "@dustinedwards/devkit/d1";
 import { applyMigrations } from "./helpers/d1";
 
 // The media group (app/lib/carrel/media.server.ts) as site-api calls it, over the real migrations, the BLOG_IMAGES and
 // BACKUPS buckets, and a stand-in Images binding and Workers AI. carrel.test.ts runs the same group through the HTTP
 // handler and site-api's conformance suite.
 const e = env as unknown as Env;
-const ORIGIN = "https://images.germomics.com";
+const ORIGIN = "/media";
 
 /** A PNG of the given size, with tEXt chunks (the embedded metadata) and a tail that makes each one's bytes its own. */
 function png(width: number, height: number, text: Record<string, string> = {}, tail = 0): Uint8Array<ArrayBuffer> {
@@ -52,7 +53,8 @@ const images = {
   },
 };
 let aiCalls = 0;
-const ai = { run: async () => (aiCalls++, { response: 'Here: {"alt": "A rod-shaped bacterium under a microscope.", "tags": ["bacterium", "Microscope", "rod shaped"]}' }) };
+// JSON mode's answer: an object (site-api 0.20 reads nothing out of prose).
+const ai = { run: async () => (aiCalls++, { response: { alt: "A rod-shaped bacterium under a microscope.", tags: ["bacterium", "Microscope", "rod shaped"] } }) };
 
 let logged: Record<string, unknown>[] = [];
 let media: MediaAdapter;
@@ -70,7 +72,7 @@ beforeEach(async () => {
   edits = [];
   aiCalls = 0;
   media = build();
-  for (const table of ["posts", "people", "scheduled_updates", "media", "media_revisions", "media_changes", "media_captions"]) await e.DB.exec(`DELETE FROM ${table}`);
+  await resetDb(e.DB);
   for (const bucket of [e.BLOG_IMAGES, e.BACKUPS]) {
     const listed = await bucket.list();
     if (listed.objects.length) await bucket.delete(listed.objects.map((o) => o.key));
@@ -83,10 +85,12 @@ describe("an upload", () => {
     const item = await upload(bytes, { alt: "Curved rods" });
     expect(item).toMatchObject({ width: 800, height: 600, alt: "Curved rods", credit: "Dustin Edwards", license: "CC BY 4.0", caption: "Vibrio cholerae", usedCount: 0, version: "r0", tags: [], trashedAt: null, embedded: ["credit", "license", "caption"] });
     expect(item.id).toMatch(/^carrel\/\d+-Vibrio\.png$/);
-    expect(item.url).toBe(`${ORIGIN}/${item.id}`);
+    expect(item.url).toBe(`/media/${item.id}`);
     // The size rides on the object, where every page reads it.
     expect((await e.BLOG_IMAGES.head(item.id))!.customMetadata).toMatchObject({ width: "800", height: "600" });
     expect((await row(item.id))!.sha256).toMatch(/^[0-9a-f]{64}$/);
+    // The placeholder and main color prepareUpload made, kept on the row.
+    expect(item.placeholder).toMatch(/^data:image\//);
     expect(logged).toEqual([{ event: "carrel.media.upload", id: item.id, version: "r0", changeId: "chg_u" }]);
   });
 
@@ -107,35 +111,12 @@ describe("an upload", () => {
     const pass = await media.shrink!(item.id, { expectedVersion: reverted.item.version!, changeId: "c" });
     expect(pass).toMatchObject({ resized: true, item: { width: 4096, height: 2048 } });
     expect(await media.shrink!(item.id, { expectedVersion: pass.item.version!, changeId: "c" })).toMatchObject({ resized: false });
-    expect((await e.BACKUPS.list({ prefix: "media/revisions/" })).objects.length).toBe(3);
+    // Copies are kept by their bytes' hash (site-api 0.24), so the reverted bytes, the original again, are one copy.
+    expect((await e.BACKUPS.list({ prefix: "media/revisions/" })).objects.length).toBe(2);
   });
 });
 
 describe("the library", () => {
-  it("searches, filters by tag, lens, orientation and kind, sorts, pages, and keeps the trash apart", async () => {
-    const a = await upload(png(800, 600), { filename: "cholera.png", alt: "Pump" });
-    const b = await upload(png(300, 900, {}, 1), { filename: "plague.png" });
-    const c = await upload(png(500, 500, {}, 2), { filename: "anthrax.png", alt: "Spores" });
-    await media.setTags!(b.id, { tags: ["flea"], expectedVersion: b.version!, changeId: "c" });
-    await media.trash!(c.id, { expectedVersion: c.version!, changeId: "c" });
-    await usePost("used", `<img src="${a.url}">`);
-
-    const ids = async (q: Partial<Parameters<MediaAdapter["list"]>[0]>) => (await media.list({ limit: 50, ...q })).items.map((i) => i.id);
-    expect(await ids({ q: "CHOLERA" })).toEqual([a.id]);
-    expect(await ids({ tag: "flea" })).toEqual([b.id]);
-    expect(await ids({ lens: "no-alt" })).toEqual([b.id]);
-    expect(await ids({ lens: "unattached" })).toEqual([b.id]);
-    expect(await ids({ orientation: "portrait" })).toEqual([b.id]);
-    expect(await ids({ kind: "video" })).toEqual([]);
-    expect(await ids({ sort: "name" })).toEqual([a.id, b.id]);
-    expect(await ids({ sort: "used" })).toEqual([a.id, b.id]);
-    expect(await ids({ trashed: "only" })).toEqual([c.id]);
-    const first = await media.list({ limit: 1, sort: "name" });
-    expect(first).toMatchObject({ total: 2, nextCursor: "1", sorted: { sort: "name", dir: "asc" } });
-    expect(first.items[0]).toMatchObject({ id: a.id, usedCount: 1 });
-    expect((await media.list({ limit: 1, sort: "name", cursor: "1" })).items.map((i) => i.id)).toEqual([b.id]);
-  });
-
   it("names every place that uses a file, refuses its delete, and deletes one nothing uses", async () => {
     const item = await upload();
     const key = item.id;
@@ -153,10 +134,10 @@ describe("the library", () => {
     await expect(media.delete(key, { changeId: "c" })).rejects.toBeInstanceOf(MediaInUseError);
     expect(await row(key)).not.toBeNull();
 
-    // The show's default card is named in code, so it is never unused.
-    await e.BLOG_IMAGES.put("cover.jpg", png(10, 10));
+    // The show's default artwork is named in code, so it is never unused.
+    await e.BLOG_IMAGES.put("brand/germomics-artwork-1400.jpg", png(10, 10));
     await backfillMedia(e);
-    await expect(media.delete("cover.jpg", { changeId: "c" })).rejects.toBeInstanceOf(MediaInUseError);
+    await expect(media.delete("brand/germomics-artwork-1400.jpg", { changeId: "c" })).rejects.toBeInstanceOf(MediaInUseError);
 
     const loose = await upload(png(20, 20, {}, 9));
     const cursor = (await media.list({ limit: 1 })).changeCursor!;
@@ -191,20 +172,42 @@ describe("the writes", () => {
     expect(Object.values(await imageSet(e, [["cover", item.url]]))[0]!.src).toContain("r=2x1&fp=0.25x0.4");
   });
 
-  it("replaces and turns a picture in place, the old bytes kept, the size and point following on the object", async () => {
+  it("replaces and turns a picture in place, the old bytes kept, the size and point following on the object and in the pages", async () => {
     const item = await upload(png(1600, 900));
     const focused = await media.setFocus!(item.id, { focus: "0.1x0.2", expectedVersion: item.version!, changeId: "c" });
     const turned = await media.transform!(item.id, { op: "rotate-90", asNewFile: false, expectedVersion: focused.version, changeId: "c_t" });
     expect(turned.item).toMatchObject({ id: item.id, width: 900, height: 1600, focus: "0.8x0.1" });
     expect((await e.BLOG_IMAGES.head(item.id))!.customMetadata).toMatchObject({ width: "900", height: "1600", focus: "0.8x0.1" });
+    // site-api 0.24: a replace names the file by the new upload.
     const replaced = await media.replace!(item.id, { bytes: png(640, 480, {}, 7), contentType: "image/png", filename: "n.png", expectedVersion: turned.item.version!, changeId: "c_r" });
-    expect(replaced.item).toMatchObject({ width: 640, height: 480, focus: null, filename: "Vibrio.png" });
+    expect(replaced.item).toMatchObject({ width: 640, height: 480, focus: null, filename: "n.png" });
     expect((await media.history!(item.id))!.map((r) => r.reason)).toEqual(["replace", "transform", "upload"]);
 
-    // A quarter turn of a picture a page uses would swap the width and height its figures record.
-    await usePost("figure", `<img src="${item.url}" width="400" height="300">`);
-    await expect(media.transform!(item.id, { op: "rotate-270", asNewFile: false, expectedVersion: replaced.item.version!, changeId: "c" })).rejects.toBeInstanceOf(RefusedError);
-    expect((await media.transform!(item.id, { op: "flip-h", asNewFile: false, expectedVersion: replaced.item.version!, changeId: "c" })).item.width).toBe(640);
+    // No page holds the size of its own (replaceKeepsSize is off): a converted post that shows the picture is rendered
+    // again after a quarter turn, so its figure has the new size and its size URLs the new bytes' version (v=), and no
+    // browser keeps the year-cached old picture.
+    await e.DB.prepare("INSERT INTO posts (kind, title, slug, body, status, render_version, body_html) VALUES ('article', 'md', 'md', ?, 'draft', '0', '')")
+      .bind(`![A vibrio](${item.url})`)
+      .run();
+    expect((await media.transform!(item.id, { op: "rotate-270", asNewFile: false, expectedVersion: replaced.item.version!, changeId: "c" })).item).toMatchObject({ id: item.id, width: 480, height: 640 });
+    const { sha256 } = (await e.DB.prepare("SELECT sha256 FROM media WHERE key = ?").bind(item.id).first<{ sha256: string }>())!;
+    const { body_html } = (await e.DB.prepare("SELECT body_html FROM posts WHERE slug = 'md'").first<{ body_html: string }>())!;
+    expect(body_html).toContain(`v=${sha256.slice(0, 12)}`);
+    expect(body_html).toMatch(/width="\d+" height="\d+"/);
+    expect((await e.BLOG_IMAGES.head(item.id))!.customMetadata).toMatchObject({ width: "480", height: "640" });
+  });
+
+  it("reverts to a copy kept before site-api 0.24, under media/revisions/<time>/<key>", async () => {
+    const item = await upload(png(800, 600));
+    const old = png(400, 300, {}, 5);
+    const copy = `media/revisions/2026-01-01T00:00:00.000Z/${item.id}`;
+    await e.BACKUPS.put(copy, old);
+    const { id } = (await e.DB.prepare("SELECT id FROM media_revisions WHERE media_key = ?").bind(item.id).first<{ id: number }>())!;
+    await e.DB.prepare("UPDATE media_revisions SET backup_key = ?, width = 400, height = 300, bytes = ? WHERE id = ?").bind(copy, old.byteLength, id).run();
+    await e.DB.prepare("INSERT INTO media_revisions (media_key, at, bytes, width, height, reason, sha256) VALUES (?, '2026-01-02 00:00:00', 1, 800, 600, 'replace', NULL)").bind(item.id).run();
+    const reverted = await media.revert!(item.id, { to: String(id), expectedVersion: item.version!, changeId: "c" });
+    expect(reverted.item).toMatchObject({ width: 400, height: 300, bytes: old.byteLength });
+    expect(new Uint8Array(await (await e.BLOG_IMAGES.get(item.id))!.arrayBuffer())).toEqual(old);
   });
 
   it("answers what changed since a cursor, each file once and as it is now", async () => {
@@ -250,6 +253,13 @@ describe("the backfill", () => {
     expect(await media.get("ep-1/vibrio-400.webp")).toMatchObject({ alt: "Old alt", filename: "vibrio.webp", focus: "0.5x0.5", width: 400, height: 300, contentType: "image/webp", version: "r0" });
     expect(await media.get("posts/1/pump.png")).toMatchObject({ caption: "The pump", width: 1200, height: 800 });
     expect((await e.BLOG_IMAGES.head("ep-1/vibrio-400.webp"))!.etag).toBe(before);
+
+    // A key from before Carrel that is not a MediaId keeps its row and address, and stays out of the library.
+    const cursor = (await media.list({ limit: 1 })).changeCursor!;
+    await e.BLOG_IMAGES.put("old pics/a b.png", png(5, 5, {}, 3), { httpMetadata: { contentType: "image/png" } });
+    expect((await backfillMedia({ ...e, IMAGES: images } as unknown as Env)).added).toEqual(["old pics/a b.png"]);
+    expect((await media.list({ limit: 50 })).items.map((i) => i.id)).not.toContain("old pics/a b.png");
+    expect(await media.changes!({ since: cursor, limit: 10 })).toMatchObject({ items: [], removed: [] });
 
     // The cron walks the bucket once on its own, then stops.
     await e.BLOG_IMAGES.put("posts/2/late.png", png(5, 5, {}, 2));

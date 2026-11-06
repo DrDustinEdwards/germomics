@@ -3,10 +3,9 @@
 import { SITE_ORIGIN } from "~/lib/site";
 import type { Route } from "./+types/sitemap";
 import { getEnv } from "~/lib/context.server";
-import { listPosts, listSeasons } from "~/lib/posts.server";
+import { listPostImages, listPosts, listSeasons } from "~/lib/posts.server";
 import { isoDay } from "@drdustinedwards/site-helpers/xml";
 import { sitemapDocument } from "@drdustinedwards/site-helpers/sitemap";
-import { HOURLY_CACHE_CONTROL } from "~/lib/edge-cache.server";
 
 const STATIC_PATHS = [
   "",
@@ -20,24 +19,29 @@ const STATIC_PATHS = [
   "about/dustin-edwards",
   "privacy",
   "terms",
+  "accessibility",
   "contact",
   "txasm",
 ];
 
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
-  const [posts, seasons] = await Promise.all([
+  const [posts, seasons, images] = await Promise.all([
     listPosts(env, { limit: 1000 }), // visible only
     listSeasons(env),
+    listPostImages(env),
   ]);
+  // An image sitemap entry is an absolute URL; a stored site path is made one.
+  const absolute = (src: string) => new URL(src, SITE_ORIGIN).href;
 
   const xml = sitemapDocument(
     [
       ...STATIC_PATHS.map((p) => ({ loc: `${SITE_ORIGIN}/${p}` })),
       ...seasons.map((s) => ({ loc: `${SITE_ORIGIN}/season/${s}` })),
-      ...posts.map((post) => ({
+      ...posts.filter((post) => !post.noindex).map((post) => ({
         loc: `${SITE_ORIGIN}/${post.slug}`,
         lastmod: isoDay(post.updatedAt) ?? isoDay(post.publishedAt),
+        images: images.get(post.slug)?.map(absolute),
       })),
     ],
     { trailingNewline: false },
@@ -46,7 +50,6 @@ export async function loader({ context }: Route.LoaderArgs) {
   return new Response(xml, {
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": HOURLY_CACHE_CONTROL,
     },
   });
 }

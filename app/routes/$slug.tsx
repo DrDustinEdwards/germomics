@@ -1,29 +1,30 @@
 import type { Route } from "./+types/$slug";
 import { getEnv } from "~/lib/context.server";
-import { getPostBySlug, listPosts, relatedPosts, adjacentPosts, toPlayerTrack } from "~/lib/posts.server";
+import { getPostBySlug, listPosts, relatedPosts, adjacentPosts, renamedPostRedirect, toPlayerTrack } from "~/lib/posts.server";
 import { getEpisodeGuests } from "~/lib/people.server";
 import { soundbitesForPost } from "~/lib/soundbites.server";
 import { getShowConfig } from "~/lib/show.server";
-import {
-  readingTime,
-  tableOfContents,
-  demoteHeadings,
-  buildJsonLd,
-  extractFaqLd,
-  ogImageFor,
-  pageHead,
-  stripHtml,
-} from "~/lib/seo";
-import { breadcrumbs, jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { buildJsonLd, ogImageFor, pageHead, stripHtml } from "~/lib/seo";
 import { SITE_ORIGIN } from "~/lib/site";
-import { postImages } from "~/lib/images.server";
+import { postTrail } from "~/lib/trails";
+import { faqPage, jsonLd } from "@drdustinedwards/site-helpers/schema";
+import type { HeadImage } from "@drdustinedwards/site-helpers/head";
+import { pageToc, storedBody } from "~/lib/render.server";
+import { postImages, shareImage } from "~/lib/images.server";
 import { PostDetail, type DetailData } from "~/components/content/PostDetail";
+
+// An episode's page is the player's own (its surface, waveform, transcript read-along, chapters and progress), so it
+// hydrates on load; an article sends no React (lib/hydration.ts).
+export const handle = {
+  hydrate: (data: unknown) => (data as { post?: { kind?: string } } | undefined)?.post?.kind === "episode",
+};
 
 export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData?.post) return [{ title: "Not found · Germomics" }];
   const { post, author, seriesTitle, guests, hosts, ogImage } = loaderData;
-  const isEpisode = post.kind === "episode";
-  const faq = extractFaqLd(post.body);
+  // The body's :::faq pairs, as Prelum rendered them, are its FAQPage.
+  const pairs = post.bodyMeta?.faq ?? [];
+  const faq = pairs.length ? faqPage(pairs) : null;
   return [
     // Episodes are editorial articles with audio on this site, so og:type is article (the prior
     // music.song regressed the social card).
@@ -31,19 +32,15 @@ export function meta({ loaderData }: Route.MetaArgs) {
       path: `/${post.slug}`,
       title: `${post.seoTitle ?? post.title} · Germomics`,
       socialTitle: post.title,
-      description: post.seoDescription ?? post.excerpt ?? stripHtml(post.body),
+      description: post.seoDescription || post.excerpt || stripHtml(post.bodyHtml ?? "") || `${post.title}, on Germomics.`,
       image: ogImage,
+      canonical: post.canonical ? new URL(post.canonical, SITE_ORIGIN).href : undefined,
+      noindex: post.noindex,
       type: "article",
       article: { published: post.publishedAt ?? post.publishAt, modified: post.updatedAt, author, tags: post.tags ?? [] },
+      breadcrumbs: postTrail(post),
     }),
     jsonLd(buildJsonLd({ post, author, seriesTitle, guests, hosts })),
-    jsonLd(
-      breadcrumbs(SITE_ORIGIN, [
-        { name: "Home", path: "/" },
-        isEpisode ? { name: "Episodes", path: "/episodes" } : { name: "Writing", path: "/writing" },
-        { name: post.title, path: `/${post.slug}` },
-      ]),
-    ),
     ...(faq ? [jsonLd(faq)] : []),
   ];
 }
@@ -51,7 +48,8 @@ export function meta({ loaderData }: Route.MetaArgs) {
 export async function loader({ params, context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const [post, visible, show] = await Promise.all([getPostBySlug(env, params.slug), listPosts(env), getShowConfig(env)]);
-  if (!post) throw new Response("Not found", { status: 404 });
+  // A slug Carrel renamed away from answers a permanent redirect to the post's address now.
+  if (!post) throw (await renamedPostRedirect(env, params.slug)) ?? new Response("Not found", { status: 404 });
 
   const [guests, clips] = await Promise.all([
     getEpisodeGuests(env, post),
@@ -61,17 +59,21 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const adj = adjacentPosts(visible, post);
   const hosts = show.hosts ?? [];
   // Hero cover uses the item's own artwork; when it has none, the CoverArt component renders the SVG
-  // brand default (so no raster default here). The social image still defaults to the show artwork.
+  // brand default (so no raster default here). The social image defaults to the wordmark card.
   const cover = post.episodeArtwork ?? post.coverImage ?? null;
-  const ogImage = ogImageFor(post) ?? show.artwork ?? null;
-  const { body, images } = await postImages(env, post, cover, { guests, hosts });
+  const [{ html, meta }, images, ogImage] = await Promise.all([
+    storedBody(env, post),
+    postImages(env, post, cover, { guests, hosts }),
+    shareImage(env, ogImageFor(post)),
+  ]);
 
   const data: DetailData & {
     seriesTitle: string;
     hosts: typeof hosts;
-    ogImage: string | null;
+    ogImage: HeadImage;
   } = {
-    post: { ...post, body },
+    // The page shows the rendered HTML; the Markdown stays on the server.
+    post: { ...post, body: "", bodyHtml: html, bodyMeta: meta },
     images,
     track: post.kind === "episode" ? toPlayerTrack(post) : null,
     soundbites: clips.map((c) => ({ id: c.id, start: c.startSeconds, duration: c.durationSeconds, title: c.title })),
@@ -83,8 +85,8 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     author: show.author,
     hosts,
     cover,
-    readingMinutes: post.readingTime ?? readingTime(post.body),
-    toc: tableOfContents(demoteHeadings(post.body)),
+    readingMinutes: post.readingTime ?? 1,
+    toc: pageToc(meta),
     seriesTitle: show.title,
     ogImage,
   };

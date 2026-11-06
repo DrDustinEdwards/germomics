@@ -24,7 +24,6 @@ export default defineConfig({
         bindings: {
           // Fake values only, never a real one.
           ADMIN_EMAIL: "admin@example.com",
-          BETTER_AUTH_SECRET: "test-only-secret-not-a-real-one",
         },
       },
     }),

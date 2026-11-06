@@ -1,7 +1,7 @@
-import { useState } from "react";
 import { Form } from "react-router";
 import { Link } from "capsomer/react/link";
 import { Rss, Check, Copy, Mail, Smartphone } from "lucide-react";
+import { CopyButton } from "~/components/content/CopyLink";
 import { ExternalCue } from "~/components/ExternalCue";
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/subscribe";
@@ -11,9 +11,10 @@ import { subscribers } from "~/db/schema";
 import { getShowConfig } from "~/lib/show.server";
 import { SUBSCRIBE_DESTINATIONS, PRIMARY_KEYS, SECONDARY_KEYS } from "~/lib/subscribe";
 import { SITE_HOST } from "~/lib/site";
+import { PUBLIC_FORM, readForm } from "~/lib/body.server";
 
 export function meta() {
-  return pageHead({ path: "/subscribe", title: "Subscribe · Germomics", description: "Follow Germomics in any podcast app, by email, or by RSS." });
+  return pageHead({ path: "/subscribe", title: "Subscribe · Germomics", description: "Follow Germomics, the podcast about microbiology and history, in any podcast app, by email, or with its RSS feed." });
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -24,7 +25,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function action({ request, context }: Route.ActionArgs) {
-  const form = await request.formData();
+  const form = await readForm(request, PUBLIC_FORM);
   const email = String(form.get("email") ?? "").trim().toLowerCase();
   const consent = form.get("consent");
 
@@ -57,17 +58,6 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
   const sl = loaderData.subscribeLinks as Record<string, string>;
   const primary = PRIMARY_KEYS.filter((k) => sl[k]);
   const secondary = SECONDARY_KEYS.filter((k) => sl[k]);
-  const [copied, setCopied] = useState(false);
-
-  const copyRss = async () => {
-    try {
-      await navigator.clipboard.writeText(`${window.location.origin}/feed/podcast/`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch {
-      /* clipboard blocked */
-    }
-  };
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -89,8 +79,6 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
                 <a
                   key={k}
                   href={sl[k]}
-                  target="_blank"
-                  rel="noopener"
                   className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 font-display text-sm font-medium hover:border-accent hover:text-accent"
                 >
                   <Icon size={18} aria-hidden />
@@ -111,7 +99,7 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
               const d = SUBSCRIBE_DESTINATIONS[k];
               const Icon = d.icon;
               return (
-                <a key={k} href={sl[k]} target="_blank" rel="noopener" className={chip}>
+                <a key={k} href={sl[k]} className={chip}>
                   <Icon size={14} aria-hidden /> {d.label}
                   <ExternalCue />
                 </a>
@@ -125,22 +113,18 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
       <section className="mt-8">
         <h2 className="font-display text-lg font-semibold">Other ways to subscribe</h2>
         <div className="mt-3 flex flex-wrap gap-2">
-          <a href={`https://subscribeonandroid.com/${SITE_HOST}/feed/podcast/`} target="_blank" rel="noopener" className={chip}>
+          <a href={`https://subscribeonandroid.com/${SITE_HOST}/feed/podcast/`} className={chip}>
             <Smartphone size={14} aria-hidden /> Subscribe on Android
             <ExternalCue />
           </a>
-          <a href={`https://subscribebyemail.com/${SITE_HOST}/feed/podcast/`} target="_blank" rel="noopener" className={chip}>
+          <a href={`https://subscribebyemail.com/${SITE_HOST}/feed/podcast/`} className={chip}>
             <Mail size={14} aria-hidden /> Subscribe by Email
             <ExternalCue />
           </a>
-          <a href="/feed/podcast/" target="_blank" rel="noopener" className={chip}>
+          <a href="/feed/podcast/" className={chip}>
             <Rss size={14} aria-hidden /> RSS feed
-            <ExternalCue />
           </a>
-          <button type="button" onClick={copyRss} className={chip}>
-            {copied ? <Check size={14} aria-hidden /> : <Copy size={14} aria-hidden />}
-            {copied ? "Copied" : "Copy RSS link"}
-          </button>
+          <CopyButton path="/feed/podcast/" label="Copy RSS link" icon={Copy} className={chip} />
         </div>
       </section>
 

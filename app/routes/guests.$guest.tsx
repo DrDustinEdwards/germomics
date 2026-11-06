@@ -7,7 +7,7 @@ import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 import { Picture } from "~/components/content/Picture";
 import { imageFor } from "~/lib/images";
-import { imageSet } from "~/lib/images.server";
+import { imageSet, shareImage } from "~/lib/images.server";
 
 export function meta({ loaderData, location }: Route.MetaArgs) {
   const name = loaderData?.name ?? "Guest";
@@ -15,7 +15,8 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
     path: location.pathname,
     title: `${name} · Germomics`,
     description: `Germomics episodes with ${name}.`,
-    image: loaderData?.photo,
+    pageType: "CollectionPage",
+    image: loaderData?.share,
   });
 }
 
@@ -36,9 +37,11 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     .sort((a, b) => String(b.publishedAt ?? "").localeCompare(String(a.publishedAt ?? "")));
 
   const legacy = episodes.flatMap((e) => e.guests ?? []).find((g) => slugifyGuest(g.name) === params.guest);
+  const name = person?.name ?? legacy?.name ?? params.guest;
+  const photo = person?.photo ? { src: person.photo, alt: person.photoAlt ?? name } : null;
 
   return {
-    name: person?.name ?? legacy?.name ?? params.guest,
+    name,
     role: person?.role ?? legacy?.role ?? null,
     bio: person?.bio ?? legacy?.bio ?? null,
     photo: person?.photo ?? null,
@@ -47,6 +50,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     episodes,
     tracks: episodes.map(toPlayerTrack),
     images: await imageSet(env, [["portrait", person?.photo]]),
+    share: await shareImage(env, photo),
   };
 }
 
@@ -67,7 +71,7 @@ export default function GuestPage({ loaderData }: Route.ComponentProps) {
           {links.length ? (
             <div className="mt-2 flex flex-wrap gap-3 font-mono text-xs">
               {links.map((l) => (
-                <a key={l.url} href={l.url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">{l.label || "link"}</a>
+                <a key={l.url} href={l.url} className="text-accent hover:underline">{l.label || "link"}</a>
               ))}
             </div>
           ) : null}
@@ -75,7 +79,7 @@ export default function GuestPage({ loaderData }: Route.ComponentProps) {
       </div>
       <div className="grid gap-3">
         {episodes.map((post) => (
-          <PostCard key={post.id} post={post} queue={tracks} />
+          <PostCard key={post.id} post={post} queue={tracks} heading="h2" />
         ))}
         {episodes.length === 0 ? <p className="text-muted">No episodes with this guest.</p> : null}
       </div>

@@ -32,13 +32,6 @@ export function formatDate(value?: string | null): string {
   });
 }
 
-/** "mm:ss" / "h:mm:ss" timestamp to seconds, for transcript cues and share-at-timestamp. */
-export function stampToSeconds(stamp: string): number {
-  const parts = stamp.split(":").map(Number);
-  if (parts.some((n) => Number.isNaN(n))) return 0;
-  return parts.reduce((acc, n) => acc * 60 + n, 0);
-}
-
 /** Human-readable spoken duration for screen readers, e.g. "3 minutes 12 seconds". */
 export function spokenTime(totalSeconds?: number | null): string {
   const [h, m, s] = splitSeconds(totalSeconds);

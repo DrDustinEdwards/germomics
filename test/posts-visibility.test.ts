@@ -15,6 +15,7 @@ import {
   searchPosts,
 } from "~/lib/posts.server";
 import type { Post } from "~/db/schema";
+import { resetDb } from "@dustinedwards/devkit/d1";
 import { applyMigrations } from "./helpers/d1";
 
 // Every public read goes through posts.server, and the publish-on-read gate there is what keeps a
@@ -37,7 +38,7 @@ const slugs = (ps: Post[]) => ps.map((p) => p.slug);
 
 beforeAll(() => applyMigrations(e.DB));
 beforeEach(async () => {
-  for (const t of ["episode_people", "soundbites", "post_versions", "posts"]) await e.DB.exec(`DELETE FROM ${t}`);
+  await resetDb(e.DB);
 });
 
 describe("the publish-on-read gate", () => {

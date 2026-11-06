@@ -1,6 +1,5 @@
 // Drag-drop / click upload target → POSTs to /admin/upload (gated) and reports progress via
 // XHR (fetch can't surface upload progress). Reused by the image, audio and transcript fields.
-// An optional `transform` runs client-side before upload (e.g. image downscale).
 import { useId, useRef, useState } from "react";
 import { UploadCloud, Loader2 } from "lucide-react";
 
@@ -18,7 +17,6 @@ export function UploadDropzone({
   postId,
   accept,
   label,
-  transform,
   onFilePicked,
   onUploaded,
 }: {
@@ -26,7 +24,6 @@ export function UploadDropzone({
   postId: number | string;
   accept: string;
   label: string;
-  transform?: (file: File) => Promise<File>;
   onFilePicked?: (file: File) => void;
   onUploaded: (result: UploadResult & { file: File }) => void;
 }) {
@@ -36,18 +33,12 @@ export function UploadDropzone({
   const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function handle(file: File) {
+  function handle(file: File) {
     setError(null);
     onFilePicked?.(file);
-    let toSend = file;
-    try {
-      if (transform) toSend = await transform(file);
-    } catch {
-      /* fall back to original on transform failure */
-    }
     setProgress(0);
     const body = new FormData();
-    body.set("file", toSend);
+    body.set("file", file);
     body.set("kind", kind);
     body.set("postId", String(postId));
 
@@ -64,7 +55,7 @@ export function UploadDropzone({
           setError(res.error || "Upload failed.");
           return;
         }
-        onUploaded({ ...res, file: toSend });
+        onUploaded({ ...res, file });
       } catch {
         setError("Upload failed (bad response).");
       }
@@ -91,7 +82,7 @@ export function UploadDropzone({
           e.preventDefault();
           setDragging(false);
           const file = e.dataTransfer.files?.[0];
-          if (file) void handle(file);
+          if (file) handle(file);
         }}
         className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 text-center transition ${
           dragging ? "border-accent bg-accent/5" : "border-border bg-surface hover:border-brand"
@@ -112,7 +103,7 @@ export function UploadDropzone({
           className="sr-only"
           onChange={(e) => {
             const file = e.target.files?.[0];
-            if (file) void handle(file);
+            if (file) handle(file);
             e.target.value = "";
           }}
         />

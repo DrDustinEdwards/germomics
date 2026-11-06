@@ -2,11 +2,12 @@
 // (CLAUDE.md rule #4); the one raw statement is the FTS5 MATCH, which Drizzle's DSL can't
 // express. Tag/guest filters parse the JSON columns in JS (the catalog is small), keeping
 // everything type-safe and camelCase.
-import { and, asc, desc, eq, getTableColumns, inArray, isNull, lte, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, gt, inArray, isNull, lte, min, or, sql, type SQL } from "drizzle-orm";
 import { toMatchExpression } from "@drdustinedwards/site-helpers/search";
 import { getDb } from "~/db/index.server";
-import { posts, type Post } from "~/db/schema";
+import { postRedirects, posts, type Post } from "~/db/schema";
 import { slugifyGuest, toPlayerTrack } from "~/lib/posts";
+import { storedBody } from "~/lib/render.server";
 
 // Re-export the client-safe pure helpers so existing server callers keep working.
 export { slugifyGuest, toPlayerTrack };
@@ -21,6 +22,8 @@ type Kind = "episode" | "article";
 // (and any consumer that reads those keys) stays intact, but nothing heavy is fetched or serialized.
 const {
   body: _body,
+  bodyHtml: _bodyHtml,
+  bodyMeta: _bodyMeta,
   transcript: _transcript,
   audioPeaks: _peaks,
   sources: _sources,
@@ -30,29 +33,41 @@ const {
 // readingTime stays in the projection: listing cards show it without loading the body.
 
 function asCards(
-  rows: Array<Omit<Post, "body" | "transcript" | "audioPeaks" | "sources" | "keyMoments">>,
+  rows: Array<Omit<Post, "body" | "bodyHtml" | "bodyMeta" | "transcript" | "audioPeaks" | "sources" | "keyMoments">>,
 ): Post[] {
   return rows.map(
-    (r) => ({ ...r, body: "", transcript: null, audioPeaks: null, sources: null, keyMoments: null }) as Post,
+    (r) => ({ ...r, body: "", bodyHtml: null, bodyMeta: null, transcript: null, audioPeaks: null, sources: null, keyMoments: null }) as Post,
   );
 }
 
 // Publish-on-read scheduling gate (the mechanism chosen this pass — see the editor spec §F):
 // a post is publicly visible when it is published AND not scheduled into the future. A
 // "scheduled" post is status=published with a future publishAt; it stays hidden from every
-// public read (lists, detail, search, feeds) until publishAt passes — no cron required.
+// public read (lists, detail, search, feeds) until publishAt passes — no cron required. A post in
+// Carrel's trash is a draft already; trashedAt is checked as well, so no stray row can show one.
 function publiclyVisible(): SQL {
   const now = new Date().toISOString();
   return and(
     eq(posts.status, "published"),
+    isNull(posts.trashedAt),
     or(isNull(posts.publishAt), lte(posts.publishAt, now)),
   )!;
+}
+
+/** When the next scheduled post goes live: it needs no write, so no purge, and a stored page stays fresh no later. */
+export async function nextPublishAt(env: Env): Promise<Date | null> {
+  const [row] = await getDb(env)
+    .select({ at: min(posts.publishAt) })
+    .from(posts)
+    .where(and(eq(posts.status, "published"), gt(posts.publishAt, new Date().toISOString())));
+  return row?.at ? new Date(row.at) : null;
 }
 
 /** In-JS mirror of publiclyVisible() for single rows already fetched. */
 export function isVisibleNow(post: Post): boolean {
   return (
     post.status === "published" &&
+    !post.trashedAt &&
     (!post.publishAt || post.publishAt <= new Date().toISOString())
   );
 }
@@ -74,16 +89,41 @@ export async function listPosts(
 }
 
 /**
- * Visible posts of one kind with every column, newest first. For the readers that print the body or
- * the transcript (the podcast and writing feeds, llms-full.txt); listing pages use listPosts' cards.
+ * Each visible post's pictures for the image sitemap, by slug: its cover, then every <img> its body shows, as they
+ * are written (a site path or an absolute URL); data: URLs and the dark half of a themed pair are left out. Read from
+ * the stored render (or a legacy row's HTML body) as it is, never re-rendered: a sitemap is no place to render.
+ */
+export async function listPostImages(env: Env): Promise<Map<string, string[]>> {
+  const rows = await getDb(env)
+    .select({ slug: posts.slug, coverImage: posts.coverImage, body: posts.body, bodyHtml: posts.bodyHtml, renderVersion: posts.renderVersion })
+    .from(posts)
+    .where(publiclyVisible());
+  const out = new Map<string, string[]>();
+  for (const row of rows) {
+    const html = row.renderVersion === null ? row.body : (row.bodyHtml ?? "");
+    const found = new Set<string>(row.coverImage ? [row.coverImage] : []);
+    for (const [tag] of html.matchAll(/<img\b[^>]*>/g)) {
+      const src = /\ssrc="([^"]+)"/.exec(tag)?.[1];
+      if (src && !src.startsWith("data:") && !/\bdark\b/.test(/\sclass="([^"]*)"/.exec(tag)?.[1] ?? "")) found.add(src.replace(/&amp;/g, "&"));
+    }
+    if (found.size > 0) out.set(row.slug, [...found]);
+  }
+  return out;
+}
+
+/**
+ * Visible posts of one kind with every column, newest first, each with its rendered body in bodyHtml. For the
+ * readers that print the body or the transcript (the podcast and writing feeds, llms-full.txt), which print
+ * HTML or plain text, never the Markdown; listing pages use listPosts' cards.
  */
 export async function listFullPosts(env: Env, kind: Kind, limit = 200): Promise<Post[]> {
-  return getDb(env)
+  const rows = await getDb(env)
     .select()
     .from(posts)
     .where(and(publiclyVisible(), eq(posts.kind, kind)))
     .orderBy(desc(posts.publishedAt))
     .limit(limit);
+  return Promise.all(rows.map(async (p) => ({ ...p, bodyHtml: (await storedBody(env, p)).html })));
 }
 
 export const listEpisodes = (env: Env, limit?: number) =>
@@ -124,6 +164,21 @@ export async function getPostBySlug(
   if (!post) return null;
   if (!opts.includeDrafts && !isVisibleNow(post)) return null;
   return post;
+}
+
+/**
+ * The permanent redirect for a slug a post was renamed from (Carrel's rename, post_redirects), to the same `suffix`
+ * under the slug it has now; null when the slug was never renamed or the post is not publicly visible, so a redirect
+ * never names a draft's address.
+ */
+export async function renamedPostRedirect(env: Env, slug: string, suffix = ""): Promise<Response | null> {
+  const [row] = await getDb(env)
+    .select({ slug: posts.slug })
+    .from(postRedirects)
+    .innerJoin(posts, eq(posts.id, postRedirects.postId))
+    .where(and(eq(postRedirects.fromSlug, slug), publiclyVisible()))
+    .limit(1);
+  return row ? new Response(null, { status: 301, headers: { Location: `/${row.slug}${suffix}` } }) : null;
 }
 
 export async function getPostById(env: Env, id: number): Promise<Post | null> {

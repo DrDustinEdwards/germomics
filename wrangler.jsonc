@@ -6,28 +6,31 @@
 	"compatibility_date": "2026-10-19",
 	"compatibility_flags": ["nodejs_compat"],
 	// Keep dashboard-set vars/secrets (ADMIN_EMAIL, ACCESS_TEAM_DOMAIN, ACCESS_AUD,
-	// BETTER_AUTH_SECRET for preview tokens) from being wiped on deploy.
+	// CARREL_SITE_KEY) from being wiped on deploy.
 	"keep_vars": true,
-	"observability": { "enabled": true, "traces": { "enabled": true, "head_sampling_rate": 0.1 } },
+	// Every invocation's logs are kept (head_sampling_rate 1: the site's traffic is far under Workers Logs' daily cap, and
+	// a sampled request line would hide the one 5xx being looked for); a tenth of requests are traced.
+	"observability": {
+		"enabled": true,
+		"logs": { "enabled": true, "head_sampling_rate": 1 },
+		"traces": { "enabled": true, "head_sampling_rate": 0.1 }
+	},
+	// The deployed version's id and time: /health's cron check holds a job's "never ran" warning until its first window
+	// since the deploy has passed.
+	"version_metadata": { "binding": "CF_VERSION_METADATA" },
 	// Run the Worker next to D1 (primary in ENAM, read replication off). A page render waits on D1
-	// round trips, each 1-3 ms from there instead of up to 150 ms from a distant colo, and the edge
-	// cache (caches.default) is then one cache instead of a cold one in every colo. Static assets
+	// round trips, each 1-3 ms from there instead of up to 150 ms from a distant colo. Static assets
 	// are still served from the visitor's colo.
 	"placement": { "region": "aws:us-east-1" },
-	// THE MAPS KEY IS A BUILD-TIME VALUE AND IS DELIBERATELY NOT A `vars` ENTRY HERE.
-	//
-	//   VITE_GOOGLE_MAPS_KEY      the Maps JavaScript API browser key
-	//   VITE_GOOGLE_MAPS_MAP_ID   the Map ID Advanced Markers require
-	//
-	// Vite inlines every VITE_* value into the CLIENT bundle when `react-router build` runs, so
-	// both have to exist as BUILD environment variables (Workers Builds settings, or .env
-	// locally). A Worker runtime var is invisible to a browser bundle and would not feed them.
-	//
-	// Writing them into `vars` would also be actively harmful: `keep_vars` protects only vars
-	// that are ABSENT from this file, so listing them with placeholder values would overwrite
-	// the dashboard values on every deploy. Declared here as documentation instead. Shape and
-	// the referrer-restriction requirement: .env.example.
-
+	// The page's edge cache (workers/app.ts, site-runtime ./edge-cache). The default export is the GATEWAY, cache
+	// disabled, so it runs on every request (Carrel's API, writes, the admin and the live paths). It calls the Renderer
+	// through ctx.exports with the path and query as the cache key, and the Renderer's responses are stored. Every write
+	// purges the "pages" tag. No `cross_version_cache`, so the Worker version stays in the key and every deploy starts cold.
+	"cache": { "enabled": true },
+	"exports": {
+		"default": { "type": "worker", "cache": { "enabled": false } },
+		"Renderer": { "type": "worker", "cache": { "enabled": true } }
+	},
 	"upload_source_maps": true,
 	// Native bindings, reached only via context.cloudflare.env in loaders/actions.
 	"d1_databases": [

@@ -1,13 +1,18 @@
-// Server half of the responsive images (app/lib/images.ts): reads each stored original's size, and
-// rewrites a post body's figures into AVIF and WebP <picture>s served from /media.
+// Server half of the responsive images (app/lib/images.ts): reads each stored original's size for the cover,
+// artwork and people photos a page shows. A body's figures are sized when it is rendered, from the media library
+// (app/lib/render.server.ts).
 //
-// THE SIZE OF AN ORIGINAL. An upload records its width and height as R2 custom metadata
-// (`imageMetadata`, from the Images binding). The season 1 figures were uploaded before that, as
-// pre-made `<slug>-<width>.webp` files, so for those the width is read from the name and the shape
-// from the figure's own width and height. An image with neither is left as it is: the original,
+// THE SIZE OF AN ORIGINAL. An upload records its width and height as R2 custom metadata (measured
+// by site-api's prepareUpload). The season 1 figures were uploaded before that, as pre-made
+// `<slug>-<width>.webp` files, so for those the width is read from the name and the shape from the
+// figure's own width and height. An image with neither is left as it is: the original,
 // unsized, is better than a guess (site-runtime's rule).
-import { FOCUS_METADATA, pictureHtml, type StoredImage } from "@dustinedwards/site-runtime/image";
-import { escapeHtml } from "@dustinedwards/site-runtime/html";
+import { FOCUS_METADATA, type StoredImage } from "@dustinedwards/site-runtime/image";
+import type { HeadImage } from "@drdustinedwards/site-helpers/head";
+import { inArray } from "drizzle-orm";
+import { getDb } from "~/db/index.server";
+import { media } from "~/db/schema";
+import { DEFAULT_CARD, SITE_ORIGIN } from "~/lib/site";
 import { imageKey, imageKeyOf, images, mediaPath, type ImageSet, type ImageUseName } from "~/lib/images";
 
 const NAMED_WIDTH = /-(\d{2,4})\.(?:webp|jpe?g|png|avif|gif)$/i;
@@ -29,7 +34,19 @@ async function storedImage(env: Env, src: string, aspect?: number): Promise<Stor
   const meta = head.customMetadata ?? {};
   const width = positive(meta.width) ?? positive(NAMED_WIDTH.exec(key)?.[1]);
   const height = positive(meta.height) ?? (width && aspect ? Math.round(width * aspect) : null);
-  return { src: mediaPath(key), width, height, focus: meta[FOCUS_METADATA] ?? null };
+  // The object's etag (its bytes' MD5) is the version its size URLs carry (`v=`), so a replaced or turned file is a new
+  // URL and never the year-old copy a browser holds.
+  return { src: mediaPath(key), width, height, focus: meta[FOCUS_METADATA] ?? null, version: head.etag };
+}
+
+/** The placeholder and main color site-api stored for each library key (D1 `media`), shown while a picture loads. */
+async function placeholders(env: Env, keys: string[]): Promise<Map<string, { placeholder: string | null; color: string | null }>> {
+  if (keys.length === 0) return new Map();
+  const rows = await getDb(env)
+    .select({ key: media.key, placeholder: media.placeholder, color: media.color })
+    .from(media)
+    .where(inArray(media.key, keys));
+  return new Map(rows.map((r) => [r.key, { placeholder: r.placeholder, color: r.color }]));
 }
 
 /**
@@ -39,101 +56,51 @@ async function storedImage(env: Env, src: string, aspect?: number): Promise<Stor
  */
 export async function imageSet(env: Env, wanted: Array<[ImageUseName, string | null | undefined]>): Promise<ImageSet> {
   const srcs = [...new Set(wanted.map(([, src]) => src).filter((s): s is string => Boolean(s)))];
-  const stored = new Map(await Promise.all(srcs.map(async (src) => [src, await storedImage(env, src, 1)] as const)));
+  const [stored, held] = await Promise.all([
+    Promise.all(srcs.map(async (src) => [src, await storedImage(env, src, 1)] as const)).then((pairs) => new Map(pairs)),
+    placeholders(env, srcs.map(imageKeyOf).filter((k): k is string => k !== null)),
+  ]);
   const set: ImageSet = {};
   for (const [use, src] of wanted) {
     const image = src ? stored.get(src) : null;
     if (!src || !image) continue;
-    const attrs = images.attributes(image, use);
+    const key = imageKeyOf(src);
+    const attrs = images.attributes({ ...image, ...(key ? held.get(key) : undefined) }, use);
     if (attrs.sources.length) set[imageKey(use, src)] = attrs;
   }
   return set;
 }
 
-// The two figure widths the body uses (BodyRenderer caps a figure at its width attribute).
-const FIGURE_USE: Record<string, ImageUseName> = { "400": "figure", "520": "leadFigure" };
-
-type Figure = { src: string; width: string; height: string; alt: string; eager: boolean };
+// The narrowest picture cut to the card's 1.9:1 without losing much: 3:2.
+const WIDE = 1.5;
 
 /**
- * A post body with each figure image on images.germomics.com rewritten into a <picture> of AVIF and
- * WebP sizes from /media. The stored body is never changed (the feeds and llms-full.txt print it
- * with the originals); this runs in the page loaders only.
+ * A page's share card: its own image as /media serves it cut to 1200x630 around its focal point, with that size. A
+ * square or tall image (the show art, a portrait) would lose its subject in that strip, so it and no image share the
+ * site's wordmark card; an image the site cannot size or crop (not in BLOG_IMAGES) is sent as it is.
  */
-export async function responsiveBody(env: Env, html: string): Promise<string> {
-  if (!html || !html.includes(`<figure`)) return html;
-  const found: Figure[] = [];
-  await new HTMLRewriter()
-    .on("figure img", {
-      element(el) {
-        found.push({
-          src: el.getAttribute("src") ?? "",
-          width: el.getAttribute("width") ?? "",
-          height: el.getAttribute("height") ?? "",
-          alt: el.getAttribute("alt") ?? "",
-          eager: el.getAttribute("loading") === "eager",
-        });
-      },
-    })
-    .transform(new Response(html))
-    .text();
-
-  const markup = new Map<string, string>();
-  await Promise.all(
-    found.map(async (f) => {
-      const use = FIGURE_USE[f.width];
-      const w = positive(f.width);
-      const h = positive(f.height);
-      if (!use || !w || !h || markup.has(f.src)) return;
-      const image = await storedImage(env, f.src, h / w);
-      if (!image) return;
-      const attrs = images.attributes(image, use);
-      if (attrs.sources.length) markup.set(f.src, pictureHtml(attrs, { alt: f.alt, priority: f.eager }, escapeHtml));
-    }),
-  );
-  if (markup.size === 0) return html;
-
-  return new HTMLRewriter()
-    .on("figure img", {
-      element(el) {
-        const picture = markup.get(el.getAttribute("src") ?? "");
-        if (picture) el.replace(picture, { html: true });
-      },
-    })
-    .transform(new Response(html))
-    .text();
+export async function shareImage(env: Env, own: { src: string; alt: string | null } | null | undefined): Promise<HeadImage> {
+  if (!own?.src) return DEFAULT_CARD;
+  const alt = own.alt ?? undefined;
+  const stored = await storedImage(env, own.src, 1);
+  if (stored?.width && stored.height && stored.width / stored.height < WIDE) return DEFAULT_CARD;
+  const card = stored ? images.attributes(stored, "share") : null;
+  // A stored address may be a site path (/media/<key>); a share tag needs an absolute URL.
+  if (!card?.sources.length) return { url: new URL(own.src, SITE_ORIGIN).href, alt };
+  return { url: `${SITE_ORIGIN}${card.src}`, width: card.width, height: card.height, alt };
 }
 
-/**
- * The width and height an upload records as custom metadata, read by the Images binding. Empty when
- * the binding is missing or the file is not a raster it can read (an SVG, say), so the upload still
- * goes through and the image is shown unsized.
- */
-export async function imageMetadata(env: Env, bytes: ArrayBuffer | Uint8Array): Promise<Record<string, string>> {
-  if (!env.IMAGES) return {};
-  try {
-    const info = await env.IMAGES.info(new Blob([bytes as BlobPart]).stream());
-    return "width" in info && info.width && info.height ? { width: String(info.width), height: String(info.height) } : {};
-  } catch {
-    return {};
-  }
-}
-
-/** What the post page (and its preview) shows: the body's figures, and the cover, artwork and people photos. */
-export async function postImages(
+/** What the post page (and its preview) shows besides the body: the cover, artwork and people photos. */
+export function postImages(
   env: Env,
-  post: { body: string; coverImage: string | null },
+  post: { coverImage: string | null },
   cover: string | null,
   people: { guests: Array<{ photo?: string | null }>; hosts: Array<{ img?: string | null }> },
-): Promise<{ body: string; images: ImageSet }> {
-  const [body, set] = await Promise.all([
-    responsiveBody(env, post.body),
-    imageSet(env, [
-      ["cover", post.coverImage],
-      ["artwork", cover],
-      ...people.guests.map((g) => ["avatar", g.photo] as [ImageUseName, string | null | undefined]),
-      ...people.hosts.map((h) => ["avatar", h.img] as [ImageUseName, string | null | undefined]),
-    ]),
+): Promise<ImageSet> {
+  return imageSet(env, [
+    ["cover", post.coverImage],
+    ["artwork", cover],
+    ...people.guests.map((g) => ["avatar", g.photo] as [ImageUseName, string | null | undefined]),
+    ...people.hosts.map((h) => ["avatar", h.img] as [ImageUseName, string | null | undefined]),
   ]);
-  return { body, images: set };
 }

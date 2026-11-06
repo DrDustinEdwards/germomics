@@ -59,6 +59,7 @@ export function Footer() {
     ["/contact", useSnippet("snippet:nav.contact", "Contact")],
     ["/privacy", useSnippet("snippet:nav.privacy", "Privacy")],
     ["/terms", useSnippet("snippet:nav.terms", "Terms")],
+    ["/accessibility", "Accessibility"],
   ];
   const year = new Date().getFullYear();
   const link = "text-muted hover:text-ink";
@@ -84,9 +85,8 @@ export function Footer() {
                 <li key={s.platform}>
                   <a
                     href={s.url}
-                    target="_blank"
-                    rel="me noopener"
-                    aria-label={`${s.label} (opens in a new tab)`}
+                    rel="me"
+                    aria-label={s.label}
                     className="grid h-9 w-9 place-items-center rounded-full border border-border text-muted hover:border-accent hover:text-accent"
                   >
                     <SocialIcon platform={s.platform} />
@@ -99,15 +99,13 @@ export function Footer() {
 
         {/* Listen */}
         <nav aria-labelledby="footer-listen">
-          <h3 id="footer-listen" className="font-display text-sm font-semibold text-ink">Listen</h3>
+          <h2 id="footer-listen" className="font-display text-sm font-semibold text-ink">Listen</h2>
           <ul className="mt-3 space-y-2 max-sm:space-y-0 text-sm">
             {PRIMARY_KEYS.map((k) =>
               subscribeLinks[k] ? (
                 <li key={k}>
                   <a
                     href={subscribeLinks[k]}
-                    target="_blank"
-                    rel="noopener"
                     className={`inline-flex items-center gap-1 ${link} ${tap}`}
                   >
                     {SUBSCRIBE_DESTINATIONS[k].label}
@@ -119,12 +117,9 @@ export function Footer() {
             <li>
               <a
                 href="/feed/podcast/"
-                target="_blank"
-                rel="noopener"
                 className={`inline-flex items-center gap-1 ${link} ${tap}`}
               >
                 <Rss size={14} aria-hidden /> Podcast RSS
-                <ExternalCue />
               </a>
             </li>
             <li><Link to="/subscribe" className={`${link} ${tap}`}>More ways to listen →</Link></li>
@@ -133,7 +128,7 @@ export function Footer() {
 
         {/* Explore */}
         <nav aria-labelledby="footer-explore">
-          <h3 id="footer-explore" className="font-display text-sm font-semibold text-ink">Explore</h3>
+          <h2 id="footer-explore" className="font-display text-sm font-semibold text-ink">Explore</h2>
           <ul className="mt-3 space-y-2 max-sm:space-y-0 text-sm">
             {explore.map(([to, label]) => (
               <li key={to}><Link to={to} className={`${link} ${tap}`}>{label}</Link></li>
@@ -143,7 +138,7 @@ export function Footer() {
 
         {/* About */}
         <nav aria-labelledby="footer-about">
-          <h3 id="footer-about" className="font-display text-sm font-semibold text-ink">About</h3>
+          <h2 id="footer-about" className="font-display text-sm font-semibold text-ink">About</h2>
           <ul className="mt-3 space-y-2 max-sm:space-y-0 text-sm">
             {about.map(([to, label]) => (
               <li key={to}><Link to={to} className={`${link} ${tap}`}>{label}</Link></li>
@@ -157,7 +152,7 @@ export function Footer() {
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-4 font-mono text-xs text-muted">
           <span>
             © {year} Germomics and{" "}
-            <a href="https://dustinedwards.info" target="_blank" rel="me noopener" className={link}>
+            <a href="https://dustinedwards.info" rel="me" className={link}>
               Dr. Dustin Edwards
             </a>
           </span>

@@ -2,19 +2,19 @@
 // the tables (no reference index to fall behind), plus the one image the code itself names. Media's "used by",
 // usage counts, the unattached lens and every delete come from here, so they agree.
 //
-// An image is referenced by its address: the original at images.germomics.com/<key>, or a resized copy at
-// germomics.com/media/<key> (relative or absolute). The key is read out of each address found, query and fragment cut.
+// An image is referenced by its address: germomics.com/media/<key> (relative or absolute), the original or a resized
+// copy. The key is read out of each address found, query and fragment cut.
 import { getDb } from "~/db/index.server";
 import { contentBlocks, people, posts, scheduledUpdates, settings, showConfig } from "~/db/schema";
 import { imageKeyOf } from "~/lib/images";
-import { DEFAULT_CARD, IMAGE_ORIGIN, SITE_ORIGIN } from "~/lib/site";
+import { DEFAULT_ARTWORK, SITE_ORIGIN } from "~/lib/site";
 
 export type MediaPlace = { type: string; id: string; title: string; detail: string; keys: Set<string> };
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
 const PATH = "([^\\s\"'<>()\\\\?#]+)";
 const ADDRESS = new RegExp(
-  `(?:https?:)?${escape(IMAGE_ORIGIN.replace(/^https?:/, ""))}/${PATH}|(?:^|[\\s"'(=,])(?:${escape(SITE_ORIGIN)})?/media/${PATH}`,
+  `(?:^|[\\s"'(=,])(?:${escape(SITE_ORIGIN)})?/media/${PATH}`,
   "g",
 );
 
@@ -23,7 +23,7 @@ function keysIn(text: string | null | undefined): Set<string> {
   const keys = new Set<string>();
   if (!text) return keys;
   for (const m of text.matchAll(ADDRESS)) {
-    const raw = (m[1] ?? m[2] ?? "").replace(/[.,;:]+$/, "");
+    const raw = (m[1] ?? "").replace(/[.,;:]+$/, "");
     try {
       keys.add(decodeURIComponent(raw));
     } catch {
@@ -86,9 +86,9 @@ export async function mediaPlaces(env: Env): Promise<Array<MediaPlace & { fields
   for (const person of persons) add("person", person.slug, person.name, [["photo", person.photo]]);
   for (const b of blocks) add("content", b.key, b.title ?? b.key, [["text", b.value]]);
   for (const s of sets) add("setting", s.key, s.label ?? s.key, [["value", s.value]]);
-  // The site's default share card and show artwork until show_config names one (app/lib/site.ts).
-  const card = imageKeyOf(DEFAULT_CARD);
-  if (card) places.push({ type: "code", id: "DEFAULT_CARD", title: "The site's default share card", detail: "app/lib/site.ts", keys: new Set([card]), fields: new Map([[card, ["code"]]]) });
+  // The show artwork until show_config names one (app/lib/site.ts).
+  const art = imageKeyOf(DEFAULT_ARTWORK);
+  if (art) places.push({ type: "code", id: "DEFAULT_ARTWORK", title: "The show's default artwork", detail: "app/lib/site.ts", keys: new Set([art]), fields: new Map([[art, ["code"]]]) });
   return places;
 }
 
@@ -97,11 +97,4 @@ export function usesOfKey(places: Awaited<ReturnType<typeof mediaPlaces>>, key: 
   return places
     .filter((p) => p.keys.has(key))
     .map((p) => ({ type: p.type, id: p.id.slice(0, 300), title: p.title.slice(0, 1000), detail: (p.detail || p.fields.get(key)!.join(", ")).slice(0, 500) }));
-}
-
-/** How many places use each key. */
-export function usageCounts(places: Awaited<ReturnType<typeof mediaPlaces>>): Map<string, number> {
-  const counts = new Map<string, number>();
-  for (const p of places) for (const key of p.keys) counts.set(key, (counts.get(key) ?? 0) + 1);
-  return counts;
 }

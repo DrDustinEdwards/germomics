@@ -21,8 +21,8 @@ import {
 import { sql, relations } from "drizzle-orm";
 // JSON shapes (stored as TEXT, typed at the edge). Defined client-safe in lib/types and
 // re-exported here so loaders and components share one source of truth.
-import type { Chapter, Guest, Host, KeyMoment, PersonLink, PodcastCategory, Source } from "~/lib/types";
-export type { Chapter, Guest, Host, KeyMoment, PersonLink, PodcastCategory, Source };
+import type { BodyMeta, Chapter, Guest, Host, KeyMoment, PersonLink, PodcastCategory, Source } from "~/lib/types";
+export type { BodyMeta, Chapter, Guest, Host, KeyMoment, PersonLink, PodcastCategory, Source };
 
 // ============================================================
 // 1. Content (live)
@@ -56,6 +56,9 @@ export const posts = sqliteTable(
     coverAlt: text("cover_alt"),
     ogImage: text("og_image"),
     ogImageAlt: text("og_image_alt"),
+    // site-api's canonical and noindex search fields (0021).
+    canonical: text("canonical"),
+    noindex: integer("noindex", { mode: "boolean" }).notNull().default(false),
     createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
     updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 
@@ -82,6 +85,16 @@ export const posts = sqliteTable(
     sources: text("sources", { mode: "json" }).$type<Source[]>(), // references/credits + image credits
     keyMoments: text("key_moments", { mode: "json" }).$type<KeyMoment[]>(), // "In this episode"
     readingTime: integer("reading_time"), // minutes, computed from body at save
+
+    // 0016: body is Markdown; beside it, Prelum's render of it and the RENDER_VERSION it was rendered with
+    // (app/lib/render.server.ts). A NULL renderVersion is a row not converted yet, whose body is still HTML.
+    bodyHtml: text("body_html"),
+    bodyMeta: text("body_meta", { mode: "json" }).$type<BodyMeta>(),
+    renderVersion: text("render_version"),
+
+    // 0019: Carrel's trash (when the post was trashed) and the change that scheduled a post not yet live.
+    trashedAt: text("trashed_at"),
+    scheduleChangeId: text("schedule_change_id"),
   },
   (t) => ({
     slugIdx: uniqueIndex("posts_slug_idx").on(t.slug),
@@ -202,6 +215,9 @@ export const contentBlocks = sqliteTable(
     description: text("description"),
     status: text("status", { enum: ["draft", "published"] }).notNull().default("draft"),
     updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+    // 0016: a page's value is Markdown, rendered as posts' bodies are (NULL renderVersion: still HTML).
+    bodyHtml: text("body_html"),
+    renderVersion: text("render_version"),
   },
   (t) => ({ kindIdx: index("content_blocks_kind_idx").on(t.kind, t.status) }),
 );
@@ -291,6 +307,88 @@ export const scheduledUpdates = sqliteTable(
   (t) => ({ dueIdx: index("scheduled_updates_due").on(t.publishAt) }),
 );
 
+// 0019: a renamed post's old slug, which redirects (301) to the post's slug now (app/lib/posts.server.ts).
+export const postRedirects = sqliteTable("post_redirects", {
+  fromSlug: text("from_slug").primaryKey(),
+  postId: integer("post_id")
+    .notNull()
+    .references(() => posts.id, { onDelete: "cascade" }),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// 0018: site-api's store (safe retries, hook retries, preview links, the webmentions sent). Read and written only
+// through @dustinedwards/site-api/store (app/lib/carrel/handler.server.ts); declared here so the schema test sees it.
+export const siteApiWrites = sqliteTable(
+  "site_api_writes",
+  {
+    changeId: text("change_id").primaryKey(),
+    route: text("route").notNull(),
+    requestHash: text("request_hash").notNull(),
+    status: integer("status"),
+    response: text("response"),
+    state: text("state").notNull(),
+    at: text("at").notNull(),
+  },
+  (t) => ({ atIdx: index("site_api_writes_at").on(t.at) }),
+);
+
+export const hookRetries = sqliteTable(
+  "hook_retries",
+  {
+    id: text("id").primaryKey(),
+    hook: text("hook").notNull(),
+    event: text("event").notNull(),
+    attempts: integer("attempts").notNull(),
+    nextAt: text("next_at").notNull(),
+    lastError: text("last_error").notNull(),
+  },
+  (t) => ({ dueIdx: index("hook_retries_due").on(t.nextAt) }),
+);
+
+export const previewLinks = sqliteTable(
+  "preview_links",
+  {
+    tokenHash: text("token_hash").primaryKey(),
+    contentId: text("content_id").notNull(),
+    createdAt: text("created_at").notNull(),
+    expiresAt: text("expires_at").notNull(),
+    revokedAt: text("revoked_at"),
+    changeId: text("change_id").notNull(),
+  },
+  (t) => ({ contentIdx: index("preview_links_content").on(t.contentId, t.expiresAt) }),
+);
+
+export const webmentionTargets = sqliteTable("webmention_targets", {
+  source: text("source").primaryKey(),
+  targets: text("targets").notNull(),
+  sentAt: text("sent_at").notNull(),
+});
+
+// site-api 0.21.0 (migration 0024): the media file each upload's duplicates key became. Only d1SiteApiStore reads it.
+export const mediaUploads = sqliteTable("media_uploads", {
+  sha256: text("sha256").primaryKey(),
+  mediaId: text("media_id").notNull(),
+  at: text("at").notNull(),
+});
+
+// site-api 0.22.0 (migration 0026): the public path of each post Carrel deleted or trashed (gone_paths) and each publish
+// hook's run (hook_runs). Only d1SiteApiStore reads them.
+export const gonePaths = sqliteTable("gone_paths", {
+  path: text("path").primaryKey(),
+  goneAt: text("gone_at").notNull(),
+});
+
+export const hookRuns = sqliteTable(
+  "hook_runs",
+  {
+    changeId: text("change_id").notNull(),
+    hook: text("hook").notNull(),
+    ok: integer("ok").notNull(),
+    at: text("at").notNull(),
+  },
+  (t) => [index("hook_runs_change").on(t.changeId), index("hook_runs_at").on(t.at)],
+);
+
 // 0014: the caption Carrel set on an image in BLOG_IMAGES, keyed by its R2 key. Since 0015 a caption lives on its
 // `media` row; this table is read only by the backfill that made those rows (app/lib/media/backfill.server.ts).
 export const mediaCaptions = sqliteTable("media_captions", {
@@ -320,6 +418,9 @@ export const media = sqliteTable(
     licenseExpires: text("license_expires"),
     takenAt: text("taken_at"),
     sha256: text("sha256"),
+    // prepareUpload's blurred data: URI and #rrggbb (0016); null for files stored before, or one the binding cannot read.
+    placeholder: text("placeholder"),
+    color: text("color"),
     trashedAt: text("trashed_at"),
     rev: integer("rev").notNull().default(0),
     uploadedAt: text("uploaded_at").notNull(),
@@ -356,3 +457,28 @@ export const mediaChanges = sqliteTable(
 
 export type MediaRow = typeof media.$inferSelect;
 export type MediaRevisionRow = typeof mediaRevisions.$inferSelect;
+
+// site-runtime's operations tables (drizzle/0017_ops.sql), written and read only through ./cron and ./not-found; here so
+// the schema test holds them in step with the migration.
+export const cronRuns = sqliteTable("cron_runs", {
+  name: text("name").primaryKey(),
+  everyMinutes: integer("every_minutes").notNull(),
+  firstStartedAt: integer("first_started_at"),
+  lastStartedAt: integer("last_started_at"),
+  lastOkAt: integer("last_ok_at"),
+  lastFailedAt: integer("last_failed_at"),
+  lastError: text("last_error"),
+});
+
+export const page404Daily = sqliteTable(
+  "page_404_daily",
+  {
+    id: text("id").primaryKey(),
+    day: integer("day").notNull(),
+    path: text("path").notNull(),
+    referrerHost: text("referrer_host").notNull().default(""),
+    kind: text("kind").notNull().default("page"),
+    hitCount: integer("hit_count").notNull().default(0),
+  },
+  (t) => ({ dayPathReferrerIdx: uniqueIndex("page_404_daily_day_path_referrer_uq").on(t.day, t.path, t.referrerHost) }),
+);

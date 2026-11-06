@@ -16,7 +16,7 @@ const CHUNKS = {
     "app/lib/posts*.ts",
     "app/lib/content*.ts",
     "app/lib/rss.server.ts",
-    "app/lib/sanitize.server.ts",
+    "app/lib/render.server.ts",
     "app/lib/seo.ts",
     "app/lib/discovery.server.ts",
     "app/lib/vtt.ts",

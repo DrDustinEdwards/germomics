@@ -17,7 +17,7 @@ const TABS = [
 ] as const;
 
 export function meta() {
-  return pageHead({ path: "/archive", title: "Archive · Germomics", description: "Every Germomics episode and post, newest first, with search." });
+  return pageHead({ path: "/archive", title: "Archive · Germomics", description: "Every Germomics podcast episode and written post in one place, newest first, with search to find any of them quickly.", pageType: "CollectionPage" });
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -65,7 +65,7 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
             </Link>
           ))}
         </div>
-        <Form method="get" className="flex items-center gap-2">
+        <Form method="get" data-keep-focus className="flex items-center gap-2">
           <input type="hidden" name="tab" value={tab} />
           <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5">
             <Search size={15} aria-hidden className="text-muted" />
@@ -91,7 +91,7 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
 
       <div className="grid gap-3">
         {items.map((post) => (
-          <PostCard key={post.id} post={post} queue={tracks} />
+          <PostCard key={post.id} post={post} queue={tracks} heading="h2" />
         ))}
         {items.length === 0 ? <p className="text-muted">Nothing here yet.</p> : null}
       </div>

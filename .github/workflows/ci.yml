@@ -1,5 +1,5 @@
-# CI gate. Runs on every push and PR. (Cloudflare Workers Builds still runs `npm run deploy`
-# on push to main; this is the correctness/security gate that should pass before that.)
+# CI gate. Runs on every push and PR, and a push to main that passes it deploys: D1 migrations first, then the
+# Worker (the `deploy` job at the end).
 #
 # TWO JOBS, NOT ONE, AND THE SPLIT IS THE POINT (2026-09-08).
 #
@@ -28,6 +28,11 @@ on:
 permissions:
   contents: read
 
+# A newer push to a pull request cancels its older run; a push to the default branch never does.
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -37,6 +42,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
@@ -62,22 +69,28 @@ jobs:
       - name: Test
         run: npm test
 
+      # Area 8: raw console.* calls in server code may not rise above .console.json's baseline (devkit-console; the
+      # structured logger is site-runtime ./log), and a migration already in drizzle/ is never edited, renamed or
+      # deleted, and a new one only adds unless it says `-- contract: <reason>` (devkit-migrations, drizzle/manifest.json).
+      - name: Console ratchet
+        run: npm run --silent check:console
+
+      - name: Migrations are expand-only
+        run: npm run --silent check:migrations
+
       # NO-BLOAT REPORTS (capsid/decisions.md "no bloat, as a standing plan", 2026-10-01).
-      # WARN-ONLY BY RULING: they report against .no-bloat.json's baseline (devkit-no-bloat
-      # --warn-only, Knip and jscpd) and page weight against .route-weight.json (devkit-route-weight),
-      # and never block a merge. Every step is continue-on-error and devkit-no-bloat --warn-only
-      # always exits 0; a number above the baseline is a warning annotation and a line in the job summary. They run
-      # after the gate steps so they cannot change its result, and `!cancelled()` keeps them
-      # reporting when a gate step failed. Together they add about 10 seconds: they reuse this
-      # job's install and build rather than a job of their own.
+      # Knip and jscpd stay warn-only: devkit-no-bloat --warn-only reports against .no-bloat.json's baseline and
+      # always exits 0. Page weight is a gate (area 7, D5: every React app fails CI over its route budget):
+      # devkit-route-weight fails the job when a route passes .route-weight.json's budget_bytes or grows past its
+      # baseline. `!cancelled()` keeps both reporting when an earlier step failed. Together they add about 10
+      # seconds: they reuse this job's install and build rather than a job of their own.
       - name: Knip and jscpd (warn-only)
         if: ${{ !cancelled() }}
         continue-on-error: true
         run: npm run --silent nobloat
 
-      - name: Page weight (warn-only)
+      - name: Page weight
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        continue-on-error: true
         run: npm run --silent nobloat:weight
 
   audit:
@@ -89,6 +102,8 @@ jobs:
     # fixed.
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
@@ -106,3 +121,35 @@ jobs:
       # problem into an unknown one, which is how six weeks of red happened in the first place.
       - name: Audit (production deps)
         run: npm audit --omit=dev --audit-level=high
+
+  # A merge to main deploys once both jobs are green: migrations first, then the Worker, so a migration is never a
+  # manual step. Dormant until the repo variable CF_DEPLOY is 'true' (with the secrets CLOUDFLARE_API_TOKEN and
+  # CLOUDFLARE_ACCOUNT_ID), so Cloudflare Workers Builds keeps deploying until it is turned off; turn it off before
+  # setting CF_DEPLOY, or both deploy each merge.
+  # devkit's shared deploy (worker-deploy.yml): it reads the D1 Time Travel bookmark (`d1-database`), so a bad
+  # migration is one restore to undo, applies the pending migrations that only add (devkit-migrations --apply; a
+  # drop, rename or row delete is refused with the command to run it by hand) and builds, deploys with
+  # DEPLOY_SHA set to this commit, waits for /health to report it, checks the home page answers, and rolls the deploy
+  # back if it does not. A rollback never undoes a migration, so migrations stay additive (CLAUDE.md, hard rule 2).
+  deploy:
+    needs: [verify, audit]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CF_DEPLOY == 'true'
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@cd31a3eba261e27aa5f4b7a9965f7c4fc59ebe49 # v0.21.5
+    with:
+      worker-name: germomics
+      d1-database: germomics
+      health-url: https://germomics.com/health
+      verify-command: >-
+        code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 https://germomics.com/ || true);
+        echo "home page answered $code";
+        if [ "$code" = 200 ]; then exit 0; elif [ "$code" = 000 ]; then exit 3; else exit 1; fi
+      pre-deploy: >-
+        npx devkit-migrations drizzle --apply germomics &&
+        npm run build
+      sha-var: DEPLOY_SHA
+    secrets:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

@@ -1,10 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { downscaleImage } from "~/lib/image-client";
 import { THEME_KEY, applyTheme, storedTheme } from "~/lib/theme";
 import { computePeaks as decodePeaks, probeDuration } from "~/lib/waveform-client";
 
 // Browser-only helpers, run against stand-ins for the browser APIs they call (localStorage,
-// matchMedia, canvas, AudioContext), so what they do with each answer is pinned without a browser.
+// matchMedia, AudioContext), so what they do with each answer is pinned without a browser.
 afterEach(() => vi.unstubAllGlobals());
 
 function storage(initial: Record<string, string> = {}, throws = false) {
@@ -46,68 +45,6 @@ describe("theme", () => {
     vi.stubGlobal("localStorage", storage({}, true));
     expect(() => applyTheme("dark")).not.toThrow();
     expect(attrs["data-theme"]).toBe("dark");
-  });
-});
-
-describe("downscaleImage", () => {
-  const png = (name = "photo.large.png", type = "image/png") => new File([new Uint8Array(8)], name, { type });
-  const close = vi.fn();
-  const canvas = { width: 0, height: 0, drawn: [] as number[][], toBlobArgs: [] as unknown[], blob: new Blob(["w"], { type: "image/webp" }) as Blob | null, ctx: true };
-  const fakeCanvas = () => ({
-    set width(v: number) { canvas.width = v; },
-    get width() { return canvas.width; },
-    set height(v: number) { canvas.height = v; },
-    get height() { return canvas.height; },
-    getContext: () => (canvas.ctx ? { drawImage: (...a: number[]) => canvas.drawn.push(a.slice(1)) } : null),
-    toBlob: (cb: (b: Blob | null) => void, ...rest: unknown[]) => {
-      canvas.toBlobArgs = rest;
-      cb(canvas.blob);
-    },
-  });
-  const bitmap = (width: number, height: number) => ({ width, height, close });
-  beforeEach(() => {
-    close.mockClear();
-    Object.assign(canvas, { width: 0, height: 0, drawn: [], toBlobArgs: [], blob: new Blob(["w"], { type: "image/webp" }), ctx: true });
-    vi.stubGlobal("document", { createElement: (tag: string) => (tag === "canvas" ? fakeCanvas() : {}) });
-  });
-
-  it("leaves non-images, GIFs and SVGs alone without decoding them", async () => {
-    const decode = vi.fn();
-    vi.stubGlobal("createImageBitmap", decode);
-    for (const f of [png("a.txt", "text/plain"), png("a.gif", "image/gif"), png("a.svg", "image/svg+xml")]) expect(await downscaleImage(f)).toBe(f);
-    expect(decode).not.toHaveBeenCalled();
-  });
-
-  it("returns the original when it cannot be decoded, or is no wider than the limit", async () => {
-    const file = png();
-    vi.stubGlobal("createImageBitmap", () => Promise.reject(new Error("bad")));
-    expect(await downscaleImage(file)).toBe(file);
-    vi.stubGlobal("createImageBitmap", async () => bitmap(2000, 900));
-    expect(await downscaleImage(file)).toBe(file);
-    expect(close).toHaveBeenCalledTimes(1);
-  });
-
-  it("shrinks a wide image to the limit, keeping its proportions, as WebP at 0.86", async () => {
-    vi.stubGlobal("createImageBitmap", async () => bitmap(4000, 1501));
-    const out = await downscaleImage(png());
-    expect(canvas.width).toBe(2000);
-    expect(canvas.height).toBe(751);
-    expect(canvas.drawn).toEqual([[0, 0, 2000, 751]]);
-    expect(canvas.toBlobArgs).toEqual(["image/webp", 0.86]);
-    expect(out.name).toBe("photo.large.webp");
-    expect(out.type).toBe("image/webp");
-    expect(close).toHaveBeenCalledTimes(1);
-  });
-
-  it("falls back to the original when there is no canvas context or the canvas gives no image", async () => {
-    const file = png();
-    vi.stubGlobal("createImageBitmap", async () => bitmap(4000, 1000));
-    canvas.ctx = false;
-    expect(await downscaleImage(file)).toBe(file);
-    expect(close).toHaveBeenCalledTimes(1);
-    canvas.ctx = true;
-    canvas.blob = null;
-    expect(await downscaleImage(file)).toBe(file);
   });
 });
 

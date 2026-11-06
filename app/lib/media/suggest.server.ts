@@ -3,13 +3,18 @@
 // accepts it as an alt or a tags write (CLAUDE.md rule 6, AI output is drafts only). Each call counts against the
 // site's AI daily cap (security.server.ts). Only Dustin's own uploads are sent, never a visitor's data.
 import { mediaSuggester } from "@dustinedwards/site-api";
+import { WRITING_RULES } from "@dustinedwards/site-runtime/prose";
 import { aiCostCapExceeded, recordAiUse } from "~/lib/security.server";
+
+const DASH_RULE = (WRITING_RULES.split("\n").find((line) => /dashes/i.test(line)) ?? "").replace(/^- /, "");
 
 /** What the model suggests for one stored picture. Throws when the site has no AI binding or the day's cap is reached. */
 export const suggestFor = mediaSuggester<Env>({
   app: "germomics",
   describe: "on a microbiology and history podcast's website",
-  rules: ["Do not guess at species that are not written in the picture.", "Do not use em dashes."],
+  // The family's dash rule, from site-runtime's WRITING_RULES rather than a local copy (area 11, W5). The rest of
+  // those rules are about an author's prose and do not apply to one sentence of alt text.
+  rules: ["Do not guess at species that are not written in the picture.", DASH_RULE],
   beforeCall: async (env) => {
     if (await aiCostCapExceeded(env)) throw new Error("today's AI cap (the ai.daily_cap setting) is reached");
   },

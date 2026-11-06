@@ -3,15 +3,17 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { RouterContextProvider } from "react-router";
 import { cloudflareContext } from "~/lib/context.server";
 import { getPostById } from "~/lib/posts.server";
-import { createDraft, listVersions, snapshotVersion, updatePost } from "~/lib/admin.server";
+import { createDraft, updatePost } from "~/lib/admin.server";
 import { getPerson, listPeople, upsertPerson } from "~/lib/people.server";
 import { getShowConfig } from "~/lib/show.server";
-import { loadBlock, loadSettings } from "~/lib/content.server";
+import { loadBlock, loadSettings, upsertBlock } from "~/lib/content.server";
 import { soundbitesForPost } from "~/lib/soundbites.server";
+import { resetDb } from "@dustinedwards/devkit/d1";
 import { applyMigrations } from "./helpers/d1";
 
-// The admin gate as a route (app/routes/admin.tsx) and the admin route actions that are not the
-// post editor: what each one stores and what it answers. The editor action is test/editor-action.
+// The admin gate as a route (app/routes/admin.tsx) and the admin route actions: what each one stores
+// and what it answers. Posts are written in Carrel (test/carrel*.test.ts); the admin keeps an
+// episode's audio and transcript.
 const e = env as unknown as Env;
 
 function args(request: Request, params: Record<string, string> = {}, over: Partial<Env> = {}) {
@@ -34,36 +36,37 @@ const thrown = async (p: unknown) => {
 };
 
 type Mod = Record<string, any>;
-let gate: Mod, posts: Mod, people: Mod, settings: Mod, content: Mod, soundbites: Mod, version: Mod;
+let gate: Mod, episodes: Mod, episode: Mod, people: Mod, settings: Mod, content: Mod, soundbites: Mod;
 
 beforeAll(async () => {
   await applyMigrations(e.DB);
-  [gate, posts, people, settings, content, soundbites, version] = await Promise.all([
+  [gate, episodes, episode, people, settings, content, soundbites] = await Promise.all([
     import("~/routes/admin"),
-    import("~/routes/admin.posts._index"),
+    import("~/routes/admin.episodes._index"),
+    import("~/routes/admin.episodes.$id"),
     import("~/routes/admin.people._index"),
     import("~/routes/admin.settings._index"),
     import("~/routes/admin.content.$key"),
     import("~/routes/admin.soundbites._index"),
-    import("~/routes/admin.version.$vid"),
   ]);
 }, 120_000);
 
 beforeEach(async () => {
-  for (const t of ["episode_people", "soundbites", "people", "post_versions", "posts", "show_config", "settings", "content_blocks"]) await e.DB.exec(`DELETE FROM ${t}`);
+  await resetDb(e.DB);
   const { keys } = await e.APP_KV.list();
   await Promise.all(keys.map((k) => e.APP_KV.delete(k.name)));
 });
 
 describe("the admin gate", () => {
-  const run = (url: string, over: Partial<Env>) => {
+  const run = (url: string, over: Partial<Env>, init?: RequestInit) => {
     let reached = false;
     const next = async () => {
       reached = true;
       return new Response("admin page");
     };
-    return { reached: () => reached, result: gate.middleware[0](args(new Request(url), {}, over), next) };
+    return { reached: () => reached, result: gate.middleware[0](args(new Request(url, init), {}, over), next) };
   };
+  const admin = { ADMIN_EMAIL: "admin@example.com", ACCESS_DEV_BYPASS: "1" };
 
   it("answers 403 and never reaches the admin route without a verified session", async () => {
     const { reached, result } = run("https://germomics.com/admin", { ACCESS_TEAM_DOMAIN: undefined, ACCESS_AUD: undefined, ACCESS_DEV_BYPASS: undefined });
@@ -72,30 +75,43 @@ describe("the admin gate", () => {
     expect(reached()).toBe(false);
   });
 
-  it("passes the admin through to the route", async () => {
-    const { reached, result } = run("http://localhost/admin", { ADMIN_EMAIL: "admin@example.com", ACCESS_DEV_BYPASS: "1" });
-    expect(await (await result).text()).toBe("admin page");
+  it("passes the admin through to the route, the answer private, no-store and noindex", async () => {
+    const { reached, result } = run("http://localhost/admin", admin);
+    const res = await result;
+    expect(await res.text()).toBe("admin page");
     expect(reached()).toBe(true);
+    expect(res.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(res.headers.get("X-Robots-Tag")).toBe("noindex, nofollow");
+  });
+
+  it("refuses a cross-origin write, even from the admin, before any admin route runs", async () => {
+    const { reached, result } = run("http://localhost/admin/upload", admin, { method: "POST", headers: { Origin: "https://evil.example" } });
+    expect((await thrown(result)).status).toBe(403);
+    expect(reached()).toBe(false);
   });
 });
 
-describe("posts list actions", () => {
-  it("creates a draft of the asked kind, defaulting to an article, and redirects to its editor", async () => {
-    const ep = await thrown(posts.action(args(form("/admin/posts", { kind: "episode" }))));
-    expect(ep.status).toBe(302);
-    const id = Number(ep.headers.get("Location")!.split("/").pop());
-    expect((await getPostById(e, id))!.kind).toBe("episode");
-    const other = await thrown(posts.action(args(form("/admin/posts", { kind: "nonsense" }))));
-    expect((await getPostById(e, Number(other.headers.get("Location")!.split("/").pop())))!.kind).toBe("article");
-  });
-
-  it("duplicates a post and redirects to the copy", async () => {
-    const src = await createDraft(e, "article");
-    await updatePost(e, src, { title: "Original" });
-    const res = await thrown(posts.action(args(form("/admin/posts", { intent: "duplicate", id: String(src) }))));
-    const copy = Number(res.headers.get("Location")!.split("/").pop());
-    expect(copy).not.toBe(src);
-    expect((await getPostById(e, copy))!.title).toBe("Original (copy)");
+describe("episode audio", () => {
+  it("starts an episode as a draft, then stores its audio and transcript, snapshotting the row and keeping the guid", async () => {
+    const made = await thrown(episodes.action(args(form("/admin/episodes", {}))));
+    const id = Number(made.headers.get("Location")!.split("/").pop());
+    expect((await getPostById(e, id))!).toMatchObject({ kind: "episode", status: "draft" });
+    await updatePost(e, id, { guid: "urn:germomics:sample" });
+    const payload = JSON.stringify({ audioUrl: " https://media.example.com/ep.mp3 ", audioDuration: 61.9, audioByteSize: 1000, audioMimeType: "", audioPeaks: [1, 2], transcript: "WEBVTT\n" });
+    expect(await episode.action(args(form(`/admin/episodes/${id}`, { payload }), { id: String(id) }))).toMatchObject({ ok: true });
+    expect((await getPostById(e, id))!).toMatchObject({
+      audioUrl: "https://media.example.com/ep.mp3",
+      audioDuration: 61,
+      audioByteSize: 1000,
+      audioMimeType: "audio/mpeg",
+      audioPeaks: [1, 2],
+      transcript: "WEBVTT",
+      guid: "urn:germomics:sample",
+    });
+    expect((await e.DB.prepare("SELECT COUNT(*) AS n FROM post_versions").first<{ n: number }>())!.n).toBe(1);
+    // An article is not an episode here.
+    const article = await createDraft(e, "article");
+    expect((await thrown(episode.loader(args(new Request(`https://germomics.com/admin/episodes/${article}`), { id: String(article) })))).status).toBe(404);
   });
 });
 
@@ -106,13 +122,6 @@ describe("people actions", () => {
     expect(ada).toMatchObject({ name: "Ada", role: "Guest", links: [{ label: "Site", url: "https://a.example" }] });
     expect(await people.action(args(form("/admin/people", { id: String(ada.id), name: "Ada L", links: "{broken" })))).toEqual({ ok: true, message: "Saved." });
     expect(await getPerson(e, ada.id)).toMatchObject({ name: "Ada L", links: [] });
-  });
-
-  it("quick-creates a person for the editor and answers with the new row", async () => {
-    const res = (await people.action(args(form("/admin/people", { intent: "quick-create", name: "  " })))) as Response;
-    const body = (await res.json()) as { ok: boolean; person: { id: number; name: string; slug: string } };
-    expect(body.ok).toBe(true);
-    expect(body.person).toMatchObject({ name: "Unnamed", slug: "unnamed" });
   });
 
   it("deletes a person", async () => {
@@ -165,12 +174,13 @@ describe("settings actions", () => {
 });
 
 describe("content block action", () => {
-  it("saves a page as draft unless published is chosen, and a snippet always published", async () => {
+  it("saves a Markdown page's title and status but never its text, which Carrel writes, and a snippet always published", async () => {
+    await upsertBlock(e, { key: "page:about", kind: "page", title: "Old", value: "Carrel's *text*", status: "draft" });
+    const before = "Carrel's *text*";
     await content.action(args(form("/admin/content/page:about", { title: "About", value: "<p>v</p>" }), { key: "page:about" }));
-    expect(await loadBlock(e, "page:about", { includeDrafts: true })).toMatchObject({ title: "About", status: "draft" });
-    // A page body is injected as HTML, so a script in it is dropped on save (GE-3).
-    await content.action(args(form("/admin/content/page:about", { value: '<p onclick="x()">v2</p><script>alert(1)</script>', status: "published" }), { key: "page:about" }));
-    expect(await loadBlock(e, "page:about")).toMatchObject({ value: "<p>v2</p>", status: "published", title: "" });
+    expect(await loadBlock(e, "page:about", { includeDrafts: true })).toMatchObject({ title: "About", status: "draft", value: before });
+    await content.action(args(form("/admin/content/page:about", { status: "published" }), { key: "page:about" }));
+    expect(await loadBlock(e, "page:about")).toMatchObject({ status: "published", title: "", value: before });
     await content.action(args(form("/admin/content/snippet:x", { value: "Hi", status: "draft" }), { key: "snippet:x" }));
     expect(await loadBlock(e, "snippet:x")).toMatchObject({ status: "published" });
   });
@@ -186,16 +196,5 @@ describe("soundbite actions", () => {
     expect((await soundbitesForPost(e, ep))[0]).toMatchObject({ id: clip.id, startSeconds: 5, title: null });
     expect(await soundbites.action(args(form("/admin/soundbites", { intent: "delete", id: String(clip.id) })))).toEqual({ ok: true, message: "Deleted." });
     expect(await soundbitesForPost(e, ep)).toEqual([]);
-  });
-});
-
-describe("version viewer", () => {
-  it("returns a stored snapshot, and 404 for one that does not exist", async () => {
-    const id = await createDraft(e, "article");
-    await updatePost(e, id, { title: "Snap" });
-    await snapshotVersion(e, (await getPostById(e, id))!);
-    const [v] = await listVersions(e, id);
-    expect((await version.loader(args(new Request("https://germomics.com/admin/version/1"), { vid: String(v.id) }))).snapshot.title).toBe("Snap");
-    expect((await thrown(version.loader(args(new Request("https://germomics.com/admin/version/9"), { vid: "999999" })))).status).toBe(404);
   });
 });

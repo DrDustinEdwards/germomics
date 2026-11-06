@@ -14,13 +14,9 @@ const SYSTEM_BASE =
   "in the transcript. If something is not in the transcript, leave it out. Produce exactly what " +
   "is asked, with no preamble, apologies, or meta-commentary.";
 
-const STYLE_RULE =
-  "Writing style (strict): Do NOT use em dashes (the long dash character) anywhere; use commas, " +
-  "periods, parentheses, or colons instead. Do not end on a verdict about the episode's worth or " +
-  "staying power ('stays with you', 'remains one of the most'), and leave out blurb adjectives " +
-  "(unforgettable, haunting, sweeping, poignant, profound). No 'not just X, it's Y' and no " +
-  "'it isn't about X, it's about Y'. A list of three only when there are three real things. " +
-  "Write plain, direct, varied, human sentences.";
+// germomics' own addition to site-runtime's WRITING_RULES, which a drafting prompt puts before it. None: the dash
+// rule is WRITING_RULES' own, so a second copy here would drift from it (area 11, W5; drizzle/0022).
+const STYLE_RULE = "";
 
 const PROMPT_SHOWNOTES =
   "Write show notes for this episode as clean HTML, optimized to be quoted by search engines " +

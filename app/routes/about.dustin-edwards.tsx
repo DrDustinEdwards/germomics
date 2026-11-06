@@ -1,16 +1,22 @@
 // /about/dustin-edwards - author bio. Prose comes from the page:dustin-edwards content block (D1).
-// Person + BreadcrumbList JSON-LD carry author authority. Independent framing: credentials in the
+// Person JSON-LD carries author authority. Independent framing: credentials in the
 // prose only, no institutional branding. ?preview shows the draft to a signed-in admin.
 import { Link } from "capsomer/react/link";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import type { Route } from "./+types/about.dustin-edwards";
 import { getEnv } from "~/lib/context.server";
 import { loadPage, isPreviewing } from "~/lib/content.server";
-import { breadcrumbs, jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { buildPersonLd, pageHead, stripHtml } from "~/lib/seo";
-import { SITE_ORIGIN } from "~/lib/site";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { AUTHOR } from "~/lib/about";
+import { sectionPageTrail } from "~/lib/trails";
+import { SectionTrail } from "~/components/content/SectionTrail";
+
+const authorTrail = sectionPageTrail(
+  { name: "About", path: "/about" },
+  { name: `${AUTHOR.honorific} ${AUTHOR.name}`, path: `/about/${AUTHOR.slug}` },
+);
 
 const LINKS = [
   { label: "Faculty profile", url: "https://faculty.tarleton.edu/dcedwards/" },
@@ -25,15 +31,9 @@ export function meta({ loaderData }: Route.MetaArgs) {
       title: `${AUTHOR.honorific} ${AUTHOR.name}`,
       description: bioText,
       type: "profile",
+      breadcrumbs: authorTrail,
     }),
     jsonLd(buildPersonLd({ ...AUTHOR, bio: bioText })),
-    jsonLd(
-      breadcrumbs(SITE_ORIGIN, [
-        { name: "Home", path: "/" },
-        { name: "About", path: "/about" },
-        { name: AUTHOR.name, path: `/about/${AUTHOR.slug}` },
-      ]),
-    ),
   ];
 }
 
@@ -41,17 +41,15 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const preview = await isPreviewing(env, request);
   const bio = await loadPage(env, "page:dustin-edwards", { includeDrafts: preview });
-  return { bioHtml: bio.value, bioText: stripHtml(bio.value) };
+  return { bioHtml: bio.html, bioText: stripHtml(bio.html) };
 }
 
 export default function AuthorBio({ loaderData }: Route.ComponentProps) {
   return (
     <div className="mx-auto max-w-2xl">
-      <Link to="/about" className="inline-flex items-center gap-1 font-mono text-xs text-muted hover:text-ink">
-        <ArrowLeft size={12} aria-hidden /> About
-      </Link>
+      <SectionTrail trail={authorTrail} />
 
-      <p className="mt-4 font-mono text-xs uppercase tracking-[0.18em] text-accent">Author</p>
+      <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent">Author</p>
       <h1 className="mt-3 font-display text-4xl font-semibold leading-tight">
         {AUTHOR.honorific} {AUTHOR.name}
       </h1>
@@ -68,8 +66,6 @@ export default function AuthorBio({ loaderData }: Route.ComponentProps) {
             <li key={l.url}>
               <a
                 href={l.url}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 hover:border-accent hover:text-accent"
               >
                 <ExternalLink size={13} aria-hidden /> {l.label}

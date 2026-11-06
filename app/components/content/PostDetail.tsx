@@ -34,6 +34,8 @@ import {
 import { usePlayer } from "~/components/player/player-context";
 import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 import { ExternalCue } from "~/components/ExternalCue";
+import { postTrail } from "~/lib/trails";
+import { SectionTrail } from "./SectionTrail";
 
 export type DetailData = {
   post: Post;
@@ -100,15 +102,14 @@ function SubscribeRow({ links }: { links: Record<string, string> }) {
           const d = SUBSCRIBE_DESTINATIONS[k];
           const Icon = d.icon;
           return (
-            <a key={k} href={links[k]} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-accent hover:text-accent">
+            <a key={k} href={links[k]} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-accent hover:text-accent">
               <Icon size={14} aria-hidden /> {d.label}
               <ExternalCue />
             </a>
           );
         })}
-        <a href="/feed/podcast/" target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-accent hover:text-accent">
+        <a href="/feed/podcast/" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-accent hover:text-accent">
           <Rss size={14} aria-hidden /> RSS
-          <ExternalCue />
         </a>
         <Link to="/subscribe" className="inline-flex items-center rounded-full px-3 py-1.5 text-sm text-muted hover:text-ink">
           More ways to listen →
@@ -126,7 +127,7 @@ export function PostDetail({ data }: { data: DetailData }) {
   const isEpisode = post.kind === "episode";
   const chapters = post.chapters ?? [];
   const bodyRef = useRef<HTMLDivElement>(null);
-  useHideBrokenFigures(bodyRef, [post.body]);
+  useHideBrokenFigures(bodyRef, [post.bodyHtml]);
 
   // Honor ?t=<seconds> deep links (share-at-timestamp landing) for episodes.
   useEffect(() => {
@@ -145,7 +146,7 @@ export function PostDetail({ data }: { data: DetailData }) {
         {guests.map((g) => (
           <div key={g.slug} className="flex gap-3 rounded-xl border border-border bg-card p-4">
             {g.photo ? (
-              <Picture src={g.photo} image={imageFor(data.images, "avatar", g.photo)} alt={g.photoAlt ?? g.name} loading="lazy" decoding="async" width={48} height={48} className="h-12 w-12 shrink-0 rounded-full border border-border object-cover" />
+              <Picture src={g.photo} image={imageFor(data.images, "avatar", g.photo)} alt={g.photoAlt ?? g.name} width={48} height={48} className="h-12 w-12 shrink-0 rounded-full border border-border object-cover" />
             ) : null}
             <div className="min-w-0">
               <Link to={`/guests/${g.slug}`} className="font-display font-medium text-ink hover:text-brand">{g.name}</Link>
@@ -154,7 +155,7 @@ export function PostDetail({ data }: { data: DetailData }) {
               {(g.links ?? []).length ? (
                 <div className="mt-1.5 flex flex-wrap gap-2 font-mono text-[11px]">
                   {(g.links ?? []).map((l) => (
-                    <a key={l.url} href={l.url} className="text-accent hover:underline" target="_blank" rel="noopener noreferrer">{l.label || "link"}</a>
+                    <a key={l.url} href={l.url} className="text-accent hover:underline">{l.label || "link"}</a>
                   ))}
                 </div>
               ) : null}
@@ -212,6 +213,7 @@ export function PostDetail({ data }: { data: DetailData }) {
         <ReadingProgress />
         <article className="mx-auto max-w-5xl">
           {data.preview ? <PreviewBanner post={post} /> : null}
+          <SectionTrail trail={postTrail(post)} />
 
           {/* Hero */}
           <header className="grid gap-6 sm:grid-cols-[1fr_12rem] sm:items-start lg:grid-cols-[1fr_14rem]">
@@ -257,10 +259,10 @@ export function PostDetail({ data }: { data: DetailData }) {
               <EpisodeToc items={toc} />
             </div>
             <div className="min-w-0 lg:order-2">
-              {post.body ? (
+              {post.bodyHtml ? (
                 <div ref={bodyRef}>
-                  <BodyRenderer html={post.body} />
-                  <FigureLightbox bodyRef={bodyRef} deps={[post.body]} />
+                  <BodyRenderer html={post.bodyHtml} />
+                  <FigureLightbox bodyRef={bodyRef} deps={[post.bodyHtml]} />
                 </div>
               ) : null}
             </div>
@@ -303,10 +305,11 @@ export function PostDetail({ data }: { data: DetailData }) {
   return (
     <article className="mx-auto max-w-3xl">
       {data.preview ? <PreviewBanner post={post} /> : null}
+      <SectionTrail trail={postTrail(post)} />
       {post.coverImage ? (
         // Cover is the article LCP element — load it eagerly with high priority; the fixed aspect
         // ratio reserves space so it doesn't shift layout (CLS).
-        <Picture src={post.coverImage} image={imageFor(data.images, "cover", post.coverImage)} alt={post.coverAlt ?? ""} loading="eager" fetchPriority="high" decoding="async" className="mb-6 aspect-[2/1] w-full rounded-2xl border border-border object-cover" />
+        <Picture src={post.coverImage} image={imageFor(data.images, "cover", post.coverImage)} alt={post.coverAlt ?? ""} priority className="mb-6 aspect-[2/1] w-full rounded-2xl border border-border object-cover" />
       ) : null}
       <p className="flex items-center gap-1 font-mono text-xs uppercase tracking-wide text-accent">
         <FileText size={12} aria-hidden /> Article
@@ -339,7 +342,7 @@ export function PostDetail({ data }: { data: DetailData }) {
         </nav>
       ) : null}
 
-      {post.body ? <div className="mt-8"><BodyRenderer html={post.body} /></div> : null}
+      {post.bodyHtml ? <div className="mt-8"><BodyRenderer html={post.bodyHtml} /></div> : null}
 
       <div className="mt-8 flex items-center gap-3">
         <CopyLink slug={post.slug} />

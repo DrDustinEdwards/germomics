@@ -4,6 +4,9 @@ import type { PlayerTrack } from "~/lib/types";
 
 // Plays a track. If a queue is supplied (a listing/home), it starts the whole queue at this
 // track so playback continues episode-to-episode; otherwise it plays the single track.
+// On a page that sends no React, a press starts the audio at once from /site.js (data-audio-src, data-track-id),
+// hydrates the page and is then handed to this button, whose player adopts the playing element
+// (data-play-intent, app/site/hydrate.ts).
 export function PlayButton({
   track,
   queue,
@@ -32,6 +35,9 @@ export function PlayButton({
     <button
       type="button"
       onClick={onClick}
+      data-play-intent=""
+      data-audio-src={track.audioUrl}
+      data-track-id={track.id}
       aria-label={playing ? `Pause ${track.title}` : `Play ${track.title}`}
       aria-pressed={playing}
       className={`grid ${dims} shrink-0 place-items-center rounded-full bg-accent text-bg transition hover:brightness-110`}

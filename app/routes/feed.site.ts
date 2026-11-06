@@ -6,7 +6,6 @@ import type { Route } from "./+types/feed.site";
 import { getEnv } from "~/lib/context.server";
 import { listFullPosts } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
-import { FEED_CACHE_CONTROL } from "~/lib/edge-cache.server";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
@@ -22,7 +21,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     posts: articles.map((a) => ({
       slug: a.slug,
       title: a.title,
-      html: a.body,
+      html: a.bodyHtml ?? "",
       description: a.excerpt,
       publishAt: a.publishedAt,
       tags: a.tags ?? [],
@@ -32,7 +31,6 @@ export async function loader({ context }: Route.LoaderArgs) {
   return new Response(xml, {
     headers: {
       "Content-Type": "application/rss+xml; charset=utf-8",
-      "Cache-Control": FEED_CACHE_CONTROL,
     },
   });
 }

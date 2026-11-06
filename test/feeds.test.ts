@@ -2,6 +2,7 @@ import { env } from "cloudflare:test";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { RouterContextProvider } from "react-router";
 import { cloudflareContext } from "~/lib/context.server";
+import { resetDb } from "@dustinedwards/devkit/d1";
 import { applyMigrations } from "./helpers/d1";
 
 // The feeds and llms-full.txt print each post's body (and, for episodes, point at the transcript),
@@ -18,7 +19,7 @@ async function load(route: Promise<{ loader: (args: never) => unknown }>, path: 
 
 beforeAll(() => applyMigrations(e.DB), 60_000);
 beforeEach(async () => {
-  for (const t of ["episode_people", "soundbites", "post_versions", "posts"]) await e.DB.exec(`DELETE FROM ${t}`);
+  await resetDb(e.DB);
   await e.DB.prepare(
     "INSERT INTO posts (kind, slug, title, status, published_at, guid, audio_url, body, transcript) VALUES ('episode', 'ep-1', 'Episode one', 'published', '2024-01-01T00:00:00.000Z', 'urn:germomics:ep-1', 'https://media.germomics.com/ep1.mp3', '<p>Episode show notes</p>', 'WEBVTT')",
   ).run();

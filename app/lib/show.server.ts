@@ -3,7 +3,7 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { showConfig, type ShowConfig } from "~/db/schema";
-import { DEFAULT_CARD } from "~/lib/site";
+import { DEFAULT_ARTWORK } from "~/lib/site";
 
 export const DEFAULT_SHOW: ShowConfig = {
   id: 0,
@@ -11,7 +11,7 @@ export const DEFAULT_SHOW: ShowConfig = {
   description: "A podcast about microbiology and history.",
   author: "Dustin Edwards",
   ownerEmail: "emaildustinedwards@gmail.com",
-  artwork: DEFAULT_CARD,
+  artwork: DEFAULT_ARTWORK,
   appleCategory: "Science",
   language: "en-us",
   itunesType: "episodic",

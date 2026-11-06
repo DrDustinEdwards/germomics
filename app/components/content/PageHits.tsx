@@ -7,6 +7,7 @@ export const PAGE_HREF: Record<string, string> = {
   "page:privacy": "/privacy",
   "page:terms": "/terms",
   "page:contact": "/contact",
+  "page:txasm": "/txasm",
   "page:llms": "/llms.txt",
   "page:ai-txt": "/ai.txt",
 };

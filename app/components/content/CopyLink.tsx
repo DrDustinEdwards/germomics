@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
 import { Share2, Check } from "lucide-react";
 import { usePlayer } from "~/components/player/player-context";
 import { formatDuration } from "~/lib/format";
@@ -35,9 +35,49 @@ function ShareButton({ path, label, share = false }: { path: string; label: stri
   );
 }
 
+/**
+ * A button that copies a link to this site, or with `share` offers the Web Share sheet where the device has one. The
+ * markup only, so a page that sends no React has it: /site.js does the copying and shows "Copied" for a moment
+ * (app/site/share.ts). Both states are rendered and the script swaps which is hidden.
+ */
+export function CopyButton({
+  path,
+  label,
+  share = false,
+  icon: Icon,
+  className,
+}: {
+  path: string;
+  label: string;
+  share?: boolean;
+  icon: ComponentType<{ size?: number; "aria-hidden"?: boolean }>;
+  className: string;
+}) {
+  return (
+    <button type="button" data-copy={path} data-share={share ? "" : undefined} className={className}>
+      <span className="contents" data-copy-idle>
+        <Icon size={14} aria-hidden />
+        {label}
+      </span>
+      <span className="contents" data-copy-done hidden>
+        <Check size={14} aria-hidden />
+        Copied
+      </span>
+    </button>
+  );
+}
+
 // Share a link to this post.
 export function CopyLink({ slug }: { slug: string }) {
-  return <ShareButton path={`/${slug}`} label="Share" share />;
+  return (
+    <CopyButton
+      path={`/${slug}`}
+      label="Share"
+      share
+      icon={Share2}
+      className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 font-mono text-xs hover:border-accent hover:text-accent"
+    />
+  );
 }
 
 // Copies a deep link to the current playhead: /<slug>?t=<seconds>. The detail page reads ?t

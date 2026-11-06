@@ -36,7 +36,7 @@ export function LegalPage({ title, html }: { title: string; html: string }) {
       <h1 className="font-display text-4xl font-semibold leading-tight">{title}</h1>
       <LegalDate />
       <ReviewBanner />
-      <BodyRenderer html={html} />
+      <BodyRenderer html={html} page />
     </article>
   );
 }
