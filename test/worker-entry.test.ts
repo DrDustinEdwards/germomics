@@ -128,7 +128,7 @@ describe("the Worker entry", () => {
     expect(purges).toEqual(["admin POST /admin/posts/1"]);
   });
 
-  it("counts a 404 with its referring host, but never a preview link's, whose path carries its token", async () => {
+  it("counts a 404 with its referring host, never a preview link's, and answers 410 for a deleted post's address", async () => {
     const notFound = async () => new Response("<p>gone</p>", { status: 404, headers: { "Content-Type": "text/html" } });
     h.render.mockImplementationOnce(notFound);
     const c = ctx();
@@ -139,6 +139,14 @@ describe("the Worker entry", () => {
     await Promise.all(c.pending);
     const rows = await e.DB.prepare("SELECT path, referrer_host, hit_count FROM page_404_daily").all();
     expect(rows.results).toEqual([{ path: "/moved-page", referrer_host: "example.com", hit_count: 1 }]);
+
+    // The tombstone site-api 0.22.0 keeps for a deleted or trashed post (drizzle/0026): 410, uncached, unindexed, and not a miss to count.
+    await e.DB.prepare("INSERT INTO gone_paths (path, gone_at) VALUES (?, ?)").bind("/blog/deleted-post", "2026-11-05T00:00:00Z").run();
+    h.render.mockImplementationOnce(notFound);
+    const gone = await fetchWith(new Request(`${ORIGIN}/blog/deleted-post?t=1`), {}, c);
+    expect(gone.status).toBe(410);
+    expect(gone.headers.get("cache-control")).toBe("no-store");
+    expect(gone.headers.get("x-robots-tag")).toBe("noindex");
   });
 
   it("answers a plain 500 with no detail when rendering throws", async () => {
