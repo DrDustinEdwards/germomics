@@ -20,8 +20,8 @@ interface Env {
   EMAIL_FROM?: string;
   /** Cloudflare Email Service's send_email binding, once wrangler.jsonc declares it (app/lib/email.server.ts). */
   SEND_EMAIL?: SendEmail;
-  /** Keys site-runtime's admin idle cookie (withAdminIdle `secret`). Minted by the deploy (devkit worker-deploy `generated-secrets`), never shown; unset falls back to the unkeyed cookie and logs admin_idle_unkeyed. */
-  ADMIN_IDLE_SECRET?: string;
+  /** Keys site-runtime's admin idle cookie (withAdminIdle `secret`). Minted by the deploy (devkit worker-deploy `generated-secrets`), never shown; unset, the admin paths fail (site-runtime 0.82 requires it). */
+  ADMIN_IDLE_SECRET: string;
   /** The deployed commit, written into the built config by vite.config.ts; empty for a local build. */
   DEPLOY_SHA?: string;
 }
