@@ -1,7 +1,6 @@
-// The site's one way to send mail: Cloudflare Email Service's send_email binding (SEND_EMAIL), from EMAIL_FROM. Both are
-// unset today (Email Routing for germomics.com waits on the old MX record), so `emailReady` is false and a caller that
-// needs a mail refuses rather than claiming one went. Turning it on is configuration, not code: add
-// `"send_email": [{ "name": "SEND_EMAIL" }]` to wrangler.jsonc once the domain is onboarded, and set EMAIL_FROM.
+// The site's one way to send mail: Cloudflare Email Service's send_email binding (SEND_EMAIL), from EMAIL_FROM, both set
+// in wrangler.jsonc (germomics.com is onboarded to Email Sending). When either is missing, `emailReady` is false and a
+// caller that needs a mail refuses rather than claiming one went.
 import type { Rendered } from "capsomer/email";
 
 export function emailReady(env: Env): boolean {

@@ -71,5 +71,9 @@
 	"triggers": { "crons": ["17 3 * * *", "* * * * *"] },
 	"kv_namespaces": [
 		{ "binding": "APP_KV", "id": "da89f831723f4ce5802f0c877f4c2209" }
-	]
+	],
+	// Email Sending (germomics.com is onboarded; DKIM and SPF on cf-bounce): the newsletter's confirmation email
+	// (app/lib/email.server.ts). No restriction attribute, so it can send to any subscriber.
+	"send_email": [{ "name": "SEND_EMAIL" }],
+	"vars": { "EMAIL_FROM": "no-reply@germomics.com" }
 }
