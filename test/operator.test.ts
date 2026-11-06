@@ -3,18 +3,19 @@ import { describe, expect, it } from "vitest";
 import { RouterContextProvider } from "react-router";
 import { cloudflareContext } from "~/lib/context.server";
 import { action } from "~/routes/api.operator";
+import { applyMigrations } from "./helpers/d1";
 
 // The operator API (app/routes/api.operator.ts): the bearer is the whole boundary, and a good call runs the files
 // backup passes into BACKUPS (copy only). Fake token, fake data.
 const TOKEN = "t".repeat(40);
 
-function call(headers: Record<string, string>, over: Partial<Env> = {}, tool = "backup_media") {
+function call(headers: Record<string, string>, over: Partial<Env> = {}, tool = "backup_media", args: Record<string, unknown> = {}) {
   const context = new RouterContextProvider();
   context.set(cloudflareContext, { env: { ...(env as unknown as Env), OPERATOR_TOKEN: TOKEN, ...over }, ctx: {} as ExecutionContext });
   const request = new Request("https://germomics.com/api/operator", {
     method: "POST",
     headers: { "content-type": "application/json", ...headers },
-    body: JSON.stringify({ tool, args: {} }),
+    body: JSON.stringify({ tool, args }),
   });
   return action({ request, params: {}, context } as never) as Promise<Response>;
 }
@@ -38,5 +39,16 @@ describe("operator API", () => {
     // backup_status reads the pass it just wrote, uncached.
     const status = (await (await call({ authorization: `Bearer ${TOKEN}` }, {}, "backup_status")).json()) as { data: { files: { gameAssets: { last_ok: string | null } } } };
     expect(status.data.files.gameAssets.last_ok).not.toBeNull();
+  });
+
+  it("delete_media refuses a request without keys and answers an unknown key as missing, deleting nothing", async () => {
+    await applyMigrations((env as unknown as Env).DB);
+    const auth = { authorization: `Bearer ${TOKEN}` };
+    for (const args of [{}, { keys: [] }, { keys: [""] }, { keys: Array.from({ length: 26 }, (_, i) => `sample/${i}.webp`) }]) {
+      expect((await call(auth, {}, "delete_media", args)).status, JSON.stringify(args).slice(0, 40)).toBe(400);
+    }
+    const res = await call(auth, {}, "delete_media", { keys: ["sample/none-795.webp", "sample/none-795.webp"] });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ ok: true, data: { deleted: [], refused: [], missing: ["sample/none-795.webp"] } });
   });
 });

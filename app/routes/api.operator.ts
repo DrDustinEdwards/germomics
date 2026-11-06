@@ -3,8 +3,9 @@
 // the tools. The bearer is the whole boundary: OPERATOR_TOKEN, compared in constant time and never echoed or logged.
 // Unset or short closes the route. This is not under /admin, so Access does not cover it.
 //
-// Tools: backup_media, the files backup passes (app/lib/backup.server.ts) run now (copy only, so safe to repeat), and
-// backup_status, the backup state read now (the same read as /health's backup field, which /health keeps for an hour).
+// Tools: backup_media, the files backup passes (app/lib/backup.server.ts) run now (copy only, so safe to repeat),
+// backup_status, the backup state read now (the same read as /health's backup field, which /health keeps for an hour),
+// and delete_media, which removes library pictures through the library's own delete (app/lib/operator-media.server.ts).
 import { safeEqual } from "@dustinedwards/site-runtime/compare";
 import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runtime/log";
 import { limit, limitedResponse, mustStop } from "@dustinedwards/site-runtime/rate-limit";
@@ -12,9 +13,10 @@ import type { Route } from "./+types/api.operator";
 import { backupFilesNow, backupStatus } from "~/lib/backup.server";
 import { getEnv } from "~/lib/context.server";
 import { readJson } from "~/lib/body.server";
+import { deleteMedia, keysFrom } from "~/lib/operator-media.server";
 
 const MIN_TOKEN_LENGTH = 32;
-const OPERATOR_BODY = 4 * 1024;
+const OPERATOR_BODY = 8 * 1024;
 
 export const TOOLS = {
   backup_media: {
@@ -26,6 +28,12 @@ export const TOOLS = {
     description:
       "Reads the backup state now, uncached: the newest complete D1 dump's age and each files pass (audio, images, game assets) " +
       "with when it last completed, and a warning when any is past 26 hours. The same read as /health's backup field.",
+  },
+  delete_media: {
+    description:
+      "Deletes library pictures by key (1 to 25 a call), through the same delete Carrel runs: a picture a post, an episode " +
+      "or the show still uses is refused and named, and a deleted file's last bytes are kept in history, so Carrel can revert it. " +
+      "Answers which keys were deleted, refused (with the reason) or not found.",
   },
 } as const;
 type ToolName = keyof typeof TOOLS;
@@ -76,6 +84,11 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   try {
     if (tool === "backup_status") return json({ ok: true, data: await backupStatus(env) });
+    if (tool === "delete_media") {
+      const asked = keysFrom((body as { args?: unknown }).args);
+      if ("error" in asked) return json({ ok: false, error: asked.error }, 400);
+      return json({ ok: true, data: await deleteMedia(env, asked.keys) });
+    }
     return json({ ok: true, data: { files: await backupFilesNow(env) } });
   } catch (error) {
     logEvent("operator_tool_failed", { ...requestFields(request), tool, error }, { level: "error" });

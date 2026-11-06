@@ -9,7 +9,7 @@ https://admin-mcp.germomics.com/mcp, a wrapper over the site's operator API (`PO
 `app/routes/api.operator.ts`) reached over the `SITE` service binding with the `OPERATOR_TOKEN` bearer. It holds no policy
 and no data binding. Own package.json and npm lockfile.
 
-The tools are in `src/tools.ts`, `germomics_` prefixed. Today: `germomics_check_backup` (reads the backup state, uncached) and `germomics_backup_media` (runs the files backup passes now). A new tool needs the operator API to offer it first, and Dustin's yes.
+The tools are in `src/tools.ts`, `germomics_` prefixed. Today: `germomics_check_backup` (reads the backup state, uncached), `germomics_backup_media` (runs the files backup passes now) and `germomics_delete_media` (deletes library pictures by key through the library's own delete: refused when a picture is in use, last bytes kept in history). A new tool needs the operator API to offer it first, and Dustin's yes.
 
 ## Security floor (rules 12 and 13)
 

@@ -39,9 +39,9 @@ function wrapperFailure(cause: unknown): ToolOutput {
 }
 
 /** One operator call: the API's data is the result, its refusal the API's message verbatim. */
-async function operate(env: ToolEnv, tool: string, signal?: AbortSignal): Promise<ToolOutput> {
+async function operate(env: ToolEnv, tool: string, signal?: AbortSignal, args: Record<string, unknown> = {}): Promise<ToolOutput> {
   try {
-    const result = await callOperator(env, tool, {}, { signal });
+    const result = await callOperator(env, tool, args, { signal });
     if (!result.ok) {
       return {
         isError: true,
@@ -103,5 +103,22 @@ export const TOOLS: ToolDefinition[] = [
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
     handler: (env, _args, signal) => operate(env, "backup_media", signal),
+  },
+
+  {
+    name: "germomics_delete_media",
+    scope: "write",
+    config: {
+      title: "Delete library pictures",
+      description:
+        "Deletes pictures from the media library by key (1 to 25 a call), through the same delete Carrel runs. A picture a " +
+        "post, an episode or the show still uses is refused and named, and a deleted file's last bytes are kept in history, so " +
+        "Carrel can revert it. Answers which keys were deleted, refused (with the reason) or not found. List the keys in " +
+        "Carrel's media library first (the Unattached filter shows pictures nothing uses).",
+      inputSchema: z.strictObject({ keys: z.array(z.string().regex(/^[A-Za-z0-9._~/-]{1,200}$/)).min(1).max(25) }),
+      outputSchema: z.looseObject({ deleted: z.array(z.string()), refused: z.array(record), missing: z.array(z.string()) }),
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+    },
+    handler: (env, args, signal) => operate(env, "delete_media", signal, { keys: args.keys }),
   },
 ];
