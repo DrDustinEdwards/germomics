@@ -37,13 +37,11 @@ export function UploadDropzone({
     setError(null);
     onFilePicked?.(file);
     setProgress(0);
-    const body = new FormData();
-    body.set("file", file);
-    body.set("kind", kind);
-    body.set("postId", String(postId));
-
+    // The file is the body, so the server can stream an episode to R2 without holding it (admin.upload.ts).
+    const query = new URLSearchParams({ kind, postId: String(postId), name: file.name });
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/admin/upload");
+    xhr.open("POST", `/admin/upload?${query}`);
+    if (file.type) xhr.setRequestHeader("Content-Type", file.type);
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
     };
@@ -64,7 +62,7 @@ export function UploadDropzone({
       setProgress(null);
       setError("Network error during upload.");
     };
-    xhr.send(body);
+    xhr.send(file);
   }
 
   const busy = progress !== null;

@@ -9,12 +9,17 @@ import { applyMigrations } from "./helpers/d1";
 const e = env as unknown as Env;
 let action: typeof import("~/routes/admin.upload").action;
 
-function upload(fields: Record<string, string | File>) {
-  const form = new FormData();
-  for (const [k, v] of Object.entries(fields)) form.set(k, v);
+/** The request UploadDropzone sends: the file as the body, its type and length in the headers, the rest in the query. */
+function upload({ file, ...fields }: { kind?: string; postId?: string; file?: File }, headers: Record<string, string> = {}) {
+  const query = new URLSearchParams({ ...fields, ...(file ? { name: file.name } : {}) });
   const context = new RouterContextProvider();
   context.set(cloudflareContext, { env: e, ctx: {} as ExecutionContext });
-  const request = new Request("https://germomics.com/admin/upload", { method: "POST", body: form });
+  const request = new Request(`https://germomics.com/admin/upload?${query}`, {
+    method: "POST",
+    body: file ? file.stream() : null,
+    headers: { ...(file ? { "Content-Type": file.type, "Content-Length": String(file.size) } : {}), ...headers },
+    ...(file ? { duplex: "half" } : {}),
+  } as RequestInit);
   return action({ request, context, params: {} } as unknown as Parameters<typeof action>[0]) as Promise<Response>;
 }
 const file = (name: string, type: string, size = 4) => new File([new Uint8Array(size)], name, { type });
@@ -68,6 +73,8 @@ describe("admin upload", () => {
     await expectRefusal(await upload({ kind: "image", file: file("t.png", "image/png") }), 415);
     await expectRefusal(await upload({ kind: "image", file: png("big.png", 25 * 1024 * 1024 + 1) }), 413, "Image exceeds 25 MB.");
     await expectRefusal(await upload({ kind: "video", file: file("v.mp4", "video/mp4") }), 400, "Unknown upload kind.");
+    // Audio is streamed at its declared length: none declared, or over the cap, is refused before a byte is read.
+    await expectRefusal(await upload({ kind: "audio", file: file("big.mp3", "audio/mpeg") }, { "Content-Length": String(100 * 1024 * 1024 + 1) }), 413, "Audio exceeds 100 MB.");
     expect((await e.BLOG_IMAGES.list()).objects).toHaveLength(0);
     expect((await e.MEDIA.list()).objects).toHaveLength(0);
   });
