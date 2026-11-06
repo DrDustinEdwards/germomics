@@ -138,6 +138,25 @@ function Popover({
   );
 }
 
+// The WAI-ARIA menu pattern's keys for a list of menu items: a roving tabindex (only `focusIdx` is in the tab order),
+// ArrowDown and ArrowUp move and wrap, Home and End jump to the ends. The one copy, used by the speed and sleep radio
+// menus and the chapters menu. Spread `item(i, focusIdx)` on each item's button.
+function useMenuKeys(count: number) {
+  const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  return (i: number, focusIdx: number) => ({
+    ref: (el: HTMLButtonElement | null) => {
+      refs.current[i] = el;
+    },
+    tabIndex: i === focusIdx ? 0 : -1,
+    onKeyDown: (e: React.KeyboardEvent) => {
+      const to = e.key === "ArrowDown" ? i + 1 : e.key === "ArrowUp" ? i - 1 : e.key === "Home" ? 0 : e.key === "End" ? count - 1 : null;
+      if (to === null) return;
+      e.preventDefault();
+      refs.current[(to + count) % count]?.focus();
+    },
+  });
+}
+
 // A radio menu (arrow-key navigable, roving tabindex) for the speed/sleep option lists. Shared by the
 // desktop popovers and the mobile sheet.
 function RadioMenu<V>({
@@ -153,13 +172,9 @@ function RadioMenu<V>({
   onSelect: (v: V) => void;
   ariaLabel: string;
 }) {
-  const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const item = useMenuKeys(options.length);
   const selectedIdx = options.findIndex((o) => equals(o.value, value));
   const focusIdx = selectedIdx === -1 ? 0 : selectedIdx;
-  const move = (from: number, dir: number) => {
-    const n = options.length;
-    refs.current[(from + dir + n) % n]?.focus();
-  };
   return (
     <ul role="menu" aria-label={ariaLabel} className="grid gap-0.5">
       {options.map((o, i) => {
@@ -167,21 +182,12 @@ function RadioMenu<V>({
         return (
           <li key={i} role="none">
             <button
-              ref={(el) => {
-                refs.current[i] = el;
-              }}
+              {...item(i, focusIdx)}
               type="button"
               role="menuitemradio"
               aria-checked={sel}
-              tabIndex={i === focusIdx ? 0 : -1}
               data-autofocus={i === focusIdx ? "" : undefined}
               onClick={() => onSelect(o.value)}
-              onKeyDown={(e) => {
-                if (e.key === "ArrowDown") (e.preventDefault(), move(i, 1));
-                else if (e.key === "ArrowUp") (e.preventDefault(), move(i, -1));
-                else if (e.key === "Home") (e.preventDefault(), refs.current[0]?.focus());
-                else if (e.key === "End") (e.preventDefault(), refs.current[options.length - 1]?.focus());
-              }}
               className={`flex min-h-11 w-full items-center justify-between gap-4 rounded-lg px-3 text-left text-sm hover:bg-surface ${
                 sel ? "text-accent" : "text-ink"
               }`}
@@ -452,7 +458,9 @@ export function ChaptersControl({ openUp }: { openUp?: boolean }) {
   const p = usePlayer();
   const chapters = p.current?.chapters ?? [];
   const cur = activeChapterIndex(chapters, p.currentTime);
+  const item = useMenuKeys(chapters.length);
   if (!chapters.length) return null;
+  const focusIdx = cur === -1 ? 0 : cur;
   return (
     <Popover
       openUp={openUp}
@@ -465,9 +473,10 @@ export function ChaptersControl({ openUp }: { openUp?: boolean }) {
           {chapters.map((c, i) => (
             <li key={i} role="none">
               <button
+                {...item(i, focusIdx)}
                 type="button"
                 role="menuitem"
-                data-autofocus={i === (cur === -1 ? 0 : cur) ? "" : undefined}
+                data-autofocus={i === focusIdx ? "" : undefined}
                 aria-current={i === cur ? "true" : undefined}
                 onClick={() => {
                   p.seek(c.start);

@@ -25,6 +25,21 @@ export async function loader({ context }: Route.LoaderArgs) {
   return { show, siteSettings, blocks };
 }
 
+const isCategory = (v: unknown): v is PodcastCategory =>
+  typeof v === "object" && v !== null && typeof (v as PodcastCategory).category === "string";
+const isHost = (v: unknown): v is Host => typeof v === "object" && v !== null && typeof (v as Host).name === "string";
+
+/** A JSON array field whose every item passes `valid`, or null when it is missing, does not parse or holds anything else. */
+function parseList<T>(raw: FormDataEntryValue | null, valid: (v: unknown) => v is T): T[] | null {
+  if (typeof raw !== "string") return null;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.every(valid) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function action({ request, context }: Route.ActionArgs) {
   const env = getEnv(context);
   const form = await readForm(request, ADMIN_FORM);
@@ -37,19 +52,16 @@ export async function action({ request, context }: Route.ActionArgs) {
     return { ok: true as const, message: "Site settings saved." };
   }
 
-  let categories: PodcastCategory[] = [];
-  try {
-    categories = JSON.parse(String(form.get("categories") || "[]"));
-  } catch {
-    categories = [];
-  }
-  let hosts: Host[] = [];
-  try {
-    hosts = JSON.parse(String(form.get("hosts") || "[]"));
-  } catch {
-    hosts = [];
-  }
-  hosts = hosts.filter((h) => h.name?.trim());
+  // Categories and hosts arrive as JSON from their editors. One that is missing or does not parse is answered as a form
+  // error and the stored value kept: falling back to [] would erase the categories and hosts the directories read.
+  const categories = parseList(form.get("categories"), isCategory);
+  const parsedHosts = parseList(form.get("hosts"), isHost);
+  const problems = [
+    ...(categories ? [] : ["The categories could not be read, so nothing was saved. Reload the page and try again."]),
+    ...(parsedHosts ? [] : ["The hosts could not be read, so nothing was saved. Reload the page and try again."]),
+  ];
+  if (!categories || !parsedHosts) return { ok: false as const, message: problems.join(" ") };
+  const hosts = parsedHosts.filter((h) => h.name.trim());
   const et = form.get("itunesType");
 
   await upsertShowConfig(env, {
@@ -152,6 +164,9 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
           <Button type="submit" variant="primary" disabled={fetcher.state !== "idle"}>Save settings</Button>
           {fetcher.data?.ok ? (
             <span role="status" className="flex items-center gap-1 font-mono text-xs text-accent"><Check size={13} aria-hidden /> {fetcher.data.message}</span>
+          ) : null}
+          {fetcher.data?.ok === false ? (
+            <span role="alert" className="text-xs font-medium text-brand">{fetcher.data.message}</span>
           ) : null}
         </div>
       </fetcher.Form>

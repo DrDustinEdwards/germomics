@@ -10,6 +10,10 @@ import { formatDate } from "~/lib/format";
 import { EmptyState } from "~/components/admin/ui";
 import { useSnippet } from "~/lib/content";
 
+/** Pending until confirmed from the mailed link (double opt-in, app/lib/newsletter.server.ts); only active ones get mail. */
+const statusOf = (r: { confirmedAt: string | null; unsubscribedAt: string | null }) =>
+  r.unsubscribedAt ? "unsubscribed" : r.confirmedAt ? "active" : "pending";
+
 function csvCell(v: unknown): string {
   const s = String(v ?? "");
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -23,7 +27,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     const header = "email,consented_at,status,created_at";
     const body = rows
       .map((r) =>
-        [r.email, r.consentedAt ?? "", r.unsubscribedAt ? "unsubscribed" : "active", r.createdAt]
+        [r.email, r.consentedAt ?? "", statusOf(r), r.createdAt]
           .map(csvCell)
           .join(","),
       )
@@ -40,7 +44,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     rows: rows.map((r) => ({
       email: r.email,
       consentedAt: r.consentedAt,
-      unsubscribedAt: r.unsubscribedAt,
+      status: statusOf(r),
       createdAt: r.createdAt,
     })),
   };
@@ -48,7 +52,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export default function SubscribersAdmin({ loaderData }: Route.ComponentProps) {
   const { rows } = loaderData;
-  const active = rows.filter((r) => !r.unsubscribedAt).length;
+  const active = rows.filter((r) => r.status === "active").length;
   const emptySubscribers = useSnippet("snippet:empty.subscribers", "No subscribers yet.");
   return (
     <div>
@@ -88,11 +92,7 @@ export default function SubscribersAdmin({ loaderData }: Route.ComponentProps) {
                   <td className="px-4 py-2 font-mono text-xs">{r.email}</td>
                   <td className="px-4 py-2 text-muted">{formatDate(r.consentedAt) || "(none)"}</td>
                   <td className="px-4 py-2">
-                    {r.unsubscribedAt ? (
-                      <span className="text-muted">unsubscribed</span>
-                    ) : (
-                      <span className="text-accent">active</span>
-                    )}
+                    <span className={r.status === "active" ? "text-accent" : "text-muted"}>{r.status}</span>
                   </td>
                 </tr>
               ))}

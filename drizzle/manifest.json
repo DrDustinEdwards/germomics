@@ -29,6 +29,7 @@
     "0023_style_rule_shared.sql": "d204f88a0ea186c4524f0da7083e3ca97d1b635fc6fee2605fc22901d3d691ef",
     "0024_site_api_media_uploads.sql": "5b1bc5068175e8118c92d64a826cc202847ae976081a1334812654e44881121c",
     "0025_home_description_length.sql": "70d946fd8301c9d325db1081c4e32052cbc7c80cd03898851aed1adf0bf04452",
-    "0026_site_api_store_v0_22.sql": "f424282b5ef683b146043c17bebc90eae8080e57c8527e5b946eab905434556c"
+    "0026_site_api_store_v0_22.sql": "f424282b5ef683b146043c17bebc90eae8080e57c8527e5b946eab905434556c",
+    "0027_subscriber_confirmation.sql": "a1fb2f37a827e33d7316e0d97e9c5f389a6aa4a81fc8432e10f3d9f8dc10738c"
   }
 }

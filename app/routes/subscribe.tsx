@@ -6,8 +6,7 @@ import { ExternalCue } from "~/components/ExternalCue";
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/subscribe";
 import { getEnv } from "~/lib/context.server";
-import { getDb } from "~/db/index.server";
-import { subscribers } from "~/db/schema";
+import { requestSubscription } from "~/lib/newsletter.server";
 import { getShowConfig } from "~/lib/show.server";
 import { SUBSCRIBE_DESTINATIONS, PRIMARY_KEYS, SECONDARY_KEYS } from "~/lib/subscribe";
 import { SITE_HOST } from "~/lib/site";
@@ -37,17 +36,11 @@ export async function action({ request, context }: Route.ActionArgs) {
     return { ok: false as const, error: "Please tick the consent box so we can email you." };
   }
 
-  // Store email + consent timestamp + an unguessable one-click unsubscribe token. No other PII.
-  // Re-subscribing (same email) refreshes consent and clears any prior unsubscribe.
-  const db = getDb(getEnv(context));
-  const now = new Date().toISOString();
-  await db
-    .insert(subscribers)
-    .values({ email, consentedAt: now, unsubscribeToken: crypto.randomUUID() })
-    .onConflictDoUpdate({
-      target: subscribers.email,
-      set: { consentedAt: now, unsubscribedAt: null },
-    });
+  // Double opt-in: this only mails the address a confirmation link. Nothing is subscribed, and no earlier unsubscribe
+  // is undone, until the address's owner opens it (app/lib/newsletter.server.ts).
+  if ((await requestSubscription(getEnv(context), email)) === "unavailable") {
+    return { ok: false as const, error: "Email signup is not available right now. Please try again later, or follow the RSS feed." };
+  }
   return { ok: true as const };
 }
 
@@ -133,7 +126,7 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
         <h2 className="font-display text-lg font-semibold">Newsletter</h2>
         {actionData?.ok ? (
           <p role="status" className="mt-3 flex items-center gap-2 text-accent">
-            <Check size={16} aria-hidden /> You’re on the list. Thank you.
+            <Check size={16} aria-hidden /> Almost done: check your inbox for a link to confirm your subscription.
           </p>
         ) : (
           <Form method="post" className="mt-3 space-y-3">

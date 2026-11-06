@@ -14,6 +14,12 @@ interface Env {
   ACCESS_DEV_BYPASS?: string;
   /** The bearer for /api/operator (32 characters or more), the admin MCP Worker's API leg. Unset or short closes the route. */
   OPERATOR_TOKEN?: string;
+  /** Hex HMAC key for the newsletter's confirmation links (site-runtime ./signed-token). Unset closes newsletter signup. */
+  SUBSCRIBE_LINK_KEY?: string;
+  /** The address the site's mail is sent from. Unset, with SEND_EMAIL, means no mail is sent (app/lib/email.server.ts). */
+  EMAIL_FROM?: string;
+  /** Cloudflare Email Service's send_email binding, once wrangler.jsonc declares it (app/lib/email.server.ts). */
+  SEND_EMAIL?: SendEmail;
   /** The deployed commit, written into the built config by vite.config.ts; empty for a local build. */
   DEPLOY_SHA?: string;
 }

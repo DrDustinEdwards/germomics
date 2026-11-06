@@ -176,6 +176,10 @@ export const subscribers = sqliteTable(
     // Suppression timestamp — set when the subscriber unsubscribes (kept, not deleted, so a
     // re-signup with the same email doesn't silently resurrect a prior unsubscribe).
     unsubscribedAt: text("unsubscribed_at"),
+    // (0027) Double opt-in: when the person confirmed from the mailed link (NULL = pending, never sent the newsletter),
+    // and when the one outstanding confirmation link was sent (in its signed payload; cleared once used).
+    confirmedAt: text("confirmed_at"),
+    confirmSentAt: text("confirm_sent_at"),
     createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   },
   (t) => ({

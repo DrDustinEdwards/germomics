@@ -8,3 +8,7 @@ ACCESS_DEV_BYPASS=1
 
 # Signs the preview links (app/lib/preview.server.ts).
 BETTER_AUTH_SECRET=dev-only-secret-change-me
+
+# Signs the newsletter's confirmation links (app/lib/newsletter.server.ts): any hex string, e.g. `openssl rand -hex 32`.
+# Mail also needs EMAIL_FROM and the send_email binding (app/lib/email.server.ts); without them signup says it is closed.
+SUBSCRIBE_LINK_KEY=00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff
