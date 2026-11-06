@@ -75,7 +75,7 @@
   //   ADMIN_EMAIL           the one email let in, as Access verifies it at sign-in.
   //   OPERATOR_TOKEN        the API leg. Same value as the germomics Worker's OPERATOR_TOKEN
   //                         secret. At least 32 characters.
-  //   AUDIT_CHAIN_KEY       the HMAC key of the tool-call log's hash chain (site-runtime audit-log).
+  //   AUDIT_SIGNING_KEY     the seed of the tool-call log's Ed25519 signing key (site-runtime audit-log 0.85); minted by the deploy.
   //   ACCESS_SAAS_CLIENT_ID      the Access for SaaS (OIDC) app used for sign-in,
   //                              with redirect URL PUBLIC_ORIGIN + /callback.
   //   ACCESS_SAAS_CLIENT_SECRET  ditto.
