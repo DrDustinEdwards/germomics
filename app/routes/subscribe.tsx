@@ -13,7 +13,12 @@ import { SITE_HOST } from "~/lib/site";
 import { PUBLIC_FORM, readForm } from "~/lib/body.server";
 
 export function meta() {
-  return pageHead({ path: "/subscribe", title: "Subscribe · Germomics", description: "Follow Germomics, the podcast about microbiology and history, in any podcast app, by email, or with its RSS feed." });
+  return pageHead({
+    path: "/subscribe",
+    title: "Subscribe · Germomics",
+    description:
+      "Follow Germomics, the podcast about microbiology and history, in any podcast app, by email, or with its RSS feed.",
+  });
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -25,7 +30,9 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function action({ request, context }: Route.ActionArgs) {
   const form = await readForm(request, PUBLIC_FORM);
-  const email = String(form.get("email") ?? "").trim().toLowerCase();
+  const email = String(form.get("email") ?? "")
+    .trim()
+    .toLowerCase();
   const consent = form.get("consent");
 
   if (!EMAIL_RE.test(email) || email.length > 254) {
@@ -39,7 +46,11 @@ export async function action({ request, context }: Route.ActionArgs) {
   // Double opt-in: this only mails the address a confirmation link. Nothing is subscribed, and no earlier unsubscribe
   // is undone, until the address's owner opens it (app/lib/newsletter.server.ts).
   if ((await requestSubscription(getEnv(context), email)) === "unavailable") {
-    return { ok: false as const, error: "Email signup is not available right now. Please try again later, or follow the RSS feed." };
+    return {
+      ok: false as const,
+      error:
+        "Email signup is not available right now. Please try again later, or follow the RSS feed.",
+    };
   }
   return { ok: true as const };
 }
@@ -75,7 +86,10 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
                   className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 font-display text-sm font-medium hover:border-accent hover:text-accent"
                 >
                   <Icon size={18} aria-hidden />
-                  <span className="inline-flex items-center gap-1.5">{d.label}<ExternalCue size={14} /></span>
+                  <span className="inline-flex items-center gap-1.5">
+                    {d.label}
+                    <ExternalCue size={14} />
+                  </span>
                 </a>
               );
             })}
@@ -126,12 +140,15 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
         <h2 className="font-display text-lg font-semibold">Newsletter</h2>
         {actionData?.ok ? (
           <p role="status" className="mt-3 flex items-center gap-2 text-accent">
-            <Check size={16} aria-hidden /> Almost done: check your inbox for a link to confirm your subscription.
+            <Check size={16} aria-hidden /> Almost done: check your inbox for a link to confirm your
+            subscription.
           </p>
         ) : (
           <Form method="post" className="mt-3 space-y-3">
             <div className="flex flex-col gap-2 sm:flex-row">
-              <label htmlFor="email" className="sr-only">Email address</label>
+              <label htmlFor="email" className="sr-only">
+                Email address
+              </label>
               <input
                 id="email"
                 type="email"
@@ -149,17 +166,27 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
               </button>
             </div>
             <div className="flex items-start gap-2">
-              <input id="consent" type="checkbox" name="consent" required className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-brand)]" />
+              <input
+                id="consent"
+                type="checkbox"
+                name="consent"
+                required
+                className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-brand)]"
+              />
               <label htmlFor="consent" className="text-sm text-muted">
                 I agree to receive the Germomics newsletter by email and accept the{" "}
-                <Link to="/privacy" className="text-accent hover:underline">privacy policy</Link>. You
-                can unsubscribe anytime via the link in every email.
+                <Link to="/privacy" className="text-accent hover:underline">
+                  privacy policy
+                </Link>
+                . You can unsubscribe anytime via the link in every email.
               </label>
             </div>
           </Form>
         )}
         {actionData?.ok === false ? (
-          <p role="alert" className="mt-2 text-sm text-accent">{actionData.error}</p>
+          <p role="alert" className="mt-2 text-sm text-accent">
+            {actionData.error}
+          </p>
         ) : null}
       </section>
     </div>

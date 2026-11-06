@@ -49,12 +49,18 @@ export async function callOperator(
   options: { signal?: AbortSignal } = {},
 ): Promise<ApiCallResult> {
   // The call's abort signal (checklist P11): a client that closes the stream stops the request to the API.
-  const { status, ok, body } = await callApi(env, LEG, "/api/operator", { json: { tool, args }, signal: options.signal });
+  const { status, ok, body } = await callApi(env, LEG, "/api/operator", {
+    json: { tool, args },
+    signal: options.signal,
+  });
   const answer = body as { ok?: unknown; data?: unknown; error?: unknown } | null;
   if (ok && answer?.ok === true) return { status, ok: true, data: answer.data };
   return {
     status,
     ok: false,
-    error: typeof answer?.error === "string" ? answer.error : `The Germomics operator API refused with status ${status}.`,
+    error:
+      typeof answer?.error === "string"
+        ? answer.error
+        : `The Germomics operator API refused with status ${status}.`,
   };
 }

@@ -68,14 +68,22 @@ export default function EpisodeWaveform({
         ref={ref}
         aria-hidden
         onClick={(e) => onSeekFrac(fracFromX(e.clientX))}
-        onMouseMove={(e) => setHover({ frac: fracFromX(e.clientX), x: e.clientX - (ref.current?.getBoundingClientRect().left ?? 0) })}
+        onMouseMove={(e) =>
+          setHover({
+            frac: fracFromX(e.clientX),
+            x: e.clientX - (ref.current?.getBoundingClientRect().left ?? 0),
+          })
+        }
         onMouseLeave={() => setHover(null)}
         className="relative flex h-16 cursor-pointer items-center gap-px overflow-hidden rounded-lg"
       >
         {activeRegion ? (
           <span
             className="pointer-events-none absolute inset-y-0 bg-accent/12"
-            style={{ left: `${activeRegion[0] * 100}%`, width: `${Math.max(0, (activeRegion[1] - activeRegion[0]) * 100)}%` }}
+            style={{
+              left: `${activeRegion[0] * 100}%`,
+              width: `${Math.max(0, (activeRegion[1] - activeRegion[0]) * 100)}%`,
+            }}
           />
         ) : null}
         {bars.map((h, i) => {

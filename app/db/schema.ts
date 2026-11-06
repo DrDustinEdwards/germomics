@@ -11,17 +11,20 @@
 // migration drizzle/0000_content_and_fts.sql. Query with:
 //   SELECT p.* FROM posts_fts f JOIN posts p ON p.id = f.rowid WHERE posts_fts MATCH ?
 
-import {
-  sqliteTable,
-  text,
-  integer,
-  index,
-  uniqueIndex,
-} from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, index, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { sql, relations } from "drizzle-orm";
 // JSON shapes (stored as TEXT, typed at the edge). Defined client-safe in lib/types and
 // re-exported here so loaders and components share one source of truth.
-import type { BodyMeta, Chapter, Guest, Host, KeyMoment, PersonLink, PodcastCategory, Source } from "~/lib/types";
+import type {
+  BodyMeta,
+  Chapter,
+  Guest,
+  Host,
+  KeyMoment,
+  PersonLink,
+  PodcastCategory,
+  Source,
+} from "~/lib/types";
 export type { BodyMeta, Chapter, Guest, Host, KeyMoment, PersonLink, PodcastCategory, Source };
 
 // ============================================================
@@ -41,7 +44,9 @@ export const posts = sqliteTable(
     body: text("body").notNull().default(""),
     excerpt: text("excerpt"),
     coverImage: text("cover_image"),
-    tags: text("tags", { mode: "json" }).$type<string[]>().default(sql`'[]'`),
+    tags: text("tags", { mode: "json" })
+      .$type<string[]>()
+      .default(sql`'[]'`),
     status: text("status", { enum: ["draft", "published"] })
       .notNull()
       .default("draft"),
@@ -59,8 +64,12 @@ export const posts = sqliteTable(
     // site-api's canonical and noindex search fields (0021).
     canonical: text("canonical"),
     noindex: integer("noindex", { mode: "boolean" }).notNull().default(false),
-    createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
-    updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
 
     // episode only (null for articles)
     audioUrl: text("audio_url"),
@@ -69,9 +78,7 @@ export const posts = sqliteTable(
     audioMimeType: text("audio_mime_type").default("audio/mpeg"),
     episodeNumber: integer("episode_number"),
     seasonNumber: integer("season_number"),
-    episodeType: text("episode_type", { enum: ["full", "trailer", "bonus"] }).default(
-      "full",
-    ),
+    episodeType: text("episode_type", { enum: ["full", "trailer", "bonus"] }).default("full"),
     explicit: integer("explicit", { mode: "boolean" }).default(false),
     guid: text("guid"),
     transcript: text("transcript"),
@@ -111,7 +118,9 @@ export const postVersions = sqliteTable(
       .notNull()
       .references(() => posts.id, { onDelete: "cascade" }),
     snapshot: text("snapshot", { mode: "json" }).notNull(),
-    createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => ({ postIdx: index("post_versions_post_idx").on(t.postId) }),
 );
@@ -129,9 +138,7 @@ export const showConfig = sqliteTable("show_config", {
     .notNull()
     .default("episodic"),
   explicit: integer("explicit", { mode: "boolean" }).notNull().default(false),
-  subscribeLinks: text("subscribe_links", { mode: "json" }).$type<
-    Record<string, string>
-  >(),
+  subscribeLinks: text("subscribe_links", { mode: "json" }).$type<Record<string, string>>(),
   fundingUrl: text("funding_url"),
   // Tier 2 (0003): up to 3 nested iTunes categories + an optional funding label.
   categories: text("categories", { mode: "json" })
@@ -157,7 +164,9 @@ export const scores = sqliteTable(
     gameSlug: text("game_slug").notNull(),
     name: text("name").notNull(),
     score: integer("score").notNull(),
-    createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => ({ boardIdx: index("scores_board_idx").on(t.gameSlug, t.score) }),
 );
@@ -180,7 +189,9 @@ export const subscribers = sqliteTable(
     // and when the one outstanding confirmation link was sent (in its signed payload; cleared once used).
     confirmedAt: text("confirmed_at"),
     confirmSentAt: text("confirm_sent_at"),
-    createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => ({
     emailIdx: uniqueIndex("subscribers_email_idx").on(t.email),
@@ -204,7 +215,9 @@ export const settings = sqliteTable("settings", {
   group: text("group"),
   label: text("label"),
   description: text("description"),
-  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
 });
 
 // Prose: pages get a draft/published gate (only published renders publicly); snippets are instant.
@@ -213,12 +226,18 @@ export const contentBlocks = sqliteTable(
   "content_blocks",
   {
     key: text("key").primaryKey(),
-    kind: text("kind", { enum: ["page", "snippet"] }).notNull().default("snippet"),
+    kind: text("kind", { enum: ["page", "snippet"] })
+      .notNull()
+      .default("snippet"),
     title: text("title"),
     value: text("value").notNull().default(""),
     description: text("description"),
-    status: text("status", { enum: ["draft", "published"] }).notNull().default("draft"),
-    updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+    status: text("status", { enum: ["draft", "published"] })
+      .notNull()
+      .default("draft"),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
     // 0016: a page's value is Markdown, rendered as posts' bodies are (NULL renderVersion: still HTML).
     bodyHtml: text("body_html"),
     renderVersion: text("render_version"),
@@ -242,9 +261,15 @@ export const people = sqliteTable(
     bio: text("bio"),
     photo: text("photo"),
     photoAlt: text("photo_alt"),
-    links: text("links", { mode: "json" }).$type<PersonLink[]>().default(sql`'[]'`),
-    createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
-    updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+    links: text("links", { mode: "json" })
+      .$type<PersonLink[]>()
+      .default(sql`'[]'`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => ({ slugIdx: uniqueIndex("people_slug_idx").on(t.slug) }),
 );
@@ -279,7 +304,9 @@ export const soundbites = sqliteTable(
     startSeconds: integer("start_seconds").notNull(),
     durationSeconds: integer("duration_seconds").notNull(),
     title: text("title"),
-    createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => ({ postIdx: index("soundbites_post_idx").on(t.postId) }),
 );
@@ -317,7 +344,9 @@ export const postRedirects = sqliteTable("post_redirects", {
   postId: integer("post_id")
     .notNull()
     .references(() => posts.id, { onDelete: "cascade" }),
-  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
 });
 
 // 0018: site-api's store (safe retries, hook retries, preview links, the webmentions sent). Read and written only
@@ -398,7 +427,9 @@ export const hookRuns = sqliteTable(
 export const mediaCaptions = sqliteTable("media_captions", {
   mediaKey: text("media_key").primaryKey(),
   caption: text("caption").notNull(),
-  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
 });
 
 // 0015: the media library (site-api v0.13.1): one row per image in BLOG_IMAGES, its byte history and a change log
@@ -414,7 +445,10 @@ export const media = sqliteTable(
     height: integer("height"),
     alt: text("alt").notNull().default(""),
     caption: text("caption").notNull().default(""),
-    tags: text("tags", { mode: "json" }).$type<string[]>().notNull().default(sql`'[]'`),
+    tags: text("tags", { mode: "json" })
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'`),
     focus: text("focus"),
     credit: text("credit").notNull().default(""),
     license: text("license").notNull().default(""),
@@ -428,7 +462,9 @@ export const media = sqliteTable(
     trashedAt: text("trashed_at"),
     rev: integer("rev").notNull().default(0),
     uploadedAt: text("uploaded_at").notNull(),
-    updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => ({ shaIdx: index("media_sha256_idx").on(t.sha256) }),
 );
@@ -442,7 +478,9 @@ export const mediaRevisions = sqliteTable(
     bytes: integer("bytes").notNull(),
     width: integer("width"),
     height: integer("height"),
-    reason: text("reason", { enum: ["upload", "import", "replace", "transform", "resize", "revert"] }).notNull(),
+    reason: text("reason", {
+      enum: ["upload", "import", "replace", "transform", "resize", "revert"],
+    }).notNull(),
     sha256: text("sha256"),
     backupKey: text("backup_key"),
   },
@@ -454,7 +492,9 @@ export const mediaChanges = sqliteTable(
   {
     seq: integer("seq").primaryKey({ autoIncrement: true }),
     mediaKey: text("media_key").notNull(),
-    at: text("at").notNull().default(sql`(datetime('now'))`),
+    at: text("at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
   },
   (t) => ({ keyIdx: index("media_changes_key_idx").on(t.mediaKey, t.seq) }),
 );
@@ -484,5 +524,11 @@ export const page404Daily = sqliteTable(
     kind: text("kind").notNull().default("page"),
     hitCount: integer("hit_count").notNull().default(0),
   },
-  (t) => ({ dayPathReferrerIdx: uniqueIndex("page_404_daily_day_path_referrer_uq").on(t.day, t.path, t.referrerHost) }),
+  (t) => ({
+    dayPathReferrerIdx: uniqueIndex("page_404_daily_day_path_referrer_uq").on(
+      t.day,
+      t.path,
+      t.referrerHost,
+    ),
+  }),
 );

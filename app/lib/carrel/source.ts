@@ -61,10 +61,15 @@ type EpisodeFields = {
 };
 
 /** What a post's source holds: its kind decides whether the episode's fields are written. */
-export type SourcePost = PostFields & Partial<EpisodeFields> & { kind: "article" | "episode"; body: string };
+export type SourcePost = PostFields &
+  Partial<EpisodeFields> & { kind: "article" | "episode"; body: string };
 
 /** A parsed source: null when it had no front matter (a body alone), else every field, cleared ones included. */
-export type ParsedSource = { body: string; post: PostFields | null; episode: Partial<EpisodeFields> | null };
+export type ParsedSource = {
+  body: string;
+  post: PostFields | null;
+  episode: Partial<EpisodeFields> | null;
+};
 
 const POST_KEYS = {
   title: "text",
@@ -95,12 +100,18 @@ const EPISODE_KEYS = {
   people: "text",
 } as const;
 
-const SOURCE = jsonSource({ ...POST_KEYS, ...EPISODE_KEYS, seoTitle: "text", seoDescription: "text" });
+const SOURCE = jsonSource({
+  ...POST_KEYS,
+  ...EPISODE_KEYS,
+  seoTitle: "text",
+  seoDescription: "text",
+});
 
 /** A source Carrel's writer must fix, every problem named. */
 export class SourceError extends Error {}
 
-const blank = (v: unknown) => v === null || v === undefined || v === "" || v === false || (Array.isArray(v) && v.length === 0);
+const blank = (v: unknown) =>
+  v === null || v === undefined || v === "" || v === false || (Array.isArray(v) && v.length === 0);
 
 /** The source, writing only the fields that have a value, in a fixed order, and an episode's fields only on one. */
 export function renderSource(post: SourcePost): string {
@@ -158,13 +169,17 @@ export function parseSource(source: string, kind: "article" | "episode"): Parsed
     sources: objects<Source>("sources", v.sources, problems, { title: "string" }),
   };
 
-  const named = (Object.keys(EPISODE_KEYS) as (keyof typeof EPISODE_KEYS)[]).filter((k) => v[k] !== undefined);
+  const named = (Object.keys(EPISODE_KEYS) as (keyof typeof EPISODE_KEYS)[]).filter(
+    (k) => v[k] !== undefined,
+  );
   let episode: Partial<EpisodeFields> | null = null;
   if (kind === "article") {
-    if (named.length) problems.push(`${named.join(", ")}: an episode's fields, and this is an article.`);
+    if (named.length)
+      problems.push(`${named.join(", ")}: an episode's fields, and this is an article.`);
   } else {
     const type = v.episodeType?.trim() || "full";
-    if (type !== "full" && type !== "trailer" && type !== "bonus") problems.push('episodeType must be "full", "trailer" or "bonus".');
+    if (type !== "full" && type !== "trailer" && type !== "bonus")
+      problems.push('episodeType must be "full", "trailer" or "bonus".');
     episode = {
       episodeNumber: whole("episodeNumber", v.episodeNumber, problems),
       seasonNumber: whole("seasonNumber", v.seasonNumber, problems),
@@ -172,10 +187,18 @@ export function parseSource(source: string, kind: "article" | "episode"): Parsed
       explicit: v.explicit ?? false,
       episodeArtwork: text(v.episodeArtwork),
       episodeArtworkAlt: text(v.episodeArtworkAlt),
-      chapters: objects<Chapter>("chapters", v.chapters, problems, { start: "number", title: "string" }),
-      keyMoments: objects<KeyMoment>("keyMoments", v.keyMoments, problems, { seconds: "number", label: "string" }),
+      chapters: objects<Chapter>("chapters", v.chapters, problems, {
+        start: "number",
+        title: "string",
+      }),
+      keyMoments: objects<KeyMoment>("keyMoments", v.keyMoments, problems, {
+        seconds: "number",
+        label: "string",
+      }),
       guests: objects<Guest>("guests", v.guests, problems, { name: "string" }),
-      people: objects<{ slug: string; role?: string | null }>("people", v.people, problems, { slug: "string" }).map((p) => ({
+      people: objects<{ slug: string; role?: string | null }>("people", v.people, problems, {
+        slug: "string",
+      }).map((p) => ({
         slug: p.slug,
         role: p.role?.trim() || null,
       })),
@@ -195,7 +218,12 @@ function whole(key: string, raw: string | null | undefined, problems: string[]):
 }
 
 /** A JSON list of objects, each with the named fields of the named types; [] for none. */
-function objects<T>(key: string, raw: string | null | undefined, problems: string[], required: Record<string, "string" | "number">): T[] {
+function objects<T>(
+  key: string,
+  raw: string | null | undefined,
+  problems: string[],
+  required: Record<string, "string" | "number">,
+): T[] {
   if (!raw?.trim()) return [];
   let value: unknown;
   try {
@@ -209,9 +237,17 @@ function objects<T>(key: string, raw: string | null | undefined, problems: strin
   const fields = Object.entries(required);
   const ok =
     Array.isArray(value) &&
-    value.every((item) => item && typeof item === "object" && !Array.isArray(item) && fields.every(([f, t]) => typeof item[f] === t));
+    value.every(
+      (item) =>
+        item &&
+        typeof item === "object" &&
+        !Array.isArray(item) &&
+        fields.every(([f, t]) => typeof item[f] === t),
+    );
   if (!ok) {
-    problems.push(`${key} must be a list of objects, each with ${fields.map(([f, t]) => `"${f}" (a ${t})`).join(" and ")}.`);
+    problems.push(
+      `${key} must be a list of objects, each with ${fields.map(([f, t]) => `"${f}" (a ${t})`).join(" and ")}.`,
+    );
     return [];
   }
   return value as T[];

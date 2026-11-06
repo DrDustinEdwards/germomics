@@ -30,13 +30,25 @@ const SLUGS = [
 // Decode the typographic/character entities that appear in the prose. We keep &amp;/&lt;/&gt;
 // as valid HTML entities in BODY (they're legal there); EXCERPT decodes those too (plain text).
 const TYPO = {
-  "&#8217;": "’", "&#8216;": "‘",
-  "&#8220;": "“", "&#8221;": "”",
-  "&#8211;": "–", "&#8212;": "—",
-  "&#8230;": "…", "&#8242;": "′", "&#8243;": "″",
-  "&#038;": "&", "&#39;": "'", "&#039;": "'",
-  "&hellip;": "…", "&mdash;": "—", "&ndash;": "–",
-  "&rsquo;": "’", "&lsquo;": "‘", "&ldquo;": "“", "&rdquo;": "”",
+  "&#8217;": "’",
+  "&#8216;": "‘",
+  "&#8220;": "“",
+  "&#8221;": "”",
+  "&#8211;": "–",
+  "&#8212;": "—",
+  "&#8230;": "…",
+  "&#8242;": "′",
+  "&#8243;": "″",
+  "&#038;": "&",
+  "&#39;": "'",
+  "&#039;": "'",
+  "&hellip;": "…",
+  "&mdash;": "—",
+  "&ndash;": "–",
+  "&rsquo;": "’",
+  "&lsquo;": "‘",
+  "&ldquo;": "“",
+  "&rdquo;": "”",
   "&nbsp;": " ",
 };
 
@@ -50,10 +62,14 @@ function decodeTypo(s) {
 
 function decodeAll(s) {
   return decodeTypo(s)
-    .split("&amp;").join("&")
-    .split("&lt;").join("<")
-    .split("&gt;").join(">")
-    .split("&quot;").join('"');
+    .split("&amp;")
+    .join("&")
+    .split("&lt;")
+    .join("<")
+    .split("&gt;")
+    .join(">")
+    .split("&quot;")
+    .join('"');
 }
 
 function stripTags(s) {
@@ -61,7 +77,10 @@ function stripTags(s) {
 }
 
 function collapseWs(s) {
-  return s.replace(/[ \t]*\r?\n[ \t]*/g, " ").replace(/[ \t]{2,}/g, " ").trim();
+  return s
+    .replace(/[ \t]*\r?\n[ \t]*/g, " ")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
 }
 
 // Pull the inner content of every `et_pb_text_inner` that occurs before the first toggle —
@@ -96,7 +115,10 @@ function cleanBodyFragment(frag) {
   // Unwrap now-attribute-less <span> wrappers (purely cosmetic), keeping their text.
   f = f.replace(/<span>/gi, "").replace(/<\/span>/gi, "");
   f = decodeTypo(f);
-  f = f.replace(/[ \t]*\r?\n[ \t]*/g, "\n").replace(/\n{2,}/g, "\n").trim();
+  f = f
+    .replace(/[ \t]*\r?\n[ \t]*/g, "\n")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
   // Tidy any doubled spaces left behind by unwrapping.
   f = f.replace(/ {2,}/g, " ");
   return f;

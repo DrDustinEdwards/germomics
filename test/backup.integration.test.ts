@@ -23,18 +23,25 @@ const CREDENTIAL_SCHEMA = [
 ];
 
 async function reset(withCredentials = true) {
-  const names = await env.DB.prepare("SELECT name FROM sqlite_master WHERE type IN ('table') AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'").all<{ name: string }>();
+  const names = await env.DB.prepare(
+    "SELECT name FROM sqlite_master WHERE type IN ('table') AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'",
+  ).all<{ name: string }>();
   await env.DB.exec("PRAGMA foreign_keys = OFF");
   for (const { name } of names.results) await env.DB.exec(`DROP TABLE IF EXISTS "${name}"`);
-  for (const sql of withCredentials ? [...SCHEMA, ...CREDENTIAL_SCHEMA] : SCHEMA) await env.DB.exec(sql);
+  for (const sql of withCredentials ? [...SCHEMA, ...CREDENTIAL_SCHEMA] : SCHEMA)
+    await env.DB.exec(sql);
   const listed = await env.BACKUPS.list();
   if (listed.objects.length) await env.BACKUPS.delete(listed.objects.map((o) => o.key));
 }
 
 async function seed(withCredentials = true) {
   await env.DB.batch([
-    env.DB.prepare("INSERT INTO posts (id, title, body, excerpt) VALUES (1, 'Cholera', 'Broad Street pump', 'x')"),
-    env.DB.prepare("INSERT INTO posts_fts (rowid, title, body, excerpt) VALUES (1, 'Cholera', 'Broad Street pump', 'x')"),
+    env.DB.prepare(
+      "INSERT INTO posts (id, title, body, excerpt) VALUES (1, 'Cholera', 'Broad Street pump', 'x')",
+    ),
+    env.DB.prepare(
+      "INSERT INTO posts_fts (rowid, title, body, excerpt) VALUES (1, 'Cholera', 'Broad Street pump', 'x')",
+    ),
     env.DB.prepare("INSERT INTO content_blocks VALUES ('page:about', 'About')"),
     env.DB.prepare("INSERT INTO settings VALUES ('site.name', 'Germomics')"),
     env.DB.prepare("INSERT INTO show_config VALUES (1, 'Germomics')"),
@@ -91,7 +98,9 @@ describe("nightly backup", () => {
   });
 
   it("leaves an emptied database without a marker, and throws", async () => {
-    await expect(runBackup(env as unknown as Env)).rejects.toThrow(/left incomplete: .*every counted table dumped empty/);
+    await expect(runBackup(env as unknown as Env)).rejects.toThrow(
+      /left incomplete: .*every counted table dumped empty/,
+    );
     const keys = (await env.BACKUPS.list()).objects.map((o) => o.key);
     expect(keys.some((k) => k.endsWith("/_complete.json"))).toBe(false);
     const health = await backupHealth(env.BACKUPS);

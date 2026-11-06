@@ -7,9 +7,11 @@ import { applyMigrations } from "./helpers/d1";
 // unknown game and a bad number, clamp a huge one, clean the name, and cap submissions per address.
 const e = env as unknown as Env;
 const GAME = "phage-defense";
-const submit = (over: Partial<{ gameSlug: string; name: unknown; score: unknown; ip: string }> = {}) =>
-  submitScore(e, { gameSlug: GAME, name: "Ada", score: 120, ip: "203.0.113.1", ...over });
-const stored = async () => (await e.DB.prepare("SELECT game_slug, name, score FROM scores ORDER BY id").all()).results;
+const submit = (
+  over: Partial<{ gameSlug: string; name: unknown; score: unknown; ip: string }> = {},
+) => submitScore(e, { gameSlug: GAME, name: "Ada", score: 120, ip: "203.0.113.1", ...over });
+const stored = async () =>
+  (await e.DB.prepare("SELECT game_slug, name, score FROM scores ORDER BY id").all()).results;
 
 beforeAll(() => applyMigrations(e.DB));
 beforeEach(() => e.DB.exec("DELETE FROM scores"));
@@ -38,7 +40,10 @@ describe("submitScore", () => {
     // Its own address: the limiter's storage outlives a test.
     const ip = "203.0.113.50";
     for (let i = 0; i < 5; i++) expect((await submit({ ip })).ok).toBe(true);
-    expect(await submit({ ip })).toEqual({ ok: false, error: "Too many submissions, try again in a minute." });
+    expect(await submit({ ip })).toEqual({
+      ok: false,
+      error: "Too many submissions, try again in a minute.",
+    });
     expect(await stored()).toHaveLength(5);
     expect((await submit({ ip: "203.0.113.51" })).ok).toBe(true);
   });
@@ -60,8 +65,15 @@ describe("sanitizeName", () => {
 
 describe("getLeaderboard", () => {
   it("returns one game's scores, highest first, up to the limit", async () => {
-    for (const [slug, name, score] of [[GAME, "a", 5], [GAME, "b", 50], [GAME, "c", 20], ["other", "d", 999]] as const) {
-      await e.DB.prepare("INSERT INTO scores (game_slug, name, score) VALUES (?, ?, ?)").bind(slug, name, score).run();
+    for (const [slug, name, score] of [
+      [GAME, "a", 5],
+      [GAME, "b", 50],
+      [GAME, "c", 20],
+      ["other", "d", 999],
+    ] as const) {
+      await e.DB.prepare("INSERT INTO scores (game_slug, name, score) VALUES (?, ?, ?)")
+        .bind(slug, name, score)
+        .run();
     }
     expect((await getLeaderboard(e, GAME)).map((s) => s.name)).toEqual(["b", "c", "a"]);
     expect((await getLeaderboard(e, GAME, 2)).map((s) => s.score)).toEqual([50, 20]);

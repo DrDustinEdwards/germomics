@@ -18,7 +18,10 @@ export function imageUrl(key: string): string {
 
 /** Build a collision-resistant, filesystem-safe object key under a folder. */
 export function buildKey(folder: string, filename: string): string {
-  const safe = filename.replace(/[^\w.-]/g, "_").replace(/_{2,}/g, "_").slice(-80);
+  const safe = filename
+    .replace(/[^\w.-]/g, "_")
+    .replace(/_{2,}/g, "_")
+    .slice(-80);
   return `${folder.replace(/^\/+|\/+$/g, "")}/${Date.now()}-${safe}`;
 }
 

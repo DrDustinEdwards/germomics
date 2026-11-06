@@ -21,7 +21,11 @@ async function uniqueSlug(env: Env, name: string, excludeId?: number): Promise<s
   const db = getDb(env);
   let slug = base;
   for (let i = 2; i < 50; i++) {
-    const rows = await db.select({ id: people.id }).from(people).where(eq(people.slug, slug)).limit(1);
+    const rows = await db
+      .select({ id: people.id })
+      .from(people)
+      .where(eq(people.slug, slug))
+      .limit(1);
     const taken = rows[0] && rows[0].id !== excludeId;
     if (!taken) return slug;
     slug = `${base}-${i}`;
@@ -153,7 +157,15 @@ export async function postsByPerson(env: Env, personSlug: string): Promise<Post[
   const rows = await db
     .select()
     .from(posts)
-    .where(and(eq(posts.kind, "episode"), inArray(posts.id, links.map((l) => l.postId))));
+    .where(
+      and(
+        eq(posts.kind, "episode"),
+        inArray(
+          posts.id,
+          links.map((l) => l.postId),
+        ),
+      ),
+    );
   return rows;
 }
 

@@ -8,7 +8,11 @@ import { getPostBySlug, renamedPostRedirect } from "~/lib/posts.server";
 export async function loader({ params, context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const post = await getPostBySlug(env, params.slug);
-  if (!post) throw (await renamedPostRedirect(env, params.slug, "/transcript.vtt")) ?? new Response("Not found", { status: 404 });
+  if (!post)
+    throw (
+      (await renamedPostRedirect(env, params.slug, "/transcript.vtt")) ??
+      new Response("Not found", { status: 404 })
+    );
   if (!post.transcript) throw new Response("Not found", { status: 404 });
   return new Response(post.transcript, {
     headers: {

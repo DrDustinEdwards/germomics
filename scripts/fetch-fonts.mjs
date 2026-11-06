@@ -38,7 +38,9 @@ for (const part of parts) {
   const unicode = /unicode-range:\s*([^;]+);/.exec(body)[1].trim();
   const slug = fam.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   const file = `${slug}-${subset}.woff2`;
-  const buf = Buffer.from(await (await fetch(url, { headers: { "User-Agent": UA } })).arrayBuffer());
+  const buf = Buffer.from(
+    await (await fetch(url, { headers: { "User-Agent": UA } })).arrayBuffer(),
+  );
   writeFileSync(`public/fonts/${file}`, buf);
   files.push({ file, bytes: buf.length });
   out +=

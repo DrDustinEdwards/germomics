@@ -46,7 +46,9 @@ if (missing.length) console.log("  MISSING in new:", missing);
 if (extra.length) console.log("  EXTRA in new:", extra);
 
 let integrityOk = true;
-console.log("\nPer-episode integrity (guid / isPermaLink / byte length / duration / enclosure host):");
+console.log(
+  "\nPer-episode integrity (guid / isPermaLink / byte length / duration / enclosure host):",
+);
 for (const g of oGuids) {
   const a = oByGuid.get(g);
   const c = nByGuid.get(g);

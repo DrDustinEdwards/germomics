@@ -13,8 +13,17 @@ import { ChevronUp, X, AlertCircle, Loader2, ListTree } from "lucide-react";
 import { usePlayer, activeChapterIndex } from "./player-context";
 import { formatDuration } from "~/lib/format";
 import {
-  PlayPauseButton, SkipButton, NextButton, Scrubber, SpeedControl, VolumeControl,
-  SleepTimerControl, ChaptersControl, SpeedMenuContent, SleepMenuContent, TranscriptToggle,
+  PlayPauseButton,
+  SkipButton,
+  NextButton,
+  Scrubber,
+  SpeedControl,
+  VolumeControl,
+  SleepTimerControl,
+  ChaptersControl,
+  SpeedMenuContent,
+  SleepMenuContent,
+  TranscriptToggle,
   PlayerStatusLive,
 } from "./controls";
 
@@ -80,78 +89,78 @@ export function PlayerDock() {
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="mx-auto max-w-5xl px-4">
-        {/* Scrubber row with chapter ticks. */}
-        <div className="pt-2">
-          <Scrubber ticks />
-        </div>
+          {/* Scrubber row with chapter ticks. */}
+          <div className="pt-2">
+            <Scrubber ticks />
+          </div>
 
-        {/* Control row. */}
-        <div className="flex items-center gap-2 py-1.5">
-          <div className="min-w-0 flex-1">
-            <Link
-              to={`/${p.current.slug}`}
-              title={p.current.title}
-              className="block truncate font-display text-sm font-medium text-ink hover:text-accent"
-            >
-              {p.current.title}
-            </Link>
-            <div className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wide text-accent">
-              {p.errored ? (
-                <span className="flex items-center gap-1 text-brand">
-                  <AlertCircle size={12} aria-hidden /> Error
-                </span>
-              ) : p.buffering ? (
-                <span className="flex items-center gap-1">
-                  <Loader2 size={12} aria-hidden className="motion-safe:animate-spin" /> Buffering
-                </span>
-              ) : (
-                <span className="truncate">{curChap ? curChap.title : "now playing"}</span>
-              )}
+          {/* Control row. */}
+          <div className="flex items-center gap-2 py-1.5">
+            <div className="min-w-0 flex-1">
+              <Link
+                to={`/${p.current.slug}`}
+                title={p.current.title}
+                className="block truncate font-display text-sm font-medium text-ink hover:text-accent"
+              >
+                {p.current.title}
+              </Link>
+              <div className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wide text-accent">
+                {p.errored ? (
+                  <span className="flex items-center gap-1 text-brand">
+                    <AlertCircle size={12} aria-hidden /> Error
+                  </span>
+                ) : p.buffering ? (
+                  <span className="flex items-center gap-1">
+                    <Loader2 size={12} aria-hidden className="motion-safe:animate-spin" /> Buffering
+                  </span>
+                ) : (
+                  <span className="truncate">{curChap ? curChap.title : "now playing"}</span>
+                )}
+              </div>
             </div>
+
+            {/* Primary transport. */}
+            <div className="flex items-center gap-1">
+              <SkipButton delta={-15} />
+              <PlayPauseButton />
+              <SkipButton delta={30} />
+              <NextButton />
+            </div>
+
+            {/* Secondary controls: inline popovers on desktop. */}
+            <div className="hidden items-center gap-1.5 md:flex">
+              <SpeedControl openUp />
+              <VolumeControl openUp />
+              <SleepTimerControl openUp />
+              <ChaptersControl openUp />
+            </div>
+
+            {/* Mobile: a single More button opens the bottom sheet. */}
+            <button
+              ref={moreRef}
+              type="button"
+              onClick={() => setSheetOpen(true)}
+              aria-haspopup="dialog"
+              aria-expanded={sheetOpen}
+              aria-label="More player controls"
+              className={`tap-target grid h-11 w-11 place-items-center rounded-full md:hidden ${
+                p.sleep != null ? "text-accent" : "text-ink hover:text-accent"
+              }`}
+            >
+              <ChevronUp size={20} aria-hidden />
+            </button>
+
+            {/* Explicit dismiss: pause and end the session (distinct from auto-hide). */}
+            <button
+              type="button"
+              onClick={p.dismiss}
+              aria-label="Close player"
+              className="tap-target grid h-11 w-11 place-items-center rounded-full text-muted hover:text-ink"
+            >
+              <X size={18} aria-hidden />
+            </button>
           </div>
-
-          {/* Primary transport. */}
-          <div className="flex items-center gap-1">
-            <SkipButton delta={-15} />
-            <PlayPauseButton />
-            <SkipButton delta={30} />
-            <NextButton />
-          </div>
-
-          {/* Secondary controls: inline popovers on desktop. */}
-          <div className="hidden items-center gap-1.5 md:flex">
-            <SpeedControl openUp />
-            <VolumeControl openUp />
-            <SleepTimerControl openUp />
-            <ChaptersControl openUp />
-          </div>
-
-          {/* Mobile: a single More button opens the bottom sheet. */}
-          <button
-            ref={moreRef}
-            type="button"
-            onClick={() => setSheetOpen(true)}
-            aria-haspopup="dialog"
-            aria-expanded={sheetOpen}
-            aria-label="More player controls"
-            className={`tap-target grid h-11 w-11 place-items-center rounded-full md:hidden ${
-              p.sleep != null ? "text-accent" : "text-ink hover:text-accent"
-            }`}
-          >
-            <ChevronUp size={20} aria-hidden />
-          </button>
-
-          {/* Explicit dismiss: pause and end the session (distinct from auto-hide). */}
-          <button
-            type="button"
-            onClick={p.dismiss}
-            aria-label="Close player"
-            className="tap-target grid h-11 w-11 place-items-center rounded-full text-muted hover:text-ink"
-          >
-            <X size={18} aria-hidden />
-          </button>
         </div>
-      </div>
 
         {sheetOpen ? <DockSheet onClose={() => setSheetOpen(false)} returnFocus={moreRef} /> : null}
       </div>
@@ -264,7 +273,9 @@ function DockSheet({
                       i === curChapIdx ? "text-accent" : "text-ink"
                     }`}
                   >
-                    <span className="font-mono text-xs tabular-nums text-accent">{formatDuration(c.start)}</span>
+                    <span className="font-mono text-xs tabular-nums text-accent">
+                      {formatDuration(c.start)}
+                    </span>
                     <span className="truncate">{c.title}</span>
                   </button>
                 </li>

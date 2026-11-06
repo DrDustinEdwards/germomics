@@ -47,32 +47,156 @@ const PROMPT_SEO =
   'engaging, first-person plural voice"}. Ground every claim in the transcript; invent nothing.';
 
 const settings = [
-  ["site.tagline", "The purple stain, retold", "string", "site", "Site tagline", "Short hero eyebrow line."],
-  ["site.base_url", "", "string", "site", "Canonical base URL", "Non-secret canonical/OG origin. Empty means use the request origin."],
-  ["contact.address", JSON.stringify({ streetAddress: "Box T-0100", locality: "Stephenville", region: "TX", postalCode: "76402", country: "US" }), "json", "contact", "Postal address (structured)", "Used in schema.org PostalAddress."],
-  ["contact.address_line", "Box T-0100, Stephenville, TX 76402", "string", "contact", "Postal address (one line)", "Shown on the privacy page and any newsletter footer."],
+  [
+    "site.tagline",
+    "The purple stain, retold",
+    "string",
+    "site",
+    "Site tagline",
+    "Short hero eyebrow line.",
+  ],
+  [
+    "site.base_url",
+    "",
+    "string",
+    "site",
+    "Canonical base URL",
+    "Non-secret canonical/OG origin. Empty means use the request origin.",
+  ],
+  [
+    "contact.address",
+    JSON.stringify({
+      streetAddress: "Box T-0100",
+      locality: "Stephenville",
+      region: "TX",
+      postalCode: "76402",
+      country: "US",
+    }),
+    "json",
+    "contact",
+    "Postal address (structured)",
+    "Used in schema.org PostalAddress.",
+  ],
+  [
+    "contact.address_line",
+    "Box T-0100, Stephenville, TX 76402",
+    "string",
+    "contact",
+    "Postal address (one line)",
+    "Shown on the privacy page and any newsletter footer.",
+  ],
   // Socials: handles only (URLs built in seo.ts socialSameAs). twitter/instagram set live in D1;
   // facebook ships via migration 0007. INSERT OR IGNORE never clobbers a live-edited row.
-  ["social.facebook", "Germomics", "string", "social", "Facebook handle", "Optional. Leave blank to omit."],
-  ["social.twitter", "Germomics", "string", "social", "X / Twitter handle", "Optional. Leave blank to omit."],
-  ["social.instagram", "Germomics", "string", "social", "Instagram handle", "Optional. Leave blank to omit."],
-  ["ai.daily_cap", "100", "number", "ai", "AI daily cap", "Max drafting sessions started per day across the admin."],
-  ["ratelimit.ai", "15", "number", "ratelimit", "Rate limit: /admin/ai", "Requests per minute per IP."],
-  ["ratelimit.auth", "30", "number", "ratelimit", "Rate limit: /api/auth", "Requests per minute per IP."],
-  ["ratelimit.admin", "150", "number", "ratelimit", "Rate limit: /admin", "Requests per minute per IP."],
-  ["ai.prompt.system", SYSTEM_BASE, "markdown", "ai-prompts", "AI system prompt", "Base system prompt for all generators."],
-  ["ai.prompt.style", STYLE_RULE, "markdown", "ai-prompts", "AI style rule", "House no-em-dash / no-AI-tells rule, appended to the system prompt."],
-  ["ai.prompt.shownotes", PROMPT_SHOWNOTES, "markdown", "ai-prompts", "AI prompt: show notes", "Instruction for the show-notes generator (transcript appended at run time)."],
-  ["ai.prompt.chapters", PROMPT_CHAPTERS, "markdown", "ai-prompts", "AI prompt: chapters", "Instruction for the chapters generator."],
-  ["ai.prompt.seo", PROMPT_SEO, "markdown", "ai-prompts", "AI prompt: SEO", "Instruction for the SEO generator."],
+  [
+    "social.facebook",
+    "Germomics",
+    "string",
+    "social",
+    "Facebook handle",
+    "Optional. Leave blank to omit.",
+  ],
+  [
+    "social.twitter",
+    "Germomics",
+    "string",
+    "social",
+    "X / Twitter handle",
+    "Optional. Leave blank to omit.",
+  ],
+  [
+    "social.instagram",
+    "Germomics",
+    "string",
+    "social",
+    "Instagram handle",
+    "Optional. Leave blank to omit.",
+  ],
+  [
+    "ai.daily_cap",
+    "100",
+    "number",
+    "ai",
+    "AI daily cap",
+    "Max drafting sessions started per day across the admin.",
+  ],
+  [
+    "ratelimit.ai",
+    "15",
+    "number",
+    "ratelimit",
+    "Rate limit: /admin/ai",
+    "Requests per minute per IP.",
+  ],
+  [
+    "ratelimit.auth",
+    "30",
+    "number",
+    "ratelimit",
+    "Rate limit: /api/auth",
+    "Requests per minute per IP.",
+  ],
+  [
+    "ratelimit.admin",
+    "150",
+    "number",
+    "ratelimit",
+    "Rate limit: /admin",
+    "Requests per minute per IP.",
+  ],
+  [
+    "ai.prompt.system",
+    SYSTEM_BASE,
+    "markdown",
+    "ai-prompts",
+    "AI system prompt",
+    "Base system prompt for all generators.",
+  ],
+  [
+    "ai.prompt.style",
+    STYLE_RULE,
+    "markdown",
+    "ai-prompts",
+    "AI style rule",
+    "House no-em-dash / no-AI-tells rule, appended to the system prompt.",
+  ],
+  [
+    "ai.prompt.shownotes",
+    PROMPT_SHOWNOTES,
+    "markdown",
+    "ai-prompts",
+    "AI prompt: show notes",
+    "Instruction for the show-notes generator (transcript appended at run time).",
+  ],
+  [
+    "ai.prompt.chapters",
+    PROMPT_CHAPTERS,
+    "markdown",
+    "ai-prompts",
+    "AI prompt: chapters",
+    "Instruction for the chapters generator.",
+  ],
+  [
+    "ai.prompt.seo",
+    PROMPT_SEO,
+    "markdown",
+    "ai-prompts",
+    "AI prompt: SEO",
+    "Instruction for the SEO generator.",
+  ],
 ];
 
 // ----- snippets (content_blocks kind=snippet, instant) -----------------------
-const CHOLERA = "John Snow's map of the Broad Street outbreak: deaths clustered around a single pump, the founding case of epidemiology and a Vibrio cholerae story.";
-const FLU = "The three waves of the 1918 H1N1 pandemic: mortality peaked sharply in the deadly autumn wave, a defining example of viral pandemic dynamics.";
+const CHOLERA =
+  "John Snow's map of the Broad Street outbreak: deaths clustered around a single pump, the founding case of epidemiology and a Vibrio cholerae story.";
+const FLU =
+  "The three waves of the 1918 H1N1 pandemic: mortality peaked sharply in the deadly autumn wave, a defining example of viral pandemic dynamics.";
 
 const snippets = [
-  ["snippet:footer.tagline", "Footer tagline", "a microbiology and history podcast and writing project."],
+  [
+    "snippet:footer.tagline",
+    "Footer tagline",
+    "a microbiology and history podcast and writing project.",
+  ],
   ["snippet:nav.episodes", "Nav: Episodes", "Episodes"],
   ["snippet:nav.writing", "Nav: Writing", "Writing"],
   ["snippet:nav.archive", "Nav: Archive", "Archive"],
@@ -87,20 +211,44 @@ const snippets = [
   // nav.contact + empty.posts/soundbites/subscribers ship via migration 0007.
   ["snippet:nav.contact", "Nav: Contact", "Contact"],
   ["snippet:empty.people", "Empty: people", "No people yet. Create one on the right."],
-  ["snippet:empty.versions", "Empty: versions", "No saved versions yet. They are snapshotted on each save."],
+  [
+    "snippet:empty.versions",
+    "Empty: versions",
+    "No saved versions yet. They are snapshotted on each save.",
+  ],
   ["snippet:empty.scores", "Empty: scores", "No scores yet. Be the first."],
   ["snippet:empty.posts", "Empty: posts", "No posts match these filters."],
   ["snippet:empty.soundbites", "Empty: soundbites", "No soundbites yet. Create one on the right."],
   ["snippet:empty.subscribers", "Empty: subscribers", "No subscribers yet."],
   ["snippet:meta.home_title", "Meta: home title", "Germomics · microbiology & history"],
-  ["snippet:meta.home_description", "Meta: home description", "A mix of microbiology and history, this series connects different aspects of modern life and society to microbes, bacteria, viruses, and parasites through seemingly unconnected natural events, scientific discoveries, and human inventions."],
+  [
+    "snippet:meta.home_description",
+    "Meta: home description",
+    "A mix of microbiology and history, this series connects different aspects of modern life and society to microbes, bacteria, viruses, and parasites through seemingly unconnected natural events, scientific discoveries, and human inventions.",
+  ],
   ["snippet:meta.title_template", "Meta: title template", "{title} · Germomics"],
   ["snippet:dataset.cholera-soho-1854", "Dataset: cholera", CHOLERA],
   ["snippet:dataset.influenza-1918", "Dataset: 1918 flu", FLU],
-  ["snippet:ai.error.not_configured", "AI error: not configured", "AI drafting is not set up. Set the AI_ROUTINE_URL and AI_ROUTINE_TOKEN worker secrets."],
-  ["snippet:ai.error.rate_limit", "AI error: rate limit", "Too many drafting sessions this hour. Try again later."],
-  ["snippet:ai.error.no_transcript", "AI error: no transcript", "This episode has no transcript yet. Add one first."],
-  ["snippet:ai.error.daily_cap", "AI error: daily cap", "Daily AI limit reached. Try again tomorrow."],
+  [
+    "snippet:ai.error.not_configured",
+    "AI error: not configured",
+    "AI drafting is not set up. Set the AI_ROUTINE_URL and AI_ROUTINE_TOKEN worker secrets.",
+  ],
+  [
+    "snippet:ai.error.rate_limit",
+    "AI error: rate limit",
+    "Too many drafting sessions this hour. Try again later.",
+  ],
+  [
+    "snippet:ai.error.no_transcript",
+    "AI error: no transcript",
+    "This episode has no transcript yet. Add one first.",
+  ],
+  [
+    "snippet:ai.error.daily_cap",
+    "AI error: daily cap",
+    "Daily AI limit reached. Try again tomorrow.",
+  ],
 ];
 
 // ----- pages (content_blocks kind=page, status=published) --------------------

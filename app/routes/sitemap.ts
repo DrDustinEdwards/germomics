@@ -38,11 +38,13 @@ export async function loader({ context }: Route.LoaderArgs) {
     [
       ...STATIC_PATHS.map((p) => ({ loc: `${SITE_ORIGIN}/${p}` })),
       ...seasons.map((s) => ({ loc: `${SITE_ORIGIN}/season/${s}` })),
-      ...posts.filter((post) => !post.noindex).map((post) => ({
-        loc: `${SITE_ORIGIN}/${post.slug}`,
-        lastmod: isoDay(post.updatedAt) ?? isoDay(post.publishedAt),
-        images: images.get(post.slug)?.map(absolute),
-      })),
+      ...posts
+        .filter((post) => !post.noindex)
+        .map((post) => ({
+          loc: `${SITE_ORIGIN}/${post.slug}`,
+          lastmod: isoDay(post.updatedAt) ?? isoDay(post.publishedAt),
+          images: images.get(post.slug)?.map(absolute),
+        })),
     ],
     { trailingNewline: false },
   );

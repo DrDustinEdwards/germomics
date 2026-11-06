@@ -13,7 +13,10 @@ async function clearKv() {
 }
 
 const hit = (path: string, ip: string) =>
-  enforceRateLimit(e, new Request(`https://germomics.com${path}`, { headers: { "cf-connecting-ip": ip } }));
+  enforceRateLimit(
+    e,
+    new Request(`https://germomics.com${path}`, { headers: { "cf-connecting-ip": ip } }),
+  );
 
 beforeAll(() => applyMigrations(e.DB));
 beforeEach(clearKv);

@@ -5,10 +5,10 @@ foxhound's `docs/research/baseline.md`. Nothing in the app changed and no test w
 
 ## Test suite
 
-| What | Command | Result |
-|------|---------|--------|
-| Tests | `npx vitest run` | 9 files, 80 tests passed, 8.4 s in Vitest (11 s wall) |
-| Pool | `vitest.config.ts` | `@cloudflare/vitest-pool-workers` (Miniflare), because `sanitize.server.ts` needs the Workers `HTMLRewriter` |
+| What  | Command            | Result                                                                                                       |
+| ----- | ------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Tests | `npx vitest run`   | 9 files, 80 tests passed, 8.4 s in Vitest (11 s wall)                                                        |
+| Pool  | `vitest.config.ts` | `@cloudflare/vitest-pool-workers` (Miniflare), because `sanitize.server.ts` needs the Workers `HTMLRewriter` |
 
 ## Mutation testing (StrykerJS 9.6.1)
 
@@ -17,25 +17,25 @@ Installed per run with `npm i --no-save`; no package.json or lockfile edit. Conf
 `ignoreStatic: true`, concurrency 4. Mutated: `app/lib/**`, `app/db/**`, `workers/**` (43 files). Four chunks,
 each pushed to the branch `results/germomics-mutation-baseline` (`chunks/`) when it finished:
 
-| Chunk | Files | Run time |
-|-------|-------|----------|
-| db | `app/db/**` | 55 s |
-| carrel | `app/lib/carrel/**`, `workers/**` | 4 min 10 s |
+| Chunk   | Files                                              | Run time   |
+| ------- | -------------------------------------------------- | ---------- |
+| db      | `app/db/**`                                        | 55 s       |
+| carrel  | `app/lib/carrel/**`, `workers/**`                  | 4 min 10 s |
 | content | posts, content, rss, sanitize, seo, discovery, vtt | 2 min 15 s |
-| rest | every other `app/lib/*.ts` | 1 min 32 s |
+| rest    | every other `app/lib/*.ts`                         | 1 min 32 s |
 
 No test file asserts on raw source text, so none had to be left out of the mutation run.
 
 ### Score
 
-| Status | Mutants |
-|--------|---------|
-| Killed | 455 |
-| Timeout | 0 |
-| Survived | 239 |
-| No coverage | 2,324 |
-| Ignored (static) | 589 |
-| Valid (killed + survived + no coverage) | 3,018 |
+| Status                                  | Mutants |
+| --------------------------------------- | ------- |
+| Killed                                  | 455     |
+| Timeout                                 | 0       |
+| Survived                                | 239     |
+| No coverage                             | 2,324   |
+| Ignored (static)                        | 589     |
+| Valid (killed + survived + no coverage) | 3,018   |
 
 - **Mutation score: 15.08%** (455 of 3,018).
 - Score over covered code: 65.56% (455 of 694).
@@ -48,51 +48,51 @@ No test file asserts on raw source text, so none had to be left out of the mutat
 
 ### Per-file table
 
-| File | Mutants | Killed | Survived | No coverage | Score |
-|---|---|---|---|---|---|
-| app/db/index.server.ts | 2 | 1 | 1 | 0 | 50.00% |
-| app/db/schema.ts | 28 | 2 | 26 | 0 | 7.14% |
-| app/lib/access.server.ts | 64 | 50 | 13 | 1 | 78.13% |
-| app/lib/admin.server.ts | 39 | 7 | 0 | 32 | 17.95% |
-| app/lib/ai.server.ts | 196 | 0 | 0 | 196 | 0.00% |
-| app/lib/apple-categories.ts | 111 | 0 | 0 | 111 | 0.00% |
-| app/lib/backup-checks.ts | 48 | 43 | 4 | 1 | 89.58% |
-| app/lib/backup.server.ts | 20 | 18 | 1 | 1 | 90.00% |
-| app/lib/carrel/adapter.server.ts | 280 | 155 | 89 | 36 | 55.36% |
-| app/lib/carrel/handler.server.ts | 3 | 0 | 0 | 3 | 0.00% |
-| app/lib/carrel/source.ts | 91 | 55 | 27 | 9 | 60.44% |
-| app/lib/content-defaults.ts | 0 | 0 | 0 | 0 | n/a |
-| app/lib/content.server.ts | 109 | 0 | 0 | 109 | 0.00% |
-| app/lib/content.ts | 6 | 0 | 0 | 6 | 0.00% |
-| app/lib/context.server.ts | 4 | 0 | 0 | 4 | 0.00% |
-| app/lib/datasets.server.ts | 0 | 0 | 0 | 0 | n/a |
-| app/lib/discovery.server.ts | 132 | 0 | 0 | 132 | 0.00% |
-| app/lib/edge-cache.server.ts | 163 | 0 | 0 | 163 | 0.00% |
-| app/lib/format.ts | 105 | 0 | 0 | 105 | 0.00% |
-| app/lib/games.server.ts | 9 | 0 | 0 | 9 | 0.00% |
-| app/lib/image-client.ts | 49 | 0 | 0 | 49 | 0.00% |
-| app/lib/map.ts | 13 | 13 | 0 | 0 | 100.00% |
-| app/lib/peaks.ts | 37 | 0 | 0 | 37 | 0.00% |
-| app/lib/people.server.ts | 125 | 0 | 0 | 125 | 0.00% |
-| app/lib/posts.server.ts | 140 | 0 | 0 | 140 | 0.00% |
-| app/lib/posts.ts | 23 | 0 | 0 | 23 | 0.00% |
-| app/lib/preview.server.ts | 30 | 0 | 0 | 30 | 0.00% |
-| app/lib/r2.server.ts | 35 | 5 | 14 | 16 | 14.29% |
-| app/lib/rss.server.ts | 111 | 0 | 0 | 111 | 0.00% |
-| app/lib/sanitize.server.ts | 89 | 71 | 16 | 2 | 79.78% |
-| app/lib/scores.server.ts | 49 | 0 | 0 | 49 | 0.00% |
-| app/lib/security.server.ts | 65 | 0 | 0 | 65 | 0.00% |
-| app/lib/sentry.server.ts | 54 | 0 | 0 | 54 | 0.00% |
-| app/lib/seo.ts | 308 | 35 | 48 | 225 | 11.36% |
-| app/lib/show.server.ts | 28 | 0 | 0 | 28 | 0.00% |
-| app/lib/site.ts | 8 | 0 | 0 | 8 | 0.00% |
-| app/lib/soundbites.server.ts | 26 | 0 | 0 | 26 | 0.00% |
-| app/lib/subscribe.ts | 25 | 0 | 0 | 25 | 0.00% |
-| app/lib/theme.ts | 30 | 0 | 0 | 30 | 0.00% |
-| app/lib/versions.ts | 158 | 0 | 0 | 158 | 0.00% |
-| app/lib/vtt.ts | 158 | 0 | 0 | 158 | 0.00% |
-| app/lib/waveform-client.ts | 25 | 0 | 0 | 25 | 0.00% |
-| workers/app.ts | 22 | 0 | 0 | 22 | 0.00% |
+| File                             | Mutants | Killed | Survived | No coverage | Score   |
+| -------------------------------- | ------- | ------ | -------- | ----------- | ------- |
+| app/db/index.server.ts           | 2       | 1      | 1        | 0           | 50.00%  |
+| app/db/schema.ts                 | 28      | 2      | 26       | 0           | 7.14%   |
+| app/lib/access.server.ts         | 64      | 50     | 13       | 1           | 78.13%  |
+| app/lib/admin.server.ts          | 39      | 7      | 0        | 32          | 17.95%  |
+| app/lib/ai.server.ts             | 196     | 0      | 0        | 196         | 0.00%   |
+| app/lib/apple-categories.ts      | 111     | 0      | 0        | 111         | 0.00%   |
+| app/lib/backup-checks.ts         | 48      | 43     | 4        | 1           | 89.58%  |
+| app/lib/backup.server.ts         | 20      | 18     | 1        | 1           | 90.00%  |
+| app/lib/carrel/adapter.server.ts | 280     | 155    | 89       | 36          | 55.36%  |
+| app/lib/carrel/handler.server.ts | 3       | 0      | 0        | 3           | 0.00%   |
+| app/lib/carrel/source.ts         | 91      | 55     | 27       | 9           | 60.44%  |
+| app/lib/content-defaults.ts      | 0       | 0      | 0        | 0           | n/a     |
+| app/lib/content.server.ts        | 109     | 0      | 0        | 109         | 0.00%   |
+| app/lib/content.ts               | 6       | 0      | 0        | 6           | 0.00%   |
+| app/lib/context.server.ts        | 4       | 0      | 0        | 4           | 0.00%   |
+| app/lib/datasets.server.ts       | 0       | 0      | 0        | 0           | n/a     |
+| app/lib/discovery.server.ts      | 132     | 0      | 0        | 132         | 0.00%   |
+| app/lib/edge-cache.server.ts     | 163     | 0      | 0        | 163         | 0.00%   |
+| app/lib/format.ts                | 105     | 0      | 0        | 105         | 0.00%   |
+| app/lib/games.server.ts          | 9       | 0      | 0        | 9           | 0.00%   |
+| app/lib/image-client.ts          | 49      | 0      | 0        | 49          | 0.00%   |
+| app/lib/map.ts                   | 13      | 13     | 0        | 0           | 100.00% |
+| app/lib/peaks.ts                 | 37      | 0      | 0        | 37          | 0.00%   |
+| app/lib/people.server.ts         | 125     | 0      | 0        | 125         | 0.00%   |
+| app/lib/posts.server.ts          | 140     | 0      | 0        | 140         | 0.00%   |
+| app/lib/posts.ts                 | 23      | 0      | 0        | 23          | 0.00%   |
+| app/lib/preview.server.ts        | 30      | 0      | 0        | 30          | 0.00%   |
+| app/lib/r2.server.ts             | 35      | 5      | 14       | 16          | 14.29%  |
+| app/lib/rss.server.ts            | 111     | 0      | 0        | 111         | 0.00%   |
+| app/lib/sanitize.server.ts       | 89      | 71     | 16       | 2           | 79.78%  |
+| app/lib/scores.server.ts         | 49      | 0      | 0        | 49          | 0.00%   |
+| app/lib/security.server.ts       | 65      | 0      | 0        | 65          | 0.00%   |
+| app/lib/sentry.server.ts         | 54      | 0      | 0        | 54          | 0.00%   |
+| app/lib/seo.ts                   | 308     | 35     | 48       | 225         | 11.36%  |
+| app/lib/show.server.ts           | 28      | 0      | 0        | 28          | 0.00%   |
+| app/lib/site.ts                  | 8       | 0      | 0        | 8           | 0.00%   |
+| app/lib/soundbites.server.ts     | 26      | 0      | 0        | 26          | 0.00%   |
+| app/lib/subscribe.ts             | 25      | 0      | 0        | 25          | 0.00%   |
+| app/lib/theme.ts                 | 30      | 0      | 0        | 30          | 0.00%   |
+| app/lib/versions.ts              | 158     | 0      | 0        | 158         | 0.00%   |
+| app/lib/vtt.ts                   | 158     | 0      | 0        | 158         | 0.00%   |
+| app/lib/waveform-client.ts       | 25      | 0      | 0        | 25          | 0.00%   |
+| workers/app.ts                   | 22      | 0      | 0        | 22          | 0.00%   |
 
 ## Coverage follow-up (job_4a1b21f87c0d)
 
@@ -102,24 +102,24 @@ new test kills at least one mutant in that run, which is its planted break seen 
 none was planted by hand and is named below. Mutant counts can differ from the baseline where a file changed
 since 166ff3b or where newly covered static code is now counted.
 
-| Batch | File | Baseline score | New score | Mutants (killed / survived / no coverage) |
-|---|---|---|---|---|
-| 1 auth | app/lib/access.server.ts | 78.13% | 90.63% | 64 (58 / 6 / 0) |
-| 1 auth | app/lib/security.server.ts | 0.00% | 98.84% | 86 (85 / 1 / 0) |
-| 1 auth | app/lib/preview.server.ts | 0.00% | 86.67% | 30 (26 / 3 / 1) |
-| 2 Carrel | app/lib/carrel/adapter.server.ts | 55.36% | 92.52% | 294 (272 / 18 / 4) |
-| 2 Carrel | app/lib/carrel/source.ts | 60.44% | 92.31% | 91 (84 / 7 / 0) |
-| 2 Carrel | app/lib/carrel/handler.server.ts | 0.00% | 66.67% | 3 (2 / 1 / 0) |
-| 3 D1 writers | app/lib/scores.server.ts | 0.00% | 100.00% | 49 (49 / 0 / 0) |
-| 3 D1 writers | app/lib/admin.server.ts | 17.95% | 97.44% | 39 (38 / 1 / 0) |
-| 3 D1 writers | app/lib/people.server.ts | 0.00% | 92.00% | 125 (115 / 7 / 3) |
-| 3 D1 writers | app/lib/soundbites.server.ts | 0.00% | 100.00% | 26 (26 / 0 / 0) |
-| 3 D1 writers | app/lib/show.server.ts | 0.00% | 100.00% | 8 (8 / 0 / 0) |
-| 3 D1 writers | app/lib/content.server.ts | 0.00% | 87.16% | 109 (95 / 14 / 0) |
-| 4 editor | app/routes/admin.posts.$id.tsx (action) | not mutated | 12 of 12 plants caught | hand-planted |
-| 4 editor | app/routes/admin.upload.ts | not mutated | 5 of 5 plants caught | hand-planted |
-| 5 public reads | app/lib/edge-cache.server.ts | 0.00% | 91.82% | 159 (146 / 13 / 0) |
-| 5 public reads | app/lib/posts.server.ts | 0.00% | 86.96% | 138 (120 / 13 / 5) |
+| Batch          | File                                    | Baseline score | New score              | Mutants (killed / survived / no coverage) |
+| -------------- | --------------------------------------- | -------------- | ---------------------- | ----------------------------------------- |
+| 1 auth         | app/lib/access.server.ts                | 78.13%         | 90.63%                 | 64 (58 / 6 / 0)                           |
+| 1 auth         | app/lib/security.server.ts              | 0.00%          | 98.84%                 | 86 (85 / 1 / 0)                           |
+| 1 auth         | app/lib/preview.server.ts               | 0.00%          | 86.67%                 | 30 (26 / 3 / 1)                           |
+| 2 Carrel       | app/lib/carrel/adapter.server.ts        | 55.36%         | 92.52%                 | 294 (272 / 18 / 4)                        |
+| 2 Carrel       | app/lib/carrel/source.ts                | 60.44%         | 92.31%                 | 91 (84 / 7 / 0)                           |
+| 2 Carrel       | app/lib/carrel/handler.server.ts        | 0.00%          | 66.67%                 | 3 (2 / 1 / 0)                             |
+| 3 D1 writers   | app/lib/scores.server.ts                | 0.00%          | 100.00%                | 49 (49 / 0 / 0)                           |
+| 3 D1 writers   | app/lib/admin.server.ts                 | 17.95%         | 97.44%                 | 39 (38 / 1 / 0)                           |
+| 3 D1 writers   | app/lib/people.server.ts                | 0.00%          | 92.00%                 | 125 (115 / 7 / 3)                         |
+| 3 D1 writers   | app/lib/soundbites.server.ts            | 0.00%          | 100.00%                | 26 (26 / 0 / 0)                           |
+| 3 D1 writers   | app/lib/show.server.ts                  | 0.00%          | 100.00%                | 8 (8 / 0 / 0)                             |
+| 3 D1 writers   | app/lib/content.server.ts               | 0.00%          | 87.16%                 | 109 (95 / 14 / 0)                         |
+| 4 editor       | app/routes/admin.posts.$id.tsx (action) | not mutated    | 12 of 12 plants caught | hand-planted                              |
+| 4 editor       | app/routes/admin.upload.ts              | not mutated    | 5 of 5 plants caught   | hand-planted                              |
+| 5 public reads | app/lib/edge-cache.server.ts            | 0.00%          | 91.82%                 | 159 (146 / 13 / 0)                        |
+| 5 public reads | app/lib/posts.server.ts                 | 0.00%          | 86.96%                 | 138 (120 / 13 / 5)                        |
 
 Survivors left on purpose in batch 1: in `access.server.ts` the key-set cache (`if (!set)`), the
 early `if (!token)` return and the catch body are equivalent mutants (jose throws on the same inputs and the
@@ -148,7 +148,6 @@ episodes, the guid regenerated on republish, the empty schedule time accepted, r
 delete redirecting elsewhere, non-numeric person ids kept; and in the upload route the post id cleaner
 loosened to allow `.` and `/`, the image type check skipped, the 25 MB limit made exclusive, images written to
 the audio bucket, and empty files accepted.
-
 
 ### Second bug, and where the job stopped
 
@@ -184,25 +183,25 @@ Left, by mutant count (baseline no-coverage), not started: `seo.ts` (225), `ai.s
 Tests for the files still at or near 0% after the high-risk batches. Same method: Stryker 9.6.1 (`--no-save`) on
 each batch's files with the full suite, new score next to the baseline.
 
-| Batch | File | Baseline score | New score | Mutants (killed / survived / no coverage) |
-|---|---|---|---|---|
-| 6 | app/lib/seo.ts | 11.36% | 87.34% | 308 (269 / 36 / 3) |
-| 6 | app/lib/versions.ts | 0.00% | 95.88% | 97 (93 / 4 / 0) |
-| 6 | app/lib/discovery.server.ts | 0.00% | 78.03% | 132 (103 / 27 / 2) |
-| 6 | app/lib/rss.server.ts | 0.00% | 87.39% | 111 (97 / 12 / 2) |
-| 6 | app/lib/sentry.server.ts | 0.00% | 92.59% | 54 (50 / 3 / 1) |
-| 6 | app/lib/peaks.ts | 0.00% | 91.89% | 37 (34 / 3 / 0) |
-| 6 | app/lib/theme.ts | 0.00% | 100.00% | 28 (28 / 0 / 0) |
-| 6 | app/lib/posts.ts | 0.00% | 86.96% | 23 (20 / 3 / 0) |
-| 6 | app/lib/site.ts | 0.00% | 88.89% | 9 (8 / 1 / 0) |
-| 6 | app/lib/content.ts | 0.00% | 100.00% | 6 (6 / 0 / 0) |
-| 6 | app/lib/datasets.server.ts | n/a | 100.00% | 5 (5 / 0 / 0) |
-| 6 | app/lib/image-client.ts | 0.00% | 93.88% | 49 (46 / 3 / 0) |
-| 6 | app/lib/waveform-client.ts | 0.00% | 100.00% | 25 (25 / 0 / 0) |
-| 6 | app/lib/content-defaults.ts | n/a | 100.00% | 72 (72 / 0 / 0) |
-| 6 | app/db/schema.ts | 7.14% | 46.18% | 275 (127 / 148 / 0) |
-| 6 | app/db/index.server.ts | 50.00% | 100.00% | 2 (2 / 0 / 0) |
-| 6 | app/lib/apple-categories.ts, app/lib/subscribe.ts | 0.00% | not scored | constants only, see below |
+| Batch | File                                              | Baseline score | New score  | Mutants (killed / survived / no coverage) |
+| ----- | ------------------------------------------------- | -------------- | ---------- | ----------------------------------------- |
+| 6     | app/lib/seo.ts                                    | 11.36%         | 87.34%     | 308 (269 / 36 / 3)                        |
+| 6     | app/lib/versions.ts                               | 0.00%          | 95.88%     | 97 (93 / 4 / 0)                           |
+| 6     | app/lib/discovery.server.ts                       | 0.00%          | 78.03%     | 132 (103 / 27 / 2)                        |
+| 6     | app/lib/rss.server.ts                             | 0.00%          | 87.39%     | 111 (97 / 12 / 2)                         |
+| 6     | app/lib/sentry.server.ts                          | 0.00%          | 92.59%     | 54 (50 / 3 / 1)                           |
+| 6     | app/lib/peaks.ts                                  | 0.00%          | 91.89%     | 37 (34 / 3 / 0)                           |
+| 6     | app/lib/theme.ts                                  | 0.00%          | 100.00%    | 28 (28 / 0 / 0)                           |
+| 6     | app/lib/posts.ts                                  | 0.00%          | 86.96%     | 23 (20 / 3 / 0)                           |
+| 6     | app/lib/site.ts                                   | 0.00%          | 88.89%     | 9 (8 / 1 / 0)                             |
+| 6     | app/lib/content.ts                                | 0.00%          | 100.00%    | 6 (6 / 0 / 0)                             |
+| 6     | app/lib/datasets.server.ts                        | n/a            | 100.00%    | 5 (5 / 0 / 0)                             |
+| 6     | app/lib/image-client.ts                           | 0.00%          | 93.88%     | 49 (46 / 3 / 0)                           |
+| 6     | app/lib/waveform-client.ts                        | 0.00%          | 100.00%    | 25 (25 / 0 / 0)                           |
+| 6     | app/lib/content-defaults.ts                       | n/a            | 100.00%    | 72 (72 / 0 / 0)                           |
+| 6     | app/db/schema.ts                                  | 7.14%          | 46.18%     | 275 (127 / 148 / 0)                       |
+| 6     | app/db/index.server.ts                            | 50.00%         | 100.00%    | 2 (2 / 0 / 0)                             |
+| 6     | app/lib/apple-categories.ts, app/lib/subscribe.ts | 0.00%          | not scored | constants only, see below                 |
 
 Reading the table:
 
@@ -245,12 +244,12 @@ meant to drop the empty line compares with `null`, not `""`).
 77 tests, keyed by file and test name; the full matrix (kills, unique kills, candidate kind, protected flag)
 is `docs/research/kill-matrix.json`. Raw chunk reports are on the results branch.
 
-| Group | Tests | Of which protected |
-|-------|-------|--------------------|
-| Zero-kill | 10 | 3 |
-| Covered by others | 37 | 24 |
-| Unprotected zero-kill candidates | 7 | |
-| Unprotected covered-by-others candidates | 13 | |
+| Group                                    | Tests | Of which protected |
+| ---------------------------------------- | ----- | ------------------ |
+| Zero-kill                                | 10    | 3                  |
+| Covered by others                        | 37    | 24                 |
+| Unprotected zero-kill candidates         | 7     |                    |
+| Unprotected covered-by-others candidates | 13    |                    |
 
 Protected means the file or test name matches the keep rule (`--protected`) in the `report:mutation` script in `package.json`: security,
 auth, access, sanitizing and XSS, CSP, session, admin, backup and restore, secrets, and tests written for a
@@ -260,16 +259,16 @@ fixed bug. The match is a name heuristic that errs toward keeping.
 
 20 unprotected tests, in 3 files. By test file (protected counts in brackets), then the candidates:
 
-| Test file | Tests | Zero-kill (protected) | Covered by others (protected) |
-|---|---|---|---|
-| test/carrel.test.ts | 15 | 4 (1) | 3 (1) |
-| test/post-render.test.ts | 10 | 0 (0) | 7 (0) |
-| test/sanitize.test.ts | 12 | 0 (0) | 5 (5) |
-| test/csp-analytics.test.ts | 2 | 2 (2) | 0 (0) |
-| test/backup.integration.test.ts | 4 | 0 (0) | 3 (3) |
-| test/access.test.ts | 11 | 0 (0) | 5 (5) |
-| test/backup.test.ts | 13 | 0 (0) | 10 (10) |
-| test/map.test.ts | 10 | 4 (0) | 4 (0) |
+| Test file                       | Tests | Zero-kill (protected) | Covered by others (protected) |
+| ------------------------------- | ----- | --------------------- | ----------------------------- |
+| test/carrel.test.ts             | 15    | 4 (1)                 | 3 (1)                         |
+| test/post-render.test.ts        | 10    | 0 (0)                 | 7 (0)                         |
+| test/sanitize.test.ts           | 12    | 0 (0)                 | 5 (5)                         |
+| test/csp-analytics.test.ts      | 2     | 2 (2)                 | 0 (0)                         |
+| test/backup.integration.test.ts | 4     | 0 (0)                 | 3 (3)                         |
+| test/access.test.ts             | 11    | 0 (0)                 | 5 (5)                         |
+| test/backup.test.ts             | 13    | 0 (0)                 | 10 (10)                       |
+| test/map.test.ts                | 10    | 4 (0)                 | 4 (0)                         |
 
 - test/carrel.test.ts :: the guard: planted requests must be refused refuses a wrong key and no key (zero-kill)
 - test/carrel.test.ts :: the guard: planted requests must be refused refuses an unknown route (zero-kill)

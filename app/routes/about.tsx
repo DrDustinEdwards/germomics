@@ -15,7 +15,10 @@ import { AUTHOR } from "~/lib/about";
 export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "About Germomics" }];
   const { show, address, title, description } = loaderData;
-  return [...pageHead({ path: "/about", title, description }), jsonLd(buildOrganizationLd(show, { address }))];
+  return [
+    ...pageHead({ path: "/about", title, description }),
+    jsonLd(buildOrganizationLd(show, { address })),
+  ];
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {

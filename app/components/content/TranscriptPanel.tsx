@@ -101,7 +101,11 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
   }, [isThis, cues, hasNativeCue, p.audioRef]);
 
   // The active cue: the native track's while this episode plays, else (no VTTCue) the last cue the playhead passed.
-  const activeStart = !isThis ? null : hasNativeCue ? nativeStart : playheadCue(cues, p.currentTime);
+  const activeStart = !isThis
+    ? null
+    : hasNativeCue
+      ? nativeStart
+      : playheadCue(cues, p.currentTime);
 
   // Center the active cue WITHIN the transcript's own scroll box. Scrolls the container element only
   // (scrollBy on it), so the document/window is never moved; a no-op when the box can't scroll or the
@@ -121,9 +125,12 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
     programmaticScroll.current = true;
     container.scrollBy({ top: delta, behavior: reduce ? "auto" : "smooth" });
     if (scrollFlagTimer.current) window.clearTimeout(scrollFlagTimer.current);
-    scrollFlagTimer.current = window.setTimeout(() => {
-      programmaticScroll.current = false;
-    }, reduce ? 60 : 700);
+    scrollFlagTimer.current = window.setTimeout(
+      () => {
+        programmaticScroll.current = false;
+      },
+      reduce ? 60 : 700,
+    );
   }, []);
 
   // Keep the active line in view, but ONLY inside the transcript box and ONLY while the panel is open
@@ -174,7 +181,7 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
     // Timestamp = the cue the selection starts in, else the current playhead.
     let t = Math.floor(isThis ? p.currentTime : 0);
     const node: Node | null = sel?.anchorNode ?? null;
-    let el = node instanceof Element ? node : node?.parentElement ?? null;
+    let el = node instanceof Element ? node : (node?.parentElement ?? null);
     while (el && !el.getAttribute("data-cue")) el = el.parentElement;
     if (el) t = Math.floor(Number(el.getAttribute("data-cue")));
     const url = `${window.location.origin}/${track.slug}?t=${t}`;
@@ -197,11 +204,19 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
     ? paragraphs.filter((para) => para.some((c) => c.text.toLowerCase().includes(q)))
     : paragraphs;
   const matches = q
-    ? paragraphs.reduce((n, para) => n + para.filter((c) => c.text.toLowerCase().includes(q)).length, 0)
+    ? paragraphs.reduce(
+        (n, para) => n + para.filter((c) => c.text.toLowerCase().includes(q)).length,
+        0,
+      )
     : 0;
 
   // Each paragraph's chapter and speaker heading, shown only where they change.
-  const heads: { chap: number; showChapter: boolean; speaker: string | null; showSpeaker: boolean }[] = [];
+  const heads: {
+    chap: number;
+    showChapter: boolean;
+    speaker: string | null;
+    showSpeaker: boolean;
+  }[] = [];
   let lastChapter = -1;
   let lastSpeaker: string | null = null;
   for (const para of shown) {
@@ -220,7 +235,9 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5">
           <Search size={14} aria-hidden className="text-muted" />
-          <label htmlFor="transcript-search" className="sr-only">Search transcript</label>
+          <label htmlFor="transcript-search" className="sr-only">
+            Search transcript
+          </label>
           <input
             id="transcript-search"
             type="search"
@@ -256,10 +273,14 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
           return (
             <div key={pi}>
               {showChapter ? (
-                <p className="mb-1 mt-2 font-display text-sm font-semibold text-brand">{chapters[chap].title}</p>
+                <p className="mb-1 mt-2 font-display text-sm font-semibold text-brand">
+                  {chapters[chap].title}
+                </p>
               ) : null}
               {showSpeaker ? (
-                <p className="font-mono text-[11px] uppercase tracking-wide text-accent">{speaker}</p>
+                <p className="font-mono text-[11px] uppercase tracking-wide text-accent">
+                  {speaker}
+                </p>
               ) : null}
               <p className="leading-relaxed">
                 <button

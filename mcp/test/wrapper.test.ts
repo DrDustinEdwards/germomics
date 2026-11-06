@@ -10,7 +10,6 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, test } from "node:test";
 
-
 const config = JSON.parse(
   readFileSync(new URL("../wrangler.jsonc.example", import.meta.url), "utf8")
     .replace(/\/\*[\s\S]*?\*\//g, "")
@@ -37,15 +36,17 @@ describe("bindings", () => {
     assert.deepEqual(keys.sort(), ["durable_objects", "kv_namespaces", "r2_buckets", "services"]);
     assert.deepEqual(config.services, [{ binding: "SITE", service: "germomics" }]);
     // The one bucket is this server's own copy of its tool-call log (L6), never one of Germomics's.
-    assert.deepEqual(config.r2_buckets, [{ binding: "AUDIT_BUCKET", bucket_name: "germomics-admin-mcp-tool-calls" }]);
+    assert.deepEqual(config.r2_buckets, [
+      { binding: "AUDIT_BUCKET", bucket_name: "germomics-admin-mcp-tool-calls" },
+    ]);
     assert.deepEqual(
       config.kv_namespaces.map((k: { binding: string }) => k.binding),
       ["OAUTH_KV"],
     );
-    assert.deepEqual(
-      config.durable_objects.bindings.map((b: { name: string }) => b.name).sort(),
-      ["MCP_RATE_LIMIT", "TOOL_CALL_LOG"],
-    );
+    assert.deepEqual(config.durable_objects.bindings.map((b: { name: string }) => b.name).sort(), [
+      "MCP_RATE_LIMIT",
+      "TOOL_CALL_LOG",
+    ]);
   });
 });
 

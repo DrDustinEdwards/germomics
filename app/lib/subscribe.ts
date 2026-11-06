@@ -3,7 +3,17 @@
 // directories show under "More directories" on /subscribe. Both tiers stay in subscribe_links (and
 // thus Organization/PodcastSeries sameAs). The Android/Email/RSS mechanisms are NOT here (they are
 // feed redirects, not identity profiles) and live only on the /subscribe page.
-import { Podcast, Music, Music2, Radio, Antenna, Disc3, Library, Star, type LucideIcon } from "lucide-react";
+import {
+  Podcast,
+  Music,
+  Music2,
+  Radio,
+  Antenna,
+  Disc3,
+  Library,
+  Star,
+  type LucideIcon,
+} from "lucide-react";
 
 type SubTier = "primary" | "secondary";
 export type SubDest = { label: string; tier: SubTier; icon: LucideIcon };
@@ -19,6 +29,7 @@ export const SUBSCRIBE_DESTINATIONS: Record<string, SubDest> = {
   podchaser: { label: "Podchaser", tier: "secondary", icon: Star },
 };
 
-const keysOf = (tier: SubTier) => Object.keys(SUBSCRIBE_DESTINATIONS).filter((k) => SUBSCRIBE_DESTINATIONS[k].tier === tier);
+const keysOf = (tier: SubTier) =>
+  Object.keys(SUBSCRIBE_DESTINATIONS).filter((k) => SUBSCRIBE_DESTINATIONS[k].tier === tier);
 export const PRIMARY_KEYS = keysOf("primary");
 export const SECONDARY_KEYS = keysOf("secondary");

@@ -42,39 +42,73 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
 
   if (kind === "image") {
-    if (length > MAX_IMAGE) return Response.json({ ok: false, error: "Image exceeds 25 MB." }, { status: 413 });
+    if (length > MAX_IMAGE)
+      return Response.json({ ok: false, error: "Image exceeds 25 MB." }, { status: 413 });
     // Counted as it arrives, so a body longer than its Content-Length says is refused too.
     const bytes = await readCappedBytes(request, MAX_IMAGE);
     if (!bytes) return Response.json({ ok: false, error: "Image exceeds 25 MB." }, { status: 413 });
-    if (bytes.byteLength === 0) return Response.json({ ok: false, error: "No file received." }, { status: 400 });
+    if (bytes.byteLength === 0)
+      return Response.json({ ok: false, error: "No file received." }, { status: 400 });
     // The bytes are checked against the type (an SVG or anything unknown is refused), a HEIC becomes a JPEG, a location
     // is taken out and a camera-sized picture shrunk, as Carrel's uploads are.
     let prepared;
     try {
-      const input = { bytes, contentType: type, filename: name, alt: "", changeId: "", resize: true };
-      prepared = await prepareUpload(env.IMAGES, input, { resize: RESIZE, limits: { ...LIMITS, maxBytes: MAX_IMAGE } });
+      const input = {
+        bytes,
+        contentType: type,
+        filename: name,
+        alt: "",
+        changeId: "",
+        resize: true,
+      };
+      prepared = await prepareUpload(env.IMAGES, input, {
+        resize: RESIZE,
+        limits: { ...LIMITS, maxBytes: MAX_IMAGE },
+      });
     } catch (error) {
-      if (error instanceof RefusedError) return Response.json({ ok: false, error: error.message }, { status: 415 });
+      if (error instanceof RefusedError)
+        return Response.json({ ok: false, error: error.message }, { status: 415 });
       throw error;
     }
     const key = buildKey(`posts/${postId}`, prepared.filename);
-    const stored = await uploadImage(env, key, prepared.bytes, prepared.contentType, sizeMetadata(prepared));
+    const stored = await uploadImage(
+      env,
+      key,
+      prepared.bytes,
+      prepared.contentType,
+      sizeMetadata(prepared),
+    );
     // Into the media library too (Carrel's media page). The image is stored and its address works either way; a row
     // that could not be written is made by the next backfill (POST /admin/media/backfill).
     await recordUpload(env, key, prepared).catch((error) =>
       logEvent("media_record_failed", { key, error }, { level: "error" }),
     );
-    return Response.json({ ok: true, url: stored, contentType: prepared.contentType, name: prepared.filename, size: prepared.bytes.byteLength });
+    return Response.json({
+      ok: true,
+      url: stored,
+      contentType: prepared.contentType,
+      name: prepared.filename,
+      size: prepared.bytes.byteLength,
+    });
   }
 
   // Audio: R2 takes a stream only at a known length. Without a Content-Length there is none, and over the cap is refused
   // before a byte is read; FixedLengthStream fails the write if the body runs longer or shorter than it said.
   if (!Number.isSafeInteger(length) || length < 0) {
-    return Response.json({ ok: false, error: "The upload needs a Content-Length." }, { status: 411 });
+    return Response.json(
+      { ok: false, error: "The upload needs a Content-Length." },
+      { status: 411 },
+    );
   }
-  if (length > MAX_AUDIO) return Response.json({ ok: false, error: "Audio exceeds 100 MB." }, { status: 413 });
+  if (length > MAX_AUDIO)
+    return Response.json({ ok: false, error: "Audio exceeds 100 MB." }, { status: 413 });
   const key = buildKey(`episodes/${postId}`, name);
   const ct = type || "audio/mpeg";
-  const { url: stored, size } = await uploadAudio(env, key, request.body.pipeThrough(new FixedLengthStream(length)), ct);
+  const { url: stored, size } = await uploadAudio(
+    env,
+    key,
+    request.body.pipeThrough(new FixedLengthStream(length)),
+    ct,
+  );
   return Response.json({ ok: true, url: stored, size, contentType: ct, name });
 }

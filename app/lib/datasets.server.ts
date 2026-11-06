@@ -76,7 +76,8 @@ const DATASETS: Record<string, Dataset> = {
       landmarks: cholera.pumps.points,
       landmarkLabel: "Water pump",
       marked: "Pump 7: Broad Street",
-      legend: "Each dot is an address, its size the deaths Snow drew there (1 to 18). The squares are the 13 water pumps on his map; the filled one is the Broad Street pump.",
+      legend:
+        "Each dot is an address, its size the deaths Snow drew there (1 to 18). The squares are the 13 water pumps on his map; the filled one is the Broad Street pump.",
       source: cholera.map.source,
     },
     timeline: {
@@ -143,7 +144,11 @@ export function getDataset(slug: string): Dataset | null {
  * there wins. A row that still holds the placeholder migration 0005 seeded (SNIPPET_DEFAULTS), or no row at all,
  * gives the summary above, written to state only what the numbers show.
  */
-export function datasetSummary(snippets: Record<string, string>, slug: string, summary: string): string {
+export function datasetSummary(
+  snippets: Record<string, string>,
+  slug: string,
+  summary: string,
+): string {
   const key = `snippet:dataset.${slug}`;
   const stored = snippets[key];
   return stored === undefined || stored === SNIPPET_DEFAULTS[key] ? summary : stored;

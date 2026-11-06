@@ -14,11 +14,21 @@ export function CategoriesEditor({
   onChange: (next: PodcastCategory[]) => void;
 }) {
   // Pad to 3 editable slots.
-  const slots: PodcastCategory[] = Array.from({ length: SLOTS }, (_, i) => value[i] ?? { category: "" });
+  const slots: PodcastCategory[] = Array.from(
+    { length: SLOTS },
+    (_, i) => value[i] ?? { category: "" },
+  );
 
   function update(i: number, patch: Partial<PodcastCategory>) {
     const next = slots.map((s, idx) => (idx === i ? { ...s, ...patch } : s));
-    onChange(next.filter((s) => s.category).map((s) => ({ category: s.category, ...(s.subcategory ? { subcategory: s.subcategory } : {}) })));
+    onChange(
+      next
+        .filter((s) => s.category)
+        .map((s) => ({
+          category: s.category,
+          ...(s.subcategory ? { subcategory: s.subcategory } : {}),
+        })),
+    );
   }
 
   return (
@@ -36,7 +46,9 @@ export function CategoriesEditor({
             >
               <option value="">none</option>
               {APPLE_TOP_CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
             <select
@@ -48,13 +60,17 @@ export function CategoriesEditor({
             >
               <option value="">{subs.length ? "no subcategory" : "n/a"}</option>
               {subs.map((s) => (
-                <option key={s} value={s}>{s}</option>
+                <option key={s} value={s}>
+                  {s}
+                </option>
               ))}
             </select>
           </div>
         );
       })}
-      <p className="text-[11px] text-muted">Apple allows up to 3 categories; the first is primary.</p>
+      <p className="text-[11px] text-muted">
+        Apple allows up to 3 categories; the first is primary.
+      </p>
     </div>
   );
 }

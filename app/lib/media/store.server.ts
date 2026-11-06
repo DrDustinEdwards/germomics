@@ -5,7 +5,13 @@
 // write, a revision's copy is `backup_key`, and keys stored before Carrel that are not a MediaId are not library files.
 // It only maps columns; every rule is site-api's mediaLibrary (app/lib/carrel/media.server.ts).
 import { and, desc, eq, gt, inArray, lte, max, or, sql } from "drizzle-orm";
-import { MediaId, type MediaLibraryStore, type MediaRecord, type MediaRecordFields, type PreparedUpload } from "@dustinedwards/site-api";
+import {
+  MediaId,
+  type MediaLibraryStore,
+  type MediaRecord,
+  type MediaRecordFields,
+  type PreparedUpload,
+} from "@dustinedwards/site-api";
 import { getDb } from "~/db/index.server";
 import { media, mediaChanges, mediaRevisions, type MediaRow } from "~/db/schema";
 
@@ -92,26 +98,44 @@ export function mediaStore(env: Env): MediaLibraryStore {
     all: async () => library(await db.select().from(media)),
 
     async byHash(sha256) {
-      const current = await db.select().from(media).where(eq(media.sha256, sha256)).orderBy(media.uploadedAt, media.key);
+      const current = await db
+        .select()
+        .from(media)
+        .where(eq(media.sha256, sha256))
+        .orderBy(media.uploadedAt, media.key);
       const [first] = library(current);
       if (first) return first;
       const original = await db
         .select({ row: media })
         .from(mediaRevisions)
         .innerJoin(media, eq(media.key, mediaRevisions.mediaKey))
-        .where(and(eq(mediaRevisions.sha256, sha256), or(eq(mediaRevisions.reason, "upload"), eq(mediaRevisions.reason, "import"))))
+        .where(
+          and(
+            eq(mediaRevisions.sha256, sha256),
+            or(eq(mediaRevisions.reason, "upload"), eq(mediaRevisions.reason, "import")),
+          ),
+        )
         .orderBy(mediaRevisions.id);
       return library(original.map((o) => o.row))[0] ?? null;
     },
 
     async insert(record) {
-      await db.insert(media).values({ ...columnsOf(record), key: record.key, contentType: record.contentType, uploadedAt: record.uploadedAt });
+      await db.insert(media).values({
+        ...columnsOf(record),
+        key: record.key,
+        contentType: record.contentType,
+        uploadedAt: record.uploadedAt,
+      });
     },
 
     async writeAtRev(key, fields, expectedRev) {
       const [row] = await db
         .update(media)
-        .set({ ...columnsOf(fields), rev: sql`${media.rev} + 1`, updatedAt: sql`(datetime('now'))` })
+        .set({
+          ...columnsOf(fields),
+          rev: sql`${media.rev} + 1`,
+          updatedAt: sql`(datetime('now'))`,
+        })
         .where(and(eq(media.key, key), eq(media.rev, expectedRev)))
         .returning();
       if (row) return { ok: true, record: recordOf(row) };
@@ -138,22 +162,52 @@ export function mediaStore(env: Env): MediaLibraryStore {
     },
 
     async revisions(key, limit = 100) {
-      const rows = await db.select().from(mediaRevisions).where(eq(mediaRevisions.mediaKey, key)).orderBy(desc(mediaRevisions.id)).limit(limit);
-      return rows.map((r) => ({ id: r.id, at: iso(r.at), bytes: r.bytes, width: r.width, height: r.height, reason: r.reason, sha256: r.sha256, copyKey: r.backupKey }));
+      const rows = await db
+        .select()
+        .from(mediaRevisions)
+        .where(eq(mediaRevisions.mediaKey, key))
+        .orderBy(desc(mediaRevisions.id))
+        .limit(limit);
+      return rows.map((r) => ({
+        id: r.id,
+        at: iso(r.at),
+        bytes: r.bytes,
+        width: r.width,
+        height: r.height,
+        reason: r.reason,
+        sha256: r.sha256,
+        copyKey: r.backupKey,
+      }));
     },
 
     async keepCopy(revisionId, copyKey) {
-      await db.update(mediaRevisions).set({ backupKey: copyKey }).where(eq(mediaRevisions.id, revisionId));
+      await db
+        .update(mediaRevisions)
+        .set({ backupKey: copyKey })
+        .where(eq(mediaRevisions.id, revisionId));
     },
 
     // Only at the version the reference check saw. The copies in BACKUPS under media/revisions/ stay.
     async remove(key, rev) {
       const [gone] = await db.batch([
-        db.delete(media).where(and(eq(media.key, key), eq(media.rev, rev))).returning({ key: media.key }),
-        db.delete(mediaRevisions).where(and(eq(mediaRevisions.mediaKey, key), sql`NOT EXISTS (SELECT 1 FROM media WHERE key = ${key})`)),
+        db
+          .delete(media)
+          .where(and(eq(media.key, key), eq(media.rev, rev)))
+          .returning({ key: media.key }),
+        db
+          .delete(mediaRevisions)
+          .where(
+            and(
+              eq(mediaRevisions.mediaKey, key),
+              sql`NOT EXISTS (SELECT 1 FROM media WHERE key = ${key})`,
+            ),
+          ),
       ]);
       if (gone.length > 0) return "removed";
-      return (await db.select({ key: media.key }).from(media).where(eq(media.key, key)).limit(1)).length > 0 ? "stale" : "missing";
+      return (await db.select({ key: media.key }).from(media).where(eq(media.key, key)).limit(1))
+        .length > 0
+        ? "stale"
+        : "missing";
     },
 
     async changeCursor() {
@@ -170,7 +224,10 @@ export function mediaStore(env: Env): MediaLibraryStore {
         .where(and(gt(mediaChanges.seq, from), lte(mediaChanges.seq, head)))
         .groupBy(mediaChanges.mediaKey)
         .orderBy(latest);
-      return rows.filter((r) => isLibraryKey(r.key)).slice(0, limit + 1).map((r) => ({ key: r.key, seq: r.seq ?? 0 }));
+      return rows
+        .filter((r) => isLibraryKey(r.key))
+        .slice(0, limit + 1)
+        .map((r) => ({ key: r.key, seq: r.seq ?? 0 }));
     },
   };
 }
@@ -182,9 +239,15 @@ export async function mediaRows(env: Env, keys: string[]): Promise<MediaRow[]> {
   return getDb(env).select().from(media).where(inArray(media.key, keys));
 }
 
-export async function insertMediaRow(env: Env, row: typeof media.$inferInsert, { ifAbsent = false } = {}): Promise<boolean> {
+export async function insertMediaRow(
+  env: Env,
+  row: typeof media.$inferInsert,
+  { ifAbsent = false } = {},
+): Promise<boolean> {
   const insert = getDb(env).insert(media).values(row);
-  const written = await (ifAbsent ? insert.onConflictDoNothing() : insert).returning({ key: media.key });
+  const written = await (ifAbsent ? insert.onConflictDoNothing() : insert).returning({
+    key: media.key,
+  });
   return written.length > 0;
 }
 

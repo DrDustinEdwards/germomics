@@ -29,24 +29,38 @@ export const TOOLS = {
   },
 } as const;
 type ToolName = keyof typeof TOOLS;
-const isToolName = (name: unknown): name is ToolName => typeof name === "string" && Object.hasOwn(TOOLS, name);
+const isToolName = (name: unknown): name is ToolName =>
+  typeof name === "string" && Object.hasOwn(TOOLS, name);
 
 const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body, null, 2), {
     status,
-    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex, nofollow", ...headers },
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
+      "x-robots-tag": "noindex, nofollow",
+      ...headers,
+    },
   });
 
 // Authenticate first, so an anonymous flood never spends the operator's allowance.
 async function refusal(env: Env, request: Request): Promise<Response | null> {
   const configured = env.OPERATOR_TOKEN;
   if (!configured || configured.length < MIN_TOKEN_LENGTH) {
-    return json({ ok: false, error: "The operator API is not configured on this deployment." }, 503);
+    return json(
+      { ok: false, error: "The operator API is not configured on this deployment." },
+      503,
+    );
   }
-  const presented = /^Bearer\s+(.+)$/i.exec((request.headers.get("authorization") ?? "").trim())?.[1] ?? "";
+  const presented =
+    /^Bearer\s+(.+)$/i.exec((request.headers.get("authorization") ?? "").trim())?.[1] ?? "";
   // Refused on length before the hash, which an anonymous caller could otherwise ask for in any size.
   if (presented.length > configured.length * 2 || !(await safeEqual(presented, configured))) {
-    logEvent(OWASP_EVENTS.signInFailure, { ...requestFields(request), via: "operator-bearer" }, { level: "warn" });
+    logEvent(
+      OWASP_EVENTS.signInFailure,
+      { ...requestFields(request), via: "operator-bearer" },
+      { level: "warn" },
+    );
     return json({ ok: false, error: "Invalid or missing bearer token." }, 401);
   }
   return null;
@@ -55,30 +69,51 @@ async function refusal(env: Env, request: Request): Promise<Response | null> {
 export async function loader({ request, context }: Route.LoaderArgs) {
   const refused = await refusal(getEnv(context), request);
   if (refused) return refused;
-  return json({ ok: true, data: { tools: Object.entries(TOOLS).map(([name, t]) => ({ name, ...t })) } });
+  return json({
+    ok: true,
+    data: { tools: Object.entries(TOOLS).map(([name, t]) => ({ name, ...t })) },
+  });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
-  if (request.method !== "POST") return json({ ok: false, error: "Use POST." }, 405, { allow: "GET, POST" });
+  if (request.method !== "POST")
+    return json({ ok: false, error: "Use POST." }, 405, { allow: "GET, POST" });
   const env = getEnv(context);
   const refused = await refusal(env, request);
   if (refused) return refused;
 
-  const verdict = await limit(env.RATE_LIMITER, "operator", [{ limit: 30, windowSeconds: 60 }], { onUnavailable: "refuse" });
+  const verdict = await limit(env.RATE_LIMITER, "operator", [{ limit: 30, windowSeconds: 60 }], {
+    onUnavailable: "refuse",
+  });
   if (mustStop(verdict, "refuse")) {
-    logEvent(OWASP_EVENTS.rateLimitExceeded, { ...requestFields(request, { status: 429 }), via: "operator" }, { level: "warn" });
+    logEvent(
+      OWASP_EVENTS.rateLimitExceeded,
+      { ...requestFields(request, { status: 429 }), via: "operator" },
+      { level: "warn" },
+    );
     return limitedResponse(verdict);
   }
 
   const body = await readJson(request, OPERATOR_BODY).catch(() => null);
   const tool = (body as { tool?: unknown } | null)?.tool;
-  if (!isToolName(tool)) return json({ ok: false, error: `Unknown tool. Available: ${Object.keys(TOOLS).join(", ")}.` }, 400);
+  if (!isToolName(tool))
+    return json(
+      { ok: false, error: `Unknown tool. Available: ${Object.keys(TOOLS).join(", ")}.` },
+      400,
+    );
 
   try {
     if (tool === "backup_status") return json({ ok: true, data: await backupStatus(env) });
     return json({ ok: true, data: { files: await backupFilesNow(env) } });
   } catch (error) {
-    logEvent("operator_tool_failed", { ...requestFields(request), tool, error }, { level: "error" });
-    return json({ ok: false, error: error instanceof Error ? error.message : "The tool failed." }, 500);
+    logEvent(
+      "operator_tool_failed",
+      { ...requestFields(request), tool, error },
+      { level: "error" },
+    );
+    return json(
+      { ok: false, error: error instanceof Error ? error.message : "The tool failed." },
+      500,
+    );
   }
 }

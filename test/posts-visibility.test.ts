@@ -25,12 +25,36 @@ const e = env as unknown as Env;
 const PAST = "2020-01-01T00:00:00.000Z";
 const FUTURE = () => new Date(Date.now() + 86_400_000).toISOString();
 
-type Row = { kind?: string; slug: string; title?: string; status?: string; publishAt?: string | null; publishedAt?: string | null; tags?: string[]; guests?: { name: string }[]; season?: number | null; episode?: number | null; body?: string };
+type Row = {
+  kind?: string;
+  slug: string;
+  title?: string;
+  status?: string;
+  publishAt?: string | null;
+  publishedAt?: string | null;
+  tags?: string[];
+  guests?: { name: string }[];
+  season?: number | null;
+  episode?: number | null;
+  body?: string;
+};
 async function add(r: Row): Promise<number> {
   const res = await e.DB.prepare(
     "INSERT INTO posts (kind, slug, title, status, publish_at, published_at, tags, guests, season_number, episode_number, body, transcript, audio_peaks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'WEBVTT', '[1,2]') RETURNING id",
   )
-    .bind(r.kind ?? "article", r.slug, r.title ?? r.slug, r.status ?? "published", r.publishAt ?? null, r.publishedAt ?? PAST, JSON.stringify(r.tags ?? []), JSON.stringify(r.guests ?? []), r.season ?? null, r.episode ?? null, r.body ?? `<p>${r.slug}</p>`)
+    .bind(
+      r.kind ?? "article",
+      r.slug,
+      r.title ?? r.slug,
+      r.status ?? "published",
+      r.publishAt ?? null,
+      r.publishedAt ?? PAST,
+      JSON.stringify(r.tags ?? []),
+      JSON.stringify(r.guests ?? []),
+      r.season ?? null,
+      r.episode ?? null,
+      r.body ?? `<p>${r.slug}</p>`,
+    )
     .first<{ id: number }>();
   return res!.id;
 }
@@ -91,7 +115,13 @@ describe("listing reads", () => {
     expect(slugs(await listArticles(e))).toEqual(["a1", "a2"]);
     expect(slugs(await listArticles(e, 1))).toEqual(["a1"]);
     const [card] = await listEpisodes(e);
-    expect(card).toMatchObject({ body: "", transcript: null, audioPeaks: null, sources: null, keyMoments: null });
+    expect(card).toMatchObject({
+      body: "",
+      transcript: null,
+      audioPeaks: null,
+      sources: null,
+      keyMoments: null,
+    });
     const full = (await getPostBySlug(e, "ep"))!;
     expect(full.transcript).toBe("WEBVTT");
     expect(full.audioPeaks).toEqual([1, 2]);
@@ -133,7 +163,9 @@ describe("navigation between posts", () => {
     expect([prev?.slug, next?.slug]).toEqual(["old", "new"]);
     const ends = adjacentPosts(await listPosts(e), (await getPostBySlug(e, "new"))!);
     expect([ends.prev?.slug, ends.next]).toEqual(["mid", null]);
-    const hidden = (await getPostBySlug(e, "nope", { includeDrafts: true })) ?? ({ id: -1, kind: "article" } as Post);
+    const hidden =
+      (await getPostBySlug(e, "nope", { includeDrafts: true })) ??
+      ({ id: -1, kind: "article" } as Post);
     expect(adjacentPosts(await listPosts(e), hidden)).toEqual({ prev: null, next: null });
   });
 

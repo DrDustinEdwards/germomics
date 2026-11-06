@@ -23,4 +23,9 @@ export const CREDENTIAL_ALLOW: Record<string, string> = {
 // The irreplaceable content: each must be dumped and match its live count, read straight after the
 // dump (d1-dump's `counted`), and a run where all of them dumped empty fails: the site always has
 // settings and a show_config row.
-export const BACKUP_COUNTED_TABLES = ["posts", "content_blocks", "settings", "show_config"] as const;
+export const BACKUP_COUNTED_TABLES = [
+  "posts",
+  "content_blocks",
+  "settings",
+  "show_config",
+] as const;

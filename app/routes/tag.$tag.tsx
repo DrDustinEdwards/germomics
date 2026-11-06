@@ -16,7 +16,11 @@ export function meta({ params, location }: Route.MetaArgs) {
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const items = await postsByTag(getEnv(context), params.tag);
-  return { tag: params.tag, items, tracks: items.filter((p) => p.kind === "episode").map(toPlayerTrack) };
+  return {
+    tag: params.tag,
+    items,
+    tracks: items.filter((p) => p.kind === "episode").map(toPlayerTrack),
+  };
 }
 
 export default function TagPage({ loaderData }: Route.ComponentProps) {

@@ -13,7 +13,10 @@ import chartsCss from "~/charts.css?url";
 export const links: Route.LinksFunction = () => [{ rel: "stylesheet", href: chartsCss }];
 
 const dataTrail = (page: { slug: string; title: string }) =>
-  sectionPageTrail({ name: "Data", path: "/data" }, { name: page.title, path: `/data/${page.slug}` });
+  sectionPageTrail(
+    { name: "Data", path: "/data" },
+    { name: page.title, path: `/data/${page.slug}` },
+  );
 
 export function meta({ loaderData, location }: Route.MetaArgs) {
   if (!loaderData?.dataset) return [{ title: "Data · Germomics" }];
@@ -44,14 +47,26 @@ function SourceLine({ source }: { source: Source }) {
   );
 }
 
-function DataTable({ title, columns, rows }: { title: string; columns: string[]; rows: (string | number)[][] }) {
+function DataTable({
+  title,
+  columns,
+  rows,
+}: {
+  title: string;
+  columns: string[];
+  rows: (string | number)[][];
+}) {
   return (
     <table className="w-full border-collapse text-sm">
       <caption className="sr-only">{title}</caption>
       <thead>
         <tr>
           {columns.map((c) => (
-            <th key={c} scope="col" className="border-b border-border py-2 pr-3 text-left align-bottom font-display text-muted">
+            <th
+              key={c}
+              scope="col"
+              className="border-b border-border py-2 pr-3 text-left align-bottom font-display text-muted"
+            >
               {c}
             </th>
           ))}

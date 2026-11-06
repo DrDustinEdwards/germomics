@@ -54,13 +54,28 @@ export function HostsEditor({
                   className={`${inputCx} w-40`}
                 />
                 <div className="flex">
-                  <button type="button" aria-label="Move up" onClick={() => move(i, -1)} className="grid h-8 w-8 place-items-center rounded text-muted hover:text-ink">
+                  <button
+                    type="button"
+                    aria-label="Move up"
+                    onClick={() => move(i, -1)}
+                    className="grid h-8 w-8 place-items-center rounded text-muted hover:text-ink"
+                  >
                     <ArrowUp size={14} aria-hidden />
                   </button>
-                  <button type="button" aria-label="Move down" onClick={() => move(i, 1)} className="grid h-8 w-8 place-items-center rounded text-muted hover:text-ink">
+                  <button
+                    type="button"
+                    aria-label="Move down"
+                    onClick={() => move(i, 1)}
+                    className="grid h-8 w-8 place-items-center rounded text-muted hover:text-ink"
+                  >
                     <ArrowDown size={14} aria-hidden />
                   </button>
-                  <button type="button" aria-label="Delete host" onClick={() => remove(i)} className="grid h-8 w-8 place-items-center rounded text-muted hover:text-brand">
+                  <button
+                    type="button"
+                    aria-label="Delete host"
+                    onClick={() => remove(i)}
+                    className="grid h-8 w-8 place-items-center rounded text-muted hover:text-brand"
+                  >
                     <Trash2 size={14} aria-hidden />
                   </button>
                 </div>

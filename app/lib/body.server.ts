@@ -8,7 +8,11 @@ export const PUBLIC_FORM = 16 * KIB;
 /** An admin form: settings, an episode's transcript and waveform. */
 export const ADMIN_FORM = 4 * KIB * KIB;
 
-const tooLarge = () => new Response("Payload Too Large", { status: 413, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
+const tooLarge = () =>
+  new Response("Payload Too Large", {
+    status: 413,
+    headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+  });
 
 async function readBytes(request: Request, max: number): Promise<Uint8Array> {
   const bytes = await readCappedBytes(request, max);
@@ -19,7 +23,9 @@ async function readBytes(request: Request, max: number): Promise<Uint8Array> {
 /** The request's form, parsed from at most `max` bytes. */
 export async function readForm(request: Request, max: number): Promise<FormData> {
   const bytes = await readBytes(request, max);
-  return new Response(bytes as Uint8Array<ArrayBuffer>, { headers: { "Content-Type": request.headers.get("Content-Type") ?? "" } }).formData();
+  return new Response(bytes as Uint8Array<ArrayBuffer>, {
+    headers: { "Content-Type": request.headers.get("Content-Type") ?? "" },
+  }).formData();
 }
 
 /** The request's JSON, parsed from at most `max` bytes; throws on a body that is not JSON. */

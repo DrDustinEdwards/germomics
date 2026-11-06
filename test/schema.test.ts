@@ -32,12 +32,23 @@ function declaredDefault(col: { default?: unknown }): string | null {
   if (typeof d === "boolean") return d ? "1" : "0";
   const chunks = (d as { queryChunks?: { value?: string[] }[] }).queryChunks;
   // SQLite reports a parenthesised expression default, "(datetime('now'))", without the outer brackets.
-  if (chunks) return chunks.map((c) => (c.value ?? []).join("")).join("").replace(/^\((.*)\)$/, "$1");
+  if (chunks)
+    return chunks
+      .map((c) => (c.value ?? []).join(""))
+      .join("")
+      .replace(/^\((.*)\)$/, "$1");
   return JSON.stringify(d);
 }
 
-type Pragma = { name: string; type: string; notnull: number; dflt_value: string | null; pk: number };
-const pragma = async (table: string) => (await e.DB.prepare(`PRAGMA table_info("${table}")`).all<Pragma>()).results;
+type Pragma = {
+  name: string;
+  type: string;
+  notnull: number;
+  dflt_value: string | null;
+  pk: number;
+};
+const pragma = async (table: string) =>
+  (await e.DB.prepare(`PRAGMA table_info("${table}")`).all<Pragma>()).results;
 
 beforeAll(() => applyMigrations(e.DB), 60_000);
 
@@ -48,30 +59,39 @@ describe("app/db/schema.ts against the migrations", () => {
     expect(new Set(fresh.map(nameOf)).size).toBe(fresh.length);
   });
 
-  it.each(tables.map(nameOf))("%s has the same columns, nullability, primary key and defaults", async (name) => {
-    const live = await pragma(name);
-    const cfg = getTableConfig((await freshTables()).find((t) => nameOf(t) === name)!);
-    expect(live.length, `${name} exists in the migrated database`).toBeGreaterThan(0);
-    expect(cfg.columns.map((c) => c.name).sort()).toEqual(live.map((c) => c.name).sort());
-    for (const col of cfg.columns) {
-      const real = live.find((c) => c.name === col.name)!;
-      const label = `${name}.${col.name}`;
-      expect(real.type.toLowerCase(), `${label} type`).toBe(col.getSQLType().toLowerCase());
-      expect(real.pk === 1, `${label} primary key`).toBe(col.primary);
-      // A primary key column is NOT NULL to Drizzle, but SQLite reports notnull 0 for INTEGER PRIMARY KEY.
-      // The same goes for the key's default: Drizzle counts AUTOINCREMENT as one, SQLite stores none.
-      if (!col.primary) {
-        expect(real.notnull === 1, `${label} not null`).toBe(col.notNull);
-        expect(real.dflt_value !== null, `${label} has a default`).toBe(col.hasDefault);
-        // ... and the value is the same one, not only the fact of having one.
-        expect(real.dflt_value, `${label} default value`).toBe(declaredDefault(col));
+  it.each(tables.map(nameOf))(
+    "%s has the same columns, nullability, primary key and defaults",
+    async (name) => {
+      const live = await pragma(name);
+      const cfg = getTableConfig((await freshTables()).find((t) => nameOf(t) === name)!);
+      expect(live.length, `${name} exists in the migrated database`).toBeGreaterThan(0);
+      expect(cfg.columns.map((c) => c.name).sort()).toEqual(live.map((c) => c.name).sort());
+      for (const col of cfg.columns) {
+        const real = live.find((c) => c.name === col.name)!;
+        const label = `${name}.${col.name}`;
+        expect(real.type.toLowerCase(), `${label} type`).toBe(col.getSQLType().toLowerCase());
+        expect(real.pk === 1, `${label} primary key`).toBe(col.primary);
+        // A primary key column is NOT NULL to Drizzle, but SQLite reports notnull 0 for INTEGER PRIMARY KEY.
+        // The same goes for the key's default: Drizzle counts AUTOINCREMENT as one, SQLite stores none.
+        if (!col.primary) {
+          expect(real.notnull === 1, `${label} not null`).toBe(col.notNull);
+          expect(real.dflt_value !== null, `${label} has a default`).toBe(col.hasDefault);
+          // ... and the value is the same one, not only the fact of having one.
+          expect(real.dflt_value, `${label} default value`).toBe(declaredDefault(col));
+        }
       }
-    }
-  });
+    },
+  );
 
   it("has the same indexes, both ways", async () => {
-    const live = (await e.DB.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%'").all<{ name: string }>()).results.map((r) => r.name);
-    const declared = (await freshTables()).flatMap((t) => getTableConfig(t).indexes.map((i) => i.config.name));
+    const live = (
+      await e.DB.prepare(
+        "SELECT name FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%'",
+      ).all<{ name: string }>()
+    ).results.map((r) => r.name);
+    const declared = (await freshTables()).flatMap((t) =>
+      getTableConfig(t).indexes.map((i) => i.config.name),
+    );
     expect(declared.length).toBeGreaterThan(0);
     expect(declared.filter((n) => !live.includes(n))).toEqual([]);
     expect(live.filter((n) => !declared.includes(n))).toEqual([]);
@@ -81,19 +101,50 @@ describe("app/db/schema.ts against the migrations", () => {
 describe("what the schema's column modes do", () => {
   it("gives a post inserted with only a title and slug every declared default, as typed values", async () => {
     const db = getDb(e);
-    const [row] = await db.insert(schema.posts).values({ title: "T", slug: "defaults-check" }).returning();
-    expect(row).toMatchObject({ kind: "article", status: "draft", body: "", featured: false, explicit: false, episodeType: "full", audioMimeType: "audio/mpeg", tags: [] });
+    const [row] = await db
+      .insert(schema.posts)
+      .values({ title: "T", slug: "defaults-check" })
+      .returning();
+    expect(row).toMatchObject({
+      kind: "article",
+      status: "draft",
+      body: "",
+      featured: false,
+      explicit: false,
+      episodeType: "full",
+      audioMimeType: "audio/mpeg",
+      tags: [],
+    });
     expect(row.createdAt).toMatch(/^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$/);
     await db.delete(schema.posts).where(eq(schema.posts.slug, "defaults-check"));
   });
 
   it("stores booleans as 0 and 1 and JSON columns as text, and reads them back typed", async () => {
     const db = getDb(e);
-    await db.insert(schema.posts).values({ title: "T", slug: "modes-check", featured: true, explicit: true, tags: ["a", "b"], chapters: [{ start: 1, title: "C" }] });
-    const raw = await e.DB.prepare("SELECT featured, explicit, tags, chapters FROM posts WHERE slug = 'modes-check'").first<Record<string, unknown>>();
-    expect(raw).toEqual({ featured: 1, explicit: 1, tags: '["a","b"]', chapters: '[{"start":1,"title":"C"}]' });
+    await db.insert(schema.posts).values({
+      title: "T",
+      slug: "modes-check",
+      featured: true,
+      explicit: true,
+      tags: ["a", "b"],
+      chapters: [{ start: 1, title: "C" }],
+    });
+    const raw = await e.DB.prepare(
+      "SELECT featured, explicit, tags, chapters FROM posts WHERE slug = 'modes-check'",
+    ).first<Record<string, unknown>>();
+    expect(raw).toEqual({
+      featured: 1,
+      explicit: 1,
+      tags: '["a","b"]',
+      chapters: '[{"start":1,"title":"C"}]',
+    });
     const [row] = await db.select().from(schema.posts).where(eq(schema.posts.slug, "modes-check"));
-    expect(row).toMatchObject({ featured: true, explicit: true, tags: ["a", "b"], chapters: [{ start: 1, title: "C" }] });
+    expect(row).toMatchObject({
+      featured: true,
+      explicit: true,
+      tags: ["a", "b"],
+      chapters: [{ start: 1, title: "C" }],
+    });
     await db.delete(schema.posts).where(eq(schema.posts.slug, "modes-check"));
   });
 });

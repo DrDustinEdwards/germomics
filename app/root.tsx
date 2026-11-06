@@ -39,8 +39,18 @@ import errorPageCss from "./error-page.css?url";
 export const links: Route.LinksFunction = () => [
   ...iconLinks(),
   // Feed autodiscovery: the writing feed and the podcast feed (whose URL never changes, CLAUDE.md rule 1).
-  { rel: "alternate", type: "application/rss+xml", title: "Germomics: Writing", href: "/feed/site.xml" },
-  { rel: "alternate", type: "application/rss+xml", title: "Germomics podcast", href: "/feed/podcast/" },
+  {
+    rel: "alternate",
+    type: "application/rss+xml",
+    title: "Germomics: Writing",
+    href: "/feed/site.xml",
+  },
+  {
+    rel: "alternate",
+    type: "application/rss+xml",
+    title: "Germomics podcast",
+    href: "/feed/podcast/",
+  },
   // The LCP font, also sent as the Early Hints `Link` header (lib/preloads.ts).
   ...PRELOADS.links,
 ];
@@ -55,7 +65,10 @@ export function meta({ error }: Route.MetaArgs): Route.MetaDescriptors {
 export const middleware: Route.MiddlewareFunction[] = [
   ({ context }, next) => {
     const env = getEnv(context);
-    context.set(siteContentContext, { settings: once(() => loadSettings(env)), snippets: once(() => loadSnippets(env)) });
+    context.set(siteContentContext, {
+      settings: once(() => loadSettings(env)),
+      snippets: once(() => loadSnippets(env)),
+    });
     return next();
   },
 ];
@@ -103,7 +116,11 @@ const noSubscribe = () => () => {};
 
 function HydrationScripts({ deferred }: { deferred: boolean }) {
   // False on the server and while hydrating, true once hydrated (React's server snapshot, then the client's).
-  const hydrated = useSyncExternalStore(noSubscribe, () => true, () => false);
+  const hydrated = useSyncExternalStore(
+    noSubscribe,
+    () => true,
+    () => false,
+  );
   if (!deferred) {
     return (
       <>
@@ -135,9 +152,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
         {/* Set data-theme before paint — no flash of the wrong theme. The render's nonce lets it run. */}
-        <script nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script
+          nonce={nonce}
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: themeInitScript }}
+        />
         {/* A deferred page keeps its streamed loader data here until it hydrates (lib/hydration.ts). */}
-        {deferred ? <script nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: STREAM_BUFFER_SCRIPT }} /> : null}
+        {deferred ? (
+          <script
+            nonce={nonce}
+            suppressHydrationWarning
+            dangerouslySetInnerHTML={{ __html: STREAM_BUFFER_SCRIPT }}
+          />
+        ) : null}
         {/* Every page's own script: the menus, the theme button, the share buttons and hydrate-on-intent (app/site.ts). */}
         <script src="/site.js" defer nonce={nonce} suppressHydrationWarning />
       </head>

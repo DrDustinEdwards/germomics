@@ -1,6 +1,10 @@
 // The schema is the real migrations, applied in order, so tests run against the real tables
 // (posts with its FTS5 triggers, post_versions, content_blocks) rather than a copy that could drift.
-const migrations = import.meta.glob("../../drizzle/*.sql", { query: "?raw", import: "default", eager: true }) as Record<string, string>;
+const migrations = import.meta.glob("../../drizzle/*.sql", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+}) as Record<string, string>;
 
 export async function applyMigrations(db: D1Database): Promise<void> {
   for (const name of Object.keys(migrations).sort()) {
@@ -40,7 +44,8 @@ function splitSql(sql: string): string[] {
     buf += c;
     const tail = buf.slice(-6).toUpperCase();
     if (/\bBEGIN$/.test(tail) && /^\W/.test(buf.slice(-6, -5) || " ")) depth++;
-    if (depth > 0 && /;\s*END$/i.test(buf.slice(-12)) && !/[A-Za-z_]/.test(sql[i + 1] ?? " ")) depth--;
+    if (depth > 0 && /;\s*END$/i.test(buf.slice(-12)) && !/[A-Za-z_]/.test(sql[i + 1] ?? " "))
+      depth--;
   }
   if (buf.trim()) out.push(buf.trim());
   return out;

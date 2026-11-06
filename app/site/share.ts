@@ -8,7 +8,8 @@ function showCopied(button: Element, copied: boolean) {
 }
 
 async function onClick(event: MouseEvent) {
-  const button = event.target instanceof Element ? event.target.closest<HTMLElement>("[data-copy]") : null;
+  const button =
+    event.target instanceof Element ? event.target.closest<HTMLElement>("[data-copy]") : null;
   if (!button) return;
   const url = `${location.origin}${button.dataset.copy ?? ""}`;
   try {
@@ -19,7 +20,10 @@ async function onClick(event: MouseEvent) {
     await navigator.clipboard.writeText(url);
     showCopied(button, true);
     clearTimeout(shown.get(button));
-    shown.set(button, setTimeout(() => showCopied(button, false), 1800));
+    shown.set(
+      button,
+      setTimeout(() => showCopied(button, false), 1800),
+    );
   } catch {
     /* dismissed or blocked */
   }

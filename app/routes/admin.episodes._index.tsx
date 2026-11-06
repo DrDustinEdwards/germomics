@@ -16,7 +16,14 @@ export async function loader({ context }: Route.LoaderArgs) {
   return {
     episodes: all
       .filter((p) => p.kind === "episode" && !p.trashedAt)
-      .map((p) => ({ id: p.id, slug: p.slug, title: p.title, status: p.status, audio: !!p.audioUrl, transcript: !!p.transcript?.trim() })),
+      .map((p) => ({
+        id: p.id,
+        slug: p.slug,
+        title: p.title,
+        status: p.status,
+        audio: !!p.audioUrl,
+        transcript: !!p.transcript?.trim(),
+      })),
   };
 }
 
@@ -31,11 +38,14 @@ export default function AdminEpisodes({ loaderData }: Route.ComponentProps) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-semibold">Episode audio</h1>
         <Form method="post">
-          <Button variant="primary"><Plus size={14} aria-hidden /> New episode</Button>
+          <Button variant="primary">
+            <Plus size={14} aria-hidden /> New episode
+          </Button>
         </Form>
       </div>
       <p className="mt-2 max-w-2xl text-sm text-muted">
-        Each episode&apos;s sound file and transcript. Its words, artwork, chapters, people and publishing are written in Carrel.
+        Each episode&apos;s sound file and transcript. Its words, artwork, chapters, people and
+        publishing are written in Carrel.
       </p>
 
       <div className="mt-5 overflow-hidden rounded-xl border border-border bg-card">
@@ -48,9 +58,15 @@ export default function AdminEpisodes({ loaderData }: Route.ComponentProps) {
               </Link>
               <span className="flex shrink-0 items-center gap-2">
                 <Badge tone={p.audio ? "accent" : "amber"}>{p.audio ? "audio" : "no audio"}</Badge>
-                <Badge tone={p.transcript ? "accent" : "amber"}>{p.transcript ? "transcript" : "no transcript"}</Badge>
+                <Badge tone={p.transcript ? "accent" : "amber"}>
+                  {p.transcript ? "transcript" : "no transcript"}
+                </Badge>
                 <Badge tone={p.status === "published" ? "accent" : "muted"}>{p.status}</Badge>
-                <a href={carrelEditUrl(p.slug)} aria-label={`Write ${p.title} in Carrel`} className="grid h-8 w-8 place-items-center rounded text-muted hover:text-ink">
+                <a
+                  href={carrelEditUrl(p.slug)}
+                  aria-label={`Write ${p.title} in Carrel`}
+                  className="grid h-8 w-8 place-items-center rounded text-muted hover:text-ink"
+                >
                   <ExternalLink size={14} aria-hidden />
                 </a>
               </span>

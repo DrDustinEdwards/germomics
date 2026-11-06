@@ -17,7 +17,11 @@ import { withAdminIdle } from "@dustinedwards/site-runtime/access";
 import { preloads, rootStylesheets, withPreloadHeader } from "@dustinedwards/site-runtime/preload";
 import { timedRender } from "@dustinedwards/site-runtime/server-timing";
 import { generateNonce, renewNonce } from "@dustinedwards/site-runtime/csp";
-import { SPECULATION_RULES_HEADER, SPECULATION_RULES_PATH, speculationRulesResponse } from "@dustinedwards/site-runtime/prefetch";
+import {
+  SPECULATION_RULES_HEADER,
+  SPECULATION_RULES_PATH,
+  speculationRulesResponse,
+} from "@dustinedwards/site-runtime/prefetch";
 import { canonicalRedirect } from "@dustinedwards/site-runtime/url";
 import { runJobs } from "@dustinedwards/site-runtime/cron";
 import { logEvent, requestFields, withRequestLog } from "@dustinedwards/site-runtime/log";
@@ -55,7 +59,8 @@ function render(request: Request, env: Env, ctx: ExecutionContext): Promise<Resp
   return requestHandler(request, context).then((page) => {
     // A public page sends no React, so the next page starts loading on hover through the speculation rules this header
     // names (site-runtime ./prefetch), as React Router's prefetch did when every page hydrated.
-    if (page.headers.get("Content-Type")?.startsWith("text/html")) page.headers.set(SPECULATION_RULES_HEADER.name, SPECULATION_RULES_HEADER.value);
+    if (page.headers.get("Content-Type")?.startsWith("text/html"))
+      page.headers.set(SPECULATION_RULES_HEADER.name, SPECULATION_RULES_HEADER.value);
     return withSecurityHeaders(page, request.url, nonce);
   });
 }
@@ -88,7 +93,8 @@ function hasSessionCookie(request: Request): boolean {
 // Each 404 a GET gets from the app, counted per path and referring host (site-runtime ./not-found), stored page or
 // live; never a preview link's, whose path carries its token.
 function counted(response: Response, request: Request, env: Env, ctx: ExecutionContext): Response {
-  if (!new URL(request.url).pathname.startsWith("/preview/")) countNotFound(env.DB, request, response, ctx);
+  if (!new URL(request.url).pathname.startsWith("/preview/"))
+    countNotFound(env.DB, request, response, ctx);
   return response;
 }
 
@@ -113,12 +119,18 @@ export class Renderer extends withPurgePages(WorkerEntrypoint<Env>) {
     // than the next scheduled post, which goes live on read with no write to purge on (posts.server publiclyVisible).
     if (page.status === 200 && !page.headers.has("Cache-Control")) {
       const tag = gameTag(url.pathname);
-      const shared = publicPageHeaders({ tags: tag ? [PAGES_CACHE_TAG, tag] : [PAGES_CACHE_TAG], until: await until });
+      const shared = publicPageHeaders({
+        tags: tag ? [PAGES_CACHE_TAG, tag] : [PAGES_CACHE_TAG],
+        until: await until,
+      });
       for (const [name, value] of Object.entries(shared)) page.headers.set(name, value);
     }
     // Early Hints: the zone answers a page carrying a preload Link header with a 103 first, so the browser starts the
     // render-blocking stylesheet and the hero's font while the Worker still renders (site-runtime ./preload).
-    const hints = withPreloadHeader(page, preloads([...rootStylesheets(await serverBuild()), ...FONT_PRELOADS]).header);
+    const hints = withPreloadHeader(
+      page,
+      preloads([...rootStylesheets(await serverBuild()), ...FONT_PRELOADS]).header,
+    );
     // Last: anything but a shared 200 (/health, a 404, an error) or one rendered for a cookie leaves private, no-store.
     return settleCacheHeaders(hints, request);
   }
@@ -136,14 +148,19 @@ const site = {
     try {
       // One hop to the canonical address: https, the bare host, no trailing slash. The podcast feed keeps its slash
       // (CLAUDE.md rule 1).
-      const redirect = canonicalRedirect(request, { host: "germomics.com", except: ["/feed/podcast/"] });
+      const redirect = canonicalRedirect(request, {
+        host: "germomics.com",
+        except: ["/feed/podcast/"],
+      });
       if (redirect) return withSecurityHeaders(redirect, origin);
 
       // Carrel's site API. Its own guard (prefix, rate limit, key, route) runs first and answers
       // everything under /api/carrel/v1; nothing else is served by it. An accepted write purges the stored pages.
       // Only its own requests load it; a preview reads the site's stylesheets when it draws.
       if (isCarrelRequest(url)) {
-        const carrel = carrelApi(env, async () => rootStylesheets(await serverBuild()).map((s) => s.href));
+        const carrel = carrelApi(env, async () =>
+          rootStylesheets(await serverBuild()).map((s) => s.href),
+        );
         if (carrel.matches(request)) {
           const response = await carrel.handle(request, ctx);
           purgeAfterWrite(request, response, ctx, `carrel ${request.method} ${url.pathname}`);
@@ -151,13 +168,17 @@ const site = {
         }
         // A preview link Carrel made (/preview/<token>, no key): the post's current source in the site's stylesheet,
         // noindex and never stored. The package's no-referrer stays, so the token, which is the address, is never sent on.
-        if (carrel.matchesPreviewLink(request)) return withSecurityHeaders(await carrel.servePreviewLink(request), origin);
+        if (carrel.matchesPreviewLink(request))
+          return withSecurityHeaders(await carrel.servePreviewLink(request), origin);
       }
 
       // The prefetch rules every page's Speculation-Rules header names (render above): never the paths in NO_PREFETCH
       // (beside the family's /admin, /api and the rest), nor a game, whose page is heavy (Phaser) and holds a leaderboard.
       if (url.pathname === SPECULATION_RULES_PATH) {
-        return withSecurityHeaders(speculationRulesResponse({ exclude: [...NO_PREFETCH, "/games/"] }, request), origin);
+        return withSecurityHeaders(
+          speculationRulesResponse({ exclude: [...NO_PREFETCH, "/games/"] }, request),
+          origin,
+        );
       }
 
       // CSP violation reports, logged to Workers Logs (security-headers.ts).
@@ -176,22 +197,46 @@ const site = {
         const live = await render(request, env, ctx);
         // An admin save changes public pages; a score changes its game page only. Other public writes
         // (subscribe, unsubscribe) change none.
-        if (url.pathname.startsWith("/admin")) purgeAfterWrite(request, live, ctx, `admin ${request.method} ${url.pathname}`);
+        if (url.pathname.startsWith("/admin"))
+          purgeAfterWrite(request, live, ctx, `admin ${request.method} ${url.pathname}`);
         const tag = gameTag(url.pathname);
-        if (tag && !read && live.status < 400) ctx.waitUntil(ctx.exports.Renderer.purgePages(`score ${url.pathname}`, [tag]));
+        if (tag && !read && live.status < 400)
+          ctx.waitUntil(ctx.exports.Renderer.purgePages(`score ${url.pathname}`, [tag]));
         // A public page rendered for the admin is theirs alone; a response naming no Cache-Control would otherwise be
         // cached by the platform's heuristics.
-        if (signedIn && !livePath(url.pathname)) return counted(await tombstoned(privateRender(live), url.pathname, d1SiteApiStore(env.DB)), request, env, ctx);
+        if (signedIn && !livePath(url.pathname))
+          return counted(
+            await tombstoned(privateRender(live), url.pathname, d1SiteApiStore(env.DB)),
+            request,
+            env,
+            ctx,
+          );
         if (!live.headers.has("Cache-Control")) live.headers.set("Cache-Control", UNCACHED);
-        return counted(await tombstoned(live, url.pathname, d1SiteApiStore(env.DB)), request, env, ctx);
+        return counted(
+          await tombstoned(live, url.pathname, d1SiteApiStore(env.DB)),
+          request,
+          env,
+          ctx,
+        );
       }
 
       // The key is the path and the query without tracking parameters. The Worker version stays in the key (no
       // `cross_version_cache`), so every deploy starts cold. A request with a cookie is told no-store for the browser; a
       // reader who already holds the page gets a 304. A HEAD reaches the Renderer as a GET, so its answer is a whole page
       // that may be stored; the reader still gets no body.
-      const page = await ctx.exports.Renderer.fetch(forRenderer(request), { cf: { cacheKey: cacheKey(url) } });
-      return counted(await tombstoned(forReader(renewNonce(page), request), url.pathname, d1SiteApiStore(env.DB)), request, env, ctx);
+      const page = await ctx.exports.Renderer.fetch(forRenderer(request), {
+        cf: { cacheKey: cacheKey(url) },
+      });
+      return counted(
+        await tombstoned(
+          forReader(renewNonce(page), request),
+          url.pathname,
+          d1SiteApiStore(env.DB),
+        ),
+        request,
+        env,
+        ctx,
+      );
     } catch (error) {
       // Prod error hygiene: never leak a stack trace or internal detail to the client. The error
       // goes to Workers Logs.
@@ -232,7 +277,9 @@ export default {
   ...site,
   fetch: withRequestLog(
     (request: Request, env: Env, ctx: ExecutionContext) =>
-      withAdminIdle(request, () => site.fetch(request as IncomingRequest, env, ctx), { secret: env.ADMIN_IDLE_SECRET }),
+      withAdminIdle(request, () => site.fetch(request as IncomingRequest, env, ctx), {
+        secret: env.ADMIN_IDLE_SECRET,
+      }),
     { sha: (env) => env.DEPLOY_SHA, tokenPath: PREVIEW_TOKEN },
   ),
 } satisfies ExportedHandler<Env>;

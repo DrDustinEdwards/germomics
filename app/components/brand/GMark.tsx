@@ -16,9 +16,7 @@ export function GMark({
   return (
     <svg
       viewBox="14 15 478 478"
-      {...(decorative
-        ? { "aria-hidden": true }
-        : { role: "img", "aria-label": "Germomics" })}
+      {...(decorative ? { "aria-hidden": true } : { role: "img", "aria-label": "Germomics" })}
       className={`text-brand ${className}`}
       fill="currentColor"
       fillRule="evenodd"

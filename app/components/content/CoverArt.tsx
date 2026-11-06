@@ -58,7 +58,12 @@ export function CoverArt({
   }
 
   return (
-    <div role="img" aria-label={alt} className={`relative overflow-hidden ${frame} ${className}`} style={{ backgroundColor: VIOLET }}>
+    <div
+      role="img"
+      aria-label={alt}
+      className={`relative overflow-hidden ${frame} ${className}`}
+      style={{ backgroundColor: VIOLET }}
+    >
       <span
         aria-hidden="true"
         className="absolute text-white [&>svg]:block [&>svg]:h-full [&>svg]:w-full"

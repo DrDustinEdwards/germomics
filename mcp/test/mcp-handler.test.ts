@@ -11,7 +11,16 @@ import { toolListHash, toolListProblems } from "@dustinedwards/site-runtime/mcp-
 import type { Caller } from "../src/auth.ts";
 import { handleMcp } from "../src/mcp-handler.ts";
 import { TOOLS, type ToolEnv } from "../src/tools.ts";
-import { READER, TOKEN, WRITER, fakeLog, fakeSite, freshEnv, type FakeLog, type FakeSite } from "./fakes.ts";
+import {
+  READER,
+  TOKEN,
+  WRITER,
+  fakeLog,
+  fakeSite,
+  freshEnv,
+  type FakeLog,
+  type FakeSite,
+} from "./fakes.ts";
 
 const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
 const ERA = "2025-11-25";
@@ -27,7 +36,11 @@ beforeEach(() => {
   env = freshEnv(site, log);
 });
 
-async function rpc(method: string, params: Record<string, unknown>, caller: Caller | null = WRITER) {
+async function rpc(
+  method: string,
+  params: Record<string, unknown>,
+  caller: Caller | null = WRITER,
+) {
   const response = await handleMcp(
     new Request("https://admin-mcp.test/mcp", {
       method: "POST",
@@ -49,7 +62,11 @@ async function rpc(method: string, params: Record<string, unknown>, caller: Call
 
 describe("handleMcp", () => {
   test("initialize names the server and carries the instructions", async () => {
-    const message = await rpc("initialize", { protocolVersion: ERA, capabilities: {}, clientInfo: { name: "test", version: "1" } });
+    const message = await rpc("initialize", {
+      protocolVersion: ERA,
+      capabilities: {},
+      clientInfo: { name: "test", version: "1" },
+    });
     assert.equal(message.result.serverInfo.name, "germomics-admin-mcp");
     assert.match(message.result.instructions, /Carrel owns all writing/);
     assert.equal(site.calls.length, 0);
@@ -57,8 +74,14 @@ describe("handleMcp", () => {
 
   test("tools/list offers the germomics_ tools with all four annotations, and passes the shared list checks", async () => {
     const message = await rpc("tools/list", {});
-    const listed = message.result.tools as Array<{ name: string; annotations: Record<string, unknown> }>;
-    assert.deepEqual(listed.map((t) => t.name), TOOLS.map((t) => t.name));
+    const listed = message.result.tools as Array<{
+      name: string;
+      annotations: Record<string, unknown>;
+    }>;
+    assert.deepEqual(
+      listed.map((t) => t.name),
+      TOOLS.map((t) => t.name),
+    );
     for (const t of listed) {
       assert.match(t.name, /^germomics_[a-z_]+$/);
       for (const hint of ["readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint"]) {
@@ -81,41 +104,75 @@ describe("handleMcp", () => {
     assert.equal(sent.headers.get("authorization"), `Bearer ${TOKEN}`);
     assert.deepEqual(sent.body, { tool: "backup_media", args: {} });
     assert.deepEqual(message.result.structuredContent, { files });
-    assert.deepEqual(log.rows.map((r) => r.phase), ["started", "finished"]);
+    assert.deepEqual(
+      log.rows.map((r) => r.phase),
+      ["started", "finished"],
+    );
     assert.ok(!JSON.stringify(message).includes(TOKEN));
   });
 
   test("a read grant reads the backup state through the same leg", async () => {
-    site.reply({ body: { ok: true, data: { files: { gameAssets: { last_ok: "2026-11-06T03:20:00Z" } } } } });
-    const message = await rpc("tools/call", { name: "germomics_check_backup", arguments: {} }, READER);
+    site.reply({
+      body: { ok: true, data: { files: { gameAssets: { last_ok: "2026-11-06T03:20:00Z" } } } },
+    });
+    const message = await rpc(
+      "tools/call",
+      { name: "germomics_check_backup", arguments: {} },
+      READER,
+    );
     assert.deepEqual(site.calls[0].body, { tool: "backup_status", args: {} });
     assert.equal(message.result.structuredContent.files.gameAssets.last_ok, "2026-11-06T03:20:00Z");
   });
 
   test("the API's refusal comes back verbatim as a tool error", async () => {
-    site.reply({ status: 500, body: { ok: false, error: "files backup failed: game-assets: boom" } });
+    site.reply({
+      status: 500,
+      body: { ok: false, error: "files backup failed: game-assets: boom" },
+    });
     const message = await rpc("tools/call", { name: "germomics_backup_media", arguments: {} });
     assert.equal(message.result.isError, true);
     assert.match(message.result.content[0].text, /files backup failed: game-assets: boom/);
   });
 
   test("PLANT 12.3: a read-only grant is not listed the write tool, is refused it, and sends nothing (T7)", async () => {
-    const listed = (await rpc("tools/list", {}, READER)).result.tools.map((t: { name: string }) => t.name);
+    const listed = (await rpc("tools/list", {}, READER)).result.tools.map(
+      (t: { name: string }) => t.name,
+    );
     assert.deepEqual(listed, ["germomics_check_backup"]);
-    const message = await rpc("tools/call", { name: "germomics_backup_media", arguments: {} }, READER);
-    assert.ok(message.error !== undefined || message.result?.isError === true, JSON.stringify(message));
+    const message = await rpc(
+      "tools/call",
+      { name: "germomics_backup_media", arguments: {} },
+      READER,
+    );
+    assert.ok(
+      message.error !== undefined || message.result?.isError === true,
+      JSON.stringify(message),
+    );
     assert.equal(site.calls.length, 0);
   });
 
   test("a schema violation fails before any request", async () => {
-    const message = await rpc("tools/call", { name: "germomics_backup_media", arguments: { extra: 1 } });
+    const message = await rpc("tools/call", {
+      name: "germomics_backup_media",
+      arguments: { extra: 1 },
+    });
     assert.equal(site.calls.length, 0);
-    assert.ok(message.error !== undefined || message.result?.isError === true, JSON.stringify(message));
+    assert.ok(
+      message.error !== undefined || message.result?.isError === true,
+      JSON.stringify(message),
+    );
   });
 
   test("a request with no caller runs no tool", async () => {
-    const message = await rpc("tools/call", { name: "germomics_backup_media", arguments: {} }, null);
-    assert.ok(message.error !== undefined || message.result?.isError === true, JSON.stringify(message));
+    const message = await rpc(
+      "tools/call",
+      { name: "germomics_backup_media", arguments: {} },
+      null,
+    );
+    assert.ok(
+      message.error !== undefined || message.result?.isError === true,
+      JSON.stringify(message),
+    );
     assert.equal(site.calls.length, 0);
   });
 });

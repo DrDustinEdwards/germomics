@@ -101,11 +101,16 @@
     font-size: 18px;
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
-    transition: background 0.35s ease, color 0.35s ease;
+    transition:
+      background 0.35s ease,
+      color 0.35s ease;
     /* Reserve the live dock height so the footer always sits above the fixed dock. */
     padding-bottom: var(--player-h);
   }
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
     color: var(--color-ink);
@@ -121,7 +126,9 @@
     border-radius: 4px;
   }
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
       transition: none !important;
       animation: none !important;
       scroll-behavior: auto !important;

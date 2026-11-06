@@ -10,7 +10,10 @@ const TOKEN = "t".repeat(40);
 
 function call(headers: Record<string, string>, over: Partial<Env> = {}, tool = "backup_media") {
   const context = new RouterContextProvider();
-  context.set(cloudflareContext, { env: { ...(env as unknown as Env), OPERATOR_TOKEN: TOKEN, ...over }, ctx: {} as ExecutionContext });
+  context.set(cloudflareContext, {
+    env: { ...(env as unknown as Env), OPERATOR_TOKEN: TOKEN, ...over },
+    ctx: {} as ExecutionContext,
+  });
   const request = new Request("https://germomics.com/api/operator", {
     method: "POST",
     headers: { "content-type": "application/json", ...headers },
@@ -23,20 +26,28 @@ describe("operator API", () => {
   it("refuses a missing or wrong bearer, and a deployment with no token", async () => {
     expect((await call({})).status).toBe(401);
     expect((await call({ authorization: `Bearer ${"x".repeat(40)}` })).status).toBe(401);
-    expect((await call({ authorization: `Bearer ${TOKEN}` }, { OPERATOR_TOKEN: undefined })).status).toBe(503);
+    expect(
+      (await call({ authorization: `Bearer ${TOKEN}` }, { OPERATOR_TOKEN: undefined })).status,
+    ).toBe(503);
   });
 
   it("runs the three files passes for the right bearer and copies a file", async () => {
     await (env as unknown as Env).GAME_ASSETS.put("sample/level.json", "{}");
     const res = await call({ authorization: `Bearer ${TOKEN}` });
     expect(res.status).toBe(200);
-    const { data } = (await res.json()) as { data: { files: Array<{ name: string; complete: boolean }> } };
+    const { data } = (await res.json()) as {
+      data: { files: Array<{ name: string; complete: boolean }> };
+    };
     expect(data.files.map((f) => f.name)).toEqual(["audio", "images", "game-assets"]);
     expect(data.files.every((f) => f.complete)).toBe(true);
-    expect(await (env as unknown as Env).BACKUPS.head("files/game-assets/sample/level.json")).not.toBeNull();
+    expect(
+      await (env as unknown as Env).BACKUPS.head("files/game-assets/sample/level.json"),
+    ).not.toBeNull();
 
     // backup_status reads the pass it just wrote, uncached.
-    const status = (await (await call({ authorization: `Bearer ${TOKEN}` }, {}, "backup_status")).json()) as { data: { files: { gameAssets: { last_ok: string | null } } } };
+    const status = (await (
+      await call({ authorization: `Bearer ${TOKEN}` }, {}, "backup_status")
+    ).json()) as { data: { files: { gameAssets: { last_ok: string | null } } } };
     expect(status.data.files.gameAssets.last_ok).not.toBeNull();
   });
 });

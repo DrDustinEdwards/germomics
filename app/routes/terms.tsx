@@ -7,7 +7,12 @@ import { loadFilledPage } from "~/lib/content.server";
 import { LegalPage } from "~/components/content/Legal";
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return pageHead({ path: "/terms", title: loaderData?.title ?? "Terms of use", description: "The Germomics terms of use: the rules for using germomics.com, its podcast episodes, writing, data pages and games." });
+  return pageHead({
+    path: "/terms",
+    title: loaderData?.title ?? "Terms of use",
+    description:
+      "The Germomics terms of use: the rules for using germomics.com, its podcast episodes, writing, data pages and games.",
+  });
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {

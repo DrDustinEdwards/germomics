@@ -9,7 +9,13 @@
 // card read the object's width and height when the page is served (app/lib/images.server.ts), and a body's figures are
 // sized from the media row when it is rendered and rendered again after each byte change (afterBytes). So a replace, a
 // revert or a quarter turn may change the size, and every page follows it.
-import { mediaLibrary, mediaVersion, type MediaAdapter, type MediaResize, type MediaUploadLimits } from "@dustinedwards/site-api";
+import {
+  mediaLibrary,
+  mediaVersion,
+  type MediaAdapter,
+  type MediaResize,
+  type MediaUploadLimits,
+} from "@dustinedwards/site-api";
 import { rerenderUsing } from "~/lib/render.server";
 import { mediaStore } from "~/lib/media/store.server";
 import { suggestFor } from "~/lib/media/suggest.server";
@@ -19,7 +25,15 @@ import { buildKey, imageUrl } from "~/lib/r2.server";
 /** What Carrel may upload; HEIC and HEIF are stored as JPEG (prepareUpload). */
 export const LIMITS: MediaUploadLimits = {
   maxBytes: 10 * 1024 * 1024,
-  types: ["image/png", "image/jpeg", "image/webp", "image/gif", "image/avif", "image/heic", "image/heif"],
+  types: [
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+    "image/gif",
+    "image/avif",
+    "image/heic",
+    "image/heif",
+  ],
 };
 
 /**
@@ -40,7 +54,11 @@ export function carrelMedia(env: Env, recordChange: Log): MediaAdapter {
     resize: RESIZE,
     url: imageUrl,
     // carrel/<ms>-<name>, as before; a taken key tries the name with -2, -3 and on.
-    key: (file, attempt) => buildKey("carrel", attempt === 1 ? file.filename : file.filename.replace(/(\.[^.]*)?$/, `-${attempt}$1`)),
+    key: (file, attempt) =>
+      buildKey(
+        "carrel",
+        attempt === 1 ? file.filename : file.filename.replace(/(\.[^.]*)?$/, `-${attempt}$1`),
+      ),
     history: { bucket: env.BACKUPS, prefix: "media/revisions/" },
     // Every page sizes a picture by these (app/lib/images.server.ts), so they follow each change of its bytes; empty
     // where the binding could not measure it, which every reader takes as no size.
@@ -60,11 +78,13 @@ export function carrelMedia(env: Env, recordChange: Log): MediaAdapter {
     },
     // Carrel's changeId joins its authorship record to this site's history, in the Worker log with the new version.
     onWrite: async ({ op, id, changeId }) => {
-      const version = op === "delete" ? "deleted" : mediaVersion((await store.record(id))?.rev ?? 0);
+      const version =
+        op === "delete" ? "deleted" : mediaVersion((await store.record(id))?.rev ?? 0);
       recordChange(`media.${op}`, id, version, changeId);
     },
     suggest: (picture) => suggestFor(env, picture),
     // The package checks every address and each redirect before this fetch runs.
-    importFetch: ((input: RequestInfo | URL, init?: RequestInit) => fetch(input, init)) as typeof fetch,
+    importFetch: ((input: RequestInfo | URL, init?: RequestInit) =>
+      fetch(input, init)) as typeof fetch,
   });
 }
