@@ -20,6 +20,7 @@ export default [
   route("tag/:tag", "routes/tag.$tag.tsx"),
   route("guests/:guest", "routes/guests.$guest.tsx"),
   route("subscribe", "routes/subscribe.tsx"),
+  route("subscribe/confirm", "routes/subscribe.confirm.tsx"),
   route("unsubscribe", "routes/unsubscribe.tsx"),
   route("about", "routes/about.tsx"),
   route("about/dustin-edwards", "routes/about.dustin-edwards.tsx"),

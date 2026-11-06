@@ -61,7 +61,7 @@ function render(request: Request, env: Env, ctx: ExecutionContext): Promise<Resp
 }
 
 // Paths that are always rendered live in the gateway, never stored. /admin + /api are gated/mutating; /search is
-// query-driven and low-repeat; /preview is Carrel's preview links, answered before the app; /unsubscribe renders a per-token email; /health is an
+// query-driven and low-repeat; /preview is Carrel's preview links, answered before the app; /unsubscribe and /subscribe/confirm render a per-token email; /health is an
 // ops probe (no-store); /games/assets are immutable R2 binaries that already cache on their own, and /media keeps each
 // resized image in the cache itself.
 function livePath(pathname: string): boolean {
@@ -72,6 +72,7 @@ function livePath(pathname: string): boolean {
     pathname.startsWith("/search") ||
     pathname.startsWith("/preview/") ||
     pathname.startsWith("/unsubscribe") ||
+    pathname.startsWith("/subscribe/confirm") ||
     pathname.startsWith("/games/assets/") ||
     pathname.startsWith("/media/")
   );
