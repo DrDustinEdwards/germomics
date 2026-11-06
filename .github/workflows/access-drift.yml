@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   drift:
-    uses: DrDustinEdwards/devkit/.github/workflows/access-drift.yml@3480f68abadcbcd50ddd72c826aa50787ea82bcc # v0.23.1
+    uses: DrDustinEdwards/devkit/.github/workflows/access-drift.yml@507d1be20e6cbf76badcfeaadf944818c66cf54f # v0.26.1
     with:
       app: germomics-login
       admins-url: https://germomics.com/admin/access-drift
