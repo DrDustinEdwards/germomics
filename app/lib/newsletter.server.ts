@@ -8,11 +8,10 @@
 // link cannot resubscribe the address after a later unsubscribe.
 import { and, eq } from "drizzle-orm";
 import { readSignedToken, signToken } from "@dustinedwards/site-runtime/signed-token";
-import { logEvent } from "@dustinedwards/site-runtime/log";
+import { sendEmail } from "@dustinedwards/site-runtime/email";
 import { renderEmail, verification } from "capsomer/email";
 import { getDb } from "~/db/index.server";
 import { subscribers } from "~/db/schema";
-import { emailReady, sendEmail } from "~/lib/email.server";
 import { SITE_ORIGIN } from "~/lib/site";
 
 const CONFIRM_PATH = "/subscribe/confirm";
@@ -28,7 +27,7 @@ const keys = (env: Env) => [env.SUBSCRIBE_LINK_KEY];
  * one mailed in the last few minutes (no mail goes; the page says the same either way, so it reveals nothing).
  */
 export async function requestSubscription(env: Env, email: string, now = new Date()): Promise<"sent" | "unavailable"> {
-  if (!emailReady(env) || !env.SUBSCRIBE_LINK_KEY) return "unavailable";
+  if (!env.SEND_EMAIL || !env.EMAIL_FROM?.trim() || !env.SUBSCRIBE_LINK_KEY) return "unavailable";
   const db = getDb(env);
   const [row] = await db
     .select({ confirmedAt: subscribers.confirmedAt, unsubscribedAt: subscribers.unsubscribedAt, confirmSentAt: subscribers.confirmSentAt })
@@ -46,10 +45,11 @@ export async function requestSubscription(env: Env, email: string, now = new Dat
     .onConflictDoUpdate({ target: subscribers.email, set: { confirmSentAt: at } });
 
   const token = await signToken(keys(env), { p: PURPOSE, e: email, at });
+  const url = `${SITE_ORIGIN}${CONFIRM_PATH}?token=${encodeURIComponent(token)}`;
   const mail = renderEmail(verification, {
     brand: { name: "Germomics", family: "purple" },
     to: email,
-    url: `${SITE_ORIGIN}${CONFIRM_PATH}?token=${encodeURIComponent(token)}`,
+    url,
     expiresIn: `${CONFIRM_DAYS} days`,
     copy: {
       subject: "Confirm your Germomics newsletter subscription",
@@ -59,12 +59,10 @@ export async function requestSubscription(env: Env, email: string, now = new Dat
       ignore: "If this was not you, ignore this message. Nothing more is sent to this address unless it is confirmed.",
     },
   });
-  try {
-    await sendEmail(env, email, mail);
-  } catch (error) {
+  const from = { email: env.EMAIL_FROM, name: "Germomics" };
+  if (!(await sendEmail(env.SEND_EMAIL, { from, to: email, ...mail }, { secrets: [url, token] })).sent) {
     // Undo the send time, so the person can try again at once rather than being told a mail went.
     await db.update(subscribers).set({ confirmSentAt: row?.confirmSentAt ?? null }).where(eq(subscribers.email, email));
-    logEvent("subscribe_confirm_send_failed", { error }, { level: "error" });
     return "unavailable";
   }
   return "sent";
