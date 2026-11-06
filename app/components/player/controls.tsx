@@ -15,10 +15,10 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Link } from "capsomer/react/link";
 import {
-  Play, Pause, RotateCcw, RotateCw, SkipForward, Gauge, Volume2, VolumeX,
+  Play, Pause, RotateCcw, RotateCw, SkipForward, Volume2, VolumeX,
   Timer, ListTree, Captions, Check,
 } from "lucide-react";
-import { usePlayer, activeChapterIndex, type SleepMode } from "./player-context";
+import { usePlayer, activeChapterIndex, type SleepMode } from "./use-player";
 import { formatDuration, spokenTime } from "~/lib/format";
 import type { PlayerTrack } from "~/lib/types";
 
@@ -66,13 +66,14 @@ function Popover({
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const btnRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const panelId = useId();
+  const buttonId = `${panelId}-button`;
+  // By id, not a ref: `children` calls this while rendering the panel.
   const close = useCallback(() => {
     setOpen(false);
-    btnRef.current?.focus();
-  }, []);
+    document.getElementById(buttonId)?.focus();
+  }, [buttonId]);
 
   useEffect(() => {
     if (!open) return;
@@ -108,7 +109,7 @@ function Popover({
   return (
     <div ref={rootRef} className="relative" onBlur={onBlur}>
       <button
-        ref={btnRef}
+        id={buttonId}
         type="button"
         aria-haspopup="true"
         aria-expanded={open}

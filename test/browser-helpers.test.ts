@@ -61,7 +61,7 @@ describe("waveform-client", () => {
 
   it("decodes in the browser, buckets the channels into the stored peaks, and reports the duration", async () => {
     let seen: ArrayBuffer | undefined;
-    vi.stubGlobal("AudioContext", audioContext((b) => ((seen = b), buffer([new Array(800).fill(0.5), new Array(800).fill(0.5)]))));
+    vi.stubGlobal("AudioContext", audioContext((b) => ((seen = b), buffer([Array.from({ length: 800 }, () => 0.5), Array.from({ length: 800 }, () => 0.5)]))));
     const source = new Uint8Array([1, 2, 3]).buffer;
     const out = await decodePeaks(source);
     expect(out!.duration).toBe(12.5);
@@ -73,7 +73,7 @@ describe("waveform-client", () => {
   });
 
   it("hears the second channel of a stereo file even when the first is silent", async () => {
-    vi.stubGlobal("AudioContext", audioContext(() => buffer([new Array(400).fill(0), new Array(400).fill(0.8)])));
+    vi.stubGlobal("AudioContext", audioContext(() => buffer([Array.from({ length: 400 }, () => 0), Array.from({ length: 400 }, () => 0.8)])));
     expect((await decodePeaks(new ArrayBuffer(1)))!.peaks.every((p) => p === 100)).toBe(true);
   });
 
@@ -86,7 +86,7 @@ describe("waveform-client", () => {
   describe("probeDuration", () => {
     const revoke = vi.fn();
     function probe(fire: (audio: { onloadedmetadata?: () => void; onerror?: () => void; duration?: number; src?: string; preload?: string }) => void) {
-      const audio: Record<string, any> = {};
+      const audio: Record<string, unknown> = {};
       vi.stubGlobal("document", { createElement: (tag: string) => (tag === "audio" ? audio : {}) });
       URL.createObjectURL = () => "blob:fake";
       URL.revokeObjectURL = revoke;

@@ -134,7 +134,8 @@ export function mediaStore(env: Env): MediaLibraryStore {
         .insert(mediaRevisions)
         .values({ ...revision, mediaKey: key, backupKey: copyKey })
         .returning({ id: mediaRevisions.id });
-      return made!.id;
+      if (!made) throw new Error(`${key}: the revision insert returned no row`);
+      return made.id;
     },
 
     async revisions(key, limit = 100) {

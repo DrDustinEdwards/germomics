@@ -8,7 +8,7 @@ export function meta() {
   return pageHead({ path: "/games", title: "Games · Germomics", description: "Free arcade games from Germomics that play in the browser, tied to its microbiology stories, each with a high-score board.", pageType: "CollectionPage" });
 }
 
-export function loader(_: Route.LoaderArgs) {
+export function loader() {
   return { games: listGames() };
 }
 

@@ -42,8 +42,7 @@ export default function Episodes({ loaderData }: Route.ComponentProps) {
       <h1 className="mb-6 font-display text-3xl font-semibold">Episodes</h1>
 
       {seasons.map((s) => {
-        const eps = bySeason
-          .get(s)!
+        const eps = (bySeason.get(s) ?? [])
           .slice()
           .sort((a, b) => (a.episodeNumber ?? 0) - (b.episodeNumber ?? 0));
         return (

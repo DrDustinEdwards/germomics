@@ -5,65 +5,17 @@
 // complete Media Session surface (lock screen / car / media keys): metadata + chapterInfo +
 // position state + all transport/seek handlers.
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
 import type { PlayerTrack } from "~/lib/types";
+import { PlayerContext, type PlayerApi, type SleepMode } from "./use-player";
 import { AUDIO_STARTED_ATTRIBUTE } from "~/lib/hydration";
 import { RATE_KEY, RESUME_PREFIX, VOL_KEY, resumeAt, storedRate, storedVolume } from "~/lib/player-storage";
 
-export type SleepMode = "end" | number; // "end" of episode, or minutes from now
-
-type PlayerState = {
-  queue: PlayerTrack[];
-  index: number;
-  current: PlayerTrack | null;
-  isPlaying: boolean;
-  currentTime: number;
-  duration: number;
-  rate: number;
-  volume: number;
-  muted: boolean;
-  buffering: boolean;
-  errored: boolean;
-  sleep: SleepMode | null;
-  /** True only while the LOADED episode's own player surface is in the viewport (drives dock auto-hide). */
-  surfaceVisible: boolean;
-};
-
-type PlayerApi = PlayerState & {
-  /** The shared <audio> element, for the transcript's native TextTrack highlight. */
-  audioRef: React.RefObject<HTMLAudioElement | null>;
-  /** Seed the queue without autoplay (home seeds all episodes, newest first). */
-  setQueue: (tracks: PlayerTrack[]) => void;
-  /** Play a single episode (episode detail page). */
-  playTrack: (track: PlayerTrack) => void;
-  /** Replace the queue and start at an index (home "play all"). */
-  playQueueAt: (tracks: PlayerTrack[], index: number) => void;
-  /** Play a single episode starting at a timestamp (transcript click, ?t deep link). */
-  playTrackAt: (track: PlayerTrack, seconds: number) => void;
-  toggle: () => void;
-  pause: () => void;
-  next: () => void;
-  prev: () => void;
-  seek: (seconds: number) => void;
-  skip: (delta: number) => void;
-  setRate: (rate: number) => void;
-  setVolume: (v: number) => void;
-  toggleMute: () => void;
-  setSleep: (mode: SleepMode | null) => void;
-  /** Reported by the episode surface: whether the loaded episode's surface is on screen. */
-  setSurfaceVisible: (visible: boolean) => void;
-  /** Explicit dismiss: pause and end the session so the dock unmounts and does not return on scroll. */
-  dismiss: () => void;
-};
-
-const PlayerContext = createContext<PlayerApi | null>(null);
 
 
 function ms(): MediaSession | null {
@@ -178,7 +130,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
     audio.addEventListener("loadedmetadata", onMeta, { once: true });
     return () => audio.removeEventListener("loadedmetadata", onMeta);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps -- runs once per loaded track, not on each state it reads
   }, [current?.id]);
 
   // Apply play/pause intent.
@@ -187,7 +139,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     if (!audio || !current) return;
     if (isPlaying) void audio.play().catch(() => setIsPlaying(false));
     else audio.pause();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps -- applies a play or pause intent only, not a track change
   }, [isPlaying]);
 
   const next = useCallback(() => {
@@ -450,20 +402,4 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       <audio ref={audioRef} preload="none" />
     </PlayerContext.Provider>
   );
-}
-
-export function usePlayer(): PlayerApi {
-  const ctx = useContext(PlayerContext);
-  if (!ctx) throw new Error("usePlayer must be used within <PlayerProvider>");
-  return ctx;
-}
-
-/** Index of the chapter active at time t, or -1. Chapters are assumed sorted by start. */
-export function activeChapterIndex(chapters: { start: number }[], t: number): number {
-  let idx = -1;
-  for (let i = 0; i < chapters.length; i++) {
-    if (chapters[i].start <= t + 0.001) idx = i;
-    else break;
-  }
-  return idx;
 }

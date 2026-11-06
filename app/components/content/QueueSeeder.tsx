@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { usePlayer } from "~/components/player/player-context";
+import { usePlayer } from "~/components/player/use-player";
 import type { PlayerTrack } from "~/lib/types";
 
 // Seeds the player queue (newest episodes first) without autoplay, only if nothing is queued
@@ -8,7 +8,7 @@ export function QueueSeeder({ tracks }: { tracks: PlayerTrack[] }) {
   const p = usePlayer();
   useEffect(() => {
     if (p.queue.length === 0 && tracks.length) p.setQueue(tracks);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps -- seeds once, on mount, never on a later queue change
   }, []);
   return null;
 }

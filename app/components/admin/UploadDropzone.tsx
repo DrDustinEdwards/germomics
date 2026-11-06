@@ -69,8 +69,9 @@ export function UploadDropzone({
 
   return (
     <div>
-      <label
-        htmlFor={inputId}
+      {/* The drop target for a dragged file; the label and its input are the control, for every other way in. */}
+      <div
+        role="presentation"
         onDragOver={(e) => {
           e.preventDefault();
           setDragging(true);
@@ -82,30 +83,34 @@ export function UploadDropzone({
           const file = e.dataTransfer.files?.[0];
           if (file) handle(file);
         }}
-        className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 text-center transition ${
-          dragging ? "border-accent bg-accent/5" : "border-border bg-surface hover:border-brand"
-        }`}
       >
-        {busy ? (
-          <Loader2 className="animate-spin text-accent" size={22} aria-hidden />
-        ) : (
-          <UploadCloud className="text-brand" size={22} aria-hidden />
-        )}
-        <span className="font-display text-sm text-ink">{label}</span>
-        <span className="text-xs text-muted">Drag &amp; drop or click to choose</span>
-        <input
-          id={inputId}
-          ref={inputRef}
-          type="file"
-          accept={accept}
-          className="sr-only"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) handle(file);
-            e.target.value = "";
-          }}
-        />
-      </label>
+        <label
+          htmlFor={inputId}
+          className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 text-center transition ${
+            dragging ? "border-accent bg-accent/5" : "border-border bg-surface hover:border-brand"
+          }`}
+        >
+          {busy ? (
+            <Loader2 className="animate-spin text-accent" size={22} aria-hidden />
+          ) : (
+            <UploadCloud className="text-brand" size={22} aria-hidden />
+          )}
+          <span className="font-display text-sm text-ink">{label}</span>
+          <span className="text-xs text-muted">Drag &amp; drop or click to choose</span>
+          <input
+            id={inputId}
+            ref={inputRef}
+            type="file"
+            accept={accept}
+            className="sr-only"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handle(file);
+              e.target.value = "";
+            }}
+          />
+        </label>
+      </div>
 
       {busy ? (
         <div className="mt-2" aria-live="polite">

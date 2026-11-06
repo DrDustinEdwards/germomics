@@ -42,7 +42,7 @@ describe("admin upload", () => {
   it("stores an image under the post's folder and returns its public URL", async () => {
     const res = await upload({ kind: "image", postId: "12", file: png("My Pic.png") });
     expect(res.status).toBe(200);
-    const body = (await res.json()) as Record<string, any>;
+    const body = (await res.json()) as { url: string; [field: string]: unknown };
     expect(body).toMatchObject({ ok: true, contentType: "image/png", name: "My Pic.png", size: 8 });
     expect(body.url).toMatch(/^\/media\/posts\/12\/\d+-My_Pic\.png$/);
     const key = body.url.replace("/media/", "");
@@ -53,12 +53,12 @@ describe("admin upload", () => {
 
   it("stores audio in the media bucket with its type, and cleans the post id", async () => {
     const res = await upload({ kind: "audio", postId: "../../etc", file: file("ep.mp3", "audio/mpeg", 10) });
-    const body = (await res.json()) as Record<string, any>;
+    const body = (await res.json()) as { url: string; [field: string]: unknown };
     expect(body).toMatchObject({ ok: true, size: 10, contentType: "audio/mpeg" });
     expect(body.url).toMatch(/^https:\/\/media\.germomics\.com\/episodes\/etc\/\d+-ep\.mp3$/);
     const key = body.url.replace("https://media.germomics.com/", "");
     expect((await e.MEDIA.head(key))?.httpMetadata?.contentType).toBe("audio/mpeg");
-    const misc = (await (await upload({ kind: "audio", postId: "///", file: file("a.mp3", "audio/mpeg") })).json()) as Record<string, any>;
+    const misc = (await (await upload({ kind: "audio", postId: "///", file: file("a.mp3", "audio/mpeg") })).json()) as Record<string, unknown>;
     expect(misc.url).toContain("/episodes/misc/");
   });
 

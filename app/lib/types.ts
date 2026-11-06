@@ -6,7 +6,8 @@ export type Guest = { name: string; role?: string; bio?: string; link?: string; 
 
 /** A reference/credit entry for the episode Sources block (also covers image credits, type:"image"). */
 export type Source = {
-  type: "credit" | "music" | "image" | "article" | "book" | "web" | string;
+  // `string & {}` keeps any other type allowed without swallowing the named ones (editor completion).
+  type: "credit" | "music" | "image" | "article" | "book" | "web" | (string & {});
   title: string;
   url?: string;
   authors?: string;

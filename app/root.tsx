@@ -8,7 +8,7 @@ import {
   useLocation,
   useMatches,
 } from "react-router";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useSyncExternalStore } from "react";
 import { iconLinks } from "@drdustinedwards/site-helpers/icons";
 
 import type { Route } from "./+types/root";
@@ -99,9 +99,11 @@ let clientDeferred: boolean | undefined;
  * (app/site/hydrate.ts). Once such a page has hydrated, ScrollRestoration mounts, so client-side navigations restore
  * and reset the scroll as on any other page.
  */
+const noSubscribe = () => () => {};
+
 function HydrationScripts({ deferred }: { deferred: boolean }) {
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
+  // False on the server and while hydrating, true once hydrated (React's server snapshot, then the client's).
+  const hydrated = useSyncExternalStore(noSubscribe, () => true, () => false);
   if (!deferred) {
     return (
       <>

@@ -56,6 +56,11 @@ jobs:
       - name: Type-check
         run: npm run typecheck
 
+      # Oxlint with devkit's shared config (oxlint.config.ts), type-aware, so after the typecheck that writes the
+      # wrangler and React Router types it reads.
+      - name: Lint
+        run: npm run lint
+
       - name: Build
         id: build
         run: npm run build

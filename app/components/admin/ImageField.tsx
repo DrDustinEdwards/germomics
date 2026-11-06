@@ -3,7 +3,8 @@
 // URL-only fields here. Emits { url, alt } upward.
 import { useState } from "react";
 import { ImageUp, Link2, X } from "lucide-react";
-import { Tabs, Field, inputCx, Button } from "./ui";
+import { Tabs, Field, Button } from "./ui";
+import { inputCx } from "./input-cx";
 import { UploadDropzone } from "./UploadDropzone";
 
 export function ImageField({
@@ -41,7 +42,6 @@ export function ImageField({
 
       {url ? (
         <div className="flex items-start gap-3 rounded-xl border border-border bg-surface p-3">
-          {/* eslint-disable-next-line jsx-a11y/img-redundant-alt */}
           <img src={url} alt={alt || "preview"} className="h-20 w-20 shrink-0 rounded-lg border border-border object-cover" />
           <div className="min-w-0 flex-1">
             <p className="truncate font-mono text-[11px] text-muted">{url}</p>

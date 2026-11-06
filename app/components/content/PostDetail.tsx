@@ -2,7 +2,7 @@
 // Episodes keep their existing experience (player, chapters, transcript, guests); articles get an
 // editorial layout (cover, byline + reading time, table of contents, share, prev/next, related).
 // Body is rendered once via BodyRenderer for both kinds.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { useSearchParams } from "react-router";
 import { Calendar, Clock, ArrowLeft, ArrowRight, FileText, Rss, Bookmark, BookmarkCheck } from "lucide-react";
 import { Link } from "capsomer/react/link";
@@ -28,10 +28,10 @@ import {
   Sources,
   Hosts,
   ChapterList,
-  useHideBrokenFigures,
   FigureLightbox,
 } from "./EpisodeExtras";
-import { usePlayer } from "~/components/player/player-context";
+import { useHideBrokenFigures } from "./use-hide-broken-figures";
+import { usePlayer } from "~/components/player/use-player";
 import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 import { ExternalCue } from "~/components/ExternalCue";
 import { postTrail } from "~/lib/trails";
@@ -56,26 +56,44 @@ export type DetailData = {
   images?: ImageSet;
 };
 
-// Lightweight "save for later": a slug set in localStorage, no server. Toggles aria-pressed.
+// Lightweight "save for later": a slug set in localStorage, no server. Toggles aria-pressed. Read as an external
+// store, so the server and hydration render "Save" and the stored state follows (another tab's change too).
+const SAVED_KEY = "germomics-saved";
+const savedListeners = new Set<() => void>();
+function subscribeSaved(onChange: () => void) {
+  savedListeners.add(onChange);
+  window.addEventListener("storage", onChange);
+  return () => {
+    savedListeners.delete(onChange);
+    window.removeEventListener("storage", onChange);
+  };
+}
+function savedList(): string {
+  try {
+    return localStorage.getItem(SAVED_KEY) || "[]";
+  } catch {
+    return "[]";
+  }
+}
+function isSaved(raw: string, slug: string): boolean {
+  try {
+    return (JSON.parse(raw) as string[]).includes(slug);
+  } catch {
+    return false;
+  }
+}
+
 function SaveButton({ slug }: { slug: string }) {
-  const KEY = "germomics-saved";
-  const [saved, setSaved] = useState(false);
-  useEffect(() => {
-    try {
-      setSaved(JSON.parse(localStorage.getItem(KEY) || "[]").includes(slug));
-    } catch {
-      /* ignore */
-    }
-  }, [slug]);
+  const saved = isSaved(useSyncExternalStore(subscribeSaved, savedList, () => "[]"), slug);
   const toggle = () => {
     try {
-      const list: string[] = JSON.parse(localStorage.getItem(KEY) || "[]");
+      const list: string[] = JSON.parse(savedList());
       const next = list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug];
-      localStorage.setItem(KEY, JSON.stringify(next));
-      setSaved(next.includes(slug));
+      localStorage.setItem(SAVED_KEY, JSON.stringify(next));
     } catch {
       /* ignore */
     }
+    for (const onChange of savedListeners) onChange();
   };
   return (
     <button
@@ -136,7 +154,7 @@ export function PostDetail({ data }: { data: DetailData }) {
       if (player.current?.id === track.id) player.seek(t);
       else player.playTrackAt(track, t);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps -- the ?t deep link applies once, on landing
   }, []);
 
   const GuestList = guests.length ? (

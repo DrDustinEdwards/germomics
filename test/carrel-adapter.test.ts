@@ -18,7 +18,7 @@ let content: typeof adapter.content;
 
 const save = (id: string, source: string, expectedVersion: string | null = null, changeId = "chg_s") =>
   content.saveDraft(id, { source, expectedVersion, changeId });
-const row = (slug: string) => e.DB.prepare("SELECT * FROM posts WHERE slug = ?").bind(slug).first<Record<string, any>>();
+const row = (slug: string) => e.DB.prepare("SELECT * FROM posts WHERE slug = ?").bind(slug).first<Record<string, unknown>>();
 const insert = (sql: string, ...binds: unknown[]) => e.DB.prepare(sql).bind(...binds).run();
 
 beforeAll(() => applyMigrations(e.DB));
@@ -37,7 +37,7 @@ describe("saving a draft", () => {
     expect(res.version).toMatch(/^[0-9a-f]{32}$/);
     const r = (await row("first"))!;
     expect(r).toMatchObject({ kind: "article", title: "First", excerpt: "E", status: "draft", reading_time: 1 });
-    expect(JSON.parse(r.tags)).toEqual(["a"]);
+    expect(JSON.parse(String(r.tags))).toEqual(["a"]);
     expect(logged).toEqual([{ event: "carrel.save", id: "first", version: res.version, changeId: "chg_1" }]);
   });
 
@@ -291,7 +291,7 @@ describe("an episode", () => {
 describe("a page", () => {
   const block = (key: string, value: string) =>
     insert("INSERT INTO content_blocks (key, kind, title, value, status) VALUES (?, 'page', 'About', ?, 'draft')", key, value);
-  const page = (key: string) => e.DB.prepare("SELECT * FROM content_blocks WHERE key = ?").bind(key).first<Record<string, any>>();
+  const page = (key: string) => e.DB.prepare("SELECT * FROM content_blocks WHERE key = ?").bind(key).first<Record<string, unknown>>();
 
   it("is listed and read as Markdown under page.<name>, saved with its render and published", async () => {
     await block("page:about", "Old *about*");

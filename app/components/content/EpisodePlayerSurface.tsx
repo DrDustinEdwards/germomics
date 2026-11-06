@@ -6,7 +6,7 @@
 // is the accessible, keyboard-operable seek control, so the waveform is never the only way to seek.
 import { Suspense, lazy, useEffect, useLayoutEffect, useRef } from "react";
 import type { PlayerTrack } from "~/lib/types";
-import { usePlayer, activeChapterIndex } from "~/components/player/player-context";
+import { usePlayer, activeChapterIndex } from "~/components/player/use-player";
 
 // Layout effect on the client (so the dock's hidden state is set before paint, no flash on play),
 // plain effect on the server (useLayoutEffect would warn during SSR).

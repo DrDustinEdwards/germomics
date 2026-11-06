@@ -6,7 +6,7 @@ import { ChevronRight, ExternalLink, X } from "lucide-react";
 import type { KeyMoment, Source, Host, Chapter } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
 import type { PlayerTrack } from "~/lib/types";
-import { usePlayer } from "~/components/player/player-context";
+import { usePlayer } from "~/components/player/use-player";
 import { GMark } from "~/components/brand/GMark";
 import { imageFor, type ImageSet } from "~/lib/images";
 import { Picture } from "./Picture";
@@ -393,7 +393,7 @@ export function FigureLightbox({
         img.removeEventListener("keydown", onKey as EventListener);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps -- the caller's deps name the body this watches
   }, deps);
 
   // While open: lock scroll, focus the close button, trap Tab, Esc closes; restore focus on close.
@@ -429,13 +429,12 @@ export function FigureLightbox({
       role="dialog"
       aria-modal="true"
       aria-label={open.alt || "Enlarged image"}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) setOpen(null);
-      }}
       className={`fixed inset-0 z-[60] grid place-items-center bg-black/80 p-4 backdrop-blur-sm motion-safe:transition-opacity motion-safe:duration-150 ${
         shown ? "opacity-100" : "opacity-0"
       }`}
     >
+      {/* The backdrop: a click outside the image closes it (Esc does too, above). */}
+      <div aria-hidden="true" className="absolute inset-0" onClick={() => setOpen(null)} />
       <button
         ref={closeBtnRef}
         type="button"
@@ -448,34 +447,8 @@ export function FigureLightbox({
       <img
         src={open.src}
         alt={open.alt}
-        className="max-h-[90vh] max-w-full rounded-lg border border-white/20 object-contain shadow-2xl"
+        className="relative max-h-[90vh] max-w-full rounded-lg border border-white/20 object-contain shadow-2xl"
       />
     </div>
   );
-}
-
-// Hide body figures whose image fails to load (e.g. before the binaries are deployed) so the article
-// never shows a broken image. Reversible: when the asset exists the figure renders normally.
-export function useHideBrokenFigures(ref: React.RefObject<HTMLElement | null>, deps: unknown[]) {
-  useEffect(() => {
-    const root = ref.current;
-    if (!root) return;
-    const imgs = Array.from(root.querySelectorAll("figure img"));
-    const onErr = (e: Event) => {
-      const img = e.target as HTMLImageElement;
-      const fig = img.closest("figure");
-      if (fig) (fig as HTMLElement).style.display = "none";
-    };
-    for (const img of imgs) {
-      const el = img as HTMLImageElement;
-      if (el.complete && el.naturalWidth === 0) {
-        const fig = el.closest("figure");
-        if (fig) (fig as HTMLElement).style.display = "none";
-      } else {
-        el.addEventListener("error", onErr);
-      }
-    }
-    return () => imgs.forEach((img) => img.removeEventListener("error", onErr));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
 }

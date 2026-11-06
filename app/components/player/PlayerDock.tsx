@@ -10,7 +10,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "capsomer/react/link";
 import { ChevronUp, X, AlertCircle, Loader2, ListTree } from "lucide-react";
-import { usePlayer, activeChapterIndex } from "./player-context";
+import { usePlayer, activeChapterIndex } from "./use-player";
 import { formatDuration } from "~/lib/format";
 import {
   PlayPauseButton, SkipButton, NextButton, Scrubber, SpeedControl, VolumeControl,
@@ -25,9 +25,10 @@ export function PlayerDock() {
   const moreRef = useRef<HTMLButtonElement | null>(null);
 
   // Measure the dock's real height into --player-h (0 when nothing is loaded).
+  const loaded = p.current;
   useEffect(() => {
     const root = document.documentElement;
-    if (!p.current) {
+    if (!loaded) {
       root.style.setProperty("--player-h", "0px");
       return;
     }
@@ -42,7 +43,7 @@ export function PlayerDock() {
       ro.disconnect();
       root.style.setProperty("--player-h", "0px");
     };
-  }, [p.current]);
+  }, [loaded]);
 
   // Close the mobile sheet if the viewport grows to desktop (the inline popovers take over there).
   useEffect(() => {
@@ -205,15 +206,17 @@ function DockSheet({
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     document.addEventListener("keydown", onKey);
+    const trigger = returnFocus.current;
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
-      returnFocus.current?.focus();
+      trigger?.focus();
     };
   }, [onClose, returnFocus]);
 
   return (
     <div
+      role="presentation"
       className="fixed inset-0 z-40 bg-black/40 md:hidden"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();

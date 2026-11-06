@@ -7,22 +7,24 @@ function showCopied(button: Element, copied: boolean) {
   for (const el of button.querySelectorAll<HTMLElement>("[data-copy-done]")) el.hidden = !copied;
 }
 
-export function enhanceShare() {
-  document.addEventListener("click", async (event) => {
-    const button = event.target instanceof Element ? event.target.closest<HTMLElement>("[data-copy]") : null;
-    if (!button) return;
-    const url = `${location.origin}${button.dataset.copy ?? ""}`;
-    try {
-      if (button.hasAttribute("data-share") && navigator.share) {
-        await navigator.share({ url });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      showCopied(button, true);
-      clearTimeout(shown.get(button));
-      shown.set(button, setTimeout(() => showCopied(button, false), 1800));
-    } catch {
-      /* dismissed or blocked */
+async function onClick(event: MouseEvent) {
+  const button = event.target instanceof Element ? event.target.closest<HTMLElement>("[data-copy]") : null;
+  if (!button) return;
+  const url = `${location.origin}${button.dataset.copy ?? ""}`;
+  try {
+    if (button.hasAttribute("data-share") && navigator.share) {
+      await navigator.share({ url });
+      return;
     }
-  });
+    await navigator.clipboard.writeText(url);
+    showCopied(button, true);
+    clearTimeout(shown.get(button));
+    shown.set(button, setTimeout(() => showCopied(button, false), 1800));
+  } catch {
+    /* dismissed or blocked */
+  }
+}
+
+export function enhanceShare() {
+  document.addEventListener("click", (event) => void onClick(event));
 }

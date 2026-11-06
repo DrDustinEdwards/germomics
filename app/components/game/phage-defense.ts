@@ -26,7 +26,8 @@ export function createPhageDefense(
 
     create() {
       this.player = this.add.rectangle(400, 560, 64, 16, 0x22d3ee);
-      const kb = this.input.keyboard!;
+      const kb = this.input.keyboard;
+      if (!kb) throw new Error("Phaser's keyboard plugin is off");
       this.cursors = kb.createCursorKeys();
       this.keyA = kb.addKey(Phaser.Input.Keyboard.KeyCodes.A);
       this.keyD = kb.addKey(Phaser.Input.Keyboard.KeyCodes.D);

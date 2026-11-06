@@ -3,7 +3,8 @@
 // parsed preview shows cue count + the first lines so the author can confirm it parsed.
 import { useMemo, useRef, useState } from "react";
 import { Captions, ClipboardPaste, FileUp } from "lucide-react";
-import { Tabs, inputCx } from "./ui";
+import { Tabs } from "./ui";
+import { inputCx } from "./input-cx";
 import { parseVtt, srtToVtt, isProbablyVtt } from "~/lib/vtt";
 import { formatDuration } from "~/lib/format";
 
