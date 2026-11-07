@@ -145,7 +145,7 @@ jobs:
     concurrency:
       group: deploy
       cancel-in-progress: false
-    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@7b07bc2ecb652f4f0341736a19c557dbb81b6f92 # v0.26.2
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@7cfb9285fae4080d856d58a501d906a1b3e471f6 # v0.26.3
     with:
       worker-name: germomics
       # site-runtime withAdminIdle's key, minted once by the deploy and never shown (devkit "generated-secrets").

@@ -24,6 +24,7 @@ import {
 } from "@dustinedwards/site-runtime/prefetch";
 import { canonicalRedirect } from "@dustinedwards/site-runtime/url";
 import { runJobs } from "@dustinedwards/site-runtime/cron";
+import { maintenanceOn, maintenanceResponse } from "@dustinedwards/site-runtime/maintenance";
 import { logEvent, requestFields, withRequestLog } from "@dustinedwards/site-runtime/log";
 import { countNotFound } from "@dustinedwards/site-runtime/not-found";
 import { cloudflareContext, cspNonceContext } from "../app/lib/context.server";
@@ -153,6 +154,10 @@ const site = {
         except: ["/feed/podcast/"],
       });
       if (redirect) return withSecurityHeaders(redirect, origin);
+
+      // The maintenance page (site-runtime ./maintenance): every path but /health answers 503 while the MAINTENANCE var is on.
+      if (maintenanceOn(env) && url.pathname !== "/health")
+        return withSecurityHeaders(maintenanceResponse({ siteName: "Germomics" }), origin);
 
       // Carrel's site API. Its own guard (prefix, rate limit, key, route) runs first and answers
       // everything under /api/carrel/v1; nothing else is served by it. An accepted write purges the stored pages.
