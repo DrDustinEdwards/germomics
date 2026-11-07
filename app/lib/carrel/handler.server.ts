@@ -1,11 +1,7 @@
 // Carrel's site API, mounted by workers/app.ts at /api/carrel/v1, with its preview links at /preview/<token>. One key
 // (CARREL_SITE_KEY, a Worker secret) reaches only that prefix and nothing else on the site. The same object runs the
 // schedules Carrel set, from the one-minute cron (workers/app.ts).
-import {
-  createSiteApi,
-  indexNowHook,
-  webmentionHook,
-} from "@dustinedwards/site-api";
+import { createSiteApi, indexNowHook, webmentionHook } from "@dustinedwards/site-api";
 import { d1SiteApiStore } from "@dustinedwards/site-api/store";
 import { schedulePurgeHook } from "@dustinedwards/site-runtime/edge-cache";
 import { submitIndexNow } from "@drdustinedwards/site-helpers/indexnow";
