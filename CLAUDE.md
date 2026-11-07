@@ -30,7 +30,7 @@ React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-pl
 
 ## Operator API: back up and run jobs now
 
-Checking the backups, backing up now and running any scheduled job now are Capsid Admin's, for every site (Dustin, 2026-11-06 and 2026-11-07): Capsid calls `backup_status` and `run_job` on `POST /api/operator` (`app/routes/api.operator.ts`, site-runtime's `./operator`, the `OPERATOR_TOKEN` bearer, 30 requests a minute). `run_job` runs any job in `app/lib/cron.server.ts` now through the path its cron runs, recorded in `cron_runs`; `{ backup: true }` runs the four backup jobs. Germomics has no admin MCP server: Germomics Admin was retired on 2026-11-07, and its tool-call log copies stay in the `germomics-admin-mcp-tool-calls` bucket.
+Checking the backups, backing up now and running any scheduled job now are Capsid Admin's, for every site (Dustin, 2026-11-06 and 2026-11-07): Capsid calls `backup_status` and `run_job` on `POST /api/operator` (`app/routes/api.operator.ts`, site-runtime's `./operator`, the `OPERATOR_TOKEN` bearer, 30 requests a minute). `run_job` runs any job in `app/lib/cron.server.ts` now through the path its cron runs, recorded in `cron_runs`; `{ backup: true }` runs the four backup jobs. Germomics has no admin MCP server: Germomics Admin was retired on 2026-11-07, and its tool-call log bucket was deleted the same day.
 
 ## Hard rules
 
