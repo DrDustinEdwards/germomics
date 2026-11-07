@@ -1,3 +1,4 @@
+import { shareCard } from "@drdustinedwards/site-helpers/head";
 // Canonical site-identity values (client-safe). One source of truth so the privacy page, the
 // schema.org PostalAddress, and any future newsletter email footer all read the same address.
 // Mirrors the Vault's site-config.md. Postal address is provisional (per Dustin, 2026-06-21).
@@ -12,12 +13,10 @@ export const MEDIA_ORIGIN = "https://media.germomics.com";
 /** The show's square cover art: its artwork in the feed until show_config sets one. */
 export const DEFAULT_ARTWORK = `${SITE_ORIGIN}/media/brand/germomics-artwork-1400.jpg`;
 /** The share card of any page without its own image: the wordmark at 1200x630 (public/brand/germomics-card.jpg). */
-export const DEFAULT_CARD = {
-  url: `${SITE_ORIGIN}/brand/germomics-card.jpg`,
-  width: 1200,
-  height: 630,
-  alt: "Germomics: a broadcasting microphone forming the M in the GERMOMICS wordmark",
-};
+export const DEFAULT_CARD = shareCard(
+  `${SITE_ORIGIN}/brand/germomics-card.jpg`,
+  "Germomics: a broadcasting microphone forming the M in the GERMOMICS wordmark",
+);
 /** The site's IndexNow key, public by the protocol's design: served as /<key>.txt and sent with each changed page. */
 export const INDEXNOW_KEY = "e181c18855ea5175390b4e1124cc23fd";
 

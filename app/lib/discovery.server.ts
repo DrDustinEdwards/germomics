@@ -8,9 +8,10 @@
 //   /ai.txt         — purpose-based access policy: citation/search welcome, training reserved.
 //
 // Builders are pure (data in, string out) so they're trivial to test; routes fetch + pass data.
+import { htmlToText } from "@drdustinedwards/site-helpers/text";
 import { llmsDocument, type LlmsLink } from "@drdustinedwards/site-helpers/llms";
 import type { Post, ShowConfig } from "~/db/schema";
-import { stripHtml } from "~/lib/seo";
+
 import { ABOUT, AUTHOR } from "~/lib/about";
 import { formatDate } from "~/lib/format";
 
@@ -19,7 +20,7 @@ const INDEX_LIMIT = 40;
 const FULL_BODY_CHARS = 6000;
 
 function oneLine(value: string | null | undefined, max = 160): string {
-  const t = stripHtml(value ?? "")
+  const t = htmlToText(value ?? "")
     .replace(/\s+/g, " ")
     .trim();
   return t.length > max ? `${t.slice(0, max - 1).trimEnd()}…` : t;

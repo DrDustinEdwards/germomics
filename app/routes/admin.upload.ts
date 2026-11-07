@@ -14,7 +14,7 @@ import { getEnv } from "~/lib/context.server";
 import { uploadAudio, uploadImage, buildKey } from "~/lib/r2.server";
 import { RefusedError, prepareUpload } from "@dustinedwards/site-api";
 import { logEvent } from "@dustinedwards/site-runtime/log";
-import { LIMITS, RESIZE } from "~/lib/carrel/media.server";
+import { pictureLimits, PICTURE_RESIZE } from "@dustinedwards/site-api";
 import { recordUpload, sizeMetadata } from "~/lib/media/store.server";
 import { readCappedBytes } from "@dustinedwards/site-runtime/body";
 
@@ -62,8 +62,8 @@ export async function action({ request, context }: Route.ActionArgs) {
         resize: true,
       };
       prepared = await prepareUpload(env.IMAGES, input, {
-        resize: RESIZE,
-        limits: { ...LIMITS, maxBytes: MAX_IMAGE },
+        resize: PICTURE_RESIZE,
+        limits: pictureLimits(MAX_IMAGE),
       });
     } catch (error) {
       if (error instanceof RefusedError)

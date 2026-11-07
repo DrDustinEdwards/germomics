@@ -3,7 +3,7 @@
 // (its type, size, alt, filename and focal point, from its R2 metadata), its caption from media_captions (0014), the
 // SHA-256 of its bytes, and its width and height (from its metadata, else measured by the Images binding). It never
 // changes an object and never overwrites a row, so it is safe to run again: a second run adds only what is missing.
-import { sha256Hex } from "@dustinedwards/site-api";
+import { sha256Hex } from "@dustinedwards/site-runtime/encoding";
 import { FOCUS_METADATA, focusOf } from "@dustinedwards/site-runtime/image";
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { inArray } from "drizzle-orm";
