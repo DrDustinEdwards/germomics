@@ -175,7 +175,7 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
               />
               <label htmlFor="consent" className="text-sm text-muted">
                 I agree to receive the Germomics newsletter by email and accept the{" "}
-                <Link to="/privacy" className="text-accent hover:underline">
+                <Link to="/privacy" className="text-accent underline underline-offset-2">
                   privacy policy
                 </Link>
                 . You can unsubscribe anytime via the link in every email.
