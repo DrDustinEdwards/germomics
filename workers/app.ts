@@ -24,6 +24,7 @@ import {
 } from "@dustinedwards/site-runtime/prefetch";
 import { canonicalRedirect } from "@dustinedwards/site-runtime/url";
 import { runJobs } from "@dustinedwards/site-runtime/cron";
+import { markdownCopies } from "@drdustinedwards/site-helpers/markdown-copy";
 import { maintenanceOn, maintenanceResponse } from "@dustinedwards/site-runtime/maintenance";
 import { logEvent, requestFields, withRequestLog } from "@dustinedwards/site-runtime/log";
 import { countNotFound } from "@dustinedwards/site-runtime/not-found";
@@ -294,13 +295,39 @@ const site = {
 // An admin idle for an hour is signed out of Access (site-runtime ./access). Every request writes one `request` line
 // (site-runtime ./log: path, status, ms and the deployed commit), a preview link's token cut from its path.
 type IncomingRequest = Parameters<typeof site.fetch>[0];
+const answer = (request: Request, env: Env, ctx: ExecutionContext) =>
+  withAdminIdle(request, () => site.fetch(request as IncomingRequest, env, ctx), {
+    secret: env.ADMIN_IDLE_SECRET,
+  });
+
+// Prelum's markdownCopies: each public page has a Markdown copy at its path plus .md and answers Accept: text/markdown.
+// /llms-full.txt stays the site's own (llmsFull: false): it prints the show notes and essays and leaves the transcripts
+// out, which the generated one, built from whole pages, would print. The admin, the APIs, the search, a game's canvas
+// page and the other non-reading paths get no copy.
+const NO_COPY = [
+  "/admin",
+  "/api/",
+  "/search",
+  "/preview",
+  "/health",
+  "/unsubscribe",
+  "/subscribe/confirm",
+  "/games/",
+  "/media/",
+  "/feed/",
+];
+const withMarkdownCopies = markdownCopies(answer, {
+  origin: SITE_ORIGIN,
+  llmsFull: false,
+  siteMarkdown: false,
+  skip: (path) =>
+    NO_COPY.some((prefix) => path === prefix.replace(/\/$/, "") || path.startsWith(prefix)),
+});
+
 export default {
   ...site,
-  fetch: withRequestLog(
-    (request: Request, env: Env, ctx: ExecutionContext) =>
-      withAdminIdle(request, () => site.fetch(request as IncomingRequest, env, ctx), {
-        secret: env.ADMIN_IDLE_SECRET,
-      }),
-    { sha: (env) => env.DEPLOY_SHA, tokenPath: PREVIEW_TOKEN },
-  ),
+  fetch: withRequestLog(withMarkdownCopies, {
+    sha: (env) => env.DEPLOY_SHA,
+    tokenPath: PREVIEW_TOKEN,
+  }),
 } satisfies ExportedHandler<Env>;
