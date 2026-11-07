@@ -18,7 +18,7 @@ import { createSiteBackup } from "@dustinedwards/d1-dump";
 import { BACKUP_COUNTED_TABLES, BACKUP_EXCLUDE, CREDENTIAL_ALLOW } from "~/lib/backup-checks";
 
 // A file pass stops itself at three minutes and goes on the next night, inside its job's four-minute timeout
-// (cron.server.ts). /health reports each pass under its own key: audio, images and gameAssets.
+// (cron.server.ts). /health reports each pass by name under `files`: audio, images and game-assets.
 const timeBudgetMs = 180_000;
 const backup = createSiteBackup<Env>({
   dump: {
@@ -27,9 +27,9 @@ const backup = createSiteBackup<Env>({
     counted: [...BACKUP_COUNTED_TABLES],
   },
   files: [
-    { name: "audio", key: "audio", source: (env) => env.MEDIA, timeBudgetMs },
-    { name: "images", key: "images", source: (env) => env.BLOG_IMAGES, timeBudgetMs },
-    { name: "game-assets", key: "gameAssets", source: (env) => env.GAME_ASSETS, timeBudgetMs },
+    { name: "audio", source: (env) => env.MEDIA, timeBudgetMs },
+    { name: "images", source: (env) => env.BLOG_IMAGES, timeBudgetMs },
+    { name: "game-assets", source: (env) => env.GAME_ASSETS, timeBudgetMs },
   ],
 });
 
