@@ -22,6 +22,8 @@ interface Env {
   SEND_EMAIL?: SendEmail;
   /** Keys site-runtime's admin idle cookie (withAdminIdle `secret`). Minted by the deploy (devkit worker-deploy `generated-secrets`), never shown; unset, the admin paths fail (site-runtime 0.82 requires it). */
   ADMIN_IDLE_SECRET: string;
+  /** "1" or "true" puts the site in maintenance: every path but /health answers the 503 page (site-runtime ./maintenance). Set in the dashboard. */
+  MAINTENANCE?: string;
   /** The deployed commit, written into the built config by vite.config.ts; empty for a local build. */
   DEPLOY_SHA?: string;
 }
