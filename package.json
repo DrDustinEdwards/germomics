@@ -26,11 +26,11 @@
     "nobloat:baseline": "react-router typegen && devkit-no-bloat --write-baseline && npm run build && devkit-route-weight --write-baseline"
   },
   "dependencies": {
-    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.39.1",
+    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.40.0",
     "@dustinedwards/d1-dump": "github:DrDustinEdwards/d1-dump#v0.15.0",
-    "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.28.0",
-    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.91.1",
-    "capsomer": "github:DrDustinEdwards/capsomer#v0.79.3",
+    "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.31.0",
+    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.97.0",
+    "capsomer": "github:DrDustinEdwards/capsomer#v0.81.0",
     "drizzle-orm": "0.45.4",
     "enarratio": "0.9.1",
     "hast-util-from-html": "2.0.3",
