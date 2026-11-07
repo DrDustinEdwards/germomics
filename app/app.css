@@ -31,6 +31,7 @@
   --color-muted: var(--muted);
   --color-brand: var(--brand);
   --color-brand-strong: var(--brand-strong);
+  --color-on-brand: var(--on-brand);
   --color-accent: var(--accent);
 }
 
@@ -47,6 +48,7 @@
   --muted: #6b6577;
   --brand: #4f2d7f;
   --brand-strong: #402567;
+  --on-brand: #ffffff;
   --accent: #0e7490;
   color-scheme: light;
 }
@@ -62,6 +64,7 @@
     --muted: #9a8fb0;
     --brand: #c4aef0;
     --brand-strong: #b29ad9;
+    --on-brand: #120b1f;
     --accent: #22d3ee;
     color-scheme: dark;
   }
@@ -77,6 +80,7 @@
   --muted: #9a8fb0;
   --brand: #c4aef0;
   --brand-strong: #b29ad9;
+  --on-brand: #120b1f;
   --accent: #22d3ee;
   color-scheme: dark;
 }

@@ -1,11 +1,12 @@
 // /txasm - landing for the Texas Branch of the American Society for Microbiology, which germomics
 // hosted for years. Prose comes from the page:txasm content block (D1, editable); a prominent CTA
 // bridges to the branch's own site at txasm.org. ?preview shows the draft to a signed-in admin.
+import { htmlToText } from "@drdustinedwards/site-helpers/text";
 import { ExternalLink } from "lucide-react";
 import type { Route } from "./+types/txasm";
 import { getEnv } from "~/lib/context.server";
 import { loadPage, isPreviewing } from "~/lib/content.server";
-import { pageHead, stripHtml } from "~/lib/seo";
+import { pageHead } from "~/lib/seo";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 
 const TITLE = "Texas Branch of the American Society for Microbiology";
@@ -22,7 +23,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const page = await loadPage(env, "page:txasm", { includeDrafts: preview });
   return {
     title: page.title || TITLE,
-    description: stripHtml(page.html),
+    description: htmlToText(page.html),
     html: page.html,
   };
 }
@@ -39,7 +40,7 @@ export default function Txasm({ loaderData }: Route.ComponentProps) {
 
       <a
         href="https://txasm.org"
-        className="mt-6 inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 font-display text-sm font-medium text-white hover:bg-brand-strong"
+        className="mt-6 inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 font-display text-sm font-medium text-on-brand hover:bg-brand-strong"
       >
         Visit txasm.org
         <ExternalLink size={16} aria-hidden />

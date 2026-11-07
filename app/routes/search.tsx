@@ -54,7 +54,7 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
         />
         <button
           type="submit"
-          className="rounded-full bg-brand px-3 py-1 font-display text-sm text-white hover:bg-brand-strong"
+          className="rounded-full bg-brand px-3 py-1 font-display text-sm text-on-brand hover:bg-brand-strong"
         >
           Go
         </button>

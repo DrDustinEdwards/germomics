@@ -29,7 +29,7 @@ export function PostCard({
         </span>
       )}
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-muted">
+        <div className="flex flex-wrap items-center gap-x-2 font-mono text-[11px] uppercase tracking-wide text-muted">
           <span className="flex items-center gap-1 text-brand">
             {isEpisode ? <Headphones size={12} aria-hidden /> : <FileText size={12} aria-hidden />}
             {isEpisode ? "Episode" : "Article"}

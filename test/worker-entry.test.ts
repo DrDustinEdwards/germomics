@@ -130,6 +130,20 @@ describe("the Worker entry", () => {
     );
   });
 
+  it("answers a page's Markdown copy at its path plus .md, and none for the admin", async () => {
+    vi.stubEnv("DEV", true);
+    const page = new Response(
+      "<html><head><title>About</title></head><body><main><h1>About</h1><p>Hello.</p></main></body></html>",
+      { headers: { "Content-Type": "text/html" } },
+    );
+    h.render.mockImplementationOnce(async () => page);
+    const copy = await fetchWith(new Request(`${ORIGIN}/about.md`));
+    expect(copy.headers.get("Content-Type")).toContain("text/markdown");
+    expect(await copy.text()).toContain("Hello.");
+    const admin = await fetchWith(new Request(`${ORIGIN}/admin.md`));
+    expect(admin.headers.get("Content-Type") ?? "").not.toContain("text/markdown");
+  });
+
   it("in development renders live", async () => {
     vi.stubEnv("DEV", true);
     const res = await fetchWith(new Request(fresh()));
@@ -231,6 +245,7 @@ describe("the nightly jobs", () => {
       "backup",
       "game-assets-backup",
       "images-backup",
+      "page-dates",
       "prune-404",
     ]);
   });

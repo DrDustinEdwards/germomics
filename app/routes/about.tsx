@@ -1,6 +1,7 @@
 // /about - what germomics is, who makes it, how to follow it. Prose comes from the page:about and
 // page:dustin-edwards content blocks (D1, editable); Organization JSON-LD carries entity clarity.
 // Public, WCAG AA. ?preview shows drafts to a signed-in admin.
+import { htmlToText } from "@drdustinedwards/site-helpers/text";
 import { Link } from "capsomer/react/link";
 import { Rss, Mic, FileText, Database, Gamepad2, User } from "lucide-react";
 import type { Route } from "./+types/about";
@@ -8,7 +9,7 @@ import { getEnv, getSettings } from "~/lib/context.server";
 import { getShowConfig } from "~/lib/show.server";
 import { loadPage, isPreviewing, settingAddress } from "~/lib/content.server";
 import { jsonLd } from "@drdustinedwards/site-helpers/schema";
-import { buildOrganizationLd, pageHead, stripHtml } from "~/lib/seo";
+import { buildOrganizationLd, pageHead } from "~/lib/seo";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { AUTHOR } from "~/lib/about";
 
@@ -34,7 +35,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     show,
     address: settingAddress(settings),
     title: about.title || "About Germomics",
-    description: stripHtml(about.html),
+    description: htmlToText(about.html),
     aboutHtml: about.html,
     bioHtml: bio.html,
   };

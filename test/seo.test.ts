@@ -5,7 +5,6 @@ import {
   buildOrganizationLd,
   buildPersonLd,
   buildPodcastSeriesLd,
-  stripHtml,
   wasUpdatedAfterPublish,
 } from "~/lib/seo";
 
@@ -37,22 +36,6 @@ const post = (over: Partial<Post>): Post =>
     episodeNumber: null,
     ...over,
   }) as Post;
-
-describe("stripHtml", () => {
-  it("drops tags, script and style blocks, and entities, and collapses whitespace", () => {
-    expect(stripHtml("<p>One   <b>two</b></p>\n<p>three &amp; four &#39;x&#39;</p>")).toBe(
-      "One two three four x",
-    );
-    expect(stripHtml("a<script>alert(1)\nx</script>b<STYLE>p{}</STYLE>c")).toBe("a b c");
-    expect(stripHtml("")).toBe("");
-    // Prelum's output: the heading's "#" link is not text, and a hex entity goes like the others.
-    expect(
-      stripHtml(
-        '<h2 id="a">A &#x26; B<a class="heading-anchor" aria-label="Link to section: A" href="#a">#</a></h2><p>c</p>',
-      ),
-    ).toBe("A B c");
-  });
-});
 
 describe("buildJsonLd", () => {
   const base = { author: "Dustin Edwards", seriesTitle: "Germomics" };

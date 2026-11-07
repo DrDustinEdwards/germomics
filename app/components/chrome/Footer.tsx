@@ -188,7 +188,7 @@ export function Footer() {
             to="/admin"
             rel="nofollow"
             prefetch="none"
-            className="ml-auto inline-flex items-center gap-1 text-muted/70 hover:text-ink"
+            className="ml-auto inline-flex items-center gap-1 text-muted hover:text-ink"
           >
             <Lock size={14} aria-hidden /> Admin
           </Link>

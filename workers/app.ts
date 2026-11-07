@@ -1,3 +1,4 @@
+import { isSiteApiRequest } from "@dustinedwards/site-api";
 // aislop-ignore-next-line ai-slop/hallucinated-import -- a Workers built-in, not an npm package
 import { WorkerEntrypoint } from "cloudflare:workers";
 import { createRequestHandler, RouterContextProvider, type ServerBuild } from "react-router";
@@ -16,7 +17,6 @@ import {
 import { withAdminIdle } from "@dustinedwards/site-runtime/access";
 import { preloads, rootStylesheets, withPreloadHeader } from "@dustinedwards/site-runtime/preload";
 import { timedRender } from "@dustinedwards/site-runtime/server-timing";
-import { generateNonce, renewNonce } from "@dustinedwards/site-runtime/csp";
 import {
   SPECULATION_RULES_HEADER,
   SPECULATION_RULES_PATH,
@@ -24,18 +24,20 @@ import {
 } from "@dustinedwards/site-runtime/prefetch";
 import { canonicalRedirect } from "@dustinedwards/site-runtime/url";
 import { runJobs } from "@dustinedwards/site-runtime/cron";
+import { markdownCopies } from "@drdustinedwards/site-helpers/markdown-copy";
 import { maintenanceOn, maintenanceResponse } from "@dustinedwards/site-runtime/maintenance";
 import { logEvent, requestFields, withRequestLog } from "@dustinedwards/site-runtime/log";
 import { countNotFound } from "@dustinedwards/site-runtime/not-found";
 import { cloudflareContext, cspNonceContext } from "../app/lib/context.server";
 import { enforceRateLimit } from "../app/lib/security.server";
-import { CSP_REPORT_PATH, handleCspReport, withSecurityHeaders } from "../app/lib/security-headers";
-import { carrelApi, isCarrelRequest } from "../app/lib/carrel/handler.server";
+import { CSP_REPORT_PATH, handleCspReport, security } from "../app/lib/security-headers";
+import { carrelApi } from "../app/lib/carrel/handler.server";
 import { d1SiteApiStore, tombstoned } from "@dustinedwards/site-api/store";
 import { cronJobs } from "../app/lib/cron.server";
+import { setPageRenderer } from "../app/lib/page-dates.server";
 import { nextPublishAt } from "../app/lib/posts.server";
 import { FONT_PRELOADS } from "../app/lib/preloads";
-import { NO_PREFETCH } from "../app/lib/site";
+import { NO_PREFETCH, SITE_ORIGIN } from "../app/lib/site";
 
 // site-runtime's limiter class, bound as RATE_LIMITER (wrangler.jsonc); enforceRateLimit and the
 // score submit count through it.
@@ -51,10 +53,11 @@ const serverBuild = () => import("virtual:react-router/server-build") as Promise
 const requestHandler = createRequestHandler(serverBuild, import.meta.env.MODE);
 
 // Each render gets its own CSP nonce (React, React Router and the theme script carry it) and leaves with the security
-// headers. A stored page's nonce is renewed for every reader in the gateway (renewNonce), so no two readers share one.
+// headers. A stored page's nonce is renewed for every reader in the gateway (security-headers.ts, `renew`), so no two
+// readers share one.
 function render(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const context = new RouterContextProvider();
-  const nonce = generateNonce();
+  const nonce = security.nonceFor(request);
   context.set(cloudflareContext, { env, ctx });
   context.set(cspNonceContext, nonce);
   return requestHandler(request, context).then((page) => {
@@ -62,9 +65,21 @@ function render(request: Request, env: Env, ctx: ExecutionContext): Promise<Resp
     // names (site-runtime ./prefetch), as React Router's prefetch did when every page hydrated.
     if (page.headers.get("Content-Type")?.startsWith("text/html"))
       page.headers.set(SPECULATION_RULES_HEADER.name, SPECULATION_RULES_HEADER.value);
-    return withSecurityHeaders(page, request.url, nonce);
+    return security.withSecurityHeaders(page, request, nonce);
   });
 }
+
+// The daily page-dates job reads each hub and static page as the Renderer would render it (app/lib/page-dates.server.ts).
+setPageRenderer(async (path, env) => {
+  const noContext = {
+    waitUntil() {},
+    passThroughOnException() {},
+    props: {},
+  } as unknown as ExecutionContext;
+  const response = await render(new Request(`${SITE_ORIGIN}${path}`), env, noContext);
+  const html = (response.headers.get("Content-Type") ?? "").includes("text/html");
+  return response.ok && html ? response.text() : null;
+});
 
 // Paths that are always rendered live in the gateway, never stored. /admin + /api are gated/mutating; /search is
 // query-driven and low-repeat; /preview is Carrel's preview links, answered before the app; /unsubscribe and /subscribe/confirm render a per-token email; /health is an
@@ -145,7 +160,6 @@ export class Renderer extends withPurgePages(WorkerEntrypoint<Env>) {
 const site = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const origin = url.origin;
     try {
       // One hop to the canonical address: https, the bare host, no trailing slash. The podcast feed keeps its slash
       // (CLAUDE.md rule 1).
@@ -153,47 +167,50 @@ const site = {
         host: "germomics.com",
         except: ["/feed/podcast/"],
       });
-      if (redirect) return withSecurityHeaders(redirect, origin);
+      if (redirect) return security.withSecurityHeaders(redirect, request);
 
       // The maintenance page (site-runtime ./maintenance): every path but /health answers 503 while the MAINTENANCE var is on.
       if (maintenanceOn(env) && url.pathname !== "/health")
-        return withSecurityHeaders(maintenanceResponse({ siteName: "Germomics" }), origin);
+        return security.withSecurityHeaders(
+          maintenanceResponse({ siteName: "Germomics" }),
+          request,
+        );
 
       // Carrel's site API. Its own guard (prefix, rate limit, key, route) runs first and answers
       // everything under /api/carrel/v1; nothing else is served by it. An accepted write purges the stored pages.
       // Only its own requests load it; a preview reads the site's stylesheets when it draws.
-      if (isCarrelRequest(url)) {
+      if (isSiteApiRequest(url)) {
         const carrel = carrelApi(env, async () =>
           rootStylesheets(await serverBuild()).map((s) => s.href),
         );
         if (carrel.matches(request)) {
           const response = await carrel.handle(request, ctx);
           purgeAfterWrite(request, response, ctx, `carrel ${request.method} ${url.pathname}`);
-          return withSecurityHeaders(response, origin);
+          return security.withSecurityHeaders(response, request);
         }
         // A preview link Carrel made (/preview/<token>, no key): the post's current source in the site's stylesheet,
         // noindex and never stored. The package's no-referrer stays, so the token, which is the address, is never sent on.
         if (carrel.matchesPreviewLink(request))
-          return withSecurityHeaders(await carrel.servePreviewLink(request), origin);
+          return security.withSecurityHeaders(await carrel.servePreviewLink(request), request);
       }
 
       // The prefetch rules every page's Speculation-Rules header names (render above): never the paths in NO_PREFETCH
       // (beside the family's /admin, /api and the rest), nor a game, whose page is heavy (Phaser) and holds a leaderboard.
       if (url.pathname === SPECULATION_RULES_PATH) {
-        return withSecurityHeaders(
+        return security.withSecurityHeaders(
           speculationRulesResponse({ exclude: [...NO_PREFETCH, "/games/"] }, request),
-          origin,
+          request,
         );
       }
 
       // CSP violation reports, logged to Workers Logs (security-headers.ts).
       if (url.pathname === CSP_REPORT_PATH) {
-        return withSecurityHeaders(await handleCspReport(request, env), origin);
+        return security.withSecurityHeaders(await handleCspReport(request, env), request);
       }
 
       // Abuse mitigation before any work: rate-limit admin/AI/signup paths.
       const limited = await enforceRateLimit(env, request);
-      if (limited) return withSecurityHeaders(limited, request.url);
+      if (limited) return security.withSecurityHeaders(limited, request);
 
       // Rendered live: writes, the signed-in admin, the live paths, and everything during `npm run dev`.
       const signedIn = hasSessionCookie(request);
@@ -234,7 +251,7 @@ const site = {
       });
       return counted(
         await tombstoned(
-          forReader(renewNonce(page), request),
+          forReader(security.withSecurityHeaders(page, request), request),
           url.pathname,
           d1SiteApiStore(env.DB),
         ),
@@ -250,12 +267,12 @@ const site = {
         { ...requestFields(request, { sha: env.DEPLOY_SHA, tokenPath: PREVIEW_TOKEN }), error },
         { level: "error", tokenPath: PREVIEW_TOKEN },
       );
-      return withSecurityHeaders(
+      return security.withSecurityHeaders(
         new Response("Internal Server Error", {
           status: 500,
           headers: { "Content-Type": "text/plain; charset=utf-8" },
         }),
-        request.url,
+        request,
       );
     }
   },
@@ -278,13 +295,39 @@ const site = {
 // An admin idle for an hour is signed out of Access (site-runtime ./access). Every request writes one `request` line
 // (site-runtime ./log: path, status, ms and the deployed commit), a preview link's token cut from its path.
 type IncomingRequest = Parameters<typeof site.fetch>[0];
+const answer = (request: Request, env: Env, ctx: ExecutionContext) =>
+  withAdminIdle(request, () => site.fetch(request as IncomingRequest, env, ctx), {
+    secret: env.ADMIN_IDLE_SECRET,
+  });
+
+// Prelum's markdownCopies: each public page has a Markdown copy at its path plus .md and answers Accept: text/markdown.
+// /llms-full.txt stays the site's own (llmsFull: false): it prints the show notes and essays and leaves the transcripts
+// out, which the generated one, built from whole pages, would print. The admin, the APIs, the search, a game's canvas
+// page and the other non-reading paths get no copy.
+const NO_COPY = [
+  "/admin",
+  "/api/",
+  "/search",
+  "/preview",
+  "/health",
+  "/unsubscribe",
+  "/subscribe/confirm",
+  "/games/",
+  "/media/",
+  "/feed/",
+];
+const withMarkdownCopies = markdownCopies(answer, {
+  origin: SITE_ORIGIN,
+  llmsFull: false,
+  siteMarkdown: false,
+  skip: (path) =>
+    NO_COPY.some((prefix) => path === prefix.replace(/\/$/, "") || path.startsWith(prefix)),
+});
+
 export default {
   ...site,
-  fetch: withRequestLog(
-    (request: Request, env: Env, ctx: ExecutionContext) =>
-      withAdminIdle(request, () => site.fetch(request as IncomingRequest, env, ctx), {
-        secret: env.ADMIN_IDLE_SECRET,
-      }),
-    { sha: (env) => env.DEPLOY_SHA, tokenPath: PREVIEW_TOKEN },
-  ),
+  fetch: withRequestLog(withMarkdownCopies, {
+    sha: (env) => env.DEPLOY_SHA,
+    tokenPath: PREVIEW_TOKEN,
+  }),
 } satisfies ExportedHandler<Env>;

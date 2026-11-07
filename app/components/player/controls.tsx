@@ -244,7 +244,7 @@ export function PlayPauseButton({
       type="button"
       onClick={onClick}
       aria-label={playing ? "Pause" : "Play"}
-      className={`tap-target grid ${dim} shrink-0 place-items-center rounded-full bg-brand text-white hover:bg-brand-strong`}
+      className={`tap-target grid ${dim} shrink-0 place-items-center rounded-full bg-brand text-on-brand hover:bg-brand-strong`}
     >
       {playing ? (
         <Pause size={ic} aria-hidden />
