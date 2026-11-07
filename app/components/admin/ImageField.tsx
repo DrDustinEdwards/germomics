@@ -1,5 +1,5 @@
 // Dual-input image field (§C): "Upload" (drag-drop → BLOG_IMAGES, stored as /media/<key>, shrunk on the server
-// past 4096px, thumbnail preview) OR "URL / Paste". Alt text is required whenever an image is set — we retire
+// past 2560px, thumbnail preview) OR "URL / Paste". Alt text is required whenever an image is set — we retire
 // URL-only fields here. Emits { url, alt } upward.
 import { useState } from "react";
 import { ImageUp, Link2, X } from "lucide-react";
