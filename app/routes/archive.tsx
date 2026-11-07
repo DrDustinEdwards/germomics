@@ -65,7 +65,7 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
               to={`/archive?tab=${key}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
               className={`rounded-full px-3 py-1.5 font-display text-sm ${
                 tab === key
-                  ? "bg-brand text-white"
+                  ? "bg-brand text-on-brand"
                   : "border border-border text-muted hover:text-ink"
               }`}
             >
@@ -75,7 +75,7 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
         </div>
         <Form method="get" data-keep-focus className="flex items-center gap-2">
           <input type="hidden" name="tab" value={tab} />
-          <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5">
+          <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
             <Search size={15} aria-hidden className="text-muted" />
             <input
               type="search"

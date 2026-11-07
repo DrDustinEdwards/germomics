@@ -160,7 +160,7 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
               />
               <button
                 type="submit"
-                className="rounded-lg bg-brand px-4 py-2 font-display text-sm font-medium text-white hover:bg-brand-strong"
+                className="rounded-lg bg-brand px-4 py-2 font-display text-sm font-medium text-on-brand hover:bg-brand-strong"
               >
                 Subscribe
               </button>
