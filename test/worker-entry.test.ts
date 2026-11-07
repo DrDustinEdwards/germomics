@@ -231,6 +231,7 @@ describe("the nightly jobs", () => {
       "backup",
       "game-assets-backup",
       "images-backup",
+      "page-dates",
       "prune-404",
     ]);
   });

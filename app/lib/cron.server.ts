@@ -19,6 +19,7 @@ import {
 } from "~/lib/backup.server";
 import { runCarrelSchedules } from "~/lib/carrel/handler.server";
 import { continueMediaBackfill } from "~/lib/media/backfill.server";
+import { runPageDates } from "~/lib/page-dates.server";
 import { rerenderStale } from "~/lib/render.server";
 
 const SCHEDULES_CRON = "* * * * *";
@@ -82,6 +83,13 @@ export function cronJobs(env: Env, scheduledTime: Date): Record<string, CronJob[
         everyMinutes: DAY,
         timeoutMs: 4 * MINUTE,
         run: () => runGameAssetsBackup(env),
+      },
+      // The day each hub and static page last changed, for /sitemap.xml's lastmod (app/lib/page-dates.server.ts).
+      {
+        name: "page-dates",
+        everyMinutes: DAY,
+        timeoutMs: 2 * MINUTE,
+        run: () => runPageDates(env),
       },
       {
         name: "prune-404",
