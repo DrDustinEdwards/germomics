@@ -11,6 +11,7 @@ import { ImageField } from "~/components/admin/ImageField";
 import { useSnippet } from "~/lib/content";
 import type { Person, PersonLink } from "~/db/schema";
 import { ADMIN_FORM, readForm } from "~/lib/body.server";
+import { confirmSubmit } from "capsomer/behavior/confirm-dialog";
 
 export async function loader({ context }: Route.LoaderArgs) {
   return { people: await listPeople(getEnv(context)) };
@@ -118,9 +119,9 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                   </button>
                   <del.Form
                     method="post"
-                    onSubmit={(e) => {
-                      if (!confirm(`Delete ${p.name}?`)) e.preventDefault();
-                    }}
+                    onSubmit={(e) =>
+                      confirmSubmit(e, { title: `Delete ${p.name}?`, action: "Delete person" })
+                    }
                   >
                     <input type="hidden" name="intent" value="delete" />
                     <input type="hidden" name="id" value={p.id} />
