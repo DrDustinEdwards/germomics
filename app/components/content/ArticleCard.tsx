@@ -33,9 +33,7 @@ export function ArticleCard({ post, image }: { post: Post; image?: ImageAttribut
           <h2 className="mt-1.5 font-display text-xl font-semibold text-ink group-hover:text-brand">
             {post.title}
           </h2>
-          {post.excerpt ? (
-            <p className="mt-1.5 text-sm text-muted">{post.excerpt}</p>
-          ) : null}
+          {post.excerpt ? <p className="mt-1.5 text-sm text-muted">{post.excerpt}</p> : null}
         </div>
       </Link>
       {(post.tags ?? []).length ? (
