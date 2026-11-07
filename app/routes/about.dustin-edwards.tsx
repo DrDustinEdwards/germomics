@@ -1,13 +1,14 @@
 // /about/dustin-edwards - author bio. Prose comes from the page:dustin-edwards content block (D1).
 // Person JSON-LD carries author authority. Independent framing: credentials in the
 // prose only, no institutional branding. ?preview shows the draft to a signed-in admin.
+import { htmlToText } from "@drdustinedwards/site-helpers/text";
 import { Link } from "capsomer/react/link";
 import { ExternalLink } from "lucide-react";
 import type { Route } from "./+types/about.dustin-edwards";
 import { getEnv } from "~/lib/context.server";
 import { loadPage, isPreviewing } from "~/lib/content.server";
 import { jsonLd } from "@drdustinedwards/site-helpers/schema";
-import { buildPersonLd, pageHead, stripHtml } from "~/lib/seo";
+import { buildPersonLd, pageHead } from "~/lib/seo";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { AUTHOR } from "~/lib/about";
 import { sectionPageTrail } from "~/lib/trails";
@@ -41,7 +42,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const preview = await isPreviewing(env, request);
   const bio = await loadPage(env, "page:dustin-edwards", { includeDrafts: preview });
-  return { bioHtml: bio.html, bioText: stripHtml(bio.html) };
+  return { bioHtml: bio.html, bioText: htmlToText(bio.html) };
 }
 
 export default function AuthorBio({ loaderData }: Route.ComponentProps) {

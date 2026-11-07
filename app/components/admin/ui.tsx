@@ -1,6 +1,7 @@
 // Shared admin UI primitives — consistent inputs, cards, buttons, tabs, badges and char
 // counters on the germomics design tokens. Accessible by construction: labels tied to inputs,
 // visible focus (global :focus-visible), 24px+ targets, errors wired via aria-describedby.
+import { Segmented } from "capsomer/react/segmented";
 import { useId } from "react";
 
 export const inputCx =
@@ -117,6 +118,7 @@ export function Button({
   );
 }
 
+// An input-method switch: Capsomer's segmented control, so the arrow keys move and choose.
 export function Tabs<T extends string>({
   tabs,
   value,
@@ -128,31 +130,16 @@ export function Tabs<T extends string>({
   onChange: (v: T) => void;
   label: string;
 }) {
+  const options = tabs.map((t) => ({
+    value: t.value,
+    label: (
+      <>
+        {t.icon} {t.label}
+      </>
+    ),
+  }));
   return (
-    <div
-      role="tablist"
-      aria-label={label}
-      className="inline-flex rounded-lg border border-border bg-surface p-0.5"
-    >
-      {tabs.map((t) => {
-        const active = t.value === value;
-        return (
-          <button
-            key={t.value}
-            type="button"
-            role="tab"
-            aria-selected={active}
-            onClick={() => onChange(t.value)}
-            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-display text-xs font-medium transition ${
-              active ? "bg-card text-ink shadow-sm" : "text-muted hover:text-ink"
-            }`}
-          >
-            {t.icon}
-            {t.label}
-          </button>
-        );
-      })}
-    </div>
+    <Segmented legend={label} hideLegend options={options} value={value} onChange={onChange} />
   );
 }
 

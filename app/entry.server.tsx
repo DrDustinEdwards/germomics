@@ -3,7 +3,7 @@ import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
 import { renderToReadableStream } from "react-dom/server";
 import { logEvent } from "@dustinedwards/site-runtime/log";
-import { cspNonceContext } from "~/lib/context.server";
+import { getNonce } from "@dustinedwards/site-runtime/context";
 
 export default async function handleRequest(
   request: Request,
@@ -16,7 +16,7 @@ export default async function handleRequest(
   const userAgent = request.headers.get("user-agent");
   // The render's CSP nonce, on React's streaming scripts and React Router's (ServerRouter's nonce is also <Scripts>'
   // and <ScrollRestoration>'s default).
-  const nonce = loadContext.get(cspNonceContext);
+  const nonce = getNonce(loadContext);
 
   const body = await renderToReadableStream(
     <ServerRouter context={routerContext} url={request.url} nonce={nonce} />,

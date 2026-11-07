@@ -193,13 +193,13 @@ describe("an upload", () => {
     const big = png(8192, 4096);
     const item = await upload(big, { resize: true });
     expect(item).toMatchObject({
-      width: 4096,
-      height: 2048,
+      width: 2560,
+      height: 1280,
       resizedFrom: { width: 8192, height: 4096, bytes: big.byteLength },
     });
     const history = (await media.history!(item.id))!;
     expect(history.map((r) => [r.reason, r.width, r.current])).toEqual([
-      ["resize", 4096, true],
+      ["resize", 2560, true],
       ["upload", 8192, false],
     ]);
     expect(await media.findByHash!(String((await row(item.id))!.sha256))).toMatchObject({
@@ -222,7 +222,7 @@ describe("an upload", () => {
       expectedVersion: reverted.item.version!,
       changeId: "c",
     });
-    expect(pass).toMatchObject({ resized: true, item: { width: 4096, height: 2048 } });
+    expect(pass).toMatchObject({ resized: true, item: { width: 2560, height: 1280 } });
     expect(
       await media.shrink!(item.id, { expectedVersion: pass.item.version!, changeId: "c" }),
     ).toMatchObject({ resized: false });
