@@ -33,9 +33,10 @@ import { CSP_REPORT_PATH, handleCspReport, security } from "../app/lib/security-
 import { carrelApi } from "../app/lib/carrel/handler.server";
 import { d1SiteApiStore, tombstoned } from "@dustinedwards/site-api/store";
 import { cronJobs } from "../app/lib/cron.server";
+import { setPageRenderer } from "../app/lib/page-dates.server";
 import { nextPublishAt } from "../app/lib/posts.server";
 import { FONT_PRELOADS } from "../app/lib/preloads";
-import { NO_PREFETCH } from "../app/lib/site";
+import { NO_PREFETCH, SITE_ORIGIN } from "../app/lib/site";
 
 // site-runtime's limiter class, bound as RATE_LIMITER (wrangler.jsonc); enforceRateLimit and the
 // score submit count through it.
@@ -66,6 +67,18 @@ function render(request: Request, env: Env, ctx: ExecutionContext): Promise<Resp
     return security.withSecurityHeaders(page, request, nonce);
   });
 }
+
+// The daily page-dates job reads each hub and static page as the Renderer would render it (app/lib/page-dates.server.ts).
+setPageRenderer(async (path, env) => {
+  const noContext = {
+    waitUntil() {},
+    passThroughOnException() {},
+    props: {},
+  } as unknown as ExecutionContext;
+  const response = await render(new Request(`${SITE_ORIGIN}${path}`), env, noContext);
+  const html = (response.headers.get("Content-Type") ?? "").includes("text/html");
+  return response.ok && html ? response.text() : null;
+});
 
 // Paths that are always rendered live in the gateway, never stored. /admin + /api are gated/mutating; /search is
 // query-driven and low-repeat; /preview is Carrel's preview links, answered before the app; /unsubscribe and /subscribe/confirm render a per-token email; /health is an
