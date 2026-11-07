@@ -71,7 +71,7 @@ export function Header() {
   const subscribeLabel = useSnippet("snippet:nav.subscribe", "Subscribe");
 
   const subscribeCta =
-    "rounded-full bg-brand px-3 py-1.5 font-display text-sm font-medium text-white hover:bg-brand-strong";
+    "rounded-full bg-brand px-3 py-1.5 font-display text-sm font-medium text-on-brand hover:bg-brand-strong";
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-bg/85 backdrop-blur">
