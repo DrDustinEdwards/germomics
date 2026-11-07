@@ -1,3 +1,4 @@
+import { isSiteApiRequest } from "@dustinedwards/site-api";
 // aislop-ignore-next-line ai-slop/hallucinated-import -- a Workers built-in, not an npm package
 import { WorkerEntrypoint } from "cloudflare:workers";
 import { createRequestHandler, RouterContextProvider, type ServerBuild } from "react-router";
@@ -30,7 +31,7 @@ import { countNotFound } from "@dustinedwards/site-runtime/not-found";
 import { cloudflareContext, cspNonceContext } from "../app/lib/context.server";
 import { enforceRateLimit } from "../app/lib/security.server";
 import { CSP_REPORT_PATH, handleCspReport, withSecurityHeaders } from "../app/lib/security-headers";
-import { carrelApi, isCarrelRequest } from "../app/lib/carrel/handler.server";
+import { carrelApi } from "../app/lib/carrel/handler.server";
 import { d1SiteApiStore, tombstoned } from "@dustinedwards/site-api/store";
 import { cronJobs } from "../app/lib/cron.server";
 import { nextPublishAt } from "../app/lib/posts.server";
@@ -162,7 +163,7 @@ const site = {
       // Carrel's site API. Its own guard (prefix, rate limit, key, route) runs first and answers
       // everything under /api/carrel/v1; nothing else is served by it. An accepted write purges the stored pages.
       // Only its own requests load it; a preview reads the site's stylesheets when it draws.
-      if (isCarrelRequest(url)) {
+      if (isSiteApiRequest(url)) {
         const carrel = carrelApi(env, async () =>
           rootStylesheets(await serverBuild()).map((s) => s.href),
         );
