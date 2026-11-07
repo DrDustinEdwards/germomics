@@ -17,14 +17,14 @@ concurrency:
 
 jobs:
   worker-size:
-    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@507d1be20e6cbf76badcfeaadf944818c66cf54f # v0.26.1
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@7b07bc2ecb652f4f0341736a19c557dbb81b6f92 # v0.26.2
     with:
       prepare: npm run build
 
   # The admin MCP Worker in mcp/: its own npm package and lockfile, so its own install. devkit's bin comes from the
   # root install; the budget is mcp/.worker-size.json.
   mcp:
-    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@507d1be20e6cbf76badcfeaadf944818c66cf54f # v0.26.1
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@7b07bc2ecb652f4f0341736a19c557dbb81b6f92 # v0.26.2
     with:
       install: npm ci && npm ci --prefix mcp
       working-directory: mcp
