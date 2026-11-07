@@ -55,21 +55,30 @@ export function cronJobs(env: Env, scheduledTime: Date): Record<string, CronJob[
       },
     ],
     [NIGHTLY_CRON]: [
-      { name: "backup", everyMinutes: DAY, timeoutMs: 4 * MINUTE, run: () => runBackup(env) },
+      {
+        name: "backup",
+        backup: true,
+        everyMinutes: DAY,
+        timeoutMs: 4 * MINUTE,
+        run: () => runBackup(env),
+      },
       {
         name: "audio-backup",
+        backup: true,
         everyMinutes: DAY,
         timeoutMs: 4 * MINUTE,
         run: () => runAudioBackup(env),
       },
       {
         name: "images-backup",
+        backup: true,
         everyMinutes: DAY,
         timeoutMs: 4 * MINUTE,
         run: () => runImagesBackup(env),
       },
       {
         name: "game-assets-backup",
+        backup: true,
         everyMinutes: DAY,
         timeoutMs: 4 * MINUTE,
         run: () => runGameAssetsBackup(env),
@@ -84,7 +93,11 @@ export function cronJobs(env: Env, scheduledTime: Date): Record<string, CronJob[
   };
 }
 
-/** Every job of every cron, for /health's cronCheck (it reads names and intervals; `run` is never called). */
+/**
+ * Every job of every cron: for /health's cronCheck (names and intervals), and for the operator API's run_job, which
+ * runs any of them now through the same runJobs path (site-runtime runJobTool). The backup jobs are marked backup, so
+ * Capsid Admin's back up now runs them.
+ */
 export function allCronJobs(env: Env): CronJob[] {
   return Object.values(cronJobs(env, new Date())).flat();
 }

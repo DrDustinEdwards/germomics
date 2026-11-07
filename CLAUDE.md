@@ -28,9 +28,9 @@ React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-pl
 - `/health` reports `backup: { last_ok, age_hours, warning?, files }`; it warns past 26 hours for the dump or either file pass, and its `cron` check warns on a job that failed or stopped.
 - Restore and the drill: the d1-dump README ("Restore" and "Restore drill"). Download a run with `npx wrangler r2 object get germomics-backups/backups/json/<run id>/<file> --remote`, then `npx d1-dump drill --dir <dir>` (Node 24). `.github/workflows/restore-drill.yml` drills the newest dump weekly, straight from the bucket (a token with R2 read only).
 
-## Admin MCP: back up now
+## Operator API: back up and run jobs now
 
-`mcp/` is Germomics Admin, its own Worker (`germomics-admin-mcp`, https://admin-mcp.germomics.com/mcp), built like Foxing's: Access sign-in, a wrapper with no policy and no data binding that reaches the site only over a service binding to `POST /api/operator` (`app/routes/api.operator.ts`, the `OPERATOR_TOKEN` bearer, 30 requests a minute). Two tools: `germomics_check_backup` (the backup state read now, uncached) and `germomics_backup_media` (the three files passes run now, copy only, the same `backupFilesNow` as the nightly jobs). `mcp/CLAUDE.md` has the rest; `.github/workflows/ci-mcp.yml` tests it and deploys it on a merge to main while `CF_DEPLOY` is `true`.
+Checking the backups, backing up now and running any scheduled job now are Capsid Admin's, for every site (Dustin, 2026-11-06 and 2026-11-07): Capsid calls `backup_status` and `run_job` on `POST /api/operator` (`app/routes/api.operator.ts`, site-runtime's `./operator`, the `OPERATOR_TOKEN` bearer, 30 requests a minute). `run_job` runs any job in `app/lib/cron.server.ts` now through the path its cron runs, recorded in `cron_runs`; `{ backup: true }` runs the four backup jobs. Germomics has no admin MCP server: Germomics Admin was retired on 2026-11-07, and its tool-call log copies stay in the `germomics-admin-mcp-tool-calls` bucket.
 
 ## Hard rules
 

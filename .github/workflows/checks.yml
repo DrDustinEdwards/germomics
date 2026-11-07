@@ -40,11 +40,6 @@ jobs:
       review: true
       # ci.yml's verify job reports Knip and jscpd warn-only (npm run nobloat), beside the page weight gate.
       no-bloat: false
-      # .worker-size.json for the site's build, mcp/.worker-size.json for the admin MCP in mcp/, which has its own package
-      # and lockfile, so its own install; devkit's bin comes from the root install. The admin MCP goes first: the site's
-      # build writes .wrangler/deploy/config.json at the root, which wrangler in mcp/ would refuse beside its own config.
-      # No secret: a dry run never talks to the account.
+      # .worker-size.json for the site's build. No secret: a dry run never talks to the account.
       workers: >-
-        [{ "name": "mcp", "working-directory": "mcp",
-           "prepare": "npm ci --prefix mcp && cp mcp/wrangler.jsonc.example mcp/wrangler.jsonc" },
-         { "name": "germomics", "prepare": "npm run build" }]
+        [{ "name": "germomics", "prepare": "npm run build" }]

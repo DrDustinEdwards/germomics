@@ -4,11 +4,16 @@ import { RouterContextProvider } from "react-router";
 import { cloudflareContext } from "~/lib/context.server";
 import { action } from "~/routes/api.operator";
 
-// The operator API (app/routes/api.operator.ts): the bearer is the whole boundary, and a good call runs the files
-// backup passes into BACKUPS (copy only). Fake token, fake data.
+// The operator API (app/routes/api.operator.ts): a good call runs the files backup passes into BACKUPS (copy only)
+// and backup_status reads them back. The bearer is site-runtime's ./operator, tested where it lives. Fake token, fake data.
 const TOKEN = "t".repeat(40);
 
-function call(headers: Record<string, string>, over: Partial<Env> = {}, tool = "backup_media") {
+function call(
+  headers: Record<string, string>,
+  over: Partial<Env> = {},
+  tool = "run_job",
+  args: Record<string, unknown> = { backup: true },
+) {
   const context = new RouterContextProvider();
   context.set(cloudflareContext, {
     env: { ...(env as unknown as Env), OPERATOR_TOKEN: TOKEN, ...over },
@@ -17,29 +22,27 @@ function call(headers: Record<string, string>, over: Partial<Env> = {}, tool = "
   const request = new Request("https://germomics.com/api/operator", {
     method: "POST",
     headers: { "content-type": "application/json", ...headers },
-    body: JSON.stringify({ tool, args: {} }),
+    body: JSON.stringify({ tool, args }),
   });
   return action({ request, params: {}, context } as never) as Promise<Response>;
 }
 
 describe("operator API", () => {
-  it("refuses a missing or wrong bearer, and a deployment with no token", async () => {
-    expect((await call({})).status).toBe(401);
-    expect((await call({ authorization: `Bearer ${"x".repeat(40)}` })).status).toBe(401);
-    expect(
-      (await call({ authorization: `Bearer ${TOKEN}` }, { OPERATOR_TOKEN: undefined })).status,
-    ).toBe(503);
-  });
-
-  it("runs the three files passes for the right bearer and copies a file", async () => {
+  it("runs the backup jobs now through run_job for the right bearer and copies a file", async () => {
     await (env as unknown as Env).GAME_ASSETS.put("sample/level.json", "{}");
     const res = await call({ authorization: `Bearer ${TOKEN}` });
     expect(res.status).toBe(200);
     const { data } = (await res.json()) as {
-      data: { files: Array<{ name: string; complete: boolean }> };
+      data: { runs: Array<{ job: string; status: string; result?: { complete?: boolean } }> };
     };
-    expect(data.files.map((f) => f.name)).toEqual(["audio", "images", "game-assets"]);
-    expect(data.files.every((f) => f.complete)).toBe(true);
+    // The test database has no tables, so the D1 dump fails as an outcome; the three files passes still run.
+    expect(data.runs.map((r) => r.job)).toEqual([
+      "backup",
+      "audio-backup",
+      "images-backup",
+      "game-assets-backup",
+    ]);
+    expect(data.runs.slice(1).every((r) => r.status === "ok" && r.result?.complete)).toBe(true);
     expect(
       await (env as unknown as Env).BACKUPS.head("files/game-assets/sample/level.json"),
     ).not.toBeNull();
