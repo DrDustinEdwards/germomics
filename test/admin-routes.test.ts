@@ -74,7 +74,7 @@ describe("the admin gate", () => {
       result: gate.middleware[0](args(new Request(url, init), {}, over), next),
     };
   };
-  const admin = { ADMIN_EMAIL: "admin@example.com", ACCESS_DEV_BYPASS: "1" };
+  const admin = { ADMIN_EMAILS: "admin@example.com", ACCESS_DEV_BYPASS: "1" };
 
   it("answers 403 and never reaches the admin route without a verified session", async () => {
     const { reached, result } = run("https://germomics.com/admin", {

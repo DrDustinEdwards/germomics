@@ -169,7 +169,7 @@ describe("searchPages", () => {
 });
 
 describe("isPreviewing", () => {
-  const dev = { ...e, ADMIN_EMAIL: "admin@example.com", ACCESS_DEV_BYPASS: "1" } as unknown as Env;
+  const dev = { ...e, ADMIN_EMAILS: "admin@example.com", ACCESS_DEV_BYPASS: "1" } as unknown as Env;
 
   it("is true only for the admin, and only with ?preview", async () => {
     expect(await isPreviewing(dev, new Request("http://localhost/about?preview"))).toBe(true);

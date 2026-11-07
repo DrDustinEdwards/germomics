@@ -23,7 +23,7 @@ export default defineConfig({
         r2Buckets: ["MEDIA", "BLOG_IMAGES", "GAME_ASSETS", "BACKUPS"],
         bindings: {
           // Fake values only, never a real one.
-          ADMIN_EMAIL: "admin@example.com",
+          ADMIN_EMAILS: "admin@example.com",
         },
       },
     }),

@@ -5,7 +5,7 @@
 	// No newer than the workerd that @cloudflare/vite-plugin bundles supports, or `npm run dev` refuses to start.
 	"compatibility_date": "2026-10-19",
 	"compatibility_flags": ["nodejs_compat"],
-	// Keep dashboard-set vars/secrets (ADMIN_EMAIL, ACCESS_TEAM_DOMAIN, ACCESS_AUD,
+	// Keep dashboard-set vars/secrets (ADMIN_EMAILS, ACCESS_TEAM_DOMAIN, ACCESS_AUD,
 	// CARREL_SITE_KEY) from being wiped on deploy.
 	"keep_vars": true,
 	// Every invocation's logs are kept (head_sampling_rate 1: the site's traffic is far under Workers Logs' daily cap, and
