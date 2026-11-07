@@ -2,22 +2,16 @@
 // routes, redirects, errors; workers/app.ts applies it), and the Content-Security-Policy built from what the site
 // really loads. Server-only.
 
-import {
-  buildContentSecurityPolicy,
-  buildStagedPolicy,
-  CSP_REPORT_GROUP,
-  CSP_REPORT_PATH,
-  reportingEndpoints,
-} from "@dustinedwards/site-runtime/csp";
+import { CSP_REPORT_PATH } from "@dustinedwards/site-runtime/csp";
 import { receiveCspReport } from "@dustinedwards/site-runtime/csp-report";
-import { applyHeaderSet, corpFor } from "@dustinedwards/site-runtime/headers";
+import { pageSecurity } from "@dustinedwards/site-runtime/page-headers";
 
 import { SECURITY_HEADERS } from "~/lib/header-set";
 import { MEDIA_ORIGIN, OP3_ORIGIN } from "~/lib/site";
 
 // Content-Security-Policy, enforced, built by site-runtime's buildContentSecurityPolicy. Inline scripts run by the
 // page's nonce: React Router puts it on its hydration and streaming scripts, React on its own, root.tsx on the theme
-// script, and the edge cache gives every reader a fresh one (renewNonce, edge-cache.server.ts). Allowlist: self, the
+// script, and the edge cache gives every reader a fresh one (`renew` below). Allowlist: self, the
 // media/images subdomains and Cloudflare's Web Analytics beacon (which reports to this origin's /cdn-cgi/rum). The data
 // pages' map is Enarratio's, drawn on the server, so no map host is listed. The only frames are the post players
 // (`embeds`). Styles keep 'unsafe-inline' for TipTap (so the nonce stays off style-src, which would switch it off).
@@ -47,57 +41,28 @@ const sitePolicy = (nonce: string | undefined) =>
       "upgrade-insecure-requests",
     ],
   }) as const;
-const csp = (nonce: string | undefined) => buildContentSecurityPolicy(sitePolicy(nonce));
-// upgrade-insecure-requests stays in the enforced policy only: a browser ignores it in a Report-Only one, and says so.
-const staged = (nonce: string | undefined) => {
-  const site = sitePolicy(nonce);
-  const extraDirectives = site.extraDirectives.filter(
-    (directive) => directive !== "upgrade-insecure-requests",
-  );
-  return buildStagedPolicy(
-    { ...site, extraDirectives },
-    { trustedTypes: true, denyUnlisted: true },
-  );
-};
 
 /**
- * Return a copy of `response` with the security headers added. Never clobbers headers a route
- * already set (Content-Type, Cache-Control, Set-Cookie, its own CSP, etc.). `url` is the request's,
- * whose origin names the Reporting API endpoint; `nonce` is the one the page was rendered with.
- * Images and feeds are Cross-Origin-Resource-Policy: cross-origin (corpFor), since other sites embed them.
+ * site-runtime's pageSecurity: the set on every response (never clobbering a header a route set), the policy above, its
+ * Report-Only companion and the Reporting API endpoint. Images and feeds are Cross-Origin-Resource-Policy: cross-origin
+ * (`corp`), since other sites embed them. `renew`: a page stored at the edge gets a fresh nonce per reader.
  */
-export function withSecurityHeaders(response: Response, url: string, nonce?: string): Response {
-  const { origin } = new URL(url);
-  const headers = new Headers(response.headers);
-  applyHeaderSet(
-    headers,
-    { ...SECURITY_HEADERS, "Cross-Origin-Resource-Policy": corpFor(headers.get("Content-Type")) },
-    { overwrite: false },
-  );
-  // The Reporting API's endpoint for report-to. reportingEndpoints refuses plain http off localhost
-  // (a dev server on a LAN address), which a browser would ignore anyway, so that origin gets none.
-  if (
-    !headers.has("Reporting-Endpoints") &&
-    !/^http:\/\/(?!localhost|127\.0\.0\.1|\[::1\])/.test(origin)
-  ) {
-    headers.set(
-      "Reporting-Endpoints",
-      reportingEndpoints(CSP_REPORT_GROUP, new URL(CSP_REPORT_PATH, origin)),
-    );
-  }
-  // A route that declared its own policy keeps it.
-  if (
-    !headers.has("Content-Security-Policy") &&
-    !headers.has("Content-Security-Policy-Report-Only")
-  ) {
-    for (const policy of [csp(nonce), staged(nonce)]) headers.set(policy.name, policy.value);
-  }
-  return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers,
-  });
-}
+export const security = pageSecurity({
+  set: SECURITY_HEADERS,
+  corp: true,
+  renew: true,
+  // upgrade-insecure-requests stays in the enforced policy only: a browser ignores it in a Report-Only one, and says so.
+  policy: ({ nonce, staged }) => {
+    const site = sitePolicy(nonce);
+    return staged
+      ? {
+          ...site,
+          extraDirectives: site.extraDirectives.filter((d) => d !== "upgrade-insecure-requests"),
+        }
+      : site;
+  },
+  staged: { trustedTypes: true, denyUnlisted: true },
+});
 
 /**
  * The report sink: the family's one receiver (@dustinedwards/site-runtime/csp-report). It logs each
