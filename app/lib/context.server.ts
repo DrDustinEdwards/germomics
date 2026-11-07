@@ -7,16 +7,12 @@
 // through it, so bindings never become a free-floating global and never reach the client.
 import { createContext, type RouterContextProvider } from "react-router";
 
-export type CloudflareBindings = { env: Env; ctx: ExecutionContext };
+import { cloudflareContext, cspNonceContext, getEnv } from "@dustinedwards/site-runtime/context";
+import type { CloudflareContext } from "@dustinedwards/site-runtime/context";
 
-export const cloudflareContext = createContext<CloudflareBindings>();
-
-// The Content-Security-Policy nonce this render puts on its inline scripts (workers/app.ts, app/entry.server.tsx).
-export const cspNonceContext = createContext<string | undefined>(undefined);
-
-export function getEnv(context: Readonly<RouterContextProvider>): Env {
-  return context.get(cloudflareContext).env;
-}
+// The request context and the render nonce (workers/app.ts, app/entry.server.tsx) are site-runtime's ./context.
+export { cloudflareContext, cspNonceContext, getEnv };
+export type CloudflareBindings = CloudflareContext;
 
 // Per-request site content (settings + snippets), read from D1 at most once per request and only
 // when a loader asks: the root middleware puts a memoized reader on context, so loaders start it
