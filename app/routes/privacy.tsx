@@ -9,11 +9,18 @@ import { SITE_ADDRESS_LINE } from "~/lib/site";
 import { LegalPage } from "~/components/content/Legal";
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return pageHead({ path: "/privacy", title: loaderData?.title ?? "Privacy policy", description: "The Germomics privacy policy: what data germomics.com collects when you listen, read or subscribe, and how it is used." });
+  return pageHead({
+    path: "/privacy",
+    title: loaderData?.title ?? "Privacy policy",
+    description:
+      "The Germomics privacy policy: what data germomics.com collects when you listen, read or subscribe, and how it is used.",
+  });
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const addressLine = getSettings(context).then((s) => setting(s, "contact.address_line", SITE_ADDRESS_LINE));
+  const addressLine = getSettings(context).then((s) =>
+    setting(s, "contact.address_line", SITE_ADDRESS_LINE),
+  );
   return loadFilledPage(getEnv(context), request, "page:privacy", "Privacy policy", addressLine);
 }
 

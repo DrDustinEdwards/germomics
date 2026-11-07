@@ -17,7 +17,13 @@ const TABS = [
 ] as const;
 
 export function meta() {
-  return pageHead({ path: "/archive", title: "Archive · Germomics", description: "Every Germomics podcast episode and written post in one place, newest first, with search to find any of them quickly.", pageType: "CollectionPage" });
+  return pageHead({
+    path: "/archive",
+    title: "Archive · Germomics",
+    description:
+      "Every Germomics podcast episode and written post in one place, newest first, with search to find any of them quickly.",
+    pageType: "CollectionPage",
+  });
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -58,7 +64,9 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
               key={key}
               to={`/archive?tab=${key}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
               className={`rounded-full px-3 py-1.5 font-display text-sm ${
-                tab === key ? "bg-brand text-white" : "border border-border text-muted hover:text-ink"
+                tab === key
+                  ? "bg-brand text-white"
+                  : "border border-border text-muted hover:text-ink"
               }`}
             >
               {label}

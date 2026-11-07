@@ -12,18 +12,18 @@ Vendor pages from the job: Workers Best Practices, Rules of Workflows, Rules of 
 
 ## Summary
 
-| # | Item | Status | Fix? |
-|---|------|--------|------|
-| 1 | compat date, nodejs_compat, observability, JSON logs | Partly | Yes (config, small) |
-| 2 | Env types from `wrangler types` | Mostly | Yes (small) |
-| 3 | Constant-time compare | Hand-written loop | Yes (small) |
-| 4 | Lint for floating promises, waitUntil, globals | No lint at all | Yes (medium) |
-| 5 | Bindings over REST | Clean | No |
-| 6 | Hand-written auth, SDKs | Better Auth in use; Anthropic and Sentry hand-rolled | DECIDE |
-| 7 | Search | D1 FTS5, fits the site | No (DECIDE only if the corpus grows) |
-| 8 | Markdown, feeds, sitemaps, charts | Hand-written feeds and sitemap; Recharts | DECIDE (Capsomer move) |
-| 9 | Rate limiting | KV counters | Yes (needs a binding, Dustin step) |
-| 10 | Static Assets, shared packages | Workers (not Pages); no shared packages yet | Later (Capsomer move) |
+| #   | Item                                                 | Status                                               | Fix?                                 |
+| --- | ---------------------------------------------------- | ---------------------------------------------------- | ------------------------------------ |
+| 1   | compat date, nodejs_compat, observability, JSON logs | Partly                                               | Yes (config, small)                  |
+| 2   | Env types from `wrangler types`                      | Mostly                                               | Yes (small)                          |
+| 3   | Constant-time compare                                | Hand-written loop                                    | Yes (small)                          |
+| 4   | Lint for floating promises, waitUntil, globals       | No lint at all                                       | Yes (medium)                         |
+| 5   | Bindings over REST                                   | Clean                                                | No                                   |
+| 6   | Hand-written auth, SDKs                              | Better Auth in use; Anthropic and Sentry hand-rolled | DECIDE                               |
+| 7   | Search                                               | D1 FTS5, fits the site                               | No (DECIDE only if the corpus grows) |
+| 8   | Markdown, feeds, sitemaps, charts                    | Hand-written feeds and sitemap; Recharts             | DECIDE (Capsomer move)               |
+| 9   | Rate limiting                                        | KV counters                                          | Yes (needs a binding, Dustin step)   |
+| 10  | Static Assets, shared packages                       | Workers (not Pages); no shared packages yet          | Later (Capsomer move)                |
 
 ## 1. Config
 
@@ -60,6 +60,7 @@ Code: D1, R2 (three buckets) and KV are all reached through bindings (`context.s
 ## 6. Hand-written auth, SDKs
 
 Code:
+
 - Admin sign-in is Better Auth (`app/lib/auth.server.ts`), not hand-written JWT code. job_7e3fefd2f0db already plans Cloudflare Access with `jose`; that is the vendor-recommended replacement and removes the Better Auth tables, KV session storage and about 85 lines. Nothing to add here.
 - Anthropic calls are a hand-written `fetch` with no retry or backoff (`ai.server.ts:66-100`). The vendor SDK would add retries and types at a cost in bundle size. It is a single-admin, low-volume path: not worth the bytes. Optional: a bounded retry on 429/529.
 - Sentry is a hand-rolled store-endpoint POST (`sentry.server.ts`, 82 lines) that sends no stack frames beyond the first line. Cloudflare's own docs describe Sentry via `@sentry/cloudflare` (not verified). Workers Logs with traces may make Sentry unnecessary for a one-person site.

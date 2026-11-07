@@ -2,9 +2,18 @@
 // Episodes keep their existing experience (player, chapters, transcript, guests); articles get an
 // editorial layout (cover, byline + reading time, table of contents, share, prev/next, related).
 // Body is rendered once via BodyRenderer for both kinds.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { useSearchParams } from "react-router";
-import { Calendar, Clock, ArrowLeft, ArrowRight, FileText, Rss, Bookmark, BookmarkCheck } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  ArrowLeft,
+  ArrowRight,
+  FileText,
+  Rss,
+  Bookmark,
+  BookmarkCheck,
+} from "lucide-react";
 import { Link } from "capsomer/react/link";
 import type { Post } from "~/db/schema";
 import type { GuestView, Host, PlayerTrack, SoundbiteView } from "~/lib/types";
@@ -56,26 +65,47 @@ export type DetailData = {
   images?: ImageSet;
 };
 
-// Lightweight "save for later": a slug set in localStorage, no server. Toggles aria-pressed.
+// Lightweight "save for later": a slug set in localStorage, no server. Toggles aria-pressed. Read as an external
+// store, so the server and hydration render "Save" and the stored state follows (another tab's change too).
+const SAVED_KEY = "germomics-saved";
+const savedListeners = new Set<() => void>();
+function subscribeSaved(onChange: () => void) {
+  savedListeners.add(onChange);
+  window.addEventListener("storage", onChange);
+  return () => {
+    savedListeners.delete(onChange);
+    window.removeEventListener("storage", onChange);
+  };
+}
+function savedList(): string {
+  try {
+    return localStorage.getItem(SAVED_KEY) || "[]";
+  } catch {
+    return "[]";
+  }
+}
+function isSaved(raw: string, slug: string): boolean {
+  try {
+    return (JSON.parse(raw) as string[]).includes(slug);
+  } catch {
+    return false;
+  }
+}
+
 function SaveButton({ slug }: { slug: string }) {
-  const KEY = "germomics-saved";
-  const [saved, setSaved] = useState(false);
-  useEffect(() => {
-    try {
-      setSaved(JSON.parse(localStorage.getItem(KEY) || "[]").includes(slug));
-    } catch {
-      /* ignore */
-    }
-  }, [slug]);
+  const saved = isSaved(
+    useSyncExternalStore(subscribeSaved, savedList, () => "[]"),
+    slug,
+  );
   const toggle = () => {
     try {
-      const list: string[] = JSON.parse(localStorage.getItem(KEY) || "[]");
+      const list: string[] = JSON.parse(savedList());
       const next = list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug];
-      localStorage.setItem(KEY, JSON.stringify(next));
-      setSaved(next.includes(slug));
+      localStorage.setItem(SAVED_KEY, JSON.stringify(next));
     } catch {
       /* ignore */
     }
+    for (const onChange of savedListeners) onChange();
   };
   return (
     <button
@@ -84,7 +114,11 @@ function SaveButton({ slug }: { slug: string }) {
       aria-pressed={saved}
       className="tap-target inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 font-mono text-xs text-ink hover:border-brand"
     >
-      {saved ? <BookmarkCheck size={14} aria-hidden className="text-accent" /> : <Bookmark size={14} aria-hidden />}
+      {saved ? (
+        <BookmarkCheck size={14} aria-hidden className="text-accent" />
+      ) : (
+        <Bookmark size={14} aria-hidden />
+      )}
       {saved ? "Saved" : "Save"}
     </button>
   );
@@ -95,23 +129,38 @@ function SubscribeRow({ links }: { links: Record<string, string> }) {
   const primary = PRIMARY_KEYS.filter((k) => links[k]);
   if (!primary.length) return null;
   return (
-    <section aria-labelledby="listen" className="mt-12 rounded-2xl border border-border bg-surface p-5">
-      <h2 id="listen" className="mb-3 font-display text-lg font-semibold">Listen and subscribe</h2>
+    <section
+      aria-labelledby="listen"
+      className="mt-12 rounded-2xl border border-border bg-surface p-5"
+    >
+      <h2 id="listen" className="mb-3 font-display text-lg font-semibold">
+        Listen and subscribe
+      </h2>
       <div className="flex flex-wrap gap-2">
         {primary.map((k) => {
           const d = SUBSCRIBE_DESTINATIONS[k];
           const Icon = d.icon;
           return (
-            <a key={k} href={links[k]} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-accent hover:text-accent">
+            <a
+              key={k}
+              href={links[k]}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-accent hover:text-accent"
+            >
               <Icon size={14} aria-hidden /> {d.label}
               <ExternalCue />
             </a>
           );
         })}
-        <a href="/feed/podcast/" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-accent hover:text-accent">
+        <a
+          href="/feed/podcast/"
+          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-accent hover:text-accent"
+        >
           <Rss size={14} aria-hidden /> RSS
         </a>
-        <Link to="/subscribe" className="inline-flex items-center rounded-full px-3 py-1.5 text-sm text-muted hover:text-ink">
+        <Link
+          to="/subscribe"
+          className="inline-flex items-center rounded-full px-3 py-1.5 text-sm text-muted hover:text-ink"
+        >
           More ways to listen →
         </Link>
       </div>
@@ -120,7 +169,19 @@ function SubscribeRow({ links }: { links: Record<string, string> }) {
 }
 
 export function PostDetail({ data }: { data: DetailData }) {
-  const { post, track, guests, related, prev, next, subscribeLinks, readingMinutes, toc, hosts, cover } = data;
+  const {
+    post,
+    track,
+    guests,
+    related,
+    prev,
+    next,
+    subscribeLinks,
+    readingMinutes,
+    toc,
+    hosts,
+    cover,
+  } = data;
   const soundbites = data.soundbites ?? [];
   const player = usePlayer();
   const [params] = useSearchParams();
@@ -136,7 +197,7 @@ export function PostDetail({ data }: { data: DetailData }) {
       if (player.current?.id === track.id) player.seek(t);
       else player.playTrackAt(track, t);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps -- the ?t deep link applies once, on landing
   }, []);
 
   const GuestList = guests.length ? (
@@ -146,16 +207,30 @@ export function PostDetail({ data }: { data: DetailData }) {
         {guests.map((g) => (
           <div key={g.slug} className="flex gap-3 rounded-xl border border-border bg-card p-4">
             {g.photo ? (
-              <Picture src={g.photo} image={imageFor(data.images, "avatar", g.photo)} alt={g.photoAlt ?? g.name} width={48} height={48} className="h-12 w-12 shrink-0 rounded-full border border-border object-cover" />
+              <Picture
+                src={g.photo}
+                image={imageFor(data.images, "avatar", g.photo)}
+                alt={g.photoAlt ?? g.name}
+                width={48}
+                height={48}
+                className="h-12 w-12 shrink-0 rounded-full border border-border object-cover"
+              />
             ) : null}
             <div className="min-w-0">
-              <Link to={`/guests/${g.slug}`} className="font-display font-medium text-ink hover:text-brand">{g.name}</Link>
+              <Link
+                to={`/guests/${g.slug}`}
+                className="font-display font-medium text-ink hover:text-brand"
+              >
+                {g.name}
+              </Link>
               {g.role ? <p className="font-mono text-xs text-muted">{g.role}</p> : null}
               {g.bio ? <p className="mt-1 text-sm text-muted">{g.bio}</p> : null}
               {(g.links ?? []).length ? (
                 <div className="mt-1.5 flex flex-wrap gap-2 font-mono text-[11px]">
                   {(g.links ?? []).map((l) => (
-                    <a key={l.url} href={l.url} className="text-accent hover:underline">{l.label || "link"}</a>
+                    <a key={l.url} href={l.url} className="text-accent hover:underline">
+                      {l.label || "link"}
+                    </a>
                   ))}
                 </div>
               ) : null}
@@ -177,29 +252,54 @@ export function PostDetail({ data }: { data: DetailData }) {
     </section>
   ) : null;
 
-  const PrevNext = (prev || next) ? (
-    <nav className="mt-10 flex items-stretch justify-between gap-3 border-t border-border pt-6" aria-label="More posts">
-      {prev ? (
-        <Link to={`/${prev.slug}`} className="group flex max-w-[48%] flex-col rounded-xl border border-border bg-card p-3 hover:border-brand">
-          <span className="flex items-center gap-1 font-mono text-[11px] text-muted"><ArrowLeft size={12} aria-hidden /> Previous</span>
-          <span className="mt-1 line-clamp-2 font-display text-sm text-ink group-hover:text-brand">{prev.title}</span>
-        </Link>
-      ) : <span />}
-      {next ? (
-        <Link to={`/${next.slug}`} className="group flex max-w-[48%] flex-col rounded-xl border border-border bg-card p-3 text-right hover:border-brand">
-          <span className="flex items-center justify-end gap-1 font-mono text-[11px] text-muted">Next <ArrowRight size={12} aria-hidden /></span>
-          <span className="mt-1 line-clamp-2 font-display text-sm text-ink group-hover:text-brand">{next.title}</span>
-        </Link>
-      ) : <span />}
-    </nav>
-  ) : null;
+  const PrevNext =
+    prev || next ? (
+      <nav
+        className="mt-10 flex items-stretch justify-between gap-3 border-t border-border pt-6"
+        aria-label="More posts"
+      >
+        {prev ? (
+          <Link
+            to={`/${prev.slug}`}
+            className="group flex max-w-[48%] flex-col rounded-xl border border-border bg-card p-3 hover:border-brand"
+          >
+            <span className="flex items-center gap-1 font-mono text-[11px] text-muted">
+              <ArrowLeft size={12} aria-hidden /> Previous
+            </span>
+            <span className="mt-1 line-clamp-2 font-display text-sm text-ink group-hover:text-brand">
+              {prev.title}
+            </span>
+          </Link>
+        ) : (
+          <span />
+        )}
+        {next ? (
+          <Link
+            to={`/${next.slug}`}
+            className="group flex max-w-[48%] flex-col rounded-xl border border-border bg-card p-3 text-right hover:border-brand"
+          >
+            <span className="flex items-center justify-end gap-1 font-mono text-[11px] text-muted">
+              Next <ArrowRight size={12} aria-hidden />
+            </span>
+            <span className="mt-1 line-clamp-2 font-display text-sm text-ink group-hover:text-brand">
+              {next.title}
+            </span>
+          </Link>
+        ) : (
+          <span />
+        )}
+      </nav>
+    ) : null;
 
   // ── Episode layout (redesigned: hero, player surface, key moments, TOC + body, hosts, then the
   //     collapsed Sources/Credits + Transcript pair, subscribe, related + prev/next). See Vault
   //     episode-page-* specs. ──────────────────────────────────────────────────────────────────────
   if (isEpisode) {
     const eyebrow =
-      [post.seasonNumber ? `Season ${post.seasonNumber}` : null, post.episodeNumber ? `Episode ${post.episodeNumber}` : null]
+      [
+        post.seasonNumber ? `Season ${post.seasonNumber}` : null,
+        post.episodeNumber ? `Episode ${post.episodeNumber}` : null,
+      ]
         .filter(Boolean)
         .join(" · ") || "Episode";
     const moments =
@@ -219,22 +319,39 @@ export function PostDetail({ data }: { data: DetailData }) {
           <header className="grid gap-6 sm:grid-cols-[1fr_12rem] sm:items-start lg:grid-cols-[1fr_14rem]">
             <div>
               <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent">{eyebrow}</p>
-              <h1 className="mt-2 font-display text-4xl font-semibold leading-tight">{post.title}</h1>
+              <h1 className="mt-2 font-display text-4xl font-semibold leading-tight">
+                {post.title}
+              </h1>
               <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-muted">
                 {post.publishedAt ? (
                   <span className="flex items-center gap-1">
-                    <Calendar size={12} aria-hidden /> <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
+                    <Calendar size={12} aria-hidden />{" "}
+                    <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
                   </span>
                 ) : null}
                 {post.audioDuration ? (
-                  <span className="flex items-center gap-1 tabular-nums"><Clock size={12} aria-hidden /> {formatDuration(post.audioDuration)}</span>
+                  <span className="flex items-center gap-1 tabular-nums">
+                    <Clock size={12} aria-hidden /> {formatDuration(post.audioDuration)}
+                  </span>
                 ) : null}
-                {wasUpdatedAfterPublish(post) ? <span className="text-accent">Updated {formatDate(post.updatedAt)}</span> : null}
+                {wasUpdatedAfterPublish(post) ? (
+                  <span className="text-accent">Updated {formatDate(post.updatedAt)}</span>
+                ) : null}
               </p>
-              {post.excerpt ? <p className="mt-4 max-w-2xl font-serif text-lg leading-relaxed text-muted">{post.excerpt}</p> : null}
+              {post.excerpt ? (
+                <p className="mt-4 max-w-2xl font-serif text-lg leading-relaxed text-muted">
+                  {post.excerpt}
+                </p>
+              ) : null}
             </div>
             <div className="order-first w-40 sm:order-none sm:w-auto">
-              <CoverArt src={cover} image={imageFor(data.images, "artwork", cover)} alt={post.coverAlt ?? "Germomics cover art"} eager className="border border-border" />
+              <CoverArt
+                src={cover}
+                image={imageFor(data.images, "artwork", cover)}
+                alt={post.coverAlt ?? "Germomics cover art"}
+                eager
+                className="border border-border"
+              />
             </div>
           </header>
 
@@ -285,7 +402,9 @@ export function PostDetail({ data }: { data: DetailData }) {
                     lazy-fetched on expand. The read-along only scrolls inside its own box and only while
                     open and on screen (see TranscriptPanel), so a collapsed transcript never moves the page. */}
                 <details>
-                  <summary className="mb-3 cursor-pointer font-display text-xl font-semibold">Transcript</summary>
+                  <summary className="mb-3 cursor-pointer font-display text-xl font-semibold">
+                    Transcript
+                  </summary>
                   <TranscriptPanel transcript={post.transcript} track={track} />
                 </details>
               </section>
@@ -309,7 +428,13 @@ export function PostDetail({ data }: { data: DetailData }) {
       {post.coverImage ? (
         // Cover is the article LCP element — load it eagerly with high priority; the fixed aspect
         // ratio reserves space so it doesn't shift layout (CLS).
-        <Picture src={post.coverImage} image={imageFor(data.images, "cover", post.coverImage)} alt={post.coverAlt ?? ""} priority className="mb-6 aspect-[2/1] w-full rounded-2xl border border-border object-cover" />
+        <Picture
+          src={post.coverImage}
+          image={imageFor(data.images, "cover", post.coverImage)}
+          alt={post.coverAlt ?? ""}
+          priority
+          className="mb-6 aspect-[2/1] w-full rounded-2xl border border-border object-cover"
+        />
       ) : null}
       <p className="flex items-center gap-1 font-mono text-xs uppercase tracking-wide text-accent">
         <FileText size={12} aria-hidden /> Article
@@ -317,32 +442,55 @@ export function PostDetail({ data }: { data: DetailData }) {
       <h1 className="mt-2 font-display text-4xl font-semibold leading-tight">{post.title}</h1>
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-muted">
         <span>{AUTHOR.byline}</span>
-        {post.publishedAt ? <span className="flex items-center gap-1"><Calendar size={12} aria-hidden /> {formatDate(post.publishedAt)}</span> : null}
-        {wasUpdatedAfterPublish(post) ? <span className="text-accent">Updated {formatDate(post.updatedAt)}</span> : null}
-        <span className="flex items-center gap-1"><Clock size={12} aria-hidden /> {readingMinutes} min read</span>
+        {post.publishedAt ? (
+          <span className="flex items-center gap-1">
+            <Calendar size={12} aria-hidden /> {formatDate(post.publishedAt)}
+          </span>
+        ) : null}
+        {wasUpdatedAfterPublish(post) ? (
+          <span className="text-accent">Updated {formatDate(post.updatedAt)}</span>
+        ) : null}
+        <span className="flex items-center gap-1">
+          <Clock size={12} aria-hidden /> {readingMinutes} min read
+        </span>
       </div>
       {(post.tags ?? []).length ? (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {(post.tags ?? []).map((t) => (
-            <Link key={t} to={`/tag/${encodeURIComponent(t)}`} className="rounded-full border border-border px-2 py-0.5 font-mono text-[11px] text-muted hover:border-brand hover:text-brand">{t}</Link>
+            <Link
+              key={t}
+              to={`/tag/${encodeURIComponent(t)}`}
+              className="rounded-full border border-border px-2 py-0.5 font-mono text-[11px] text-muted hover:border-brand hover:text-brand"
+            >
+              {t}
+            </Link>
           ))}
         </div>
       ) : null}
 
       {toc.length >= 3 ? (
-        <nav aria-label="Table of contents" className="mt-6 rounded-xl border border-border bg-surface p-4">
+        <nav
+          aria-label="Table of contents"
+          className="mt-6 rounded-xl border border-border bg-surface p-4"
+        >
           <p className="mb-2 font-display text-sm font-semibold">On this page</p>
           <ol className="space-y-1 text-sm">
             {toc.map((t) => (
               <li key={t.id} className={t.level === 3 ? "pl-4" : ""}>
-                <a href={`#${t.id}`} className="text-muted hover:text-accent">{t.text}</a>
+                <a href={`#${t.id}`} className="text-muted hover:text-accent">
+                  {t.text}
+                </a>
               </li>
             ))}
           </ol>
         </nav>
       ) : null}
 
-      {post.bodyHtml ? <div className="mt-8"><BodyRenderer html={post.bodyHtml} /></div> : null}
+      {post.bodyHtml ? (
+        <div className="mt-8">
+          <BodyRenderer html={post.bodyHtml} />
+        </div>
+      ) : null}
 
       <div className="mt-8 flex items-center gap-3">
         <CopyLink slug={post.slug} />
@@ -359,7 +507,9 @@ function PreviewBanner({ post }: { post: Post }) {
   return (
     <div className="mb-6 flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-sm text-amber-700 dark:text-amber-300">
       <span className="font-display font-semibold">Preview</span>
-      <span className="text-muted">: this is the unpublished “{post.status}” version, visible only via this link.</span>
+      <span className="text-muted">
+        : this is the unpublished “{post.status}” version, visible only via this link.
+      </span>
     </div>
   );
 }

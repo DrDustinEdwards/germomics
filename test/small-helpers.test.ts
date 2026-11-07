@@ -24,7 +24,10 @@ describe("the Apple Podcasts categories", () => {
     expect(DEFAULT_SHOW.categories!.length).toBeGreaterThan(0);
     for (const c of DEFAULT_SHOW.categories!) {
       expect(APPLE_CATEGORIES, c.category).toHaveProperty(c.category);
-      if (c.subcategory) expect(APPLE_CATEGORIES[c.category], `${c.category} / ${c.subcategory}`).toContain(c.subcategory);
+      if (c.subcategory)
+        expect(APPLE_CATEGORIES[c.category], `${c.category} / ${c.subcategory}`).toContain(
+          c.subcategory,
+        );
     }
     expect(APPLE_CATEGORIES).toHaveProperty(DEFAULT_SHOW.appleCategory);
   });
@@ -55,7 +58,10 @@ describe("computePeaks", () => {
   const f32 = (...v: number[]) => Float32Array.from(v);
 
   it("returns N integers from 0 to 100, with the loudest slice at 100", () => {
-    const samples = Float32Array.from({ length: 4000 }, (_, i) => Math.sin(i / 7) * (i < 2000 ? 0.25 : 0.5));
+    const samples = Float32Array.from(
+      { length: 4000 },
+      (_, i) => Math.sin(i / 7) * (i < 2000 ? 0.25 : 0.5),
+    );
     const peaks = computePeaks([samples]);
     expect(peaks).toHaveLength(400);
     expect(Math.max(...peaks)).toBe(100);
@@ -69,7 +75,7 @@ describe("computePeaks", () => {
   });
 
   it("returns all zeros for silence", () => {
-    expect(computePeaks([new Float32Array(1000)], 10)).toEqual(new Array(10).fill(0));
+    expect(computePeaks([new Float32Array(1000)], 10)).toEqual(Array.from({ length: 10 }, () => 0));
   });
 
   it("takes the peak of the absolute value, so negative swings count", () => {

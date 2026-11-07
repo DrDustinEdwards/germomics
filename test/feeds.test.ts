@@ -10,11 +10,18 @@ import { applyMigrations } from "./helpers/d1";
 const e = env as unknown as Env;
 const ORIGIN = "https://germomics.com";
 
-async function load(route: Promise<{ loader: (args: never) => unknown }>, path: string): Promise<Response> {
+async function load(
+  route: Promise<{ loader: (args: never) => unknown }>,
+  path: string,
+): Promise<Response> {
   const { loader } = await route;
   const context = new RouterContextProvider();
   context.set(cloudflareContext, { env: e, ctx: {} as ExecutionContext });
-  return (await loader({ request: new Request(`${ORIGIN}${path}`), context, params: {} } as never)) as Response;
+  return (await loader({
+    request: new Request(`${ORIGIN}${path}`),
+    context,
+    params: {},
+  } as never)) as Response;
 }
 
 beforeAll(() => applyMigrations(e.DB), 60_000);
@@ -37,8 +44,12 @@ describe("the podcast feed", () => {
     expect(res.headers.get("Content-Type")).toBe("application/rss+xml; charset=utf-8");
     const xml = await res.text();
     expect(xml).toContain('<guid isPermaLink="false">urn:germomics:ep-1</guid>');
-    expect(xml).toContain("<content:encoded><![CDATA[<p>Episode show notes</p>]]></content:encoded>");
-    expect(xml).toContain(`<podcast:transcript url="${ORIGIN}/ep-1/transcript.vtt" type="text/vtt"/>`);
+    expect(xml).toContain(
+      "<content:encoded><![CDATA[<p>Episode show notes</p>]]></content:encoded>",
+    );
+    expect(xml).toContain(
+      `<podcast:transcript url="${ORIGIN}/ep-1/transcript.vtt" type="text/vtt"/>`,
+    );
     expect(xml).not.toContain("Secret notes");
     expect(xml).not.toContain("urn:germomics:d");
   }, 60_000);

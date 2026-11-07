@@ -76,7 +76,12 @@ export async function loadSnippets(env: Env): Promise<StrMap> {
   return Object.fromEntries(rows.map((r) => [r.key, r.value]));
 }
 
-export type PageBlock = { key: string; title: string; value: string; status: "draft" | "published" };
+export type PageBlock = {
+  key: string;
+  title: string;
+  value: string;
+  status: "draft" | "published";
+};
 /** A page as a route shows it: its value (Markdown, or the text of a TEXT_PAGES page) and the HTML to show. */
 export type Page = PageBlock & { html: string };
 
@@ -90,14 +95,27 @@ export async function loadBlock(
   key: string,
   opts: { includeDrafts?: boolean } = {},
 ): Promise<Page | null> {
-  const rows = await getDb(env).select().from(contentBlocks).where(eq(contentBlocks.key, key)).limit(1);
+  const rows = await getDb(env)
+    .select()
+    .from(contentBlocks)
+    .where(eq(contentBlocks.key, key))
+    .limit(1);
   const row = rows[0];
   if (!row) return null;
   if (!opts.includeDrafts && row.status !== "published") return null;
   const block = { key: row.key, title: row.title ?? "", value: row.value, status: row.status };
   return TEXT_PAGES.has(key) || row.kind !== "page"
     ? { ...block, html: row.value }
-    : { ...block, html: (await storedBody(env, { body: row.value, bodyHtml: row.bodyHtml, renderVersion: row.renderVersion })).html };
+    : {
+        ...block,
+        html: (
+          await storedBody(env, {
+            body: row.value,
+            bodyHtml: row.bodyHtml,
+            renderVersion: row.renderVersion,
+          })
+        ).html,
+      };
 }
 
 /**
@@ -112,7 +130,13 @@ export async function loadPage(
   const found = await loadBlock(env, key, opts);
   if (found) return found;
   const d = PAGE_DEFAULTS[key];
-  return { key, title: d?.title ?? "", value: d?.value ?? "", html: d?.value ?? "", status: "published" };
+  return {
+    key,
+    title: d?.title ?? "",
+    value: d?.value ?? "",
+    html: d?.value ?? "",
+    status: "published",
+  };
 }
 
 /** Read a setting with fallback to the generated default then an optional caller default. */
@@ -131,7 +155,9 @@ export function snippet(map: StrMap, key: string, fallback = ""): string {
 /** Parse the contact.address JSON setting into a partial Address (for schema.org). */
 export function settingAddress(map: StrMap): Partial<import("~/lib/site").Address> {
   try {
-    return JSON.parse(setting(map, "contact.address", "{}")) as Partial<import("~/lib/site").Address>;
+    return JSON.parse(setting(map, "contact.address", "{}")) as Partial<
+      import("~/lib/site").Address
+    >;
   } catch {
     return {};
   }
@@ -142,7 +168,10 @@ export async function upsertSetting(env: Env, key: string, value: string): Promi
   await getDb(env)
     .insert(settingsTable)
     .values({ key, value })
-    .onConflictDoUpdate({ target: settingsTable.key, set: { value, updatedAt: new Date().toISOString() } });
+    .onConflictDoUpdate({
+      target: settingsTable.key,
+      set: { value, updatedAt: new Date().toISOString() },
+    });
 }
 
 export type BlockInput = {
@@ -167,7 +196,11 @@ export async function upsertBlock(env: Env, b: BlockInput): Promise<void> {
 }
 
 /** A Markdown page's title and status, which the admin sets; its text is written in Carrel (lib/carrel/adapter.server.ts). */
-export async function updatePageSettings(env: Env, key: string, fields: { title: string | null; status: "draft" | "published" }): Promise<void> {
+export async function updatePageSettings(
+  env: Env,
+  key: string,
+  fields: { title: string | null; status: "draft" | "published" },
+): Promise<void> {
   await getDb(env)
     .update(contentBlocks)
     .set({ ...fields, updatedAt: new Date().toISOString() })
@@ -182,7 +215,6 @@ export async function listSettings(env: Env): Promise<import("~/db/schema").Sett
   return getDb(env).select().from(settingsTable);
 }
 
-
 /** Full-text search across published pages (site search + raw SQL both reach every word). */
 export async function searchPages(env: Env, rawQuery: string): Promise<PageBlock[]> {
   const match = toFtsMatch(rawQuery);
@@ -195,5 +227,10 @@ export async function searchPages(env: Env, rawQuery: string): Promise<PageBlock
         WHERE content_blocks_fts MATCH ${match} AND c.kind = 'page' AND c.status = 'published'
         ORDER BY rank LIMIT 10`,
   );
-  return rows.map((r) => ({ key: r.key, title: r.title, value: r.value, status: r.status as "published" }));
+  return rows.map((r) => ({
+    key: r.key,
+    title: r.title,
+    value: r.value,
+    status: r.status as "published",
+  }));
 }

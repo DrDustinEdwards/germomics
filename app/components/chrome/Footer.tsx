@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useRouteLoaderData } from "react-router";
 import { Rss, Lock } from "lucide-react";
 import { Link } from "capsomer/react/link";
@@ -18,7 +19,12 @@ type RootData = {
 };
 
 function SocialIcon({ platform }: { platform: string }) {
-  const common = { viewBox: "0 0 24 24", fill: "currentColor", "aria-hidden": true, className: "h-4 w-4" } as const;
+  const common = {
+    viewBox: "0 0 24 24",
+    fill: "currentColor",
+    "aria-hidden": true,
+    className: "h-4 w-4",
+  } as const;
   if (platform === "facebook")
     return (
       <svg {...common}>
@@ -44,7 +50,10 @@ export function Footer() {
   const root = useRouteLoaderData("root") as RootData | undefined;
   const socials = root?.socials ?? [];
   const subscribeLinks = root?.subscribeLinks ?? {};
-  const tagline = useSnippet("snippet:footer.tagline", "a microbiology and history podcast and writing project.");
+  const tagline = useSnippet(
+    "snippet:footer.tagline",
+    "a microbiology and history podcast and writing project.",
+  );
 
   const explore: [string, string, string][] = [
     ["/episodes", useSnippet("snippet:nav.episodes", "Episodes"), "episodes"],
@@ -61,7 +70,7 @@ export function Footer() {
     ["/terms", useSnippet("snippet:nav.terms", "Terms")],
     ["/accessibility", "Accessibility"],
   ];
-  const year = new Date().getFullYear();
+  const [year] = useState(() => new Date().getFullYear());
   const link = "text-muted hover:text-ink";
   // Below sm the three lists go 3-up; give each link a 44px tappable row there. Inert at sm+.
   const tap = "max-sm:flex max-sm:min-h-11 max-sm:items-center";
@@ -99,7 +108,9 @@ export function Footer() {
 
         {/* Listen */}
         <nav aria-labelledby="footer-listen">
-          <h2 id="footer-listen" className="font-display text-sm font-semibold text-ink">Listen</h2>
+          <h2 id="footer-listen" className="font-display text-sm font-semibold text-ink">
+            Listen
+          </h2>
           <ul className="mt-3 space-y-2 max-sm:space-y-0 text-sm">
             {PRIMARY_KEYS.map((k) =>
               subscribeLinks[k] ? (
@@ -115,33 +126,46 @@ export function Footer() {
               ) : null,
             )}
             <li>
-              <a
-                href="/feed/podcast/"
-                className={`inline-flex items-center gap-1 ${link} ${tap}`}
-              >
+              <a href="/feed/podcast/" className={`inline-flex items-center gap-1 ${link} ${tap}`}>
                 <Rss size={14} aria-hidden /> Podcast RSS
               </a>
             </li>
-            <li><Link to="/subscribe" className={`${link} ${tap}`}>More ways to listen →</Link></li>
+            <li>
+              <Link to="/subscribe" className={`${link} ${tap}`}>
+                More ways to listen →
+              </Link>
+            </li>
           </ul>
         </nav>
 
         {/* Explore */}
         <nav aria-labelledby="footer-explore">
-          <h2 id="footer-explore" className="font-display text-sm font-semibold text-ink">Explore</h2>
+          <h2 id="footer-explore" className="font-display text-sm font-semibold text-ink">
+            Explore
+          </h2>
           <ul className="mt-3 space-y-2 max-sm:space-y-0 text-sm">
             {explore.map(([to, label]) => (
-              <li key={to}><Link to={to} className={`${link} ${tap}`}>{label}</Link></li>
+              <li key={to}>
+                <Link to={to} className={`${link} ${tap}`}>
+                  {label}
+                </Link>
+              </li>
             ))}
           </ul>
         </nav>
 
         {/* About */}
         <nav aria-labelledby="footer-about">
-          <h2 id="footer-about" className="font-display text-sm font-semibold text-ink">About</h2>
+          <h2 id="footer-about" className="font-display text-sm font-semibold text-ink">
+            About
+          </h2>
           <ul className="mt-3 space-y-2 max-sm:space-y-0 text-sm">
             {about.map(([to, label]) => (
-              <li key={to}><Link to={to} className={`${link} ${tap}`}>{label}</Link></li>
+              <li key={to}>
+                <Link to={to} className={`${link} ${tap}`}>
+                  {label}
+                </Link>
+              </li>
             ))}
           </ul>
         </nav>
@@ -157,8 +181,15 @@ export function Footer() {
             </a>
           </span>
           <span aria-hidden>·</span>
-          <a href="/feed/site.xml" className={link}>Writing feed</a>
-          <Link to="/admin" rel="nofollow" prefetch="none" className="ml-auto inline-flex items-center gap-1 text-muted/70 hover:text-ink">
+          <a href="/feed/site.xml" className={link}>
+            Writing feed
+          </a>
+          <Link
+            to="/admin"
+            rel="nofollow"
+            prefetch="none"
+            className="ml-auto inline-flex items-center gap-1 text-muted/70 hover:text-ink"
+          >
             <Lock size={14} aria-hidden /> Admin
           </Link>
         </div>

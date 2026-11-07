@@ -19,7 +19,9 @@ const INDEX_LIMIT = 40;
 const FULL_BODY_CHARS = 6000;
 
 function oneLine(value: string | null | undefined, max = 160): string {
-  const t = stripHtml(value ?? "").replace(/\s+/g, " ").trim();
+  const t = stripHtml(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
   return t.length > max ? `${t.slice(0, max - 1).trimEnd()}…` : t;
 }
 
@@ -30,7 +32,11 @@ function summaryFor(p: Post): string {
 /** A post marked noindex (site-api's search field) stays out of llms.txt and llms-full.txt. */
 const indexed = (list: Post[]) => list.filter((p) => !p.noindex);
 
-const link = (p: Post, origin: string): LlmsLink => ({ title: p.title, url: `${origin}/${p.slug}`, description: summaryFor(p) });
+const link = (p: Post, origin: string): LlmsLink => ({
+  title: p.title,
+  url: `${origin}/${p.slug}`,
+  description: summaryFor(p),
+});
 
 /** Curated Markdown index of hubs + key content, in Prelum's llms.txt skeleton. */
 export function buildLlmsTxt(
@@ -40,7 +46,11 @@ export function buildLlmsTxt(
   origin: string,
   intro?: string,
 ): string {
-  const page = (path: string, title: string, description: string): LlmsLink => ({ title, url: `${origin}${path}`, description });
+  const page = (path: string, title: string, description: string): LlmsLink => ({
+    title,
+    url: `${origin}${path}`,
+    description,
+  });
   return llmsDocument({
     title: show.title,
     summary: oneLine(show.description, 240),
@@ -51,19 +61,39 @@ export function buildLlmsTxt(
           `Citation is welcome. Please cite ${show.title} and link the source URL.`,
     ],
     sections: [
-      { heading: "About", links: [
-        page("/about", `About ${show.title}`, "what the project is and how to follow it."),
-        page(`/about/${AUTHOR.slug}`, `${AUTHOR.name}, author`, `${AUTHOR.jobTitle.toLowerCase()}; bio and research.`),
-      ] },
-      { heading: "Episodes", links: indexed(episodes).slice(0, INDEX_LIMIT).map((e) => link(e, origin)) },
-      { heading: "Writing", links: indexed(articles).slice(0, INDEX_LIMIT).map((a) => link(a, origin)) },
-      { heading: "Explore", links: [
-        page("/subscribe", "Subscribe", "podcast apps and the email newsletter."),
-        page("/feed/podcast/", "Podcast RSS feed", "the canonical feed."),
-        page("/data", "Data", "interactive virus & bacteria data pages."),
-        page("/games", "Games", "short browser games."),
-        page("/archive", "Archive", "everything, filterable."),
-      ] },
+      {
+        heading: "About",
+        links: [
+          page("/about", `About ${show.title}`, "what the project is and how to follow it."),
+          page(
+            `/about/${AUTHOR.slug}`,
+            `${AUTHOR.name}, author`,
+            `${AUTHOR.jobTitle.toLowerCase()}; bio and research.`,
+          ),
+        ],
+      },
+      {
+        heading: "Episodes",
+        links: indexed(episodes)
+          .slice(0, INDEX_LIMIT)
+          .map((e) => link(e, origin)),
+      },
+      {
+        heading: "Writing",
+        links: indexed(articles)
+          .slice(0, INDEX_LIMIT)
+          .map((a) => link(a, origin)),
+      },
+      {
+        heading: "Explore",
+        links: [
+          page("/subscribe", "Subscribe", "podcast apps and the email newsletter."),
+          page("/feed/podcast/", "Podcast RSS feed", "the canonical feed."),
+          page("/data", "Data", "interactive virus & bacteria data pages."),
+          page("/games", "Games", "short browser games."),
+          page("/archive", "Archive", "everything, filterable."),
+        ],
+      },
     ],
   });
 }
@@ -112,7 +142,10 @@ export function buildLlmsFullTxt(
     "",
   ];
 
-  for (const [heading, list] of [["Episodes", indexed(episodes)], ["Writing", indexed(articles)]] as const) {
+  for (const [heading, list] of [
+    ["Episodes", indexed(episodes)],
+    ["Writing", indexed(articles)],
+  ] as const) {
     if (!list.length) continue;
     out.push(`# ${heading}`, "");
     for (const p of list) out.push(fullSection(p, origin));

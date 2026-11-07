@@ -8,7 +8,15 @@ import type { PlayerTrack } from "~/lib/types";
 // A single content card for listings. Episodes get a play button (their track is the one in
 // `queue` with the post's id); articles get a read icon. `heading` is h2 on a page where the cards
 // sit right under the h1, h3 under a section's h2.
-export function PostCard({ post, queue, heading: Heading = "h3" }: { post: Post; queue?: PlayerTrack[]; heading?: "h2" | "h3" }) {
+export function PostCard({
+  post,
+  queue,
+  heading: Heading = "h3",
+}: {
+  post: Post;
+  queue?: PlayerTrack[];
+  heading?: "h2" | "h3";
+}) {
   const isEpisode = post.kind === "episode";
   const track = queue?.find((t) => t.id === post.id);
   return (

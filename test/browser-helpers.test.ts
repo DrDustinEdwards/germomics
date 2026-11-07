@@ -36,7 +36,9 @@ describe("theme", () => {
 
   it("sets data-theme on the page and remembers it, and still sets it when storage is blocked", () => {
     const attrs: Record<string, string> = {};
-    vi.stubGlobal("document", { documentElement: { setAttribute: (k: string, v: string) => (attrs[k] = v) } });
+    vi.stubGlobal("document", {
+      documentElement: { setAttribute: (k: string, v: string) => (attrs[k] = v) },
+    });
     const store = storage();
     vi.stubGlobal("localStorage", store);
     applyTheme("light");
@@ -56,12 +58,24 @@ describe("waveform-client", () => {
       close = closed;
     };
   }
-  const buffer = (channels: number[][], duration = 12.5) => ({ numberOfChannels: channels.length, duration, getChannelData: (i: number) => Float32Array.from(channels[i]) });
+  const buffer = (channels: number[][], duration = 12.5) => ({
+    numberOfChannels: channels.length,
+    duration,
+    getChannelData: (i: number) => Float32Array.from(channels[i]),
+  });
   beforeEach(() => closed.mockClear());
 
   it("decodes in the browser, buckets the channels into the stored peaks, and reports the duration", async () => {
     let seen: ArrayBuffer | undefined;
-    vi.stubGlobal("AudioContext", audioContext((b) => ((seen = b), buffer([new Array(800).fill(0.5), new Array(800).fill(0.5)]))));
+    vi.stubGlobal(
+      "AudioContext",
+      audioContext(
+        (b) => (
+          (seen = b),
+          buffer([Array.from({ length: 800 }, () => 0.5), Array.from({ length: 800 }, () => 0.5)])
+        ),
+      ),
+    );
     const source = new Uint8Array([1, 2, 3]).buffer;
     const out = await decodePeaks(source);
     expect(out!.duration).toBe(12.5);
@@ -73,20 +87,36 @@ describe("waveform-client", () => {
   });
 
   it("hears the second channel of a stereo file even when the first is silent", async () => {
-    vi.stubGlobal("AudioContext", audioContext(() => buffer([new Array(400).fill(0), new Array(400).fill(0.8)])));
+    vi.stubGlobal(
+      "AudioContext",
+      audioContext(() =>
+        buffer([Array.from({ length: 400 }, () => 0), Array.from({ length: 400 }, () => 0.8)]),
+      ),
+    );
     expect((await decodePeaks(new ArrayBuffer(1)))!.peaks.every((p) => p === 100)).toBe(true);
   });
 
   it("answers null, and still closes the context, when the audio cannot be decoded", async () => {
-    vi.stubGlobal("AudioContext", audioContext(() => Promise.reject(new Error("bad audio"))));
+    vi.stubGlobal(
+      "AudioContext",
+      audioContext(() => Promise.reject(new Error("bad audio"))),
+    );
     expect(await decodePeaks(new ArrayBuffer(1))).toBeNull();
     expect(closed).toHaveBeenCalledTimes(1);
   });
 
   describe("probeDuration", () => {
     const revoke = vi.fn();
-    function probe(fire: (audio: { onloadedmetadata?: () => void; onerror?: () => void; duration?: number; src?: string; preload?: string }) => void) {
-      const audio: Record<string, any> = {};
+    function probe(
+      fire: (audio: {
+        onloadedmetadata?: () => void;
+        onerror?: () => void;
+        duration?: number;
+        src?: string;
+        preload?: string;
+      }) => void,
+    ) {
+      const audio: Record<string, unknown> = {};
       vi.stubGlobal("document", { createElement: (tag: string) => (tag === "audio" ? audio : {}) });
       URL.createObjectURL = () => "blob:fake";
       URL.revokeObjectURL = revoke;
@@ -108,8 +138,18 @@ describe("waveform-client", () => {
     });
 
     it("answers null for a duration that is not a number, and for a file that will not load", async () => {
-      expect(await probe((a) => { a.duration = Infinity; a.onloadedmetadata!(); }).result).toBeNull();
-      expect(await probe((a) => { a.duration = NaN; a.onloadedmetadata!(); }).result).toBeNull();
+      expect(
+        await probe((a) => {
+          a.duration = Infinity;
+          a.onloadedmetadata!();
+        }).result,
+      ).toBeNull();
+      expect(
+        await probe((a) => {
+          a.duration = NaN;
+          a.onloadedmetadata!();
+        }).result,
+      ).toBeNull();
       expect(await probe((a) => a.onerror!()).result).toBeNull();
     });
   });

@@ -14,14 +14,16 @@ import { article, thing } from "@drdustinedwards/site-helpers/schema";
 import { DEFAULT_CARD, SITE_ORIGIN, postalAddressLd, type Address } from "~/lib/site";
 
 export function stripHtml(html: string): string {
-  return html
-    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ")
-    // Prelum's "#" link after each heading is navigation, not text.
-    .replace(/<a [^>]*class="heading-anchor"[^>]*>[\s\S]*?<\/a>/g, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&[a-z]+;|&#\d+;|&#x[0-9a-f]+;/gi, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return (
+    html
+      .replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ")
+      // Prelum's "#" link after each heading is navigation, not text.
+      .replace(/<a [^>]*class="heading-anchor"[^>]*>[\s\S]*?<\/a>/g, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&[a-z]+;|&#\d+;|&#x[0-9a-f]+;/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+  );
 }
 
 /**
@@ -45,7 +47,7 @@ function isoDuration(totalSeconds?: number | null): string | undefined {
   const h = Math.floor(totalSeconds / 3600);
   const m = Math.floor((totalSeconds % 3600) / 60);
   const s = totalSeconds % 60;
-  return `PT${h ? `${h}H` : ""}${m ? `${m}M` : ""}${s ? `${s}S` : ""}` || "PT0S";
+  return `PT${h ? `${h}H` : ""}${m ? `${m}M` : ""}${s ? `${s}S` : ""}`;
 }
 
 /** A post's own share image and its alt text: the social image, else the episode artwork, else the cover. */
@@ -70,11 +72,15 @@ export function buildJsonLd({ post, author, seriesTitle, guests = [], hosts = []
   // A stored image address may be a site path (/media/<key>); structured data needs an absolute URL.
   const own = ogImageFor(post)?.src;
   const image = own ? new URL(own, SITE_ORIGIN).href : undefined;
-  const description = post.seoDescription ?? post.excerpt ?? stripHtml(post.bodyHtml ?? "").slice(0, 200);
+  const description =
+    post.seoDescription ?? post.excerpt ?? stripHtml(post.bodyHtml ?? "").slice(0, 200);
   const datePublished = post.publishedAt ?? post.publishAt ?? undefined;
 
   if (post.kind === "episode") {
-    const { published, modified } = articleDates({ published: datePublished, modified: post.updatedAt });
+    const { published, modified } = articleDates({
+      published: datePublished,
+      modified: post.updatedAt,
+    });
     return thing("PodcastEpisode", {
       name: post.title,
       url,
@@ -136,9 +142,19 @@ export type SocialLink = { platform: string; label: string; url: string };
 /** Profile links from social handles (settings social.*), for the footer. Empty handles are skipped. */
 export function socialLinks(s: SocialHandles): SocialLink[] {
   const links: SocialLink[] = [];
-  if (s.facebook) links.push({ platform: "facebook", label: "Facebook", url: `https://www.facebook.com/${s.facebook}` });
+  if (s.facebook)
+    links.push({
+      platform: "facebook",
+      label: "Facebook",
+      url: `https://www.facebook.com/${s.facebook}`,
+    });
   if (s.twitter) links.push({ platform: "x", label: "X", url: `https://x.com/${s.twitter}` });
-  if (s.instagram) links.push({ platform: "instagram", label: "Instagram", url: `https://www.instagram.com/${s.instagram}/` });
+  if (s.instagram)
+    links.push({
+      platform: "instagram",
+      label: "Instagram",
+      url: `https://www.instagram.com/${s.instagram}/`,
+    });
   return links;
 }
 

@@ -11,35 +11,70 @@ import { getDb } from "~/db/index.server";
 import { mediaCaptions } from "~/db/schema";
 import { insertMediaRow, mediaRows } from "./store.server";
 
-const TYPES: Record<string, string> = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp", gif: "image/gif", avif: "image/avif", svg: "image/svg+xml" };
+const TYPES: Record<string, string> = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  webp: "image/webp",
+  gif: "image/gif",
+  avif: "image/avif",
+  svg: "image/svg+xml",
+};
 
 const positive = (v: string | number | null | undefined): number | null => {
   const n = Number(v);
   return Number.isInteger(n) && n > 0 ? n : null;
 };
 
-async function measured(env: Env, bytes: ArrayBuffer): Promise<{ width: number; height: number } | null> {
+async function measured(
+  env: Env,
+  bytes: ArrayBuffer,
+): Promise<{ width: number; height: number } | null> {
   if (!env.IMAGES) return null;
   try {
     const info = await env.IMAGES.info(new Blob([bytes]).stream());
-    return "width" in info && info.width && info.height ? { width: info.width, height: info.height } : null;
+    return "width" in info && info.width && info.height
+      ? { width: info.width, height: info.height }
+      : null;
   } catch {
     return null;
   }
 }
 
-export type BackfillResult = { scanned: number; added: string[]; cursor: string | null; done: boolean };
+export type BackfillResult = {
+  scanned: number;
+  added: string[];
+  cursor: string | null;
+  done: boolean;
+};
 
 /** One batch of the bucket, in its own order: up to `limit` objects listed, a row made for each one without. */
-export async function backfillMedia(env: Env, { cursor, limit = 50 }: { cursor?: string | null; limit?: number } = {}): Promise<BackfillResult> {
-  const listed = await env.BLOG_IMAGES.list({ limit: Math.min(Math.max(1, limit), 100), cursor: cursor || undefined, include: ["httpMetadata", "customMetadata"] });
+export async function backfillMedia(
+  env: Env,
+  { cursor, limit = 50 }: { cursor?: string | null; limit?: number } = {},
+): Promise<BackfillResult> {
+  const listed = await env.BLOG_IMAGES.list({
+    limit: Math.min(Math.max(1, limit), 100),
+    cursor: cursor || undefined,
+    include: ["httpMetadata", "customMetadata"],
+  });
   const keys = listed.objects.map((o) => o.key);
   const held = new Set((await mediaRows(env, keys)).map((r) => r.key));
   const waiting = listed.objects.filter((o) => !held.has(o.key));
   const captions =
     waiting.length > 0
       ? new Map(
-          (await getDb(env).select().from(mediaCaptions).where(inArray(mediaCaptions.mediaKey, waiting.map((o) => o.key)))).map((c) => [c.mediaKey, c.caption]),
+          (
+            await getDb(env)
+              .select()
+              .from(mediaCaptions)
+              .where(
+                inArray(
+                  mediaCaptions.mediaKey,
+                  waiting.map((o) => o.key),
+                ),
+              )
+          ).map((c) => [c.mediaKey, c.caption]),
         )
       : new Map<string, string>();
 
@@ -51,13 +86,19 @@ export async function backfillMedia(env: Env, { cursor, limit = 50 }: { cursor?:
     const meta = object.customMetadata ?? {};
     const ext = object.key.split(".").pop()?.toLowerCase() ?? "";
     const named = { width: positive(meta.width), height: positive(meta.height) };
-    const size = named.width && named.height ? named : ((await measured(env, bytes)) ?? { width: null, height: null });
+    const size =
+      named.width && named.height
+        ? named
+        : ((await measured(env, bytes)) ?? { width: null, height: null });
     const made = await insertMediaRow(
       env,
       {
         key: object.key,
         filename: meta.filename ?? object.key.split("/").pop() ?? null,
-        contentType: object.httpMetadata?.contentType?.split(";")[0]?.trim() || TYPES[ext] || "application/octet-stream",
+        contentType:
+          object.httpMetadata?.contentType?.split(";")[0]?.trim() ||
+          TYPES[ext] ||
+          "application/octet-stream",
         bytes: object.size,
         width: size.width,
         height: size.height,
@@ -86,5 +127,6 @@ export async function continueMediaBackfill(env: Env): Promise<void> {
   if (state === "done") return;
   const batch = await backfillMedia(env, { cursor: state });
   await env.APP_KV.put(BACKFILL_KEY, batch.cursor ?? "done");
-  if (batch.added.length > 0) logEvent("media_backfill_batch", { added: batch.added.length, done: batch.done });
+  if (batch.added.length > 0)
+    logEvent("media_backfill_batch", { added: batch.added.length, done: batch.done });
 }

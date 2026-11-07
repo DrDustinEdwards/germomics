@@ -26,9 +26,7 @@ export function op3Enclosure(url: string): string {
 
 /** Nested <itunes:category> elements (up to 3), falling back to the single legacy column. */
 function categoriesXml(show: ShowConfig): string {
-  const cats = show.categories?.length
-    ? show.categories
-    : [{ category: show.appleCategory }];
+  const cats = show.categories?.length ? show.categories : [{ category: show.appleCategory }];
   return cats
     .map((c) =>
       c.subcategory
@@ -51,7 +49,9 @@ export function buildPodcastFeed(
 ): string {
   const items = episodes
     .filter((e) => e.audioUrl && e.guid)
-    .map((e) => itemXml(e, origin, guestsByEpisode.get(e.id) ?? [], soundbitesByEpisode.get(e.id) ?? []))
+    .map((e) =>
+      itemXml(e, origin, guestsByEpisode.get(e.id) ?? [], soundbitesByEpisode.get(e.id) ?? []),
+    )
     .join("\n");
 
   const funding = show.fundingUrl
@@ -91,7 +91,12 @@ function personXml(g: GuestView, origin: string): string {
   return `<podcast:person role="${escapeXml(g.role || "guest")}" href="${escapeXml(href)}"${img}>${escapeXml(g.name)}</podcast:person>`;
 }
 
-function itemXml(e: Post, origin: string, guests: GuestView[], soundbites: Soundbite[] = []): string {
+function itemXml(
+  e: Post,
+  origin: string,
+  guests: GuestView[],
+  soundbites: Soundbite[] = [],
+): string {
   const url = `${origin}/${e.slug}`;
   // The rendered body (listFullPosts), its /media sizes made absolute: a feed item is read on another origin.
   const body = absolutizeUrls(e.bodyHtml ?? "", origin);

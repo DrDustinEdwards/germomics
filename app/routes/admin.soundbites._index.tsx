@@ -1,7 +1,6 @@
 // Admin -> Soundbites: CRUD for episode clips (episode, start, duration, title). Behind the admin
 // gate. Clips render a public clip player on the episode page and emit <podcast:soundbite> in the
 // feed. Drizzle via soundbites.server.
-import { useState } from "react";
 import { useFetcher } from "react-router";
 import { Scissors, Trash2 } from "lucide-react";
 import type { Route } from "./+types/admin.soundbites._index";
@@ -43,7 +42,10 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
   const { episodes, clips } = loaderData;
   const save = useFetcher<{ ok: boolean; message?: string }>();
   const del = useFetcher();
-  const emptySoundbites = useSnippet("snippet:empty.soundbites", "No soundbites yet. Create one on the right.");
+  const emptySoundbites = useSnippet(
+    "snippet:empty.soundbites",
+    "No soundbites yet. Create one on the right.",
+  );
   const titleById = new Map(episodes.map((e) => [e.id, e.title]));
 
   return (
@@ -64,15 +66,26 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
               {clips.map((c) => (
                 <li key={c.id} className="flex items-center gap-3 px-4 py-3">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-display font-medium text-ink">{c.title || "(untitled clip)"}</p>
+                    <p className="truncate font-display font-medium text-ink">
+                      {c.title || "(untitled clip)"}
+                    </p>
                     <p className="truncate font-mono text-[11px] text-muted">
-                      {titleById.get(c.postId) ?? `post ${c.postId}`} · {formatDuration(c.startSeconds)} for {c.durationSeconds}s
+                      {titleById.get(c.postId) ?? `post ${c.postId}`} ·{" "}
+                      {formatDuration(c.startSeconds)} for {c.durationSeconds}s
                     </p>
                   </div>
-                  <del.Form method="post" onSubmit={(e) => { if (!confirm("Delete this soundbite?")) e.preventDefault(); }}>
+                  <del.Form
+                    method="post"
+                    onSubmit={(e) => {
+                      if (!confirm("Delete this soundbite?")) e.preventDefault();
+                    }}
+                  >
                     <input type="hidden" name="intent" value="delete" />
                     <input type="hidden" name="id" value={c.id} />
-                    <button aria-label="Delete soundbite" className="grid h-7 w-7 place-items-center rounded text-muted hover:text-brand">
+                    <button
+                      aria-label="Delete soundbite"
+                      className="grid h-7 w-7 place-items-center rounded text-muted hover:text-brand"
+                    >
                       <Trash2 size={14} aria-hidden />
                     </button>
                   </del.Form>
@@ -101,18 +114,43 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Start (seconds)" required>
-                  {({ id }) => <input id={id} name="startSeconds" type="number" min={0} className={inputCx} required />}
+                  {({ id }) => (
+                    <input
+                      id={id}
+                      name="startSeconds"
+                      type="number"
+                      min={0}
+                      className={inputCx}
+                      required
+                    />
+                  )}
                 </Field>
                 <Field label="Duration (seconds)" required>
-                  {({ id }) => <input id={id} name="durationSeconds" type="number" min={1} defaultValue={30} className={inputCx} required />}
+                  {({ id }) => (
+                    <input
+                      id={id}
+                      name="durationSeconds"
+                      type="number"
+                      min={1}
+                      defaultValue={30}
+                      className={inputCx}
+                      required
+                    />
+                  )}
                 </Field>
               </div>
               <Field label="Title" hint="Optional. Shown on the clip and in the feed.">
                 {({ id }) => <input id={id} name="title" className={inputCx} />}
               </Field>
               <div className="flex items-center gap-3">
-                <Button type="submit" variant="primary" disabled={save.state !== "idle"}>Create</Button>
-                {save.data?.ok ? <span role="status" className="font-mono text-xs text-accent">{save.data.message}</span> : null}
+                <Button type="submit" variant="primary" disabled={save.state !== "idle"}>
+                  Create
+                </Button>
+                {save.data?.ok ? (
+                  <span role="status" className="font-mono text-xs text-accent">
+                    {save.data.message}
+                  </span>
+                ) : null}
               </div>
             </save.Form>
           </Card>

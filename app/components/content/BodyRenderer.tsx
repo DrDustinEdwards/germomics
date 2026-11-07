@@ -61,9 +61,23 @@ const PROSE =
   "[&_.footnotes]:mt-10 [&_.footnotes]:text-sm [&_.footnotes]:text-muted";
 
 /** `page`: a content page, whose headings sit right under its h1 and keep their level. */
-export function BodyRenderer({ html, page = false, className = "" }: { html: string; page?: boolean; className?: string }) {
-  const shown = useMemo(() => (page ? html ?? "" : demoteHeadings(html ?? "")), [html, page]);
+export function BodyRenderer({
+  html,
+  page = false,
+  className = "",
+}: {
+  html: string;
+  page?: boolean;
+  className?: string;
+}) {
+  const shown = useMemo(() => (page ? (html ?? "") : demoteHeadings(html ?? "")), [html, page]);
   // A body with a lite embed loads the embeds island (app/islands/embeds.ts), so a page with none sends no script for it.
   const island = shown.includes("embed-link") ? "embeds" : undefined;
-  return <div className={`${PROSE} ${page ? PAGE_HEADINGS : SECTION_HEADINGS} ${className}`} data-island={island} dangerouslySetInnerHTML={{ __html: shown }} />;
+  return (
+    <div
+      className={`${PROSE} ${page ? PAGE_HEADINGS : SECTION_HEADINGS} ${className}`}
+      data-island={island}
+      dangerouslySetInnerHTML={{ __html: shown }}
+    />
+  );
 }

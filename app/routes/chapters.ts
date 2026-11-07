@@ -8,7 +8,11 @@ import { buildChaptersJson } from "~/lib/rss.server";
 export async function loader({ params, context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const post = await getPostBySlug(env, params.slug);
-  if (!post) throw (await renamedPostRedirect(env, params.slug, "/chapters.json")) ?? new Response("Not found", { status: 404 });
+  if (!post)
+    throw (
+      (await renamedPostRedirect(env, params.slug, "/chapters.json")) ??
+      new Response("Not found", { status: 404 })
+    );
   return new Response(buildChaptersJson(post), {
     headers: {
       "Content-Type": "application/json+chapters; charset=utf-8",

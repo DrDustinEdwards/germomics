@@ -15,8 +15,17 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Link } from "capsomer/react/link";
 import {
-  Play, Pause, RotateCcw, RotateCw, SkipForward, Gauge, Volume2, VolumeX,
-  Timer, ListTree, Captions, Check,
+  Play,
+  Pause,
+  RotateCcw,
+  RotateCw,
+  SkipForward,
+  Volume2,
+  VolumeX,
+  Timer,
+  ListTree,
+  Captions,
+  Check,
 } from "lucide-react";
 import { usePlayer, activeChapterIndex, type SleepMode } from "./player-context";
 import { formatDuration, spokenTime } from "~/lib/format";
@@ -66,13 +75,14 @@ function Popover({
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const btnRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const panelId = useId();
+  const buttonId = `${panelId}-button`;
+  // By id, not a ref: `children` calls this while rendering the panel.
   const close = useCallback(() => {
     setOpen(false);
-    btnRef.current?.focus();
-  }, []);
+    document.getElementById(buttonId)?.focus();
+  }, [buttonId]);
 
   useEffect(() => {
     if (!open) return;
@@ -108,7 +118,7 @@ function Popover({
   return (
     <div ref={rootRef} className="relative" onBlur={onBlur}>
       <button
-        ref={btnRef}
+        id={buttonId}
         type="button"
         aria-haspopup="true"
         aria-expanded={open}
@@ -149,7 +159,16 @@ function useMenuKeys(count: number) {
     },
     tabIndex: i === focusIdx ? 0 : -1,
     onKeyDown: (e: React.KeyboardEvent) => {
-      const to = e.key === "ArrowDown" ? i + 1 : e.key === "ArrowUp" ? i - 1 : e.key === "Home" ? 0 : e.key === "End" ? count - 1 : null;
+      const to =
+        e.key === "ArrowDown"
+          ? i + 1
+          : e.key === "ArrowUp"
+            ? i - 1
+            : e.key === "Home"
+              ? 0
+              : e.key === "End"
+                ? count - 1
+                : null;
       if (to === null) return;
       e.preventDefault();
       refs.current[(to + count) % count]?.focus();
@@ -204,7 +223,13 @@ function RadioMenu<V>({
 
 // ── Transport ────────────────────────────────────────────────────────────────
 // Play/pause uses a dynamic label (Play/Pause) and no aria-pressed (APG: do one, not both).
-export function PlayPauseButton({ track, size = "md" }: { track?: PlayerTrack; size?: "md" | "lg" }) {
+export function PlayPauseButton({
+  track,
+  size = "md",
+}: {
+  track?: PlayerTrack;
+  size?: "md" | "lg";
+}) {
   const p = usePlayer();
   const isThis = !track || p.current?.id === track.id;
   const playing = isThis && p.isPlaying;
@@ -221,7 +246,11 @@ export function PlayPauseButton({ track, size = "md" }: { track?: PlayerTrack; s
       aria-label={playing ? "Pause" : "Play"}
       className={`tap-target grid ${dim} shrink-0 place-items-center rounded-full bg-brand text-white hover:bg-brand-strong`}
     >
-      {playing ? <Pause size={ic} aria-hidden /> : <Play size={ic} aria-hidden className="translate-x-px" />}
+      {playing ? (
+        <Pause size={ic} aria-hidden />
+      ) : (
+        <Play size={ic} aria-hidden className="translate-x-px" />
+      )}
     </button>
   );
 }
@@ -379,7 +408,9 @@ export function SleepMenuContent({ onSelect }: { onSelect?: () => void }) {
   const p = usePlayer();
   return (
     <div>
-      <p className="px-2 pb-1 font-mono text-[11px] uppercase tracking-wide text-muted">Sleep timer</p>
+      <p className="px-2 pb-1 font-mono text-[11px] uppercase tracking-wide text-muted">
+        Sleep timer
+      </p>
       <RadioMenu
         ariaLabel="Sleep timer"
         options={SLEEP_OPTIONS}
@@ -420,7 +451,9 @@ export function VolumeControl({ openUp, className }: { openUp?: boolean; classNa
         label={muted ? "Volume, muted" : `Volume, ${Math.round(p.volume * 100)} percent`}
         panelLabel="Volume"
         active={muted}
-        buttonContent={muted ? <VolumeX size={18} aria-hidden /> : <Volume2 size={18} aria-hidden />}
+        buttonContent={
+          muted ? <VolumeX size={18} aria-hidden /> : <Volume2 size={18} aria-hidden />
+        }
       >
         {() => (
           <div className="flex items-center gap-2 px-1">
@@ -486,7 +519,9 @@ export function ChaptersControl({ openUp }: { openUp?: boolean }) {
                   i === cur ? "text-accent" : "text-ink"
                 }`}
               >
-                <span className="font-mono text-xs tabular-nums text-accent">{formatDuration(c.start)}</span>
+                <span className="font-mono text-xs tabular-nums text-accent">
+                  {formatDuration(c.start)}
+                </span>
                 <span className="truncate">{c.title}</span>
               </button>
             </li>

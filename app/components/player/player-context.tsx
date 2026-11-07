@@ -15,7 +15,14 @@ import {
 } from "react";
 import type { PlayerTrack } from "~/lib/types";
 import { AUDIO_STARTED_ATTRIBUTE } from "~/lib/hydration";
-import { RATE_KEY, RESUME_PREFIX, VOL_KEY, resumeAt, storedRate, storedVolume } from "~/lib/player-storage";
+import {
+  RATE_KEY,
+  RESUME_PREFIX,
+  VOL_KEY,
+  resumeAt,
+  storedRate,
+  storedVolume,
+} from "~/lib/player-storage";
 
 export type SleepMode = "end" | number; // "end" of episode, or minutes from now
 
@@ -64,7 +71,6 @@ type PlayerApi = PlayerState & {
 };
 
 const PlayerContext = createContext<PlayerApi | null>(null);
-
 
 function ms(): MediaSession | null {
   if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return null;
@@ -178,7 +184,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
     audio.addEventListener("loadedmetadata", onMeta, { once: true });
     return () => audio.removeEventListener("loadedmetadata", onMeta);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps -- runs once per loaded track, not on each state it reads
   }, [current?.id]);
 
   // Apply play/pause intent.
@@ -187,7 +193,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     if (!audio || !current) return;
     if (isPlaying) void audio.play().catch(() => setIsPlaying(false));
     else audio.pause();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps -- applies a play or pause intent only, not a track change
   }, [isPlaying]);
 
   const next = useCallback(() => {
@@ -303,10 +309,13 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   // Sleep timer: a minute count pauses after N minutes; "end" is handled on `ended`.
   useEffect(() => {
     if (typeof sleep !== "number") return;
-    const id = setTimeout(() => {
-      setIsPlaying(false);
-      setSleepState(null);
-    }, sleep * 60 * 1000);
+    const id = setTimeout(
+      () => {
+        setIsPlaying(false);
+        setSleepState(null);
+      },
+      sleep * 60 * 1000,
+    );
     return () => clearTimeout(id);
   }, [sleep]);
 
@@ -416,7 +425,16 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     });
     return () => {
       // Clear handlers so a stale closure never fires after unmount.
-      for (const a of ["play", "pause", "stop", "previoustrack", "nexttrack", "seekbackward", "seekforward", "seekto"] as const) {
+      for (const a of [
+        "play",
+        "pause",
+        "stop",
+        "previoustrack",
+        "nexttrack",
+        "seekbackward",
+        "seekforward",
+        "seekto",
+      ] as const) {
         try {
           session.setActionHandler(a, null);
         } catch {
@@ -434,12 +452,68 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<PlayerApi>(
     () => ({
-      queue, index, current, isPlaying, currentTime, duration, rate, volume, muted, buffering, errored, sleep, surfaceVisible,
+      queue,
+      index,
+      current,
+      isPlaying,
+      currentTime,
+      duration,
+      rate,
+      volume,
+      muted,
+      buffering,
+      errored,
+      sleep,
+      surfaceVisible,
       audioRef,
-      setQueue, playTrack, playQueueAt, playTrackAt, toggle, pause, next, prev, seek, skip, setRate,
-      setVolume, toggleMute, setSleep, setSurfaceVisible, dismiss,
+      setQueue,
+      playTrack,
+      playQueueAt,
+      playTrackAt,
+      toggle,
+      pause,
+      next,
+      prev,
+      seek,
+      skip,
+      setRate,
+      setVolume,
+      toggleMute,
+      setSleep,
+      setSurfaceVisible,
+      dismiss,
     }),
-    [queue, index, current, isPlaying, currentTime, duration, rate, volume, muted, buffering, errored, sleep, surfaceVisible, setQueue, playTrack, playQueueAt, playTrackAt, toggle, pause, next, prev, seek, skip, setRate, setVolume, toggleMute, setSleep, setSurfaceVisible, dismiss],
+    [
+      queue,
+      index,
+      current,
+      isPlaying,
+      currentTime,
+      duration,
+      rate,
+      volume,
+      muted,
+      buffering,
+      errored,
+      sleep,
+      surfaceVisible,
+      setQueue,
+      playTrack,
+      playQueueAt,
+      playTrackAt,
+      toggle,
+      pause,
+      next,
+      prev,
+      seek,
+      skip,
+      setRate,
+      setVolume,
+      toggleMute,
+      setSleep,
+      setSurfaceVisible,
+      dismiss,
+    ],
   );
 
   return (

@@ -1,6 +1,13 @@
 import type { Route } from "./+types/$slug";
 import { getEnv } from "~/lib/context.server";
-import { getPostBySlug, listPosts, relatedPosts, adjacentPosts, renamedPostRedirect, toPlayerTrack } from "~/lib/posts.server";
+import {
+  getPostBySlug,
+  listPosts,
+  relatedPosts,
+  adjacentPosts,
+  renamedPostRedirect,
+  toPlayerTrack,
+} from "~/lib/posts.server";
 import { getEpisodeGuests } from "~/lib/people.server";
 import { soundbitesForPost } from "~/lib/soundbites.server";
 import { getShowConfig } from "~/lib/show.server";
@@ -16,7 +23,8 @@ import { PostDetail, type DetailData } from "~/components/content/PostDetail";
 // An episode's page is the player's own (its surface, waveform, transcript read-along, chapters and progress), so it
 // hydrates on load; an article sends no React (lib/hydration.ts).
 export const handle = {
-  hydrate: (data: unknown) => (data as { post?: { kind?: string } } | undefined)?.post?.kind === "episode",
+  hydrate: (data: unknown) =>
+    (data as { post?: { kind?: string } } | undefined)?.post?.kind === "episode",
 };
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -32,12 +40,21 @@ export function meta({ loaderData }: Route.MetaArgs) {
       path: `/${post.slug}`,
       title: `${post.seoTitle ?? post.title} · Germomics`,
       socialTitle: post.title,
-      description: post.seoDescription || post.excerpt || stripHtml(post.bodyHtml ?? "") || `${post.title}, on Germomics.`,
+      description:
+        post.seoDescription ||
+        post.excerpt ||
+        stripHtml(post.bodyHtml ?? "") ||
+        `${post.title}, on Germomics.`,
       image: ogImage,
       canonical: post.canonical ? new URL(post.canonical, SITE_ORIGIN).href : undefined,
       noindex: post.noindex,
       type: "article",
-      article: { published: post.publishedAt ?? post.publishAt, modified: post.updatedAt, author, tags: post.tags ?? [] },
+      article: {
+        published: post.publishedAt ?? post.publishAt,
+        modified: post.updatedAt,
+        author,
+        tags: post.tags ?? [],
+      },
       breadcrumbs: postTrail(post),
     }),
     jsonLd(buildJsonLd({ post, author, seriesTitle, guests, hosts })),
@@ -47,9 +64,16 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const env = getEnv(context);
-  const [post, visible, show] = await Promise.all([getPostBySlug(env, params.slug), listPosts(env), getShowConfig(env)]);
+  const [post, visible, show] = await Promise.all([
+    getPostBySlug(env, params.slug),
+    listPosts(env),
+    getShowConfig(env),
+  ]);
   // A slug Carrel renamed away from answers a permanent redirect to the post's address now.
-  if (!post) throw (await renamedPostRedirect(env, params.slug)) ?? new Response("Not found", { status: 404 });
+  if (!post)
+    throw (
+      (await renamedPostRedirect(env, params.slug)) ?? new Response("Not found", { status: 404 })
+    );
 
   const [guests, clips] = await Promise.all([
     getEpisodeGuests(env, post),
@@ -76,7 +100,12 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     post: { ...post, body: "", bodyHtml: html, bodyMeta: meta },
     images,
     track: post.kind === "episode" ? toPlayerTrack(post) : null,
-    soundbites: clips.map((c) => ({ id: c.id, start: c.startSeconds, duration: c.durationSeconds, title: c.title })),
+    soundbites: clips.map((c) => ({
+      id: c.id,
+      start: c.startSeconds,
+      duration: c.durationSeconds,
+      title: c.title,
+    })),
     guests,
     related,
     prev: adj.prev ? { slug: adj.prev.slug, title: adj.prev.title } : null,

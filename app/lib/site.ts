@@ -76,4 +76,5 @@ export const ROBOTS_DISALLOW = ["/admin", "/preview/"];
 /** Carrel's Desk, the family's writing editor, where this site's posts and pages are written (app/lib/carrel/adapter.server.ts). */
 const CARREL_ORIGIN = "https://desk.dustinedwards.info";
 /** The Carrel editor for one of this site's items, by its Carrel id (a post's slug, `page.<name>` for a page). */
-export const carrelEditUrl = (id: string) => `${CARREL_ORIGIN}/p/germomics/e/${encodeURIComponent(id)}`;
+export const carrelEditUrl = (id: string) =>
+  `${CARREL_ORIGIN}/p/germomics/e/${encodeURIComponent(id)}`;

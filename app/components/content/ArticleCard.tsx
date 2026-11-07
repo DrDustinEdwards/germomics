@@ -22,14 +22,20 @@ export function ArticleCard({ post, image }: { post: Post; image?: ImageAttribut
         <div className="p-4">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-wide text-muted">
             {post.publishedAt ? (
-              <span className="flex items-center gap-1"><Calendar size={11} aria-hidden /> {formatDate(post.publishedAt)}</span>
+              <span className="flex items-center gap-1">
+                <Calendar size={11} aria-hidden /> {formatDate(post.publishedAt)}
+              </span>
             ) : null}
             {post.readingTime ? (
               <span className="tabular-nums">{post.readingTime} min read</span>
             ) : null}
           </div>
-          <h2 className="mt-1.5 font-display text-xl font-semibold text-ink group-hover:text-brand">{post.title}</h2>
-          {post.excerpt ? <p className="mt-1.5 line-clamp-2 text-sm text-muted">{post.excerpt}</p> : null}
+          <h2 className="mt-1.5 font-display text-xl font-semibold text-ink group-hover:text-brand">
+            {post.title}
+          </h2>
+          {post.excerpt ? (
+            <p className="mt-1.5 line-clamp-2 text-sm text-muted">{post.excerpt}</p>
+          ) : null}
         </div>
       </Link>
       {(post.tags ?? []).length ? (

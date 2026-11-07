@@ -8,6 +8,9 @@ export function loader() {
     backgroundColor: "#FBFAFD",
   });
   return new Response(JSON.stringify(manifest), {
-    headers: { "Content-Type": "application/manifest+json", "Cache-Control": "public, max-age=86400" },
+    headers: {
+      "Content-Type": "application/manifest+json",
+      "Cache-Control": "public, max-age=86400",
+    },
   });
 }

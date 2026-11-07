@@ -63,9 +63,13 @@ describe("the source", () => {
       featured: false,
       sources: [],
     });
-    expect(parseSource("just a body", "episode")).toEqual({ body: "just a body", post: null, episode: null });
-    expect(() => parseSource('---\nepisodeNumber: 1.5\nchapters: [{"title":"no start"}]\n---\n', "episode")).toThrow(
-      /episodeNumber must be a whole number\. chapters must be a list of objects/,
-    );
+    expect(parseSource("just a body", "episode")).toEqual({
+      body: "just a body",
+      post: null,
+      episode: null,
+    });
+    expect(() =>
+      parseSource('---\nepisodeNumber: 1.5\nchapters: [{"title":"no start"}]\n---\n', "episode"),
+    ).toThrow(/episodeNumber must be a whole number\. chapters must be a list of objects/);
   });
 });

@@ -6,14 +6,14 @@ All data is in `datasets.json`. Every number there was read from one of the sour
 
 ### Timelines: fatal attacks and deaths per day (19 Aug to 30 Sep 1854)
 
-- **Citation:** John Snow, *On the Mode of Communication of Cholera*, 2nd ed. (London: John Churchill, 1855), Table I, p. 49.
+- **Citation:** John Snow, _On the Mode of Communication of Cholera_, 2nd ed. (London: John Churchill, 1855), Table I, p. 49.
 - **Fetched:** https://raw.githubusercontent.com/vincentarelbundock/Rdatasets/master/csv/HistData/Snow.dates.csv (HistData `Snow.dates`), and the Wellcome Library scan of the 1855 edition, https://archive.org/download/b28985266/b28985266.pdf (PDF page 63 = printed p. 49).
 - **Check:** I read both columns of Table I off the scan at 220 dpi and transcribed them. The transcription matches HistData row for row (the build script asserts this). Totals as printed: 616 fatal attacks (571 dated plus 45 "Date unknown") and 616 deaths (all dated). Peaks: 143 attacks on 1 September, 127 deaths on 2 September.
 - **Note:** the old placeholder's six values (56, 143, 116, 54, 46, 36) were the attacks column, labeled correctly as "fatal attacks". The deaths column is a separate series and peaks a day later.
 
 ### Map: deaths by address, and pumps
 
-- **Citation:** the 578 death bars on Snow's 1855 map, as digitized by W. R. Tobler and S. Dodson (1992; HistData `Snow.deaths`), amended (3 duplicates removed, 3 missing cases restored) and georeferenced by lindbrook in the R package *cholera* (QGIS Georeferencer, thin plate spline, WGS 84, ground control points at road intersections on OpenStreetMap).
+- **Citation:** the 578 death bars on Snow's 1855 map, as digitized by W. R. Tobler and S. Dodson (1992; HistData `Snow.deaths`), amended (3 duplicates removed, 3 missing cases restored) and georeferenced by lindbrook in the R package _cholera_ (QGIS Georeferencer, thin plate spline, WGS 84, ground control points at road intersections on OpenStreetMap).
 - **Fetched:** https://raw.githubusercontent.com/lindbrook/cholera/master/data/ files `fatalities.rda`, `fatalities.anchor.rda`, `latlong.ortho.anchor.rda`, `roads.rda` and `pumps.rda`, the matching `man/*.Rd` pages, and `docs/notes/georeferencing.md` (method). Also https://raw.githubusercontent.com/vincentarelbundock/Rdatasets/master/csv/HistData/Snow.deaths.csv and `Snow.deaths2.csv`.
 - **Aggregation:** one point per address. In lindbrook's terms an address is an "anchor", the base of a stack of bars. There are 321 addresses, each valued at its number of deaths (`case.count`), and they sum to 578. Each address is labeled with the street of the road segment it projects onto (`latlong.ortho.anchor.road.segment` joined to `roads.name`). The street table lists the 15 streets with the most deaths and then "Other streets (47)", which together sum to 578. The top streets are Broad Street 95, Berwick Street 44, Marshall Street 39, Poland Street 26 and St Anns Court 25.
 - **Checks:**
@@ -23,7 +23,7 @@ All data is in `datasets.json`. Every number there was read from one of the sour
 
 ### Map: the streets
 
-- **Citation:** the streets of Snow's 1855 map as digitized by W. R. Tobler and S. Dodson (1992; HistData `Snow.streets`), with Snow's road names added and georeferenced (WGS 84) by lindbrook in the R package *cholera*, data set `roads`.
+- **Citation:** the streets of Snow's 1855 map as digitized by W. R. Tobler and S. Dodson (1992; HistData `Snow.streets`), with Snow's road names added and georeferenced (WGS 84) by lindbrook in the R package _cholera_, data set `roads`.
 - **Fetched:** https://raw.githubusercontent.com/lindbrook/cholera/master/data/roads.rda (2026-11-01) and its page `man/roads.Rd`.
 - **Converted:** `scripts/soho-streets.py` writes `soho-streets.json`: one GeoJSON feature per road name, a MultiLineString of its segments (206 names, 479 segments), positions rounded to 6 decimals. Snow's map frame ("Map Frame") is left out. The map prints a name without its roman numeral ("Princes Street (I)" reads "Princes Street").
 - **Check:** the streets come from the same georeference as the 321 addresses and 13 pumps, so the dots sit on their streets as on Snow's map. I did not check the street lines against a second source.
@@ -37,7 +37,7 @@ All data is in `datasets.json`. Every number there was read from one of the sour
 
 ## Influenza, London 1918 to 1919
 
-- **Citation:** Registrar-General, *Report on the Mortality from Influenza in England and Wales during the Epidemic of 1918-19*, Supplement to the 81st Annual Report of the Registrar-General (London: HMSO, 1920, Cmd. 700), Table XX, pp. 48-50, row "London (Admin. County)".
+- **Citation:** Registrar-General, _Report on the Mortality from Influenza in England and Wales during the Epidemic of 1918-19_, Supplement to the 81st Annual Report of the Registrar-General (London: HMSO, 1920, Cmd. 700), Table XX, pp. 48-50, row "London (Admin. County)".
 - **Fetched:** https://archive.org/download/sid14156800/sid14156800.pdf (Wellcome Library scan; PDF pages 52 to 54 = printed pp. 48 to 50) and its OCR text, `sid14156800_djvu.txt`.
 - **Measure:** deaths of civilians certified to influenza in each week, for the 46 weeks ending Saturday 29 June 1918 to Saturday 10 May 1919. The italic second row of the table gives the same deaths as an annual death rate per 1,000 civilians. Both series are in `datasets.json`.
 - **Check:** I read the London row off the page images at 200 dpi. The weekly deaths sum exactly to the table's printed wave totals: first wave 997 (12 weeks, 23 Jun to 14 Sep), second wave 12,330 (19 weeks, 15 Sep to 25 Jan) and third wave 3,786 (15 weeks, 26 Jan to 10 May). The whole-period total is 17,113 (rate 4.9 per 1,000). The build script asserts all four sums. The week-ending dates were checked as consecutive Saturdays.

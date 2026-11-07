@@ -5,10 +5,18 @@ import { formatDuration } from "~/lib/format";
 
 // One share button: `share` offers the Web Share sheet where the device has one, else (or always,
 // without it) the link goes to the clipboard and the label reads "Copied" for a moment.
-function ShareButton({ path, label, share = false }: { path: string; label: string; share?: boolean }) {
+function ShareButton({
+  path,
+  label,
+  share = false,
+}: {
+  path: string;
+  label: string;
+  share?: boolean;
+}) {
   const [copied, setCopied] = useState(false);
 
-  const onClick = async () => {
+  const copy = async () => {
     const url = `${window.location.origin}${path}`;
     try {
       if (share && navigator.share) {
@@ -26,7 +34,7 @@ function ShareButton({ path, label, share = false }: { path: string; label: stri
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={() => void copy()}
       className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 font-mono text-xs hover:border-accent hover:text-accent"
     >
       {copied ? <Check size={14} aria-hidden /> : <Share2 size={14} aria-hidden />}
@@ -54,7 +62,12 @@ export function CopyButton({
   className: string;
 }) {
   return (
-    <button type="button" data-copy={path} data-share={share ? "" : undefined} className={className}>
+    <button
+      type="button"
+      data-copy={path}
+      data-share={share ? "" : undefined}
+      className={className}
+    >
       <span className="contents" data-copy-idle>
         <Icon size={14} aria-hidden />
         {label}

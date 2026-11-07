@@ -10,21 +10,35 @@ const e = env as unknown as Env;
 let action: typeof import("~/routes/admin.upload").action;
 
 /** The request UploadDropzone sends: the file as the body, its type and length in the headers, the rest in the query. */
-function upload({ file, ...fields }: { kind?: string; postId?: string; file?: File }, headers: Record<string, string> = {}) {
+function upload(
+  { file, ...fields }: { kind?: string; postId?: string; file?: File },
+  headers: Record<string, string> = {},
+) {
   const query = new URLSearchParams({ ...fields, ...(file ? { name: file.name } : {}) });
   const context = new RouterContextProvider();
   context.set(cloudflareContext, { env: e, ctx: {} as ExecutionContext });
   const request = new Request(`https://germomics.com/admin/upload?${query}`, {
     method: "POST",
     body: file ? file.stream() : null,
-    headers: { ...(file ? { "Content-Type": file.type, "Content-Length": String(file.size) } : {}), ...headers },
+    headers: {
+      ...(file ? { "Content-Type": file.type, "Content-Length": String(file.size) } : {}),
+      ...headers,
+    },
     ...(file ? { duplex: "half" } : {}),
   } as RequestInit);
-  return action({ request, context, params: {} } as unknown as Parameters<typeof action>[0]) as Promise<Response>;
+  return action({ request, context, params: {} } as unknown as Parameters<
+    typeof action
+  >[0]) as Promise<Response>;
 }
-const file = (name: string, type: string, size = 4) => new File([new Uint8Array(size)], name, { type });
+const file = (name: string, type: string, size = 4) =>
+  new File([new Uint8Array(size)], name, { type });
 /** A file that starts with the PNG signature, so its bytes match its type. */
-const png = (name: string, size = 8) => new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), new Uint8Array(size - 8)], name, { type: "image/png" });
+const png = (name: string, size = 8) =>
+  new File(
+    [new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), new Uint8Array(size - 8)],
+    name,
+    { type: "image/png" },
+  );
 
 beforeAll(async () => {
   await applyMigrations(e.DB);
@@ -42,23 +56,33 @@ describe("admin upload", () => {
   it("stores an image under the post's folder and returns its public URL", async () => {
     const res = await upload({ kind: "image", postId: "12", file: png("My Pic.png") });
     expect(res.status).toBe(200);
-    const body = (await res.json()) as Record<string, any>;
+    const body = (await res.json()) as { url: string; [field: string]: unknown };
     expect(body).toMatchObject({ ok: true, contentType: "image/png", name: "My Pic.png", size: 8 });
     expect(body.url).toMatch(/^\/media\/posts\/12\/\d+-My_Pic\.png$/);
     const key = body.url.replace("/media/", "");
     expect((await e.BLOG_IMAGES.head(key))?.httpMetadata?.contentType).toBe("image/png");
     // And into the media library, where Carrel's media page lists it.
-    expect(await e.DB.prepare("SELECT filename, content_type, bytes FROM media WHERE key = ?").bind(key).first()).toEqual({ filename: "My Pic.png", content_type: "image/png", bytes: 8 });
+    expect(
+      await e.DB.prepare("SELECT filename, content_type, bytes FROM media WHERE key = ?")
+        .bind(key)
+        .first(),
+    ).toEqual({ filename: "My Pic.png", content_type: "image/png", bytes: 8 });
   });
 
   it("stores audio in the media bucket with its type, and cleans the post id", async () => {
-    const res = await upload({ kind: "audio", postId: "../../etc", file: file("ep.mp3", "audio/mpeg", 10) });
-    const body = (await res.json()) as Record<string, any>;
+    const res = await upload({
+      kind: "audio",
+      postId: "../../etc",
+      file: file("ep.mp3", "audio/mpeg", 10),
+    });
+    const body = (await res.json()) as { url: string; [field: string]: unknown };
     expect(body).toMatchObject({ ok: true, size: 10, contentType: "audio/mpeg" });
     expect(body.url).toMatch(/^https:\/\/media\.germomics\.com\/episodes\/etc\/\d+-ep\.mp3$/);
     const key = body.url.replace("https://media.germomics.com/", "");
     expect((await e.MEDIA.head(key))?.httpMetadata?.contentType).toBe("audio/mpeg");
-    const misc = (await (await upload({ kind: "audio", postId: "///", file: file("a.mp3", "audio/mpeg") })).json()) as Record<string, any>;
+    const misc = (await (
+      await upload({ kind: "audio", postId: "///", file: file("a.mp3", "audio/mpeg") })
+    ).json()) as Record<string, unknown>;
     expect(misc.url).toContain("/episodes/misc/");
   });
 
@@ -68,13 +92,32 @@ describe("admin upload", () => {
       expect(await res.json()).toEqual({ ok: false, error: error ?? expect.any(String) });
     };
     await expectRefusal(await upload({ kind: "image" }), 400, "No file received.");
-    await expectRefusal(await upload({ kind: "image", file: file("e.png", "image/png", 0) }), 400, "No file received.");
+    await expectRefusal(
+      await upload({ kind: "image", file: file("e.png", "image/png", 0) }),
+      400,
+      "No file received.",
+    );
     await expectRefusal(await upload({ kind: "image", file: file("x.svg", "image/svg+xml") }), 415);
     await expectRefusal(await upload({ kind: "image", file: file("t.png", "image/png") }), 415);
-    await expectRefusal(await upload({ kind: "image", file: png("big.png", 25 * 1024 * 1024 + 1) }), 413, "Image exceeds 25 MB.");
-    await expectRefusal(await upload({ kind: "video", file: file("v.mp4", "video/mp4") }), 400, "Unknown upload kind.");
+    await expectRefusal(
+      await upload({ kind: "image", file: png("big.png", 25 * 1024 * 1024 + 1) }),
+      413,
+      "Image exceeds 25 MB.",
+    );
+    await expectRefusal(
+      await upload({ kind: "video", file: file("v.mp4", "video/mp4") }),
+      400,
+      "Unknown upload kind.",
+    );
     // Audio is streamed at its declared length: none declared, or over the cap, is refused before a byte is read.
-    await expectRefusal(await upload({ kind: "audio", file: file("big.mp3", "audio/mpeg") }, { "Content-Length": String(100 * 1024 * 1024 + 1) }), 413, "Audio exceeds 100 MB.");
+    await expectRefusal(
+      await upload(
+        { kind: "audio", file: file("big.mp3", "audio/mpeg") },
+        { "Content-Length": String(100 * 1024 * 1024 + 1) },
+      ),
+      413,
+      "Audio exceeds 100 MB.",
+    );
     expect((await e.BLOG_IMAGES.list()).objects).toHaveLength(0);
     expect((await e.MEDIA.list()).objects).toHaveLength(0);
   });

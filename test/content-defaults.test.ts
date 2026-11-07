@@ -21,7 +21,9 @@ async function defaults() {
 
 describe("the in-code content defaults", () => {
   it("match the settings the migrations seed, key for key and value for value", async () => {
-    const seeded = Object.fromEntries((await rows("SELECT key, value FROM settings")).map((r) => [r.key, r.value]));
+    const seeded = Object.fromEntries(
+      (await rows("SELECT key, value FROM settings")).map((r) => [r.key, r.value]),
+    );
     expect(Object.keys(seeded).length).toBeGreaterThan(10);
     const { SETTING_DEFAULTS } = await defaults();
     expect(Object.keys(SETTING_DEFAULTS).sort()).toEqual(Object.keys(seeded).sort());
@@ -29,7 +31,12 @@ describe("the in-code content defaults", () => {
   });
 
   it("match the snippets the migrations seed", async () => {
-    const seeded = Object.fromEntries((await rows("SELECT key, value FROM content_blocks WHERE kind = 'snippet'")).map((r) => [r.key, r.value]));
+    const seeded = Object.fromEntries(
+      (await rows("SELECT key, value FROM content_blocks WHERE kind = 'snippet'")).map((r) => [
+        r.key,
+        r.value,
+      ]),
+    );
     expect(Object.keys(seeded).length).toBeGreaterThan(10);
     const fresh = (await defaults()).SNIPPET_DEFAULTS;
     expect(Object.keys(fresh).sort()).toEqual(Object.keys(seeded).sort());
@@ -37,7 +44,12 @@ describe("the in-code content defaults", () => {
   });
 
   it("match the pages the migrations seed, with their titles", async () => {
-    const seeded = Object.fromEntries((await rows("SELECT key, title, value FROM content_blocks WHERE kind = 'page'")).map((r) => [r.key, { title: r.title, value: r.value }]));
+    const seeded = Object.fromEntries(
+      (await rows("SELECT key, title, value FROM content_blocks WHERE kind = 'page'")).map((r) => [
+        r.key,
+        { title: r.title, value: r.value },
+      ]),
+    );
     expect(Object.keys(seeded).length).toBeGreaterThan(0);
     const { PAGE_DEFAULTS } = await defaults();
     expect(Object.keys(PAGE_DEFAULTS).sort()).toEqual(Object.keys(seeded).sort());

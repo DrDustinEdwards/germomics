@@ -60,7 +60,12 @@ export function Field({
       <div className="flex items-baseline justify-between gap-2">
         <label htmlFor={id} className="font-display text-sm font-medium text-ink">
           {label}
-          {required ? <span className="ml-0.5 text-brand" aria-hidden> *</span> : null}
+          {required ? (
+            <span className="ml-0.5 text-brand" aria-hidden>
+              {" "}
+              *
+            </span>
+          ) : null}
         </label>
         {count ? (
           <span
@@ -124,7 +129,11 @@ export function Tabs<T extends string>({
   label: string;
 }) {
   return (
-    <div role="tablist" aria-label={label} className="inline-flex rounded-lg border border-border bg-surface p-0.5">
+    <div
+      role="tablist"
+      aria-label={label}
+      className="inline-flex rounded-lg border border-border bg-surface p-0.5"
+    >
       {tabs.map((t) => {
         const active = t.value === value;
         return (
@@ -161,7 +170,9 @@ export function Badge({
     amber: "border-amber-500/40 text-amber-600 dark:text-amber-400",
   }[tone];
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide ${cx}`}>
+    <span
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide ${cx}`}
+    >
       {children}
     </span>
   );

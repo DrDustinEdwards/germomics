@@ -47,13 +47,18 @@ export async function submitScore(
   // Rate-limit by IP (fixed window). A counter that is down lets the score through (logged): the
   // name and score are already clamped, so the worst case is a few extra leaderboard rows.
   const rule = { limit: RL_MAX_PER_WINDOW, windowSeconds: RL_WINDOW_SECONDS };
-  const verdict = await rateLimit(env.RATE_LIMITER, `score:${input.gameSlug}:${input.ip}`, [rule], { onUnavailable: "allow" });
-  if (mustStop(verdict, "allow")) return { ok: false, error: "Too many submissions, try again in a minute." };
-
-  await getDb(env).insert(scores).values({
-    gameSlug: input.gameSlug,
-    name: sanitizeName(input.name),
-    score,
+  const verdict = await rateLimit(env.RATE_LIMITER, `score:${input.gameSlug}:${input.ip}`, [rule], {
+    onUnavailable: "allow",
   });
+  if (mustStop(verdict, "allow"))
+    return { ok: false, error: "Too many submissions, try again in a minute." };
+
+  await getDb(env)
+    .insert(scores)
+    .values({
+      gameSlug: input.gameSlug,
+      name: sanitizeName(input.name),
+      score,
+    });
   return { ok: true, score };
 }

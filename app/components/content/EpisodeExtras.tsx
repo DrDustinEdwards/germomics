@@ -49,22 +49,13 @@ export function ReadingProgress() {
   }, []);
   return (
     <div className="fixed inset-x-0 top-0 z-50 h-0.5" aria-hidden>
-      <div
-        className="h-full bg-gradient-to-r from-brand to-accent"
-        style={{ width: `${pct}%` }}
-      />
+      <div className="h-full bg-gradient-to-r from-brand to-accent" style={{ width: `${pct}%` }} />
     </div>
   );
 }
 
 // ── "In this episode" key moments ────────────────────────────────────────────
-export function KeyMoments({
-  moments,
-  track,
-}: {
-  moments: KeyMoment[];
-  track: PlayerTrack;
-}) {
+export function KeyMoments({ moments, track }: { moments: KeyMoment[]; track: PlayerTrack }) {
   const p = usePlayer();
   const reduced = usePrefersReducedMotion();
   const [toast, setToast] = useState<string | null>(null);
@@ -97,9 +88,7 @@ export function KeyMoments({
                 type="button"
                 onClick={() => go(m)}
                 className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
-                  active
-                    ? "border-accent bg-accent/10"
-                    : "border-border bg-card hover:border-brand"
+                  active ? "border-accent bg-accent/10" : "border-border bg-card hover:border-brand"
                 }`}
               >
                 <span
@@ -187,7 +176,10 @@ export function EpisodeToc({ items }: { items: TocItem[] }) {
         <div className="mt-2">{list}</div>
       </details>
       {/* Desktop: a sticky rail. */}
-      <nav aria-label="On this page" className="sticky top-24 hidden max-h-[calc(100vh-8rem)] overflow-auto lg:block">
+      <nav
+        aria-label="On this page"
+        className="sticky top-24 hidden max-h-[calc(100vh-8rem)] overflow-auto lg:block"
+      >
         <p className="mb-2 font-display text-sm font-semibold">On this page</p>
         {list}
       </nav>
@@ -214,7 +206,9 @@ export function Sources({ sources }: { sources: Source[] }) {
           image credits) stays server-rendered inside <details> so it's present in view-source while
           collapsed, not lazy-mounted on open. */}
       <details>
-        <summary className="mb-3 cursor-pointer font-display text-xl font-semibold">Sources and Credits</summary>
+        <summary className="mb-3 cursor-pointer font-display text-xl font-semibold">
+          Sources and Credits
+        </summary>
         <ol className="space-y-2 text-sm">
           {sources.map((s, i) => (
             <li key={i} className="flex flex-wrap items-baseline gap-x-2 text-muted">
@@ -222,7 +216,10 @@ export function Sources({ sources }: { sources: Source[] }) {
                 {SOURCE_KIND[s.type] ?? s.type}
               </span>
               {s.url ? (
-                <a href={s.url} className="inline-flex items-center gap-1 text-accent hover:underline">
+                <a
+                  href={s.url}
+                  className="inline-flex items-center gap-1 text-accent hover:underline"
+                >
                   {s.title}
                   <ExternalLink size={12} aria-hidden />
                   <span className="sr-only"> (another site)</span>
@@ -252,9 +249,19 @@ export function Hosts({ hosts, images }: { hosts: Host[]; images?: ImageSet }) {
       </h2>
       <div className="grid gap-4 sm:grid-cols-2">
         {hosts.map((h) => (
-          <div key={h.name} className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
+          <div
+            key={h.name}
+            className="flex items-center gap-3 rounded-xl border border-border bg-card p-4"
+          >
             {h.img ? (
-              <Picture src={h.img} image={imageFor(images, "avatar", h.img)} alt={h.name} width={48} height={48} className="h-12 w-12 shrink-0 rounded-full border border-border object-cover" />
+              <Picture
+                src={h.img}
+                image={imageFor(images, "avatar", h.img)}
+                alt={h.name}
+                width={48}
+                height={48}
+                className="h-12 w-12 shrink-0 rounded-full border border-border object-cover"
+              />
             ) : (
               <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-border bg-surface">
                 <GMark className="h-6 w-auto" />
@@ -262,7 +269,11 @@ export function Hosts({ hosts, images }: { hosts: Host[]; images?: ImageSet }) {
             )}
             <div className="min-w-0">
               {h.href ? (
-                <a href={h.href} rel="me" className="font-display font-medium text-ink hover:text-brand">
+                <a
+                  href={h.href}
+                  rel="me"
+                  className="font-display font-medium text-ink hover:text-brand"
+                >
                   {h.name}
                 </a>
               ) : (
@@ -286,7 +297,9 @@ export function ChapterList({ chapters, track }: { chapters: Chapter[]; track: P
   if (!chapters.length) return null;
   return (
     <section aria-labelledby="chapters" className="mt-10">
-      <h2 id="chapters" className="mb-3 font-display text-xl font-semibold">Chapters</h2>
+      <h2 id="chapters" className="mb-3 font-display text-xl font-semibold">
+        Chapters
+      </h2>
       <ol className="grid gap-1">
         {chapters.map((c, i) => {
           const nextAt = chapters[i + 1]?.start ?? Infinity;
@@ -393,7 +406,7 @@ export function FigureLightbox({
         img.removeEventListener("keydown", onKey as EventListener);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps -- the caller's deps name the body this watches
   }, deps);
 
   // While open: lock scroll, focus the close button, trap Tab, Esc closes; restore focus on close.
@@ -429,13 +442,12 @@ export function FigureLightbox({
       role="dialog"
       aria-modal="true"
       aria-label={open.alt || "Enlarged image"}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) setOpen(null);
-      }}
       className={`fixed inset-0 z-[60] grid place-items-center bg-black/80 p-4 backdrop-blur-sm motion-safe:transition-opacity motion-safe:duration-150 ${
         shown ? "opacity-100" : "opacity-0"
       }`}
     >
+      {/* The backdrop: a click outside the image closes it (Esc does too, above). */}
+      <div aria-hidden="true" className="absolute inset-0" onClick={() => setOpen(null)} />
       <button
         ref={closeBtnRef}
         type="button"
@@ -448,7 +460,7 @@ export function FigureLightbox({
       <img
         src={open.src}
         alt={open.alt}
-        className="max-h-[90vh] max-w-full rounded-lg border border-white/20 object-contain shadow-2xl"
+        className="relative max-h-[90vh] max-w-full rounded-lg border border-white/20 object-contain shadow-2xl"
       />
     </div>
   );
@@ -476,6 +488,6 @@ export function useHideBrokenFigures(ref: React.RefObject<HTMLElement | null>, d
       }
     }
     return () => imgs.forEach((img) => img.removeEventListener("error", onErr));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps -- the caller's deps name the body this watches
   }, deps);
 }

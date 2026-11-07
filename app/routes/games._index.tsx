@@ -5,10 +5,16 @@ import type { Route } from "./+types/games._index";
 import { listGames } from "~/lib/games.server";
 
 export function meta() {
-  return pageHead({ path: "/games", title: "Games · Germomics", description: "Free arcade games from Germomics that play in the browser, tied to its microbiology stories, each with a high-score board.", pageType: "CollectionPage" });
+  return pageHead({
+    path: "/games",
+    title: "Games · Germomics",
+    description:
+      "Free arcade games from Germomics that play in the browser, tied to its microbiology stories, each with a high-score board.",
+    pageType: "CollectionPage",
+  });
 }
 
-export function loader(_: Route.LoaderArgs) {
+export function loader() {
   return { games: listGames() };
 }
 
@@ -17,8 +23,8 @@ export default function GamesHub({ loaderData }: Route.ComponentProps) {
     <div>
       <h1 className="font-display text-3xl font-semibold">Games</h1>
       <p className="mt-2 max-w-2xl text-muted">
-        Small arcade games that tie into the microbiology. Each loads its engine only when you
-        open it.
+        Small arcade games that tie into the microbiology. Each loads its engine only when you open
+        it.
       </p>
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
         {loaderData.games.map((g) => (

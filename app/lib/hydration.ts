@@ -32,7 +32,9 @@ export const STREAM_BUFFER_SCRIPT = `window.${STREAM_BUFFER}={chunks:[],closed:f
 type HydrateHandle = { hydrate?: boolean | ((data: unknown) => boolean) };
 
 /** True when a matched route hydrates on load: its handle says so, or says so of its loader data. */
-export function routeHydrates(matches: readonly { handle?: unknown; loaderData?: unknown }[]): boolean {
+export function routeHydrates(
+  matches: readonly { handle?: unknown; loaderData?: unknown }[],
+): boolean {
   return matches.some((match) => {
     const hydrate = (match.handle as HydrateHandle | undefined)?.hydrate;
     return typeof hydrate === "function" ? hydrate(match.loaderData) : hydrate === true;

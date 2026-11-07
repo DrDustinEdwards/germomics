@@ -38,7 +38,11 @@ beforeAll(async () => {
 beforeEach(async () => {
   await e.DB.exec("DELETE FROM posts; DELETE FROM media;");
   for (const key of [PHOTO, LEAD]) {
-    await e.DB.prepare("INSERT INTO media (key, content_type, width, height, uploaded_at) VALUES (?, 'image/webp', 795, 597, '2026-01-01')").bind(key).run();
+    await e.DB.prepare(
+      "INSERT INTO media (key, content_type, width, height, uploaded_at) VALUES (?, 'image/webp', 795, 597, '2026-01-01')",
+    )
+      .bind(key)
+      .run();
   }
 });
 
@@ -55,7 +59,9 @@ describe("a save", () => {
     expect(html).toContain('<span class="figure-credit">© CDC</span>');
     // The link opens the original, versioned like its sizes.
     expect(html).toContain(`href="/media/${PHOTO}`);
-    expect(html).toMatch(new RegExp(`<img src="${IMG}/missing.webp" alt="Not in the library" loading="lazy"`));
+    expect(html).toMatch(
+      new RegExp(`<img src="${IMG}/missing.webp" alt="Not in the library" loading="lazy"`),
+    );
     expect(fields.bodyMeta.toc).toEqual([{ depth: 2, id: "first-section", text: "First section" }]);
     // An episode's cover art is its largest picture, above the body: no body image is eager or high.
     const episode = (await postBodyFields(e, BODY, true)).bodyHtml;
@@ -64,7 +70,9 @@ describe("a save", () => {
   });
 
   it("refuses a figure without alt text, with Prelum's reason", async () => {
-    await expect(postBodyFields(e, `:::figure{src="${IMG}/${PHOTO}"}\nx\n:::`, false)).rejects.toThrow("requires an alt attribute");
+    await expect(
+      postBodyFields(e, `:::figure{src="${IMG}/${PHOTO}"}\nx\n:::`, false),
+    ).rejects.toThrow("requires an alt attribute");
   });
 });
 
@@ -72,12 +80,24 @@ describe("a read", () => {
   const row = { bodyHtml: "<p>stored</p>", bodyMeta: { toc: [], faq: [] } };
 
   it("serves the stored HTML while its version is Prelum's, and renders a stale one in memory", async () => {
-    expect((await storedBody(e, { ...row, body: "fresh", renderVersion: RENDER_VERSION })).html).toBe(`<div data-render-version="${RENDER_VERSION}"><p>stored</p></div>`);
-    expect((await storedBody(e, { ...row, body: "fresh", renderVersion: "0" })).html).toBe(`<div data-render-version="${RENDER_VERSION}"><p>fresh</p></div>`);
+    expect(
+      (await storedBody(e, { ...row, body: "fresh", renderVersion: RENDER_VERSION })).html,
+    ).toBe(`<div data-render-version="${RENDER_VERSION}"><p>stored</p></div>`);
+    expect((await storedBody(e, { ...row, body: "fresh", renderVersion: "0" })).html).toBe(
+      `<div data-render-version="${RENDER_VERSION}"><p>fresh</p></div>`,
+    );
   });
 
   it("serves a row not converted yet as the HTML it still holds", async () => {
-    expect((await storedBody(e, { body: "<p>old <em>html</em></p>", bodyHtml: null, renderVersion: null })).html).toBe("<p>old <em>html</em></p>");
+    expect(
+      (
+        await storedBody(e, {
+          body: "<p>old <em>html</em></p>",
+          bodyHtml: null,
+          renderVersion: null,
+        })
+      ).html,
+    ).toBe("<p>old <em>html</em></p>");
   });
 });
 
@@ -88,15 +108,30 @@ describe("the nightly re-render", () => {
       INSERT INTO posts (kind, title, slug, body, status) VALUES ('article', 'L', 'legacy', '<p>html</p>', 'published');
     `);
     expect(await rerenderStale(e)).toMatchObject({ posts: 1, failed: 0 });
-    const read = (slug: string) => e.DB.prepare("SELECT body, body_html, render_version FROM posts WHERE slug = ?").bind(slug).first();
-    expect(await read("stale")).toEqual({ body: "New *words*", body_html: "<p>New <em>words</em></p>", render_version: RENDER_VERSION });
-    expect(await read("legacy")).toEqual({ body: "<p>html</p>", body_html: null, render_version: null });
+    const read = (slug: string) =>
+      e.DB.prepare("SELECT body, body_html, render_version FROM posts WHERE slug = ?")
+        .bind(slug)
+        .first();
+    expect(await read("stale")).toEqual({
+      body: "New *words*",
+      body_html: "<p>New <em>words</em></p>",
+      render_version: RENDER_VERSION,
+    });
+    expect(await read("legacy")).toEqual({
+      body: "<p>html</p>",
+      body_html: null,
+      render_version: null,
+    });
   });
 });
 
 describe("demoteHeadings", () => {
   it("moves every heading down one level, keeping Prelum's ids, so the page keeps its own h1 and h2s", () => {
-    expect(demoteHeadings('<h2 id="a">A<a class="heading-anchor" href="#a">#</a></h2>')).toBe('<h3 id="a">A<a class="heading-anchor" href="#a">#</a></h3>');
-    expect(demoteHeadings("<h1>a</h1><h5>b</h5><h6>c</h6><p>d</p>")).toBe("<h2>a</h2><h6>b</h6><h6>c</h6><p>d</p>");
+    expect(demoteHeadings('<h2 id="a">A<a class="heading-anchor" href="#a">#</a></h2>')).toBe(
+      '<h3 id="a">A<a class="heading-anchor" href="#a">#</a></h3>',
+    );
+    expect(demoteHeadings("<h1>a</h1><h5>b</h5><h6>c</h6><p>d</p>")).toBe(
+      "<h2>a</h2><h6>b</h6><h6>c</h6><p>d</p>",
+    );
   });
 });

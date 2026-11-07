@@ -10,11 +10,18 @@ import { SITE_ADDRESS_LINE } from "~/lib/site";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return pageHead({ path: "/contact", title: loaderData?.title ?? "Contact", description: "How to reach Germomics by email or by post, with a question about an episode or anything else about the show." });
+  return pageHead({
+    path: "/contact",
+    title: loaderData?.title ?? "Contact",
+    description:
+      "How to reach Germomics by email or by post, with a question about an episode or anything else about the show.",
+  });
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const addressLine = getSettings(context).then((s) => setting(s, "contact.address_line", SITE_ADDRESS_LINE));
+  const addressLine = getSettings(context).then((s) =>
+    setting(s, "contact.address_line", SITE_ADDRESS_LINE),
+  );
   return loadFilledPage(getEnv(context), request, "page:contact", "Contact", addressLine);
 }
 

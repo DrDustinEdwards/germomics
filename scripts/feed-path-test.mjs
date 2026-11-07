@@ -11,19 +11,30 @@ const check = (name, cond, detail = "") => {
 
 // 1. The trailing-slash URL serves directly: 200, no redirect, XML.
 const slash = await fetch(`${BASE}/feed/podcast/`, { redirect: "manual" });
-check("/feed/podcast/ returns 200 (not a redirect)", slash.status === 200, `status ${slash.status}`);
+check(
+  "/feed/podcast/ returns 200 (not a redirect)",
+  slash.status === 200,
+  `status ${slash.status}`,
+);
 const ct = slash.headers.get("content-type") || "";
 check("/feed/podcast/ content-type is XML", /xml/i.test(ct), ct || "(none)");
 const body = await slash.text();
 check("body is RSS with a <channel>", body.includes("<rss") && body.includes("<channel>"));
 check("self atom:link is /feed/podcast/", body.includes("/feed/podcast/"));
 check("enclosure points at media.germomics.com", body.includes("media.germomics.com"));
-check("guid is permanent (isPermaLink=\"false\")", body.includes('isPermaLink="false"'));
-check("itunes channel tags present", body.includes("<itunes:author>") && body.includes("podcast:locked"));
+check('guid is permanent (isPermaLink="false")', body.includes('isPermaLink="false"'));
+check(
+  "itunes channel tags present",
+  body.includes("<itunes:author>") && body.includes("podcast:locked"),
+);
 
 // 2. The non-slash URL must ALSO serve directly (no forced redirect either way).
 const noslash = await fetch(`${BASE}/feed/podcast`, { redirect: "manual" });
-check("/feed/podcast (no slash) is not a redirect", noslash.status === 200, `status ${noslash.status}`);
+check(
+  "/feed/podcast (no slash) is not a redirect",
+  noslash.status === 200,
+  `status ${noslash.status}`,
+);
 
 console.log(failed === 0 ? "\nFEED PATH OK" : `\n${failed} CHECK(S) FAILED`);
 process.exit(failed ? 1 : 0);

@@ -55,5 +55,9 @@ export async function backupStatus(env: Env) {
     filesHealth(env.BACKUPS, IMAGES_BACKUP),
     filesHealth(env.BACKUPS, GAME_ASSETS_BACKUP),
   ]);
-  return { ...dump, files: { audio, images, gameAssets }, warning: dump.warning ?? audio.warning ?? images.warning ?? gameAssets.warning };
+  return {
+    ...dump,
+    files: { audio, images, gameAssets },
+    warning: dump.warning ?? audio.warning ?? images.warning ?? gameAssets.warning,
+  };
 }

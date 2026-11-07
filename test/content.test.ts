@@ -35,7 +35,9 @@ describe("settings", () => {
     expect((await loadSettings(e))["site.tagline"]).toBe("First");
     await upsertSetting(e, "site.tagline", "Second");
     expect((await loadSettings(e))["site.tagline"]).toBe("Second");
-    expect((await listSettings(e)).map((s) => [s.key, s.value])).toEqual([["site.tagline", "Second"]]);
+    expect((await listSettings(e)).map((s) => [s.key, s.value])).toEqual([
+      ["site.tagline", "Second"],
+    ]);
   });
 
   it("falls back to the stored value, then the in-code default, then the caller's", () => {
@@ -52,7 +54,9 @@ describe("settings", () => {
   });
 
   it("parses the contact address, and gives an empty one for bad JSON", () => {
-    expect(settingAddress({ "contact.address": '{"locality":"Here"}' })).toEqual({ locality: "Here" });
+    expect(settingAddress({ "contact.address": '{"locality":"Here"}' })).toEqual({
+      locality: "Here",
+    });
     expect(settingAddress({ "contact.address": "{nope" })).toEqual({});
     expect(settingAddress({}).locality).toBe("Stephenville");
   });
@@ -71,24 +75,53 @@ describe("snippets and pages", () => {
   });
 
   it("never serves a draft page publicly, but shows it to an admin preview", async () => {
-    await upsertBlock(e, { key: "page:about", kind: "page", title: "Draft about", value: "<p>draft</p>" });
+    await upsertBlock(e, {
+      key: "page:about",
+      kind: "page",
+      title: "Draft about",
+      value: "<p>draft</p>",
+    });
     expect(await loadBlock(e, "page:about")).toBeNull();
-    expect(await loadBlock(e, "page:about", { includeDrafts: true })).toEqual({ key: "page:about", title: "Draft about", value: "<p>draft</p>", html: "<p>draft</p>", status: "draft" });
+    expect(await loadBlock(e, "page:about", { includeDrafts: true })).toEqual({
+      key: "page:about",
+      title: "Draft about",
+      value: "<p>draft</p>",
+      html: "<p>draft</p>",
+      status: "draft",
+    });
     const page = await loadPage(e, "page:about");
     expect(page.title).toBe("About Germomics");
     expect(page.status).toBe("published");
   });
 
   it("shows a saved page on the next read", async () => {
-    await upsertBlock(e, { key: "page:p", kind: "page", title: "T", value: "v1", status: "published" });
+    await upsertBlock(e, {
+      key: "page:p",
+      kind: "page",
+      title: "T",
+      value: "v1",
+      status: "published",
+    });
     expect((await loadPage(e, "page:p")).value).toBe("v1");
     await upsertBlock(e, { key: "page:p", kind: "page", value: "v2", status: "published" });
     // Not converted (no render version): the value is still the HTML it was saved as, and is shown as it is.
-    expect(await loadPage(e, "page:p")).toEqual({ key: "page:p", title: "", value: "v2", html: "v2", status: "published" });
+    expect(await loadPage(e, "page:p")).toEqual({
+      key: "page:p",
+      title: "",
+      value: "v2",
+      html: "v2",
+      status: "published",
+    });
   });
 
   it("gives an empty page for a key with no row and no default", async () => {
-    expect(await loadPage(e, "page:none")).toEqual({ key: "page:none", title: "", value: "", html: "", status: "published" });
+    expect(await loadPage(e, "page:none")).toEqual({
+      key: "page:none",
+      title: "",
+      value: "",
+      html: "",
+      status: "published",
+    });
     expect(await loadPage(e, "page:none", { includeDrafts: true })).toMatchObject({ value: "" });
   });
 
@@ -101,9 +134,26 @@ describe("snippets and pages", () => {
 
 describe("searchPages", () => {
   beforeEach(async () => {
-    await upsertBlock(e, { key: "page:cholera", kind: "page", title: "Cholera", value: "<p>The Broad Street pump</p>", status: "published" });
-    await upsertBlock(e, { key: "page:draft", kind: "page", title: "Hidden", value: "<p>Broad Street draft</p>", status: "draft" });
-    await upsertBlock(e, { key: "snippet:s", kind: "snippet", value: "Broad Street snippet", status: "published" });
+    await upsertBlock(e, {
+      key: "page:cholera",
+      kind: "page",
+      title: "Cholera",
+      value: "<p>The Broad Street pump</p>",
+      status: "published",
+    });
+    await upsertBlock(e, {
+      key: "page:draft",
+      kind: "page",
+      title: "Hidden",
+      value: "<p>Broad Street draft</p>",
+      status: "draft",
+    });
+    await upsertBlock(e, {
+      key: "snippet:s",
+      kind: "snippet",
+      value: "Broad Street snippet",
+      status: "published",
+    });
   });
 
   it("finds published pages only, matching every word and a prefix of the last", async () => {

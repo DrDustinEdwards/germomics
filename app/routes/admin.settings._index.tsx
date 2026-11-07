@@ -4,7 +4,15 @@
 import { useState } from "react";
 import { useFetcher } from "react-router";
 import { Link } from "capsomer/react/link";
-import { Settings, Megaphone, ListTree, Check, SlidersHorizontal, FileText, Users } from "lucide-react";
+import {
+  Settings,
+  Megaphone,
+  ListTree,
+  Check,
+  SlidersHorizontal,
+  FileText,
+  Users,
+} from "lucide-react";
 import type { Route } from "./+types/admin.settings._index";
 import { getEnv } from "~/lib/context.server";
 import { getShowConfig, upsertShowConfig } from "~/lib/show.server";
@@ -27,7 +35,8 @@ export async function loader({ context }: Route.LoaderArgs) {
 
 const isCategory = (v: unknown): v is PodcastCategory =>
   typeof v === "object" && v !== null && typeof (v as PodcastCategory).category === "string";
-const isHost = (v: unknown): v is Host => typeof v === "object" && v !== null && typeof (v as Host).name === "string";
+const isHost = (v: unknown): v is Host =>
+  typeof v === "object" && v !== null && typeof (v as Host).name === "string";
 
 /** A JSON array field whose every item passes `valid`, or null when it is missing, does not parse or holds anything else. */
 function parseList<T>(raw: FormDataEntryValue | null, valid: (v: unknown) => v is T): T[] | null {
@@ -57,8 +66,12 @@ export async function action({ request, context }: Route.ActionArgs) {
   const categories = parseList(form.get("categories"), isCategory);
   const parsedHosts = parseList(form.get("hosts"), isHost);
   const problems = [
-    ...(categories ? [] : ["The categories could not be read, so nothing was saved. Reload the page and try again."]),
-    ...(parsedHosts ? [] : ["The hosts could not be read, so nothing was saved. Reload the page and try again."]),
+    ...(categories
+      ? []
+      : ["The categories could not be read, so nothing was saved. Reload the page and try again."]),
+    ...(parsedHosts
+      ? []
+      : ["The hosts could not be read, so nothing was saved. Reload the page and try again."]),
   ];
   if (!categories || !parsedHosts) return { ok: false as const, message: problems.join(" ") };
   const hosts = parsedHosts.filter((h) => h.name.trim());
@@ -96,7 +109,9 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
       <h1 className="flex items-center gap-2 font-display text-2xl font-semibold">
         <Settings size={22} aria-hidden /> Settings
       </h1>
-      <p className="mt-1 text-sm text-muted">Podcast channel metadata, categories, and funding. These drive the feed.</p>
+      <p className="mt-1 text-sm text-muted">
+        Podcast channel metadata, categories, and funding. These drive the feed.
+      </p>
 
       <fetcher.Form method="post" className="mt-6 space-y-5">
         <input type="hidden" name="categories" value={JSON.stringify(categories)} />
@@ -105,29 +120,67 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
         <Card title="Show" icon={<Megaphone size={15} aria-hidden />}>
           <div className="space-y-4">
             <Field label="Title">
-              {({ id }) => <input id={id} name="title" defaultValue={show.title} className={inputCx} />}
+              {({ id }) => (
+                <input id={id} name="title" defaultValue={show.title} className={inputCx} />
+              )}
             </Field>
             <Field label="Description">
-              {({ id }) => <textarea id={id} name="description" defaultValue={show.description} rows={3} className={inputCx} />}
+              {({ id }) => (
+                <textarea
+                  id={id}
+                  name="description"
+                  defaultValue={show.description}
+                  rows={3}
+                  className={inputCx}
+                />
+              )}
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Author">
-                {({ id }) => <input id={id} name="author" defaultValue={show.author} className={inputCx} />}
+                {({ id }) => (
+                  <input id={id} name="author" defaultValue={show.author} className={inputCx} />
+                )}
               </Field>
               <Field label="Owner email">
-                {({ id }) => <input id={id} name="ownerEmail" type="email" defaultValue={show.ownerEmail} className={inputCx} />}
+                {({ id }) => (
+                  <input
+                    id={id}
+                    name="ownerEmail"
+                    type="email"
+                    defaultValue={show.ownerEmail}
+                    className={inputCx}
+                  />
+                )}
               </Field>
             </div>
-            <Field label="Artwork URL" hint="Square cover art (≥ 1400px). Image re-hosting is deferred.">
-              {({ id }) => <input id={id} name="artwork" type="url" defaultValue={show.artwork} className={inputCx} />}
+            <Field
+              label="Artwork URL"
+              hint="Square cover art (≥ 1400px). Image re-hosting is deferred."
+            >
+              {({ id }) => (
+                <input
+                  id={id}
+                  name="artwork"
+                  type="url"
+                  defaultValue={show.artwork}
+                  className={inputCx}
+                />
+              )}
             </Field>
             <div className="grid grid-cols-3 gap-3">
               <Field label="Language">
-                {({ id }) => <input id={id} name="language" defaultValue={show.language} className={inputCx} />}
+                {({ id }) => (
+                  <input id={id} name="language" defaultValue={show.language} className={inputCx} />
+                )}
               </Field>
               <Field label="Type">
                 {({ id }) => (
-                  <select id={id} name="itunesType" defaultValue={show.itunesType} className={inputCx}>
+                  <select
+                    id={id}
+                    name="itunesType"
+                    defaultValue={show.itunesType}
+                    className={inputCx}
+                  >
                     <option value="episodic">episodic</option>
                     <option value="serial">serial</option>
                   </select>
@@ -145,28 +198,55 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
         </Card>
 
         <Card title="Hosts" icon={<Users size={15} aria-hidden />}>
-          <p className="mb-4 text-sm text-muted">Show-level byline. Maps to podcast:person in the feed alongside per-episode guests.</p>
+          <p className="mb-4 text-sm text-muted">
+            Show-level byline. Maps to podcast:person in the feed alongside per-episode guests.
+          </p>
           <HostsEditor hosts={hosts} onChange={setHosts} />
         </Card>
 
         <Card title="Funding">
           <div className="space-y-4">
             <Field label="Funding URL" hint="Leave blank to omit podcast:funding from the feed.">
-              {({ id }) => <input id={id} name="fundingUrl" type="url" defaultValue={show.fundingUrl ?? ""} placeholder="https://…" className={inputCx} />}
+              {({ id }) => (
+                <input
+                  id={id}
+                  name="fundingUrl"
+                  type="url"
+                  defaultValue={show.fundingUrl ?? ""}
+                  placeholder="https://…"
+                  className={inputCx}
+                />
+              )}
             </Field>
-            <Field label="Funding label" hint="Button text shown by apps (e.g. “Support the show”).">
-              {({ id }) => <input id={id} name="fundingLabel" defaultValue={show.fundingLabel ?? ""} className={inputCx} />}
+            <Field
+              label="Funding label"
+              hint="Button text shown by apps (e.g. “Support the show”)."
+            >
+              {({ id }) => (
+                <input
+                  id={id}
+                  name="fundingLabel"
+                  defaultValue={show.fundingLabel ?? ""}
+                  className={inputCx}
+                />
+              )}
             </Field>
           </div>
         </Card>
 
         <div className="flex items-center gap-3">
-          <Button type="submit" variant="primary" disabled={fetcher.state !== "idle"}>Save settings</Button>
+          <Button type="submit" variant="primary" disabled={fetcher.state !== "idle"}>
+            Save settings
+          </Button>
           {fetcher.data?.ok ? (
-            <span role="status" className="flex items-center gap-1 font-mono text-xs text-accent"><Check size={13} aria-hidden /> {fetcher.data.message}</span>
+            <span role="status" className="flex items-center gap-1 font-mono text-xs text-accent">
+              <Check size={13} aria-hidden /> {fetcher.data.message}
+            </span>
           ) : null}
           {fetcher.data?.ok === false ? (
-            <span role="alert" className="text-xs font-medium text-brand">{fetcher.data.message}</span>
+            <span role="alert" className="text-xs font-medium text-brand">
+              {fetcher.data.message}
+            </span>
           ) : null}
         </div>
       </fetcher.Form>
@@ -176,8 +256,8 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
         <input type="hidden" name="_form" value="settings" />
         <Card title="Site settings" icon={<SlidersHorizontal size={15} aria-hidden />}>
           <p className="mb-4 text-sm text-muted">
-            Non-secret config and the AI generator prompts. Saved instantly. Identity that drives the
-            feed lives in the Show card above, not here.
+            Non-secret config and the AI generator prompts. Saved instantly. Identity that drives
+            the feed lives in the Show card above, not here.
           </p>
           <div className="space-y-4">
             {siteSettings.map((s) => (
@@ -188,7 +268,13 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
               >
                 {({ id }) =>
                   s.type === "markdown" || s.type === "json" ? (
-                    <textarea id={id} name={`s:${s.key}`} defaultValue={s.value} rows={s.type === "markdown" ? 6 : 2} className={`${inputCx} font-mono text-xs`} />
+                    <textarea
+                      id={id}
+                      name={`s:${s.key}`}
+                      defaultValue={s.value}
+                      rows={s.type === "markdown" ? 6 : 2}
+                      className={`${inputCx} font-mono text-xs`}
+                    />
                   ) : (
                     <input id={id} name={`s:${s.key}`} defaultValue={s.value} className={inputCx} />
                   )
@@ -198,21 +284,30 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
           </div>
         </Card>
         <div className="flex items-center gap-3">
-          <Button type="submit" variant="primary" disabled={settingsFetcher.state !== "idle"}>Save site settings</Button>
+          <Button type="submit" variant="primary" disabled={settingsFetcher.state !== "idle"}>
+            Save site settings
+          </Button>
           {settingsFetcher.data?.ok ? (
-            <span role="status" className="flex items-center gap-1 font-mono text-xs text-accent"><Check size={13} aria-hidden /> {settingsFetcher.data.message}</span>
+            <span role="status" className="flex items-center gap-1 font-mono text-xs text-accent">
+              <Check size={13} aria-hidden /> {settingsFetcher.data.message}
+            </span>
           ) : null}
         </div>
       </settingsFetcher.Form>
 
       {/* Content blocks: pages (draft/publish) + snippets (instant). Edit on a dedicated page. */}
       <Card title="Content" icon={<FileText size={15} aria-hidden />} className="mt-8">
-        <p className="mb-4 text-sm text-muted">Pages render publicly only when published. Snippets are instant.</p>
+        <p className="mb-4 text-sm text-muted">
+          Pages render publicly only when published. Snippets are instant.
+        </p>
         <h3 className="mb-2 font-display text-sm font-semibold">Pages</h3>
         <ul className="mb-5 divide-y divide-border">
           {pages.map((b) => (
             <li key={b.key} className="flex items-center justify-between gap-3 py-2">
-              <Link to={`/admin/content/${encodeURIComponent(b.key)}`} className="font-display text-sm text-ink hover:text-brand">
+              <Link
+                to={`/admin/content/${encodeURIComponent(b.key)}`}
+                className="font-display text-sm text-ink hover:text-brand"
+              >
                 {b.title || b.key}
               </Link>
               <Badge tone={b.status === "published" ? "accent" : "amber"}>{b.status}</Badge>
@@ -223,10 +318,15 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
         <ul className="divide-y divide-border">
           {snippets.map((b) => (
             <li key={b.key} className="flex items-center justify-between gap-3 py-2">
-              <Link to={`/admin/content/${encodeURIComponent(b.key)}`} className="font-mono text-xs text-ink hover:text-brand">
+              <Link
+                to={`/admin/content/${encodeURIComponent(b.key)}`}
+                className="font-mono text-xs text-ink hover:text-brand"
+              >
                 {b.key}
               </Link>
-              <span className="truncate text-xs text-muted" style={{ maxWidth: "16rem" }}>{b.value}</span>
+              <span className="truncate text-xs text-muted" style={{ maxWidth: "16rem" }}>
+                {b.value}
+              </span>
             </li>
           ))}
         </ul>

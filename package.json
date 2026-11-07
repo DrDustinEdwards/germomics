@@ -2,9 +2,6 @@
   "name": "germomics",
   "private": true,
   "type": "module",
-  "engines": {
-    "node": ">=22.22.0"
-  },
   "scripts": {
     "build": "site-runtime-headers --site germomics --out public/_headers --header \"tdm-reservation: 1\" && react-router build",
     "dev": "react-router dev",
@@ -12,6 +9,9 @@
     "check:console": "devkit-console",
     "check:migrations": "devkit-migrations drizzle",
     "typecheck": "devkit-bootstrap --types-only && react-router typegen && tsc -b",
+    "lint": "oxlint --type-aware --deny-warnings --report-unused-disable-directives-severity=error",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
     "deploy": "npm run build && wrangler deploy -c build/server/wrangler.json",
     "preview": "npm run build && vite preview",
     "typegen": "devkit-bootstrap --types-only",
@@ -30,7 +30,7 @@
     "@dustinedwards/d1-dump": "github:DrDustinEdwards/d1-dump#v0.13.1",
     "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.26.0",
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.86.0",
-    "capsomer": "github:DrDustinEdwards/capsomer#v0.76.0",
+    "capsomer": "github:DrDustinEdwards/capsomer#v0.77.0",
     "drizzle-orm": "0.45.4",
     "enarratio": "0.7.3",
     "hast-util-to-string": "3.0.1",
@@ -55,7 +55,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.66.0",
     "@cloudflare/vitest-plugin": "1.4.11",
-    "@dustinedwards/devkit": "github:DrDustinEdwards/devkit#v0.23.0",
+    "@dustinedwards/devkit": "github:DrDustinEdwards/devkit#v0.26.2",
     "@react-router/dev": "8.5.1",
     "@tailwindcss/vite": "4.3.3",
     "@types/node": "22.20.5",
@@ -63,10 +63,16 @@
     "@types/react-dom": "19.3.0",
     "audio-decode": "3.12.0",
     "knip": "6.44.0",
+    "oxfmt": "0.77.0",
+    "oxlint": "1.92.0",
+    "oxlint-tsgolint": "7.0.2006",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
     "vite": "8.3.5",
     "vitest": "4.1.12",
     "wrangler": "4.130.0"
+  },
+  "engines": {
+    "node": ">=22.22.0"
   }
 }

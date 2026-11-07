@@ -51,16 +51,45 @@ import { SEARCH_FIELDS } from "@dustinedwards/site-api/frontmatter";
 import { d1ScheduledUpdates, utc } from "@dustinedwards/site-api/schedules";
 import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
 import { getDb } from "~/db/index.server";
-import { contentBlocks, episodePeople, people, postRedirects, posts, postVersions, type ContentBlock, type Post } from "~/db/schema";
-import { deletePost, generateGuid, nextUpdatedAt, snapshotVersion, updatePost } from "~/lib/admin.server";
+import {
+  contentBlocks,
+  episodePeople,
+  people,
+  postRedirects,
+  posts,
+  postVersions,
+  type ContentBlock,
+  type Post,
+} from "~/db/schema";
+import {
+  deletePost,
+  generateGuid,
+  nextUpdatedAt,
+  snapshotVersion,
+  updatePost,
+} from "~/lib/admin.server";
 import { TEXT_PAGES } from "~/lib/content.server";
 import { setEpisodePeople } from "~/lib/people.server";
-import { lcpAboveBody, libraryMedia, pageFields, postBodyFields, renderMarkdown, RENDER_VERSION } from "~/lib/render.server";
+import {
+  lcpAboveBody,
+  libraryMedia,
+  pageFields,
+  postBodyFields,
+  renderMarkdown,
+  RENDER_VERSION,
+} from "~/lib/render.server";
 import { SITE_ORIGIN } from "~/lib/site";
 import { PAGE_HREF } from "~/components/content/PageHits";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { carrelMedia } from "./media.server";
-import { parsePageSource, parseSource, renderPageSource, renderSource, SourceError, type PersonRef } from "./source";
+import {
+  parsePageSource,
+  parseSource,
+  renderPageSource,
+  renderSource,
+  SourceError,
+  type PersonRef,
+} from "./source";
 
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/;
 // A page's id: content_blocks' `page:about` is Carrel's `page.about` (a colon is not an id character).
@@ -73,7 +102,10 @@ type Status = ContentSummary["status"];
 type Item = Post & { people?: PersonRef[] };
 type Waiting = Pick<ScheduledUpdate, "publishAt" | "changeId"> | null;
 /** What one write changes: the row's fields, and an episode's people when the source names them. */
-type Change = { fields: Partial<Post>; people?: { personId: number; role: string | null; sort: number }[] };
+type Change = {
+  fields: Partial<Post>;
+  people?: { personId: number; role: string | null; sort: number }[];
+};
 
 // SQLite's datetime('now') is "YYYY-MM-DD HH:MM:SS" in UTC; the contract wants ISO with an offset.
 const iso = (v: string | null | undefined): string | null => {
@@ -119,7 +151,8 @@ const versionOf = (p: Item, update: Waiting = null): Promise<string> =>
     ...(update ? [update.publishAt, update.changeId] : []),
   ]);
 
-const waitingOf = (u: ScheduledUpdate | null): Waiting => (u ? { publishAt: u.publishAt, changeId: u.changeId } : null);
+const waitingOf = (u: ScheduledUpdate | null): Waiting =>
+  u ? { publishAt: u.publishAt, changeId: u.changeId } : null;
 
 async function summaryOf(p: Item, update: Waiting = null): Promise<ContentSummary> {
   return {
@@ -148,7 +181,8 @@ async function rendered<T>(run: () => Promise<T>): Promise<T> {
   }
 }
 
-const EPISODE_NEEDS = "An episode goes live with its audio and transcript, which are added in the germomics admin (/admin/episodes).";
+const EPISODE_NEEDS =
+  "An episode goes live with its audio and transcript, which are added in the germomics admin (/admin/episodes).";
 const IN_TRASH = "This post is in the trash. Restore it first.";
 
 // ---------- pages ----------
@@ -174,7 +208,11 @@ async function pageSummary(b: PageRow): Promise<ContentSummary> {
 async function findPage(env: Env, id: string): Promise<PageRow | null> {
   const key = pageKeyOf(id);
   if (!key || TEXT_PAGES.has(key)) return null;
-  const rows = await getDb(env).select().from(contentBlocks).where(and(eq(contentBlocks.key, key), eq(contentBlocks.kind, "page"))).limit(1);
+  const rows = await getDb(env)
+    .select()
+    .from(contentBlocks)
+    .where(and(eq(contentBlocks.key, key), eq(contentBlocks.kind, "page")))
+    .limit(1);
   return rows[0] ?? null;
 }
 
@@ -207,7 +245,8 @@ export function createCarrelAdapter(
       .innerJoin(people, eq(people.id, episodePeople.personId))
       .where(inArray(episodePeople.postId, ids))
       .orderBy(episodePeople.sort);
-    for (const r of rows) out.set(r.postId, [...(out.get(r.postId) ?? []), { slug: r.slug, role: r.role }]);
+    for (const r of rows)
+      out.set(r.postId, [...(out.get(r.postId) ?? []), { slug: r.slug, role: r.role }]);
     return out;
   }
 
@@ -227,18 +266,40 @@ export function createCarrelAdapter(
     try {
       parsed = parseSource(source, kind);
     } catch (err) {
-      throw new RefusedError(err instanceof SourceError ? err.message : "The source could not be read.");
+      throw new RefusedError(
+        err instanceof SourceError ? err.message : "The source could not be read.",
+      );
     }
-    const fields: Partial<Post> = { ...(await rendered(() => postBodyFields(env, parsed.body, lcpAboveBody({ kind, coverImage: parsed.post?.coverImage })))), ...parsed.post };
+    const fields: Partial<Post> = {
+      ...(await rendered(() =>
+        postBodyFields(
+          env,
+          parsed.body,
+          lcpAboveBody({ kind, coverImage: parsed.post?.coverImage }),
+        ),
+      )),
+      ...parsed.post,
+    };
     if (!parsed.episode) return { fields };
     const { people: refs = [], ...episode } = parsed.episode;
     Object.assign(fields, episode);
     const slugs = refs.map((r) => r.slug);
-    const found = slugs.length ? await db.select({ id: people.id, slug: people.slug }).from(people).where(inArray(people.slug, slugs)) : [];
+    const found = slugs.length
+      ? await db
+          .select({ id: people.id, slug: people.slug })
+          .from(people)
+          .where(inArray(people.slug, slugs))
+      : [];
     const ids = new Map(found.map((p) => [p.slug, p.id]));
     const unknown = slugs.filter((s) => !ids.has(s));
-    if (unknown.length) throw new RefusedError(`No one in the germomics People list (/admin/people) has the slug ${unknown.join(", ")}.`);
-    return { fields, people: refs.map((r, sort) => ({ personId: ids.get(r.slug)!, role: r.role, sort })) };
+    if (unknown.length)
+      throw new RefusedError(
+        `No one in the germomics People list (/admin/people) has the slug ${unknown.join(", ")}.`,
+      );
+    return {
+      fields,
+      people: refs.map((r, sort) => ({ personId: ids.get(r.slug)!, role: r.role, sort })),
+    };
   }
 
   // `dropUpdate`: a publish, an unpublish or a trash drops an update waiting on the post, so the cron
@@ -255,7 +316,8 @@ export function createCarrelAdapter(
     const update = current ? await waiting(slug) : null;
     const version = current ? await versionOf(current, update) : null;
     if (version !== expectedVersion) throw new VersionConflictError(version);
-    if (!current && (!ID_PATTERN.test(slug) || PAGE_ID.test(slug))) throw new RefusedError("That id cannot be used as a slug.");
+    if (!current && (!ID_PATTERN.test(slug) || PAGE_ID.test(slug)))
+      throw new RefusedError("That id cannot be used as a slug.");
     const { fields, people: links } = await build(current);
     let id: number;
     if (current) {
@@ -294,9 +356,14 @@ export function createCarrelAdapter(
   async function goingLive(current: Item | null, source: string | undefined): Promise<Change> {
     if (!current) throw new NotFoundError();
     if (current.trashedAt) throw new RefusedError(IN_TRASH);
-    if (current.kind === "episode" && (!current.audioUrl || !current.transcript?.trim())) throw new RefusedError(EPISODE_NEEDS);
-    const change = source !== undefined ? await changeFromSource(source, current.kind) : { fields: {} };
-    return { ...change, fields: { ...change.fields, status: "published", guid: current.guid ?? generateGuid() } };
+    if (current.kind === "episode" && (!current.audioUrl || !current.transcript?.trim()))
+      throw new RefusedError(EPISODE_NEEDS);
+    const change =
+      source !== undefined ? await changeFromSource(source, current.kind) : { fields: {} };
+    return {
+      ...change,
+      fields: { ...change.fields, status: "published", guid: current.guid ?? generateGuid() },
+    };
   }
 
   /** A page's write: the version checked, then the change. A page is never created here. */
@@ -310,9 +377,15 @@ export function createCarrelAdapter(
     const current = await findPage(env, id);
     const now = current ? await pageVersion(current) : null;
     if (now !== expectedVersion) throw new VersionConflictError(now);
-    if (!current) throw new RefusedError("A germomics page is a route of its own, so Carrel edits the pages it lists and adds none.");
+    if (!current)
+      throw new RefusedError(
+        "A germomics page is a route of its own, so Carrel edits the pages it lists and adds none.",
+      );
     const fields = await build(current);
-    await db.update(contentBlocks).set({ ...fields, updatedAt: nowIso() }).where(eq(contentBlocks.key, current.key));
+    await db
+      .update(contentBlocks)
+      .set({ ...fields, updatedAt: nowIso() })
+      .where(eq(contentBlocks.key, current.key));
     const next = { ...current, ...fields };
     const version = await pageVersion(next);
     recordChange(event, id, version, changeId);
@@ -333,11 +406,16 @@ export function createCarrelAdapter(
   }
 
   const refusedForPage = (what: string) => () =>
-    Promise.reject(new RefusedError(`Every germomics page is a live route, so it cannot be ${what}. Publish a new version instead.`));
+    Promise.reject(
+      new RefusedError(
+        `Every germomics page is a live route, so it cannot be ${what}. Publish a new version instead.`,
+      ),
+    );
 
   /** A page id is never renamed, trashed or deleted; anything else must be a post that exists. */
   async function existingPost(id: string, what: string): Promise<Item> {
-    if (await findPage(env, id)) throw new RefusedError(`Every germomics page is a live route, so it cannot be ${what}.`);
+    if (await findPage(env, id))
+      throw new RefusedError(`Every germomics page is a live route, so it cannot be ${what}.`);
     const current = await findPost(id);
     if (!current) throw new NotFoundError();
     return current;
@@ -354,7 +432,17 @@ export function createCarrelAdapter(
     publishedAtSettable: true,
 
     async list(query) {
-      const { status, q, kind, tag, publishedAfter, publishedBefore, trashed = false, cursor, limit } = query;
+      const {
+        status,
+        q,
+        kind,
+        tag,
+        publishedAfter,
+        publishedBefore,
+        trashed = false,
+        cursor,
+        limit,
+      } = query;
       const needle = q?.toLowerCase();
       const after = publishedAfter ? new Date(publishedAfter).toISOString() : null;
       const before = publishedBefore ? new Date(publishedBefore).toISOString() : null;
@@ -377,39 +465,77 @@ export function createCarrelAdapter(
           : (await listPages(env)).filter(
               (b) =>
                 (!status || (b.status === "published" ? "published" : "draft") === status) &&
-                (!needle || [b.title ?? "", b.key, b.value].some((t) => t.toLowerCase().includes(needle))),
+                (!needle ||
+                  [b.title ?? "", b.key, b.value].some((t) => t.toLowerCase().includes(needle))),
             );
       const all = [
-        ...rows.map((p) => ({ post: p, page: null, updated: iso(p.updatedAt), published: iso(p.publishedAt), title: p.title })),
-        ...pages.map((b) => ({ post: null, page: b, updated: iso(b.updatedAt), published: null, title: b.title || b.key })),
+        ...rows.map((p) => ({
+          post: p,
+          page: null,
+          updated: iso(p.updatedAt),
+          published: iso(p.publishedAt),
+          title: p.title,
+        })),
+        ...pages.map((b) => ({
+          post: null,
+          page: b,
+          updated: iso(b.updatedAt),
+          published: null,
+          title: b.title || b.key,
+        })),
       ];
       const sort = query.sort ?? "updated";
       const dir = query.dir ?? (sort === "title" ? "asc" : "desc");
-      const key = (i: (typeof all)[number]) => (sort === "title" ? i.title.toLowerCase() : (i[sort] ?? ""));
+      const key = (i: (typeof all)[number]) =>
+        sort === "title" ? i.title.toLowerCase() : (i[sort] ?? "");
       all.sort((a, b) => key(a).localeCompare(key(b)) * (dir === "asc" ? 1 : -1));
       const start = Math.max(0, Number(cursor) || 0);
       const shown = all.slice(start, start + limit);
       // Only the page shown is read in full: its episodes' people and its waiting updates.
-      const full = new Map((await withPeople(shown.flatMap((i) => (i.post ? [i.post] : [])))).map((p) => [p.id, p]));
-      const items = await Promise.all(
-        shown.map(async (i) => (i.post ? summaryOf(full.get(i.post.id)!, await waiting(i.post.slug)) : pageSummary(i.page!))),
+      const full = new Map(
+        (await withPeople(shown.flatMap((i) => (i.post ? [i.post] : [])))).map((p) => [p.id, p]),
       );
-      return { items, nextCursor: start + limit < all.length ? String(start + limit) : null, total: all.length, sorted: { sort, dir } };
+      const items = await Promise.all(
+        shown.map(async (i) =>
+          i.post
+            ? summaryOf(full.get(i.post.id)!, await waiting(i.post.slug))
+            : pageSummary(i.page!),
+        ),
+      );
+      return {
+        items,
+        nextCursor: start + limit < all.length ? String(start + limit) : null,
+        total: all.length,
+        sorted: { sort, dir },
+      };
     },
 
     async get(id) {
       const b = await findPage(env, id);
-      if (b) return { ...(await pageSummary(b)), format: "markdown" as const, source: renderPageSource(b), version: await pageVersion(b) };
+      if (b)
+        return {
+          ...(await pageSummary(b)),
+          format: "markdown" as const,
+          source: renderPageSource(b),
+          version: await pageVersion(b),
+        };
       const p = await findPost(id);
       if (!p) return null;
       const update = await waiting(id);
-      return { ...(await summaryOf(p, update)), format: "markdown" as const, source: sourceOf(p), version: await versionOf(p, update) };
+      return {
+        ...(await summaryOf(p, update)),
+        format: "markdown" as const,
+        source: sourceOf(p),
+        version: await versionOf(p, update),
+      };
     },
 
     // A new id is a new article: an episode starts in the admin, with its audio.
     saveDraft: (id, input) =>
       pageKeyOf(id)
-        ? writePage("save", id, input.changeId, input.expectedVersion, () => pageSourceFields(input.source))
+        ? writePage("save", id, input.changeId, input.expectedVersion, () =>
+            pageSourceFields(input.source),
+          )
         : write("save", id, input.changeId, input.expectedVersion, async (current) => {
             const change = await changeFromSource(input.source, current?.kind ?? "article");
             return current ? change : { ...change, fields: { ...change.fields, status: "draft" } };
@@ -424,45 +550,92 @@ export function createCarrelAdapter(
             if (input.publishedAt) throw new RefusedError("A germomics page has no publish date.");
             return {
               ...(input.source !== undefined ? await pageSourceFields(input.source) : {}),
-              ...(current.renderVersion === null ? await rendered(() => pageFields(env, current.value)) : {}),
+              ...(current.renderVersion === null
+                ? await rendered(() => pageFields(env, current.value))
+                : {}),
               status: "published",
             };
           })
-        : write("publish", id, input.changeId, input.expectedVersion, async (current) => {
-            const change = await goingLive(current, input.source);
-            const was = current && everLive(current) ? current.publishedAt : null;
-            const publishedAt = input.publishedAt ? new Date(input.publishedAt).toISOString() : (was ?? nowIso());
-            return { ...change, fields: { ...change.fields, publishedAt, publishAt: null, scheduleChangeId: null } };
-          }, { dropUpdate: true }),
+        : write(
+            "publish",
+            id,
+            input.changeId,
+            input.expectedVersion,
+            async (current) => {
+              const change = await goingLive(current, input.source);
+              const was = current && everLive(current) ? current.publishedAt : null;
+              const publishedAt = input.publishedAt
+                ? new Date(input.publishedAt).toISOString()
+                : (was ?? nowIso());
+              return {
+                ...change,
+                fields: { ...change.fields, publishedAt, publishAt: null, scheduleChangeId: null },
+              };
+            },
+            { dropUpdate: true },
+          ),
 
     schedule: (id, input) =>
       pageKeyOf(id)
-        ? writePage("schedule", id, input.changeId, input.expectedVersion, refusedForPage("scheduled"))
+        ? writePage(
+            "schedule",
+            id,
+            input.changeId,
+            input.expectedVersion,
+            refusedForPage("scheduled"),
+          )
         : write("schedule", id, input.changeId, input.expectedVersion, async (current) => {
             const change = await goingLive(current, input.source);
             const at = utc(input.publishAt);
-            return { ...change, fields: { ...change.fields, publishAt: at, publishedAt: at, scheduleChangeId: input.changeId } };
+            return {
+              ...change,
+              fields: {
+                ...change.fields,
+                publishAt: at,
+                publishedAt: at,
+                scheduleChangeId: input.changeId,
+              },
+            };
           }),
 
     unpublish: (id, input) =>
       pageKeyOf(id)
-        ? writePage("unpublish", id, input.changeId, input.expectedVersion, refusedForPage("taken down"))
-        : write("unpublish", id, input.changeId, input.expectedVersion, async (current) => {
-            if (!current) throw new NotFoundError();
-            return { fields: { status: "draft", publishAt: null, scheduleChangeId: null } };
-          }, { dropUpdate: true }),
+        ? writePage(
+            "unpublish",
+            id,
+            input.changeId,
+            input.expectedVersion,
+            refusedForPage("taken down"),
+          )
+        : write(
+            "unpublish",
+            id,
+            input.changeId,
+            input.expectedVersion,
+            async (current) => {
+              if (!current) throw new NotFoundError();
+              return { fields: { status: "draft", publishAt: null, scheduleChangeId: null } };
+            },
+            { dropUpdate: true },
+          ),
 
     // The slug moves and the row stays, so the history, the people and the guid move with it. The old address of a
     // post ever live redirects to the new one; a slug taken by another post or a page id is refused.
     async rename(id, { newId, expectedVersion, changeId }) {
       const current = await existingPost(id, "renamed");
       if (current.trashedAt) throw new RefusedError(IN_TRASH);
-      if (!ID_PATTERN.test(newId) || PAGE_ID.test(newId)) throw new RefusedError("That id cannot be used as a slug.");
+      if (!ID_PATTERN.test(newId) || PAGE_ID.test(newId))
+        throw new RefusedError("That id cannot be used as a slug.");
       const version = await versionOf(current, await waiting(id));
       if (version !== expectedVersion) throw new VersionConflictError(version);
-      if (newId !== id && (await findPost(newId))) throw new RefusedError(`Another post already has the slug ${newId}.`);
-      const result = await write("rename", id, changeId, expectedVersion, async () => ({ fields: { slug: newId } }));
-      await env.DB.prepare("UPDATE scheduled_updates SET content_id = ? WHERE content_id = ?").bind(newId, id).run();
+      if (newId !== id && (await findPost(newId)))
+        throw new RefusedError(`Another post already has the slug ${newId}.`);
+      const result = await write("rename", id, changeId, expectedVersion, async () => ({
+        fields: { slug: newId },
+      }));
+      await env.DB.prepare("UPDATE scheduled_updates SET content_id = ? WHERE content_id = ?")
+        .bind(newId, id)
+        .run();
       // The new slug is a post's again, so it no longer redirects; the old one does where readers may hold it.
       await db.delete(postRedirects).where(eq(postRedirects.fromSlug, newId));
       const previousPath = everLive(current) ? `/${id}` : null;
@@ -479,16 +652,25 @@ export function createCarrelAdapter(
     async trash(id, { expectedVersion, changeId }) {
       const current = await existingPost(id, "trashed");
       if (current.trashedAt) throw new RefusedError("This post is already in the trash.");
-      return write("trash", id, changeId, expectedVersion, async () => ({
-        fields: { trashedAt: nowIso(), status: "draft", publishAt: null, scheduleChangeId: null },
-      }), { dropUpdate: true });
+      return write(
+        "trash",
+        id,
+        changeId,
+        expectedVersion,
+        async () => ({
+          fields: { trashedAt: nowIso(), status: "draft", publishAt: null, scheduleChangeId: null },
+        }),
+        { dropUpdate: true },
+      );
     },
 
     // Always a draft: a restore never republishes.
     async restore(id, { expectedVersion, changeId }) {
       const current = await existingPost(id, "restored");
       if (!current.trashedAt) throw new RefusedError("This post is not in the trash.");
-      return write("restore", id, changeId, expectedVersion, async () => ({ fields: { trashedAt: null, status: "draft" } }));
+      return write("restore", id, changeId, expectedVersion, async () => ({
+        fields: { trashedAt: null, status: "draft" },
+      }));
     },
 
     // For good, and only from the trash: the row, its snapshots, people and redirects (cascade) and any waiting update.
@@ -496,7 +678,10 @@ export function createCarrelAdapter(
       const current = await existingPost(id, "deleted");
       const version = await versionOf(current, await waiting(id));
       if (version !== expectedVersion) throw new VersionConflictError(version);
-      if (!current.trashedAt) throw new RefusedError("Move this post to the trash first; the trash is deleted after 30 days.");
+      if (!current.trashedAt)
+        throw new RefusedError(
+          "Move this post to the trash first; the trash is deleted after 30 days.",
+        );
       await updates.remove(id).run();
       await deletePost(env, current.id);
       recordChange("delete", id, version, changeId);
@@ -505,10 +690,22 @@ export function createCarrelAdapter(
     async revisions(id) {
       const b = await findPage(env, id);
       // A page keeps no history of its own; its one revision is the current text.
-      if (b) return [{ version: await pageVersion(b), at: iso(b.updatedAt) ?? new Date(0).toISOString(), author: "germomics", message: "Current" }];
+      if (b)
+        return [
+          {
+            version: await pageVersion(b),
+            at: iso(b.updatedAt) ?? new Date(0).toISOString(),
+            author: "germomics",
+            message: "Current",
+          },
+        ];
       const p = await findPost(id);
       if (!p) return null;
-      const rows = await db.select().from(postVersions).where(eq(postVersions.postId, p.id)).orderBy(postVersions.id);
+      const rows = await db
+        .select()
+        .from(postVersions)
+        .where(eq(postVersions.postId, p.id))
+        .orderBy(postVersions.id);
       const items = [];
       for (const r of rows.reverse()) {
         const snap = r.snapshot as Item;
@@ -550,7 +747,8 @@ export function createCarrelAdapter(
       const before = await waiting(id);
       const version = await versionOf(current, before);
       if (version !== expectedVersion) throw new VersionConflictError(version);
-      if (statusOf(current) !== "published") throw new RefusedError("Only a live post takes a scheduled update.");
+      if (statusOf(current) !== "published")
+        throw new RefusedError("Only a live post takes a scheduled update.");
       await changeFromSource(source, current.kind); // refused now, not at the time, when it cannot be read or rendered
       await updates.put(id, { source, publishAt, changeId }).run();
       const update = { publishAt: utc(publishAt), changeId };
@@ -571,7 +769,8 @@ export function createCarrelAdapter(
         recordChange("schedule.cancel", id, next, changeId);
         return { id, version: next, status: statusOf(current), changeId, scheduledUpdate: null };
       }
-      if (statusOf(current) !== "scheduled") throw new RefusedError("Nothing is scheduled for this post.");
+      if (statusOf(current) !== "scheduled")
+        throw new RefusedError("Nothing is scheduled for this post.");
       // Never live: back to a draft, as an unpublish would.
       return write("schedule.cancel", id, changeId, expectedVersion, async () => ({
         fields: { status: "draft", publishAt: null, publishedAt: null, scheduleChangeId: null },
@@ -583,11 +782,22 @@ export function createCarrelAdapter(
       const firsts = await db
         .select({ slug: posts.slug, publishAt: posts.publishAt, changeId: posts.scheduleChangeId })
         .from(posts)
-        .where(and(eq(posts.status, "published"), isNotNull(posts.scheduleChangeId), lte(posts.publishAt, now.toISOString())))
+        .where(
+          and(
+            eq(posts.status, "published"),
+            isNotNull(posts.scheduleChangeId),
+            lte(posts.publishAt, now.toISOString()),
+          ),
+        )
         .limit(limit);
       const due: DueSchedule[] = [
         ...(await updates.due(now, limit)),
-        ...firsts.map((p) => ({ id: p.slug, kind: "publish" as const, publishAt: utc(p.publishAt!), changeId: p.changeId! })),
+        ...firsts.map((p) => ({
+          id: p.slug,
+          kind: "publish" as const,
+          publishAt: utc(p.publishAt!),
+          changeId: p.changeId!,
+        })),
       ];
       return due.sort((a, b) => a.publishAt.localeCompare(b.publishAt)).slice(0, limit);
     },
@@ -597,7 +807,13 @@ export function createCarrelAdapter(
       const current = await findPost(id);
       if (kind === "publish") {
         // Already live by the clock: clearing the change id is what takes it out of `due`.
-        if (!current || current.status !== "published" || current.scheduleChangeId !== changeId || !current.publishAt) return null;
+        if (
+          !current ||
+          current.status !== "published" ||
+          current.scheduleChangeId !== changeId ||
+          !current.publishAt
+        )
+          return null;
         if (utc(current.publishAt) !== utc(publishAt)) return null;
         await updatePost(env, current.id, { scheduleChangeId: null });
         const version = await versionOf(current, await waiting(id));
@@ -605,7 +821,8 @@ export function createCarrelAdapter(
         return { id, version, status: "published", changeId, scheduledUpdate: await waiting(id) };
       }
       const update = await updates.get(id);
-      if (!update || update.publishAt !== utc(publishAt) || update.changeId !== changeId) return null;
+      if (!update || update.publishAt !== utc(publishAt) || update.changeId !== changeId)
+        return null;
       const match = { publishAt: update.publishAt, changeId };
       // Deleted, renamed or taken down since: the update has nothing left to replace.
       if (!current || statusOf(current) !== "published") {
@@ -640,7 +857,10 @@ export function createCarrelAdapter(
         if (pageKeyOf(id ?? "")) ({ title, body } = parsePageSource(source));
         else {
           try {
-            const parsed = parseSource(source, (id ? (await findPost(id))?.kind : null) ?? "episode");
+            const parsed = parseSource(
+              source,
+              (id ? (await findPost(id))?.kind : null) ?? "episode",
+            );
             ({ body } = parsed);
             title = parsed.post?.title ?? null;
           } catch {

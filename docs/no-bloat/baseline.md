@@ -34,15 +34,15 @@ plugin can know: the hand-run scripts in `scripts/` as entries, and `cloudflare`
 dependency, because `cloudflare:test` is the workers pool's virtual module. Route files import
 `./+types/*`, so typegen runs first; without it Knip reports 46 false unresolved imports.
 
-| Issue type | Count |
-|---|--:|
-| Unused files | 0 |
-| Unused dependencies | 0 |
-| Unused devDependencies | 0 |
-| Unlisted dependencies | 0 |
-| Unresolved imports | 0 |
-| Unused exports | 27 |
-| Unused exported types | 2 |
+| Issue type             | Count |
+| ---------------------- | ----: |
+| Unused files           |     0 |
+| Unused dependencies    |     0 |
+| Unused devDependencies |     0 |
+| Unlisted dependencies  |     0 |
+| Unresolved imports     |     0 |
+| Unused exports         |    27 |
+| Unused exported types  |     2 |
 
 Unused exports: `usePrefersReducedMotion` (components/content/EpisodeExtras.tsx),
 `LEGAL_LAST_UPDATED` (components/content/Legal.tsx), `SPEEDS`, `SLEEP_OPTIONS`
@@ -73,13 +73,13 @@ Scope: tracked TypeScript, TSX, JavaScript and CSS from the repo root, excluding
 build output, .react-router, scripts/_generated, worker-configuration.d.ts, public, docs,
 research, improve, drizzle and .claude. Default detection (exact clones, 50 tokens, 5 lines).
 
-| Format | Files | Lines | Clones | Duplicated lines | Duplication |
-|---|--:|--:|--:|--:|--:|
-| CSS | 3 | 407 | 34 | 231 | 56.76% |
-| JavaScript | 16 | 2,433 | 1 | 8 | 0.33% |
-| TSX | 82 | 9,866 | 22 | 211 | 2.14% |
-| TypeScript | 71 | 5,307 | 9 | 67 | 1.26% |
-| Total | 172 | 18,013 | 66 | 517 | 2.87% (4.44% of tokens) |
+| Format     | Files |  Lines | Clones | Duplicated lines |             Duplication |
+| ---------- | ----: | -----: | -----: | ---------------: | ----------------------: |
+| CSS        |     3 |    407 |     34 |              231 |                  56.76% |
+| JavaScript |    16 |  2,433 |      1 |                8 |                   0.33% |
+| TSX        |    82 |  9,866 |     22 |              211 |                   2.14% |
+| TypeScript |    71 |  5,307 |      9 |               67 |                   1.26% |
+| Total      |   172 | 18,013 |     66 |              517 | 2.87% (4.44% of tokens) |
 
 Largest pairs by duplicated lines: app/admin.css and app/fonts.css (102, the self-hosted
 `@font-face` blocks), app/fonts.css with itself (77), app/admin.css with itself (40),
@@ -97,38 +97,38 @@ health) load no client code and are not listed.
 
 Shared JS on every page (entry and root): 124.7 KB gzip.
 
-| Route | JS | CSS | Total |
-|---|--:|--:|--:|
-| `/` | 131.1 KB | 9.6 KB | 140.7 KB |
-| `/:slug` | 141.5 KB | 9.6 KB | 151.1 KB |
-| `/about` | 130.3 KB | 9.6 KB | 139.9 KB |
-| `/about/dustin-edwards` | 129.4 KB | 9.6 KB | 139.0 KB |
-| `/archive` | 127.5 KB | 9.6 KB | 137.1 KB |
-| `/contact` | 127.6 KB | 9.6 KB | 137.2 KB |
-| `/data` | 125.7 KB | 9.6 KB | 135.3 KB |
-| `/data/:slug` | 125.9 KB | 9.6 KB | 135.5 KB |
-| `/episodes` | 127.1 KB | 9.6 KB | 136.7 KB |
-| `/games` | 125.7 KB | 9.6 KB | 135.4 KB |
-| `/games/:slug` | 126.5 KB | 9.6 KB | 136.1 KB |
-| `/guests/:guest` | 127.1 KB | 9.6 KB | 136.7 KB |
-| `/preview/:id/:token` | 141.2 KB | 9.6 KB | 150.8 KB |
-| `/privacy` | 128.3 KB | 9.6 KB | 137.9 KB |
-| `/search` | 127.4 KB | 9.6 KB | 137.1 KB |
-| `/season/:num` | 128.7 KB | 9.6 KB | 138.4 KB |
-| `/subscribe` | 126.9 KB | 9.6 KB | 136.5 KB |
-| `/tag/:tag` | 126.9 KB | 9.6 KB | 136.5 KB |
-| `/terms` | 128.3 KB | 9.6 KB | 137.9 KB |
-| `/txasm` | 127.9 KB | 9.6 KB | 137.6 KB |
-| `/unsubscribe` | 125.4 KB | 9.6 KB | 135.0 KB |
-| `/writing` | 125.9 KB | 9.6 KB | 135.5 KB |
-| `/admin` | 134.0 KB | 16.7 KB | 150.7 KB |
-| `/admin/content/:key` | 134.9 KB | 16.7 KB | 151.6 KB |
-| `/admin/people` | 138.4 KB | 16.7 KB | 155.0 KB |
-| `/admin/posts` | 136.7 KB | 16.7 KB | 153.4 KB |
-| `/admin/posts/:id` | 153.9 KB | 16.7 KB | 170.6 KB |
-| `/admin/settings` | 138.4 KB | 16.7 KB | 155.1 KB |
-| `/admin/soundbites` | 135.3 KB | 16.7 KB | 151.9 KB |
-| `/admin/subscribers` | 134.7 KB | 16.7 KB | 151.3 KB |
+| Route                   |       JS |     CSS |    Total |
+| ----------------------- | -------: | ------: | -------: |
+| `/`                     | 131.1 KB |  9.6 KB | 140.7 KB |
+| `/:slug`                | 141.5 KB |  9.6 KB | 151.1 KB |
+| `/about`                | 130.3 KB |  9.6 KB | 139.9 KB |
+| `/about/dustin-edwards` | 129.4 KB |  9.6 KB | 139.0 KB |
+| `/archive`              | 127.5 KB |  9.6 KB | 137.1 KB |
+| `/contact`              | 127.6 KB |  9.6 KB | 137.2 KB |
+| `/data`                 | 125.7 KB |  9.6 KB | 135.3 KB |
+| `/data/:slug`           | 125.9 KB |  9.6 KB | 135.5 KB |
+| `/episodes`             | 127.1 KB |  9.6 KB | 136.7 KB |
+| `/games`                | 125.7 KB |  9.6 KB | 135.4 KB |
+| `/games/:slug`          | 126.5 KB |  9.6 KB | 136.1 KB |
+| `/guests/:guest`        | 127.1 KB |  9.6 KB | 136.7 KB |
+| `/preview/:id/:token`   | 141.2 KB |  9.6 KB | 150.8 KB |
+| `/privacy`              | 128.3 KB |  9.6 KB | 137.9 KB |
+| `/search`               | 127.4 KB |  9.6 KB | 137.1 KB |
+| `/season/:num`          | 128.7 KB |  9.6 KB | 138.4 KB |
+| `/subscribe`            | 126.9 KB |  9.6 KB | 136.5 KB |
+| `/tag/:tag`             | 126.9 KB |  9.6 KB | 136.5 KB |
+| `/terms`                | 128.3 KB |  9.6 KB | 137.9 KB |
+| `/txasm`                | 127.9 KB |  9.6 KB | 137.6 KB |
+| `/unsubscribe`          | 125.4 KB |  9.6 KB | 135.0 KB |
+| `/writing`              | 125.9 KB |  9.6 KB | 135.5 KB |
+| `/admin`                | 134.0 KB | 16.7 KB | 150.7 KB |
+| `/admin/content/:key`   | 134.9 KB | 16.7 KB | 151.6 KB |
+| `/admin/people`         | 138.4 KB | 16.7 KB | 155.0 KB |
+| `/admin/posts`          | 136.7 KB | 16.7 KB | 153.4 KB |
+| `/admin/posts/:id`      | 153.9 KB | 16.7 KB | 170.6 KB |
+| `/admin/settings`       | 138.4 KB | 16.7 KB | 155.1 KB |
+| `/admin/soundbites`     | 135.3 KB | 16.7 KB | 151.9 KB |
+| `/admin/subscribers`    | 134.7 KB | 16.7 KB | 151.3 KB |
 
 Lazy chunks (no page loads them on first view): PhaserGame.client 347.1 KB, TipTapBody 103.0 KB,
 DataChart.client (Recharts) 96.1 KB, DataMap.client 2.0 KB, EpisodeWaveform 1.0 KB, all gzip.

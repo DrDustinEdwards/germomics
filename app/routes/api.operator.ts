@@ -28,5 +28,7 @@ function operator(request: Request, env: Env) {
   });
 }
 
-export const loader = ({ request, context }: Route.LoaderArgs) => operator(request, getEnv(context));
-export const action = ({ request, context }: Route.ActionArgs) => operator(request, getEnv(context));
+export const loader = ({ request, context }: Route.LoaderArgs) =>
+  operator(request, getEnv(context));
+export const action = ({ request, context }: Route.ActionArgs) =>
+  operator(request, getEnv(context));

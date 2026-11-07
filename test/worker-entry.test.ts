@@ -8,7 +8,10 @@ import { applyMigrations, setSettings } from "./helpers/d1";
 // others nor be swallowed. React Router's request handler and the backup runs are replaced so only the
 // entry is under test.
 const h = vi.hoisted(() => ({
-  render: vi.fn(async (_req: Request, _ctx: unknown) => new Response("<p>page</p>", { headers: { "Content-Type": "text/html" } })),
+  render: vi.fn(
+    async (_req: Request, _ctx: unknown) =>
+      new Response("<p>page</p>", { headers: { "Content-Type": "text/html" } }),
+  ),
   backup: vi.fn(async (_env: unknown) => {}),
   audio: vi.fn(async (_env: unknown) => {}),
 }));
@@ -16,7 +19,12 @@ vi.mock("react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react-router")>()),
   createRequestHandler: () => h.render,
 }));
-vi.mock("~/lib/backup.server", () => ({ runBackup: h.backup, runAudioBackup: h.audio, runImagesBackup: async () => {}, runGameAssetsBackup: async () => {} }));
+vi.mock("~/lib/backup.server", () => ({
+  runBackup: h.backup,
+  runAudioBackup: h.audio,
+  runImagesBackup: async () => {},
+  runGameAssetsBackup: async () => {},
+}));
 
 const e = env as unknown as Env;
 const ORIGIN = "https://germomics.com";
@@ -24,7 +32,11 @@ let worker: typeof import("../workers/app").default;
 
 function ctx() {
   const pending: Promise<unknown>[] = [];
-  return { pending, waitUntil: (p: Promise<unknown>) => pending.push(p), passThroughOnException() {} } as unknown as ExecutionContext & { pending: Promise<unknown>[] };
+  return {
+    pending,
+    waitUntil: (p: Promise<unknown>) => pending.push(p),
+    passThroughOnException() {},
+  } as unknown as ExecutionContext & { pending: Promise<unknown>[] };
 }
 const fetchWith = (request: Request, over: Partial<Env> = {}, c = ctx()) =>
   worker.fetch!(request as never, { ...e, CARREL_SITE_KEY: undefined, ...over } as Env, c);
@@ -53,7 +65,8 @@ describe("the Worker entry", () => {
 
   it("rate-limits /admin before rendering", async () => {
     await setSettings(e.DB, { "ratelimit.admin": "1" });
-    const admin = () => new Request(`${ORIGIN}/admin`, { headers: { "cf-connecting-ip": "198.51.100.5" } });
+    const admin = () =>
+      new Request(`${ORIGIN}/admin`, { headers: { "cf-connecting-ip": "198.51.100.5" } });
     expect((await fetchWith(admin())).status).toBe(200);
     const limited = await fetchWith(admin());
     expect(limited.status).toBe(429);
@@ -65,24 +78,42 @@ describe("the Worker entry", () => {
       new Request(`${ORIGIN}/csp-report`, {
         method: "POST",
         headers: { "Content-Type": "application/csp-report", "cf-connecting-ip": "198.51.100.7" },
-        body: JSON.stringify({ "csp-report": { "document-uri": `${ORIGIN}/data/x?q=1`, "effective-directive": "font-src", "blocked-uri": "https://fonts.gstatic.com/s/roboto.woff2" } }),
+        body: JSON.stringify({
+          "csp-report": {
+            "document-uri": `${ORIGIN}/data/x?q=1`,
+            "effective-directive": "font-src",
+            "blocked-uri": "https://fonts.gstatic.com/s/roboto.woff2",
+          },
+        }),
       });
     const keys: string[] = [];
     let open = true;
-    const limiter = { limit: async ({ key }: { key: string }) => (keys.push(key), { success: open }) };
+    const limiter = {
+      limit: async ({ key }: { key: string }) => (keys.push(key), { success: open }),
+    };
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
 
     // Every request also writes its `request` line (site-runtime withRequestLog); only the reports are counted here.
-    const reports = () => log.mock.calls.map(([line]) => JSON.parse(line as string)).filter((line) => line.event === "csp-violation");
+    const reports = () =>
+      log.mock.calls
+        .map(([line]) => JSON.parse(line as string))
+        .filter((line) => line.event === "csp-violation");
 
     const res = await fetchWith(report(), { CSP_REPORT_RATE_LIMIT: limiter } as never);
     expect(res.status).toBe(204);
-    expect(reports()[0]).toMatchObject({ event: "csp-violation", directive: "font-src", blocked: "https://fonts.gstatic.com/s/roboto.woff2", page: `${ORIGIN}/data/x` });
+    expect(reports()[0]).toMatchObject({
+      event: "csp-violation",
+      directive: "font-src",
+      blocked: "https://fonts.gstatic.com/s/roboto.woff2",
+      page: `${ORIGIN}/data/x`,
+    });
     expect(keys).toEqual(["198.51.100.7"]);
 
     // Over the limit, or with no limiter bound, the report is dropped and still answered 204.
     open = false;
-    expect((await fetchWith(report(), { CSP_REPORT_RATE_LIMIT: limiter } as never)).status).toBe(204);
+    expect((await fetchWith(report(), { CSP_REPORT_RATE_LIMIT: limiter } as never)).status).toBe(
+      204,
+    );
     expect((await fetchWith(report())).status).toBe(204);
     expect(reports()).toHaveLength(1);
     expect(h.render).not.toHaveBeenCalled();
@@ -94,7 +125,9 @@ describe("the Worker entry", () => {
     const [request, context] = h.render.mock.calls[0];
     expect(new URL(request.url).pathname).toBe("/");
     const { cloudflareContext } = await import("~/lib/context.server");
-    expect((context as { get: (k: unknown) => { env: Env } }).get(cloudflareContext).env.DB).toBe(e.DB);
+    expect((context as { get: (k: unknown) => { env: Env } }).get(cloudflareContext).env.DB).toBe(
+      e.DB,
+    );
   });
 
   it("in development renders live", async () => {
@@ -112,7 +145,10 @@ describe("the Worker entry", () => {
     const c = Object.assign(ctx(), {
       exports: {
         Renderer: {
-          fetch: async (_r: Request, init: { cf: { cacheKey: string } }) => (stored.push(init.cf.cacheKey), new Response("stored")),
+          fetch: async (_r: Request, init: { cf: { cacheKey: string } }) => (
+            stored.push(init.cf.cacheKey),
+            new Response("stored")
+          ),
           purgePages: async (why: string) => void purges.push(why),
         },
       },
@@ -120,7 +156,11 @@ describe("the Worker entry", () => {
     await fetchWith(new Request(`${ORIGIN}/episodes?utm_source=x`), {}, c);
     expect(stored).toEqual(["/episodes"]);
 
-    const admin = await fetchWith(new Request(`${ORIGIN}/writing?preview`, { headers: { Cookie: "CF_Authorization=abc" } }), {}, c);
+    const admin = await fetchWith(
+      new Request(`${ORIGIN}/writing?preview`, { headers: { Cookie: "CF_Authorization=abc" } }),
+      {},
+      c,
+    );
     expect(admin.headers.get("Cache-Control")).toBe("private, no-store");
     await fetchWith(new Request(`${ORIGIN}/admin/posts/1`, { method: "POST", body: "x" }), {}, c);
     expect(stored).toHaveLength(1);
@@ -129,19 +169,32 @@ describe("the Worker entry", () => {
   });
 
   it("counts a 404 with its referring host, never a preview link's, and answers 410 for a deleted post's address", async () => {
-    const notFound = async () => new Response("<p>gone</p>", { status: 404, headers: { "Content-Type": "text/html" } });
+    const notFound = async () =>
+      new Response("<p>gone</p>", { status: 404, headers: { "Content-Type": "text/html" } });
     h.render.mockImplementationOnce(notFound);
     const c = ctx();
-    await fetchWith(new Request(`${ORIGIN}/moved-page`, { headers: { Referer: "https://example.com/links?x=1" } }), {}, c);
+    await fetchWith(
+      new Request(`${ORIGIN}/moved-page`, {
+        headers: { Referer: "https://example.com/links?x=1" },
+      }),
+      {},
+      c,
+    );
     // A preview link: site-api answers it (here 503, the test Worker has no key), noindex, before the app.
     const link = await fetchWith(new Request(`${ORIGIN}/preview/secret-token`), {}, c);
     expect(link.headers.get("x-robots-tag")).toContain("noindex");
     await Promise.all(c.pending);
-    const rows = await e.DB.prepare("SELECT path, referrer_host, hit_count FROM page_404_daily").all();
-    expect(rows.results).toEqual([{ path: "/moved-page", referrer_host: "example.com", hit_count: 1 }]);
+    const rows = await e.DB.prepare(
+      "SELECT path, referrer_host, hit_count FROM page_404_daily",
+    ).all();
+    expect(rows.results).toEqual([
+      { path: "/moved-page", referrer_host: "example.com", hit_count: 1 },
+    ]);
 
     // The tombstone site-api 0.22.0 keeps for a deleted or trashed post (drizzle/0026): 410, uncached, unindexed, and not a miss to count.
-    await e.DB.prepare("INSERT INTO gone_paths (path, gone_at) VALUES (?, ?)").bind("/blog/deleted-post", "2026-11-05T00:00:00Z").run();
+    await e.DB.prepare("INSERT INTO gone_paths (path, gone_at) VALUES (?, ?)")
+      .bind("/blog/deleted-post", "2026-11-05T00:00:00Z")
+      .run();
     h.render.mockImplementationOnce(notFound);
     const gone = await fetchWith(new Request(`${ORIGIN}/blog/deleted-post?t=1`), {}, c);
     expect(gone.status).toBe(410);
@@ -170,8 +223,16 @@ describe("the nightly jobs", () => {
     await worker.scheduled!(nightly, e);
     expect(h.backup).toHaveBeenCalledWith(e);
     expect(h.audio).toHaveBeenCalledWith(e);
-    const ok = await e.DB.prepare("SELECT name FROM cron_runs WHERE last_ok_at IS NOT NULL ORDER BY name").all<{ name: string }>();
-    expect(ok.results.map((r) => r.name)).toEqual(["audio-backup", "backup", "game-assets-backup", "images-backup", "prune-404"]);
+    const ok = await e.DB.prepare(
+      "SELECT name FROM cron_runs WHERE last_ok_at IS NOT NULL ORDER BY name",
+    ).all<{ name: string }>();
+    expect(ok.results.map((r) => r.name)).toEqual([
+      "audio-backup",
+      "backup",
+      "game-assets-backup",
+      "images-backup",
+      "prune-404",
+    ]);
   });
 
   it("runs the rest after a failed backup, then fails the invocation", async () => {

@@ -6,7 +6,9 @@ const TIMING =
   /(?:(\d{1,2}):)?(\d{1,2}):(\d{2})[.,](\d{3})\s*-->\s*(?:(\d{1,2}):)?(\d{1,2}):(\d{2})[.,](\d{3})/;
 
 function toSeconds(h: string | undefined, m: string, s: string, ms: string): number {
-  return (h ? parseInt(h, 10) * 3600 : 0) + parseInt(m, 10) * 60 + parseInt(s, 10) + Number(`0.${ms}`);
+  return (
+    (h ? parseInt(h, 10) * 3600 : 0) + parseInt(m, 10) * 60 + parseInt(s, 10) + Number(`0.${ms}`)
+  );
 }
 
 export function parseVtt(vtt: string): Cue[] {
@@ -20,7 +22,11 @@ export function parseVtt(vtt: string): Cue[] {
     if (!m) continue;
     const start = toSeconds(m[1], m[2], m[3], m[4]);
     const end = toSeconds(m[5], m[6], m[7], m[8]);
-    const text = lines.slice(tIdx + 1).join(" ").replace(/<[^>]+>/g, "").trim();
+    const text = lines
+      .slice(tIdx + 1)
+      .join(" ")
+      .replace(/<[^>]+>/g, "")
+      .trim();
     if (text) cues.push({ start, end, text });
   }
   return cues;
@@ -67,7 +73,11 @@ export function isProbablyVtt(text: string): boolean {
  * (VTT <v Name> voice tags are already stripped to "Name: " by some exporters, or appear as a
  * leading capitalized label).
  */
-export function parseCueText(raw: string): { speaker: string | null; text: string; nonVerbal: boolean } {
+export function parseCueText(raw: string): {
+  speaker: string | null;
+  text: string;
+  nonVerbal: boolean;
+} {
   const text = (raw ?? "").trim();
   const nonVerbal = /^[[(][^\])]*[\])]$/.test(text);
   if (nonVerbal) return { speaker: null, text, nonVerbal: true };
