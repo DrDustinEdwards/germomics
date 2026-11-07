@@ -14,50 +14,32 @@
 //                                        and walks the bucket once more, which skips images already in `media`.
 //   RATE_LIMITER (Durable Object)        per-address request counts in 60-second windows; gone within a minute anyway.
 //   BACKUPS                              is the backup.
-import { backupFiles, backupHealth, filesHealth, runCheckedBackup } from "@dustinedwards/d1-dump";
+import { createSiteBackup } from "@dustinedwards/d1-dump";
 import { BACKUP_COUNTED_TABLES, BACKUP_EXCLUDE, CREDENTIAL_ALLOW } from "~/lib/backup-checks";
 
 // A file pass stops itself at three minutes and goes on the next night, inside its job's four-minute timeout
-// (cron.server.ts).
-const FILES_BUDGET_MS = 180_000;
-const AUDIO_BACKUP = { name: "audio", timeBudgetMs: FILES_BUDGET_MS };
-const IMAGES_BACKUP = { name: "images", timeBudgetMs: FILES_BUDGET_MS };
-const GAME_ASSETS_BACKUP = { name: "game-assets", timeBudgetMs: FILES_BUDGET_MS };
-
-export async function runBackup(env: Env): Promise<void> {
-  await runCheckedBackup(env.DB, env.BACKUPS, {
+// (cron.server.ts). /health reports each pass under its own key: audio, images and gameAssets.
+const timeBudgetMs = 180_000;
+const backup = createSiteBackup<Env>({
+  dump: {
     excludeIfPresent: [...BACKUP_EXCLUDE],
     credentials: { allow: CREDENTIAL_ALLOW },
     counted: [...BACKUP_COUNTED_TABLES],
-  });
-}
+  },
+  files: [
+    { name: "audio", key: "audio", source: (env) => env.MEDIA, timeBudgetMs },
+    { name: "images", key: "images", source: (env) => env.BLOG_IMAGES, timeBudgetMs },
+    { name: "game-assets", key: "gameAssets", source: (env) => env.GAME_ASSETS, timeBudgetMs },
+  ],
+});
 
-export async function runAudioBackup(env: Env) {
-  const run = await backupFiles(env.MEDIA, env.BACKUPS, AUDIO_BACKUP);
-  return { name: run.name, complete: run.complete, ...run.counts };
-}
+export const runBackup = async (env: Env): Promise<void> => void (await backup.runBackup(env));
 
-export async function runImagesBackup(env: Env) {
-  const run = await backupFiles(env.BLOG_IMAGES, env.BACKUPS, IMAGES_BACKUP);
-  return { name: run.name, complete: run.complete, ...run.counts };
-}
-
-export async function runGameAssetsBackup(env: Env) {
-  const run = await backupFiles(env.GAME_ASSETS, env.BACKUPS, GAME_ASSETS_BACKUP);
-  return { name: run.name, complete: run.complete, ...run.counts };
-}
+// One pass each: the jobs run apart so each has its own four minutes.
+const pass = async (env: Env, name: string) => (await backup.runFilesBackup(env, [name])).files[0];
+export const runAudioBackup = (env: Env) => pass(env, "audio");
+export const runImagesBackup = (env: Env) => pass(env, "images");
+export const runGameAssetsBackup = (env: Env) => pass(env, "game-assets");
 
 /** The newest complete dump and all three file passes, for /health's backup check: it warns when any is stale. Never throws. */
-export async function backupStatus(env: Env) {
-  const [dump, audio, images, gameAssets] = await Promise.all([
-    backupHealth(env.BACKUPS),
-    filesHealth(env.BACKUPS, AUDIO_BACKUP),
-    filesHealth(env.BACKUPS, IMAGES_BACKUP),
-    filesHealth(env.BACKUPS, GAME_ASSETS_BACKUP),
-  ]);
-  return {
-    ...dump,
-    files: { audio, images, gameAssets },
-    warning: dump.warning ?? audio.warning ?? images.warning ?? gameAssets.warning,
-  };
-}
+export const backupStatus = (env: Env) => backup.status(env);
