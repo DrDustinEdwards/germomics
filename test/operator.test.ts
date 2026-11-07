@@ -50,7 +50,7 @@ describe("operator API", () => {
     // backup_status reads the pass it just wrote, uncached.
     const status = (await (
       await call({ authorization: `Bearer ${TOKEN}` }, {}, "backup_status")
-    ).json()) as { data: { files: { gameAssets: { last_ok: string | null } } } };
-    expect(status.data.files.gameAssets.last_ok).not.toBeNull();
+    ).json()) as { data: { files: { "game-assets": { last_ok: string | null } } } };
+    expect(status.data.files["game-assets"].last_ok).not.toBeNull();
   });
 });
