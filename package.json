@@ -29,7 +29,7 @@
     "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.33.0",
     "@dustinedwards/d1-dump": "github:DrDustinEdwards/d1-dump#v0.13.2",
     "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.26.0",
-    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.87.0",
+    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.88.0",
     "capsomer": "github:DrDustinEdwards/capsomer#v0.77.0",
     "drizzle-orm": "0.45.4",
     "enarratio": "0.7.3",
@@ -70,7 +70,7 @@
     "typescript": "5.9.3",
     "vite": "8.3.5",
     "vitest": "4.1.12",
-    "wrangler": "4.130.0"
+    "wrangler": "4.157.0"
   },
   "engines": {
     "node": ">=22.22.0"
