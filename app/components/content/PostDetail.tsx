@@ -266,7 +266,7 @@ export function PostDetail({ data }: { data: DetailData }) {
             <span className="flex items-center gap-1 font-mono text-[11px] text-muted">
               <ArrowLeft size={12} aria-hidden /> Previous
             </span>
-            <span className="mt-1 line-clamp-2 font-display text-sm text-ink group-hover:text-brand">
+            <span className="mt-1 font-display text-sm text-ink group-hover:text-brand">
               {prev.title}
             </span>
           </Link>
@@ -281,7 +281,7 @@ export function PostDetail({ data }: { data: DetailData }) {
             <span className="flex items-center justify-end gap-1 font-mono text-[11px] text-muted">
               Next <ArrowRight size={12} aria-hidden />
             </span>
-            <span className="mt-1 line-clamp-2 font-display text-sm text-ink group-hover:text-brand">
+            <span className="mt-1 font-display text-sm text-ink group-hover:text-brand">
               {next.title}
             </span>
           </Link>
