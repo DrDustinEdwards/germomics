@@ -11,20 +11,8 @@ import {
   defineHead,
 } from "@drdustinedwards/site-helpers/head";
 import { article, thing } from "@drdustinedwards/site-helpers/schema";
+import { htmlToText, isoDuration } from "@drdustinedwards/site-helpers/text";
 import { DEFAULT_CARD, SITE_ORIGIN, postalAddressLd, type Address } from "~/lib/site";
-
-export function stripHtml(html: string): string {
-  return (
-    html
-      .replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ")
-      // Prelum's "#" link after each heading is navigation, not text.
-      .replace(/<a [^>]*class="heading-anchor"[^>]*>[\s\S]*?<\/a>/g, " ")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/&[a-z]+;|&#\d+;|&#x[0-9a-f]+;/gi, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-  );
-}
 
 /**
  * Demote a rendered body's headings one level (h1->h2 ... h5->h6) so the page keeps a single h1 (the post
@@ -40,15 +28,6 @@ export function demoteHeadings(html: string): string {
 }
 
 export type TocItem = { level: 2 | 3; id: string; text: string };
-
-/** ISO-8601 duration (PT#M#S) for schema.org. */
-function isoDuration(totalSeconds?: number | null): string | undefined {
-  if (!totalSeconds || totalSeconds <= 0) return undefined;
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-  return `PT${h ? `${h}H` : ""}${m ? `${m}M` : ""}${s ? `${s}S` : ""}`;
-}
 
 /** A post's own share image and its alt text: the social image, else the episode artwork, else the cover. */
 export function ogImageFor(post: Post): { src: string; alt: string | null } | null {
@@ -73,7 +52,7 @@ export function buildJsonLd({ post, author, seriesTitle, guests = [], hosts = []
   const own = ogImageFor(post)?.src;
   const image = own ? new URL(own, SITE_ORIGIN).href : undefined;
   const description =
-    post.seoDescription ?? post.excerpt ?? stripHtml(post.bodyHtml ?? "").slice(0, 200);
+    post.seoDescription ?? post.excerpt ?? htmlToText(post.bodyHtml ?? "").slice(0, 200);
   const datePublished = post.publishedAt ?? post.publishAt ?? undefined;
 
   if (post.kind === "episode") {

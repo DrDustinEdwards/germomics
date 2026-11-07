@@ -1,3 +1,4 @@
+import { htmlToText } from "@drdustinedwards/site-helpers/text";
 import type { Route } from "./+types/$slug";
 import { getEnv } from "~/lib/context.server";
 import {
@@ -11,7 +12,7 @@ import {
 import { getEpisodeGuests } from "~/lib/people.server";
 import { soundbitesForPost } from "~/lib/soundbites.server";
 import { getShowConfig } from "~/lib/show.server";
-import { buildJsonLd, ogImageFor, pageHead, stripHtml } from "~/lib/seo";
+import { buildJsonLd, ogImageFor, pageHead } from "~/lib/seo";
 import { SITE_ORIGIN } from "~/lib/site";
 import { postTrail } from "~/lib/trails";
 import { faqPage, jsonLd } from "@drdustinedwards/site-helpers/schema";
@@ -43,7 +44,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
       description:
         post.seoDescription ||
         post.excerpt ||
-        stripHtml(post.bodyHtml ?? "") ||
+        htmlToText(post.bodyHtml ?? "") ||
         `${post.title}, on Germomics.`,
       image: ogImage,
       canonical: post.canonical ? new URL(post.canonical, SITE_ORIGIN).href : undefined,
