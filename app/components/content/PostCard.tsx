@@ -49,7 +49,7 @@ export function PostCard({
           </Link>
         </Heading>
         {post.excerpt ? (
-          <p className="mt-1 line-clamp-2 text-sm text-muted">{post.excerpt}</p>
+          <p className="mt-1 text-sm text-muted">{post.excerpt}</p>
         ) : null}
         {(post.tags ?? []).length ? (
           <div className="mt-2 flex flex-wrap gap-1.5">

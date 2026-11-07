@@ -135,7 +135,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   </Link>
                 </h3>
                 {featured.excerpt ? (
-                  <p className="mt-1 line-clamp-2 text-sm text-muted">{featured.excerpt}</p>
+                  <p className="mt-1 text-sm text-muted">{featured.excerpt}</p>
                 ) : null}
               </div>
             </article>

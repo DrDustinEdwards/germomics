@@ -34,7 +34,7 @@ export function ArticleCard({ post, image }: { post: Post; image?: ImageAttribut
             {post.title}
           </h2>
           {post.excerpt ? (
-            <p className="mt-1.5 line-clamp-2 text-sm text-muted">{post.excerpt}</p>
+            <p className="mt-1.5 text-sm text-muted">{post.excerpt}</p>
           ) : null}
         </div>
       </Link>
