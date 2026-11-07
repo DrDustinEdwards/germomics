@@ -25,7 +25,8 @@
 //
 // READING. site-api's jsonSource reads the lines, given this field list; the structured fields (numbers and lists of
 // objects) are read as text, which jsonSource hands back as written, and parsed and checked here.
-import { jsonSource, splitSource } from "@dustinedwards/site-api/frontmatter";
+import { splitSource } from "@drdustinedwards/site-helpers/frontmatter";
+import { jsonSource } from "@dustinedwards/site-api/frontmatter";
 import type { Chapter, Guest, KeyMoment, Source } from "~/lib/types";
 
 /** An episode's guest by their People entry (/admin/people), with the role on this episode. */
