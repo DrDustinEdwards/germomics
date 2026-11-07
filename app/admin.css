@@ -8,6 +8,7 @@
 @import "capsomer/theme-switch.css";
 @import "capsomer/admin-shell.css";
 @import "capsomer/dialog.css";
+@import "capsomer/segmented.css";
 @import "capsomer/popover.css";
 
 /* Capsomer's faces from capsomer/fonts.css, loaded only with the admin, so public pages do not

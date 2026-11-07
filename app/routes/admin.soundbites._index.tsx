@@ -11,6 +11,7 @@ import { formatDuration } from "~/lib/format";
 import { Card, Field, Button, inputCx, EmptyState } from "~/components/admin/ui";
 import { useSnippet } from "~/lib/content";
 import { ADMIN_FORM, readForm } from "~/lib/body.server";
+import { confirmSubmit } from "capsomer/behavior/confirm-dialog";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
@@ -76,9 +77,12 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
                   </div>
                   <del.Form
                     method="post"
-                    onSubmit={(e) => {
-                      if (!confirm("Delete this soundbite?")) e.preventDefault();
-                    }}
+                    onSubmit={(e) =>
+                      confirmSubmit(e, {
+                        title: "Delete this soundbite?",
+                        action: "Delete soundbite",
+                      })
+                    }
                   >
                     <input type="hidden" name="intent" value="delete" />
                     <input type="hidden" name="id" value={c.id} />
