@@ -29,7 +29,7 @@
     "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.40.0",
     "@dustinedwards/d1-dump": "github:DrDustinEdwards/d1-dump#v0.15.0",
     "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.31.3",
-    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.100.1",
+    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.101.1",
     "capsomer": "github:DrDustinEdwards/capsomer#v0.82.0",
     "drizzle-orm": "0.45.4",
     "enarratio": "0.9.2",

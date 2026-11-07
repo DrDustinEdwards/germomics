@@ -1,7 +1,7 @@
 // Admin layout: the SINGLE gate for the whole admin.* subtree, resource routes included. RR v8
 // middleware runs once per request before any admin loader/action, so the checks are not repeated
 // per route (per the v8_middleware instruction). Cloudflare Access signs people in before a request
-// gets here; this re-verifies its JWT and the one admin email (site-runtime's accessAdmin) and
+// gets here; this re-verifies its JWT and the admin roster (ADMIN_EMAIL, CO_OWNER_EMAILS) (site-runtime's accessAdmin) and
 // answers 403 to anything else, so a request that bypassed Access, or an Access setup that is wrong,
 // never reaches an admin route. A cross-site write is refused first (site-runtime's
 // refuseCrossSite), since the framework's own Origin check never sees a resource route, and every
