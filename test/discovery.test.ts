@@ -28,7 +28,7 @@ describe("buildLlmsTxt", () => {
     const txt = buildLlmsTxt(show, [], [], ORIGIN);
     const lines = txt.split("\n");
     expect(lines[0]).toBe("# Germomics");
-    expect(lines[2]).toBe("> A podcast about microbes .");
+    expect(lines[2]).toBe("> A podcast about microbes.");
     expect(txt).toContain(
       "Germomics is a podcast and writing project about microbiology and history by Dustin Edwards.",
     );
