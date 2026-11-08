@@ -480,6 +480,7 @@ describe("suggestions", () => {
       alt: "A rod-shaped bacterium under a microscope.",
       tags: ["bacterium", "Microscope", "rod shaped"],
       model: "claude-haiku-5-5",
+      usage: { input: 10, output: 20, cacheRead: 0, cacheWrite: 0 },
     });
     expect(aiCalls).toBe(1);
     expect((await row(item.id))!).toMatchObject({ alt: "", tags: "[]", rev: 0 });
