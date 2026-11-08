@@ -1,5 +1,5 @@
-// Tags and alt text a model suggests for one image: site-api's mediaSuggester (Claude Haiku 5.5, direct at Anthropic
-// with the site's ANTHROPIC_API_KEY). Nothing here writes: a suggestion reaches the file only when a person
+// Tags and alt text a model suggests for one image: site-api's mediaSuggester (Claude Haiku 5.5, straight at
+// Anthropic with ANTHROPIC_API_KEY). Nothing here writes: a suggestion reaches the file only when a person
 // accepts it as an alt or a tags write (CLAUDE.md rule 6, AI output is drafts only). Each call counts against the
 // site's AI daily cap (security.server.ts). Only Dustin's own uploads are sent, never a visitor's data.
 import { mediaSuggester } from "@dustinedwards/site-api";

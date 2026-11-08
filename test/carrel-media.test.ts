@@ -1,5 +1,5 @@
 import { env } from "cloudflare:test";
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   MediaInUseError,
   NotFoundError,
@@ -14,7 +14,7 @@ import { resetDb } from "@dustinedwards/devkit/d1";
 import { applyMigrations } from "./helpers/d1";
 
 // The media group (app/lib/carrel/media.server.ts) as site-api calls it, over the real migrations, the BLOG_IMAGES and
-// BACKUPS buckets, and a stand-in Images binding and Anthropic. carrel.test.ts runs the same group through the HTTP
+// BACKUPS buckets, and a stand-in Images binding and Workers AI. carrel.test.ts runs the same group through the HTTP
 // handler and site-api's conformance suite.
 const e = env as unknown as Env;
 const ORIGIN = "/media";
@@ -101,10 +101,15 @@ const images = {
     };
   },
 };
-// The model's answer, as Anthropic's Messages API returns it with structured outputs (site-api 0.32 calls it direct).
-const claudeReply = () =>
+let aiCalls = 0;
+// Anthropic's answer, as structured outputs return it: one JSON text block (site-api 0.32 calls Claude straight at Anthropic).
+const anthropic = async () => (
+  aiCalls++,
   new Response(
     JSON.stringify({
+      id: "msg_1",
+      type: "message",
+      role: "assistant",
       stop_reason: "end_turn",
       content: [
         {
@@ -115,17 +120,18 @@ const claudeReply = () =>
           }),
         },
       ],
-      usage: { input_tokens: 5, output_tokens: 7 },
+      usage: { input_tokens: 10, output_tokens: 20 },
     }),
     { headers: { "content-type": "application/json" } },
-  );
-const claude = vi.fn(async (..._args: unknown[]) => claudeReply());
+  )
+);
 
 let logged: Record<string, unknown>[] = [];
 let media: MediaAdapter;
 const build = (extra: Partial<Env> = {}) =>
-  createCarrelAdapter({ ...e, IMAGES: images, ANTHROPIC_API_KEY: "sk-ant-test", ...extra } as unknown as Env, (x) =>
-    logged.push(x),
+  createCarrelAdapter(
+    { ...e, IMAGES: images, ANTHROPIC_API_KEY: "sk-ant-test", ...extra } as unknown as Env,
+    (x) => logged.push(x),
   ).media!;
 const row = (key: string) =>
   e.DB.prepare("SELECT * FROM media WHERE key = ?").bind(key).first<Record<string, unknown>>();
@@ -146,13 +152,12 @@ const usePost = (slug: string, html: string) =>
     .run();
 
 beforeAll(() => applyMigrations(e.DB));
-afterEach(() => vi.unstubAllGlobals());
 
 beforeEach(async () => {
   logged = [];
   edits = [];
-  claude.mockClear();
-  vi.stubGlobal("fetch", claude);
+  aiCalls = 0;
+  globalThis.fetch = anthropic as unknown as typeof fetch;
   media = build();
   await resetDb(e.DB);
   for (const bucket of [e.BLOG_IMAGES, e.BACKUPS]) {
@@ -476,12 +481,12 @@ describe("suggestions", () => {
       tags: ["bacterium", "Microscope", "rod shaped"],
       model: "claude-haiku-5-5",
     });
-    expect(claude).toHaveBeenCalledTimes(1);
+    expect(aiCalls).toBe(1);
     expect((await row(item.id))!).toMatchObject({ alt: "", tags: "[]", rev: 0 });
     expect(await media.suggest!("carrel/none.png")).toBeNull();
-    await expect(build({ ANTHROPIC_API_KEY: undefined } as Partial<Env>).suggest!(item.id)).rejects.toBeInstanceOf(
-      RefusedError,
-    );
+    await expect(
+      build({ ANTHROPIC_API_KEY: undefined } as Partial<Env>).suggest!(item.id),
+    ).rejects.toBeInstanceOf(RefusedError);
   });
 });
 
