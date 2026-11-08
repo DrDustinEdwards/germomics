@@ -527,6 +527,8 @@ export function createCarrelAdapter(
         format: "markdown" as const,
         source: sourceOf(p),
         version: await versionOf(p, update),
+        // Read only (site-api v0.33.0): what a Claude session drafts an episode's summary and chapters from.
+        ...(p.kind === "episode" && p.transcript?.trim() ? { transcript: p.transcript } : {}),
       };
     },
 
