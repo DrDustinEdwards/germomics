@@ -129,8 +129,9 @@ const anthropic = async () => (
 let logged: Record<string, unknown>[] = [];
 let media: MediaAdapter;
 const build = (extra: Partial<Env> = {}) =>
-  createCarrelAdapter({ ...e, IMAGES: images, ANTHROPIC_API_KEY: "sk-ant-test", ...extra } as unknown as Env, (x) =>
-    logged.push(x),
+  createCarrelAdapter(
+    { ...e, IMAGES: images, ANTHROPIC_API_KEY: "sk-ant-test", ...extra } as unknown as Env,
+    (x) => logged.push(x),
   ).media!;
 const row = (key: string) =>
   e.DB.prepare("SELECT * FROM media WHERE key = ?").bind(key).first<Record<string, unknown>>();
@@ -483,9 +484,9 @@ describe("suggestions", () => {
     expect(aiCalls).toBe(1);
     expect((await row(item.id))!).toMatchObject({ alt: "", tags: "[]", rev: 0 });
     expect(await media.suggest!("carrel/none.png")).toBeNull();
-    await expect(build({ ANTHROPIC_API_KEY: undefined } as Partial<Env>).suggest!(item.id)).rejects.toBeInstanceOf(
-      RefusedError,
-    );
+    await expect(
+      build({ ANTHROPIC_API_KEY: undefined } as Partial<Env>).suggest!(item.id),
+    ).rejects.toBeInstanceOf(RefusedError);
   });
 });
 
