@@ -53,11 +53,6 @@ export const SNIPPET_DEFAULTS: Record<string, string> = {
     "John Snow's map of the Broad Street outbreak: deaths clustered around a single pump, the founding case of epidemiology and a Vibrio cholerae story.",
   "snippet:dataset.influenza-1918":
     "The three waves of the 1918 H1N1 pandemic: mortality peaked sharply in the deadly autumn wave, a defining example of viral pandemic dynamics.",
-  "snippet:ai.error.not_configured":
-    "AI drafting is not set up. Set the AI_ROUTINE_URL and AI_ROUTINE_TOKEN worker secrets.",
-  "snippet:ai.error.rate_limit": "Too many drafting sessions this hour. Try again later.",
-  "snippet:ai.error.no_transcript": "This episode has no transcript yet. Add one first.",
-  "snippet:ai.error.daily_cap": "Daily AI limit reached. Try again tomorrow.",
 };
 
 export const PAGE_DEFAULTS: Record<string, { title: string; value: string }> = {
