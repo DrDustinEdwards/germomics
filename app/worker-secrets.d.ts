@@ -16,6 +16,8 @@ interface Env {
   ACCESS_DEV_BYPASS?: string;
   /** The bearer for /api/operator (32 characters or more), the admin MCP Worker's API leg. Unset or short closes the route. */
   OPERATOR_TOKEN?: string;
+  /** Anthropic API key for the media library's suggested alt text and tags (site-api mediaSuggester, Claude Haiku 5.5, direct). Unset, a suggestion is refused. */
+  ANTHROPIC_API_KEY?: string;
   /** Hex HMAC key for the newsletter's confirmation links (site-runtime ./signed-token). Unset closes newsletter signup. */
   SUBSCRIBE_LINK_KEY?: string;
   /** The address the site's mail is sent from. Unset, with SEND_EMAIL, means no mail is sent (app/lib/newsletter.server.ts). */

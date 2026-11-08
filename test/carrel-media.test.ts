@@ -1,5 +1,5 @@
 import { env } from "cloudflare:test";
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   MediaInUseError,
   NotFoundError,
@@ -14,7 +14,7 @@ import { resetDb } from "@dustinedwards/devkit/d1";
 import { applyMigrations } from "./helpers/d1";
 
 // The media group (app/lib/carrel/media.server.ts) as site-api calls it, over the real migrations, the BLOG_IMAGES and
-// BACKUPS buckets, and a stand-in Images binding and Workers AI. carrel.test.ts runs the same group through the HTTP
+// BACKUPS buckets, and a stand-in Images binding and Anthropic. carrel.test.ts runs the same group through the HTTP
 // handler and site-api's conformance suite.
 const e = env as unknown as Env;
 const ORIGIN = "/media";
@@ -101,24 +101,30 @@ const images = {
     };
   },
 };
-let aiCalls = 0;
-// JSON mode's answer: an object (site-api 0.20 reads nothing out of prose).
-const ai = {
-  run: async () => (
-    aiCalls++,
-    {
-      response: {
-        alt: "A rod-shaped bacterium under a microscope.",
-        tags: ["bacterium", "Microscope", "rod shaped"],
-      },
-    }
-  ),
-};
+// The model's answer, as Anthropic's Messages API returns it with structured outputs (site-api 0.32 calls it direct).
+const claudeReply = () =>
+  new Response(
+    JSON.stringify({
+      stop_reason: "end_turn",
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            alt: "A rod-shaped bacterium under a microscope.",
+            tags: ["bacterium", "Microscope", "rod shaped"],
+          }),
+        },
+      ],
+      usage: { input_tokens: 5, output_tokens: 7 },
+    }),
+    { headers: { "content-type": "application/json" } },
+  );
+const claude = vi.fn(async (..._args: unknown[]) => claudeReply());
 
 let logged: Record<string, unknown>[] = [];
 let media: MediaAdapter;
 const build = (extra: Partial<Env> = {}) =>
-  createCarrelAdapter({ ...e, IMAGES: images, AI: ai, ...extra } as unknown as Env, (x) =>
+  createCarrelAdapter({ ...e, IMAGES: images, ANTHROPIC_API_KEY: "sk-ant-test", ...extra } as unknown as Env, (x) =>
     logged.push(x),
   ).media!;
 const row = (key: string) =>
@@ -140,11 +146,13 @@ const usePost = (slug: string, html: string) =>
     .run();
 
 beforeAll(() => applyMigrations(e.DB));
+afterEach(() => vi.unstubAllGlobals());
 
 beforeEach(async () => {
   logged = [];
   edits = [];
-  aiCalls = 0;
+  claude.mockClear();
+  vi.stubGlobal("fetch", claude);
   media = build();
   await resetDb(e.DB);
   for (const bucket of [e.BLOG_IMAGES, e.BACKUPS]) {
@@ -466,12 +474,12 @@ describe("suggestions", () => {
     expect(await media.suggest!(item.id)).toEqual({
       alt: "A rod-shaped bacterium under a microscope.",
       tags: ["bacterium", "Microscope", "rod shaped"],
-      model: "@cf/meta/llama-4-scout-17b-16e-instruct",
+      model: "claude-haiku-5-5",
     });
-    expect(aiCalls).toBe(1);
+    expect(claude).toHaveBeenCalledTimes(1);
     expect((await row(item.id))!).toMatchObject({ alt: "", tags: "[]", rev: 0 });
     expect(await media.suggest!("carrel/none.png")).toBeNull();
-    await expect(build({ AI: undefined } as Partial<Env>).suggest!(item.id)).rejects.toBeInstanceOf(
+    await expect(build({ ANTHROPIC_API_KEY: undefined } as Partial<Env>).suggest!(item.id)).rejects.toBeInstanceOf(
       RefusedError,
     );
   });
