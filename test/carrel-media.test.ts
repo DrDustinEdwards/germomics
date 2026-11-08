@@ -102,23 +102,34 @@ const images = {
   },
 };
 let aiCalls = 0;
-// JSON mode's answer: an object (site-api 0.20 reads nothing out of prose).
-const ai = {
-  run: async () => (
-    aiCalls++,
-    {
-      response: {
-        alt: "A rod-shaped bacterium under a microscope.",
-        tags: ["bacterium", "Microscope", "rod shaped"],
-      },
-    }
-  ),
-};
+// Anthropic's answer, as structured outputs return it: one JSON text block (site-api 0.32 calls Claude straight at Anthropic).
+const anthropic = async () => (
+  aiCalls++,
+  new Response(
+    JSON.stringify({
+      id: "msg_1",
+      type: "message",
+      role: "assistant",
+      stop_reason: "end_turn",
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            alt: "A rod-shaped bacterium under a microscope.",
+            tags: ["bacterium", "Microscope", "rod shaped"],
+          }),
+        },
+      ],
+      usage: { input_tokens: 10, output_tokens: 20 },
+    }),
+    { headers: { "content-type": "application/json" } },
+  )
+);
 
 let logged: Record<string, unknown>[] = [];
 let media: MediaAdapter;
 const build = (extra: Partial<Env> = {}) =>
-  createCarrelAdapter({ ...e, IMAGES: images, AI: ai, ...extra } as unknown as Env, (x) =>
+  createCarrelAdapter({ ...e, IMAGES: images, ANTHROPIC_API_KEY: "sk-ant-test", ...extra } as unknown as Env, (x) =>
     logged.push(x),
   ).media!;
 const row = (key: string) =>
@@ -145,6 +156,7 @@ beforeEach(async () => {
   logged = [];
   edits = [];
   aiCalls = 0;
+  globalThis.fetch = anthropic as unknown as typeof fetch;
   media = build();
   await resetDb(e.DB);
   for (const bucket of [e.BLOG_IMAGES, e.BACKUPS]) {
@@ -466,12 +478,12 @@ describe("suggestions", () => {
     expect(await media.suggest!(item.id)).toEqual({
       alt: "A rod-shaped bacterium under a microscope.",
       tags: ["bacterium", "Microscope", "rod shaped"],
-      model: "@cf/meta/llama-4-scout-17b-16e-instruct",
+      model: "claude-haiku-5-5",
     });
     expect(aiCalls).toBe(1);
     expect((await row(item.id))!).toMatchObject({ alt: "", tags: "[]", rev: 0 });
     expect(await media.suggest!("carrel/none.png")).toBeNull();
-    await expect(build({ AI: undefined } as Partial<Env>).suggest!(item.id)).rejects.toBeInstanceOf(
+    await expect(build({ ANTHROPIC_API_KEY: undefined } as Partial<Env>).suggest!(item.id)).rejects.toBeInstanceOf(
       RefusedError,
     );
   });

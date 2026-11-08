@@ -9,7 +9,6 @@
 // limit bindings (CARREL_RATE_LIMIT, CSP_REPORT_RATE_LIMIT), which have no read that does not spend a request's count.
 import { cronCheck } from "@dustinedwards/site-runtime/cron";
 import {
-  aiCheck,
   durableObjectCheck,
   emailCheck,
   healthResponse,
@@ -34,7 +33,6 @@ export function loader({ context }: Route.LoaderArgs) {
       { ...r2Check("game-assets", env.GAME_ASSETS), level: "warn" },
       { ...kvCheck("kv", env.APP_KV), level: "warn" },
       imagesCheck("images-binding", env.IMAGES),
-      aiCheck("ai", env.AI),
       emailCheck("email", env.SEND_EMAIL),
       durableObjectCheck("rate-limiter", env.RATE_LIMITER),
       cronCheck(env.DB, {

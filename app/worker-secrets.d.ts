@@ -14,6 +14,8 @@ interface Env {
   ACCESS_AUD?: string;
   /** "1" in .dev.vars only: treats a localhost request as the admin. Ignored on any other host. */
   ACCESS_DEV_BYPASS?: string;
+  /** The Anthropic key for the media suggestions (Claude Haiku 5.5, called straight at Anthropic). Unset: no suggestions. */
+  ANTHROPIC_API_KEY?: string;
   /** The bearer for /api/operator (32 characters or more), the admin MCP Worker's API leg. Unset or short closes the route. */
   OPERATOR_TOKEN?: string;
   /** Hex HMAC key for the newsletter's confirmation links (site-runtime ./signed-token). Unset closes newsletter signup. */
