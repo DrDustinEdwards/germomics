@@ -13,7 +13,9 @@ const FILES: Record<string, string> = {
 
 export type DiagramFiles = ReadonlyMap<string, string>;
 
-type Assets = { fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> };
+export type DiagramAssets = {
+  fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+};
 
 /** Prelum's diagram key: FNV-1a of template version 1 and the normalized Mermaid source. */
 export function diagramKey(source: string): string {
@@ -27,17 +29,41 @@ export function diagramKey(source: string): string {
   return hash.toString(16).padStart(8, "0");
 }
 
-/** The six drawings, keyed by the hash of the essay's Mermaid. Missing binding yields an empty map. */
-export async function loadBlogDiagrams(env: Env): Promise<DiagramFiles> {
-  const assets = (env as Env & { ASSETS?: Assets }).ASSETS;
+const ASSET_ORIGIN = "https://assets.local";
+
+/**
+ * Workers Static Assets' html_handling redirects /name.html to /name. That response is not ok,
+ * so reading only the first hop drops every drawing and the Mermaid image is left in place.
+ */
+async function readAsset(assets: DiagramAssets, path: string): Promise<string> {
+  let url = new URL(path, ASSET_ORIGIN);
+  for (let hop = 0; hop < 2; hop += 1) {
+    const response = await assets.fetch(url);
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      if (!location) return "";
+      url = new URL(location, url);
+      continue;
+    }
+    if (!response.ok) return "";
+    const text = await response.text();
+    return text.includes("<svg") ? text : "";
+  }
+  return "";
+}
+
+/** The six drawings, keyed by the hash of the essay's Mermaid. */
+export async function diagramsFromAssets(assets: DiagramAssets | undefined): Promise<DiagramFiles> {
+  if (!assets) return new Map();
   const entries = await Promise.all(
-    Object.entries(FILES).map(async ([key, path]) => {
-      if (!assets) return [key, ""] as const;
-      const response = await assets.fetch(new URL(path, "https://assets.local"));
-      return [key, response.ok ? await response.text() : ""] as const;
-    }),
+    Object.entries(FILES).map(async ([key, path]) => [key, await readAsset(assets, path)] as const),
   );
   return new Map(entries.filter((entry) => entry[1] !== ""));
+}
+
+/** The six drawings from the Worker's asset binding. */
+export async function loadBlogDiagrams(env: Env): Promise<DiagramFiles> {
+  return diagramsFromAssets((env as Env & { ASSETS?: DiagramAssets }).ASSETS);
 }
 
 const FIGURE = /<figure\b[^>]*\bclass="diagram-figure"[^>]*>[\s\S]*?<\/figure>/g;
