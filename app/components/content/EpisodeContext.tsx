@@ -7,9 +7,8 @@ function DataPreview({ preview }: { preview: DataPreviewView }) {
   return (
     <figure id={preview.id} className="rounded-xl border border-border bg-card p-4">
       <figcaption>
-        <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">Data</p>
-        <p className="mt-1 font-display text-lg font-semibold leading-snug text-ink">
-          {preview.title}
+        <p className="font-display text-lg font-semibold leading-snug text-ink">
+          {preview.heading}
         </p>
       </figcaption>
       <div
@@ -17,15 +16,13 @@ function DataPreview({ preview }: { preview: DataPreviewView }) {
         aria-hidden="true"
         dangerouslySetInnerHTML={{ __html: preview.svg }}
       />
-      <p className="mt-3 text-sm leading-relaxed text-ink">{preview.alt}</p>
-      <p className="mt-2 text-sm leading-relaxed text-muted">{preview.limits}</p>
+      <p className="mt-3 text-sm leading-relaxed text-ink">{preview.summary}</p>
       <p className="mt-3 text-sm">
         <Link to={preview.href} className="font-display text-accent underline underline-offset-2">
-          The full data page
+          {preview.link}
         </Link>
       </p>
       <p className="mt-2 font-display text-xs leading-relaxed text-muted">
-        Source:{" "}
         <a href={preview.source.href} className="text-accent underline underline-offset-2">
           {preview.source.label}
           <ExternalCue />
