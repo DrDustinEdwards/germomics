@@ -1,5 +1,5 @@
-// The :::diagram blocks currently saved in the six essays. The page draws the figure itself
-// (public/blog-diagrams). diagramMarkdown is the block to delete from each essay.
+// The :::diagram blocks saved in the six essays. The Mermaid fence is the key. The renderer
+// swaps that figure for the inline SVG in public/blog-diagrams and keeps the caption.
 
 export type EpisodeDiagram = {
   slug: string;
