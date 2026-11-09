@@ -130,6 +130,9 @@ jobs:
       - name: Audit (production deps)
         run: npm audit --omit=dev --audit-level=high
 
+  # deploy needs verify. If GitHub never assigns verify a runner, this workflow ends with only
+  # audit, and deploy is skipped. The workflow file did not change between the 92c30fc deploy
+  # and the efc26c1 run that did that. Re-running the workflow, or merging a later commit, deploys.
   # A merge to main deploys once both jobs are green: migrations first, then the Worker, so a migration is never a
   # manual step. Dormant until the repo variable CF_DEPLOY is 'true' (with the secrets CLOUDFLARE_API_TOKEN and
   # CLOUDFLARE_ACCOUNT_ID), so Cloudflare Workers Builds keeps deploying until it is turned off; turn it off before
