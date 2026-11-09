@@ -1,6 +1,8 @@
 // The six episode figures. The essay keeps its :::diagram block. Prelum's hash of that Mermaid
 // selects the drawing, and the author's caption stays under it. The SVG text lives in a static
-// file so the Worker script does not carry it.
+// file so the Worker script does not carry it. Reading it needs the ASSETS binding in
+// wrangler.jsonc. The files are still served to browsers without that binding, and then
+// env.ASSETS is missing, so the swap leaves the Mermaid image in place.
 
 const FILES: Record<string, string> = {
   "52d7f101": "/blog-diagrams/on-the-right-taq.html",
@@ -38,7 +40,9 @@ const ASSET_ORIGIN = "https://assets.local";
 async function readAsset(assets: DiagramAssets, path: string): Promise<string> {
   let url = new URL(path, ASSET_ORIGIN);
   for (let hop = 0; hop < 2; hop += 1) {
-    const response = await assets.fetch(url);
+    // manual: the assets binding applies html_handling, and a followed redirect would leave
+    // the binding. A /name.html request is a 307 to /name, which this loop reads next.
+    const response = await assets.fetch(url, { redirect: "manual" });
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get("location");
       if (!location) return "";
@@ -63,7 +67,7 @@ export async function diagramsFromAssets(assets: DiagramAssets | undefined): Pro
 
 /** The six drawings from the Worker's asset binding. */
 export async function loadBlogDiagrams(env: Env): Promise<DiagramFiles> {
-  return diagramsFromAssets((env as Env & { ASSETS?: DiagramAssets }).ASSETS);
+  return diagramsFromAssets(env.ASSETS);
 }
 
 const FIGURE = /<figure\b[^>]*\bclass="diagram-figure"[^>]*>[\s\S]*?<\/figure>/g;

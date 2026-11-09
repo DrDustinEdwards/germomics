@@ -32,6 +32,10 @@
 		"Renderer": { "type": "worker", "cache": { "enabled": true } }
 	},
 	"upload_source_maps": true,
+	// The episode renderer reads the six drawings from static assets (app/lib/blog-diagram.server.ts).
+	// The files are public either way. Without this binding, env.ASSETS does not exist, the swap
+	// finds nothing, and the page keeps the Mermaid image.
+	"assets": { "binding": "ASSETS" },
 	// Native bindings, reached only via context.cloudflare.env in loaders/actions.
 	"d1_databases": [
 		{

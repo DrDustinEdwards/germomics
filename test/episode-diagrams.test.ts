@@ -80,7 +80,8 @@ describe("the mechanism diagrams", () => {
 
   it("follows the asset redirect from a .html address to the drawing", async () => {
     const assets = {
-      fetch: async (input: RequestInfo | URL) => {
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        expect(init?.redirect).toBe("manual");
         const url = String(input);
         if (url.endsWith(".html")) {
           return new Response(null, {
