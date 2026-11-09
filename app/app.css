@@ -11,7 +11,7 @@
 /* ── germomics design system ───────────────────────────────────────────────
    Anchor #4F2D7F (crystal violet). Light + dark are both first-class, switched by
    data-theme on <html> and remembered. Cyan (#0E7490 light / #22D3EE dark) is the
-   accent — reserved for interactive and now-playing states only. Tokens are CSS vars;
+   accent, reserved for interactive and now-playing states only. Tokens are CSS vars;
    @theme inline maps them into Tailwind utilities so bg-bg / text-brand / text-accent
    respond to the theme. No hard-coded colors anywhere else. */
 
@@ -123,7 +123,7 @@
     color: var(--color-accent);
     text-underline-offset: 3px;
   }
-  /* Visible focus everywhere (WCAG 2.2 — 2.4.7 / 2.4.11). */
+  /* Visible focus everywhere (WCAG 2.2, 2.4.7 and 2.4.11). */
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
@@ -141,7 +141,7 @@
 }
 
 @utility tap-target {
-  /* WCAG 2.5.8 — 24px minimum interactive target. */
+  /* WCAG 2.5.8, 24px minimum interactive target. */
   min-width: 1.5rem;
   min-height: 1.5rem;
 }
@@ -220,8 +220,11 @@
   margin-inline-start: calc(-1 * var(--space-2));
 }
 
-/* Prelum :::diagram: one drawing per theme. The SVG is an image, so it cannot follow the page variables.
-   The light drawing shows unless the page is dark. */
+/* Prelum :::diagram. The SVG is an image, so it cannot follow the page variables, and it cannot
+   load the site's webfont. Prelum draws the labels in a system sans at 16px, inside a box about
+   168 to 216 px wide. Width 100% would scale that box up to the column and the type with it.
+   Keep the intrinsic size, center it, and shrink it only when the column is narrower.
+   Prose images get a rounded border. A diagram is a drawing, so it does not. */
 .diagram-title {
   margin: 0 0 0.5rem;
   font-family: var(--font-display);
@@ -231,26 +234,29 @@
 }
 .diagram-figure .diagram-image {
   display: block;
-  width: 100%;
+  /* No width here. The img width attribute is the drawing's real size. Setting
+     width, even to auto, drops that and the picture collapses until it loads,
+     or grows to the column if the value is 100%. */
   max-width: 100%;
   height: auto;
   margin: 0.75rem auto 0;
   border: 0;
+  border-radius: 0;
 }
-.diagram-dark {
+.diagram-figure .diagram-dark {
   display: none;
 }
-:root[data-theme="dark"] .diagram-light {
+:root[data-theme="dark"] .diagram-figure .diagram-light {
   display: none;
 }
-:root[data-theme="dark"] .diagram-dark {
+:root[data-theme="dark"] .diagram-figure .diagram-dark {
   display: block;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .diagram-light {
+  :root:not([data-theme="light"]) .diagram-figure .diagram-light {
     display: none;
   }
-  :root:not([data-theme="light"]) .diagram-dark {
+  :root:not([data-theme="light"]) .diagram-figure .diagram-dark {
     display: block;
   }
 }
