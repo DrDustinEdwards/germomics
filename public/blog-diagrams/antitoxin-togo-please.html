@@ -1,0 +1,59 @@
+<div class="blog-diagram-block">
+  <figure
+    class="blog-diagram"
+    role="img"
+    aria-label="A phage brings the tox gene into Corynebacterium diphtheriae. The B part of the toxin binds a cell, and the A part stops that cell from making protein."
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 200" width="680" height="200">
+      <title>Phage-carried diphtheria toxin</title>
+      <desc>
+        A phage brings the tox gene into Corynebacterium diphtheriae. The B part of the toxin binds
+        a cell, and the A part stops that cell from making protein.
+      </desc>
+      <defs>
+        <marker
+          id="arrow-antitoxintogoplease"
+          viewBox="0 0 10 10"
+          refX="8"
+          refY="5"
+          markerWidth="6"
+          markerHeight="6"
+          orient="auto-start-reverse"
+        >
+          <path d="M0 0 L10 5 L0 10 Z" class="arrow-head" />
+        </marker>
+      </defs>
+
+      <g class="node-accent">
+        <rect x="20" y="70" width="150" height="48" rx="24" />
+        <circle cx="96" cy="48" r="14" />
+        <path class="glyph" d="M96 62 V70" />
+        <path class="glyph" d="M86 44 H106" />
+        <text class="label-primary" x="96" y="150" text-anchor="middle">Phage brings tox</text>
+      </g>
+      <path class="connector" d="M170 94 H210" marker-end="url(#arrow-antitoxintogoplease)" />
+      <g class="node-info">
+        <path class="membrane" d="M220 78 H400" />
+        <circle cx="300" cy="58" r="12" />
+        <path class="glyph" d="M300 70 V78" />
+        <text class="label-primary" x="310" y="150" text-anchor="middle">B binds the cell</text>
+      </g>
+      <path class="connector" d="M400 94 H440" marker-end="url(#arrow-antitoxintogoplease)" />
+      <g class="node-warning">
+        <circle cx="500" cy="78" r="16" />
+        <circle cx="500" cy="108" r="22" />
+        <path class="glyph stop" d="M478 96 H522" />
+        <text class="label-primary" x="560" y="150" text-anchor="middle">A stops protein</text>
+        <text class="label-secondary" x="560" y="168" text-anchor="middle">synthesis</text>
+      </g>
+    </svg>
+  </figure>
+  <p class="blog-diagram-credit">
+    Sources:
+    <a href="https://doi.org/10.1128/jb.61.6.675-688.1951"
+      >Freeman, Journal of Bacteriology (1951)</a
+    >; <a href="https://doi.org/10.1086/315554">Holmes, Journal of Infectious Diseases (2000)</a>;
+    <a href="https://doi.org/10.1016/0092-8674(92)90623-k">Naglich and colleagues, Cell (1992)</a>;
+    <a href="https://doi.org/10.1016/s0041-0101(01)00165-9">Collier, Toxicon (2001)</a>.
+  </p>
+</div>

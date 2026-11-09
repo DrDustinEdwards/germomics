@@ -1,0 +1,80 @@
+<div class="blog-diagram-block">
+  <figure
+    class="blog-diagram"
+    role="img"
+    aria-label="Leptospira is maintained in a mammal kidney, shed in urine into fresh water and wet soil, and can return to another reservoir host. A person meets it through broken skin or a mucous membrane and does not keep the cycle going."
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 340" width="680" height="340">
+      <title>Leptospirosis: reservoir, environment, exposure</title>
+      <desc>
+        Leptospira is maintained in a mammal kidney, shed in urine into fresh water and wet soil,
+        and can return to another reservoir host. A person meets it through broken skin or a mucous
+        membrane and does not keep the cycle going.
+      </desc>
+      <defs>
+        <marker
+          id="arrow-hellonweils"
+          viewBox="0 0 10 10"
+          refX="8"
+          refY="5"
+          markerWidth="6"
+          markerHeight="6"
+          orient="auto-start-reverse"
+        >
+          <path d="M0 0 L10 5 L0 10 Z" class="arrow-head" />
+        </marker>
+      </defs>
+
+      <g class="node-neutral">
+        <path
+          class="organ"
+          d="M250 18 C310 8 360 28 366 64 C372 100 330 118 286 110 C242 102 214 76 220 48 C224 30 228 22 250 18 Z"
+        />
+        <text class="label-primary" x="400" y="58" text-anchor="start">Reservoir kidney</text>
+        <text class="label-secondary" x="400" y="76" text-anchor="start">
+          mammals, rats especially
+        </text>
+      </g>
+      <path class="connector" d="M292 118 V150" marker-end="url(#arrow-hellonweils)" />
+      <g class="node-info">
+        <path class="organ" d="M292 158 C276 176 276 198 292 210 C308 198 308 176 292 158 Z" />
+        <text class="label-primary" x="390" y="186" text-anchor="middle">Shed in urine</text>
+      </g>
+      <path class="connector" d="M292 214 V246" marker-end="url(#arrow-hellonweils)" />
+      <g class="node-accent">
+        <path class="glyph" d="M160 268 C210 256 240 280 292 268 C344 256 380 280 430 268" />
+        <path class="glyph" d="M168 284 C218 272 248 296 300 284 C352 272 388 296 438 284" />
+        <text class="label-primary" x="300" y="314" text-anchor="middle">
+          Fresh water and wet soil
+        </text>
+      </g>
+      <path
+        class="connector quiet"
+        d="M160 268 C80 240 70 140 200 80"
+        marker-end="url(#arrow-hellonweils)"
+      />
+      <path class="connector" d="M430 276 H500" marker-end="url(#arrow-hellonweils)" />
+      <g class="node-warning">
+        <path
+          class="organ"
+          d="M520 250 C548 238 578 246 586 268 C578 292 546 298 524 282 C514 272 512 258 520 250 Z"
+        />
+        <path class="glyph" d="M552 248 L560 272" />
+        <text class="label-primary" x="600" y="220" text-anchor="middle">Broken skin or</text>
+        <text class="label-secondary" x="600" y="236" text-anchor="middle">a mucous membrane</text>
+      </g>
+    </svg>
+  </figure>
+  <p class="blog-diagram-credit">
+    Sources:
+    <a href="https://doi.org/10.1128/CMR.14.2.296-326.2001"
+      >Levett, Clinical Microbiology Reviews (2001)</a
+    >;
+    <a href="https://doi.org/10.1007/978-3-662-45059-8_5"
+      >Haake and Levett, Current Topics in Microbiology and Immunology (2014)</a
+    >;
+    <a href="https://www.cdc.gov/leptospirosis/about/index.html"
+      >Centers for Disease Control and Prevention, About leptospirosis</a
+    >.
+  </p>
+</div>

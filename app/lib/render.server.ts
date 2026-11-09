@@ -135,8 +135,8 @@ export async function renderMarkdown(
     },
     options: {
       assertSafe: true,
-      // :::diagram only. editorialPack also loads enarratio/plot for :::chart, which this site does not
-      // ship (hard rule 4). The drawing is still Prelum's: buildDiagramModel, renderDiagramHast, drawDiagrams.
+      // :::diagram is accepted and dropped. The episode page inlines the figure. editorialPack is
+      // not used: it also loads enarratio/plot for :::chart, which this site does not ship.
       packs: [diagramPack()],
       priority: { taken: lcpAbove },
       media: {

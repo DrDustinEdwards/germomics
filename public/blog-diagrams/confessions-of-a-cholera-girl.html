@@ -1,0 +1,70 @@
+<div class="blog-diagram-block">
+  <figure
+    class="blog-diagram"
+    role="img"
+    aria-label="Cholera toxin on an intestinal cell. The B subunits bind GM1, the A1 piece locks Gs on, and the cell lets chloride out while taking up less sodium."
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 210" width="680" height="210">
+      <title>How cholera toxin acts on an intestinal cell</title>
+      <desc>
+        Cholera toxin on an intestinal cell. The B subunits bind GM1, the A1 piece locks Gs on, and
+        the cell lets chloride out while taking up less sodium.
+      </desc>
+      <defs>
+        <marker
+          id="arrow-confessionsofacholeragirl"
+          viewBox="0 0 10 10"
+          refX="8"
+          refY="5"
+          markerWidth="6"
+          markerHeight="6"
+          orient="auto-start-reverse"
+        >
+          <path d="M0 0 L10 5 L0 10 Z" class="arrow-head" />
+        </marker>
+      </defs>
+
+      <path class="membrane" d="M24 96 H656" />
+      <g class="node-accent">
+        <circle class="bead" cx="92" cy="58" r="9" />
+        <circle class="bead" cx="112" cy="48" r="9" />
+        <circle class="bead" cx="132" cy="58" r="9" />
+        <circle class="bead" cx="102" cy="74" r="9" />
+        <circle class="bead" cx="122" cy="74" r="9" />
+        <path class="glyph" d="M112 83 V96" />
+        <path class="glyph" d="M104 90 L120 86" />
+        <text class="label-primary" x="112" y="28" text-anchor="middle">B binds GM1</text>
+      </g>
+      <g class="node-warning">
+        <path class="glyph" d="M200 96 C200 130 250 130 268 156" />
+        <circle class="bead" cx="276" cy="164" r="11" />
+        <rect x="292" y="146" width="86" height="36" rx="8" />
+        <text class="label-primary" x="335" y="168" text-anchor="middle">Gs</text>
+        <text class="label-primary" x="276" y="200" text-anchor="middle">A1 locks Gs on</text>
+      </g>
+      <g class="node-info">
+        <path
+          class="connector"
+          d="M400 150 H470"
+          marker-end="url(#arrow-confessionsofacholeragirl)"
+        />
+        <text class="label-primary" x="540" y="146" text-anchor="middle">Chloride out</text>
+        <path
+          class="connector quiet"
+          d="M470 176 H400"
+          marker-end="url(#arrow-confessionsofacholeragirl)"
+        />
+        <text class="label-secondary" x="540" y="180" text-anchor="middle">Less sodium in</text>
+      </g>
+    </svg>
+  </figure>
+  <p class="blog-diagram-credit">
+    Sources:
+    <a href="https://doi.org/10.1128/iai.8.2.208-214.1973"
+      >Holmgren, Lönnroth and Svennerholm, Infection and Immunity (1973)</a
+    >; <a href="https://doi.org/10.1073/pnas.75.7.3050">Gill and Meren, PNAS (1978)</a>;
+    <a href="https://doi.org/10.1172/JCI18326">Field, Journal of Clinical Investigation (2003)</a>;
+    <a href="https://doi.org/10.1126/science.272.5270.1910">Waldor and Mekalanos, Science (1996)</a
+    >.
+  </p>
+</div>

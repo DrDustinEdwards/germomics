@@ -20,6 +20,7 @@ import type { HeadImage } from "@drdustinedwards/site-helpers/head";
 import { pageToc, storedBody } from "~/lib/render.server";
 import { postImages, shareImage } from "~/lib/images.server";
 import { episodeContext } from "~/lib/episode-context.server";
+import { blogDiagram, stripMermaidFigure } from "~/lib/blog-diagram.server";
 import { PostDetail, type DetailData } from "~/components/content/PostDetail";
 
 // An episode's page is the player's own (its surface, waveform, transcript read-along, chapters and progress), so it
@@ -93,13 +94,19 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     shareImage(env, ogImageFor(post)),
   ]);
 
+  const diagram = post.kind === "episode" ? await blogDiagram(env, post.slug) : null;
   const data: DetailData & {
     seriesTitle: string;
     hosts: typeof hosts;
     ogImage: HeadImage;
   } = {
     // The page shows the rendered HTML; the Markdown stays on the server.
-    post: { ...post, body: "", bodyHtml: html, bodyMeta: meta },
+    post: {
+      ...post,
+      body: "",
+      bodyHtml: diagram ? stripMermaidFigure(html) : html,
+      bodyMeta: meta,
+    },
     images,
     track: post.kind === "episode" ? toPlayerTrack(post) : null,
     soundbites: clips.map((c) => ({
@@ -119,6 +126,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     readingMinutes: post.readingTime ?? 1,
     toc: pageToc(meta),
     context: post.kind === "episode" ? episodeContext(post.slug) : null,
+    diagram,
     seriesTitle: show.title,
     ogImage,
   };
