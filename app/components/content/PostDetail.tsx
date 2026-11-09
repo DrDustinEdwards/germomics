@@ -65,8 +65,10 @@ export type DetailData = {
   preview?: boolean;
   /** Sizes from /media for the cover, artwork and people photos the loader could size (app/lib/images.server.ts). */
   images?: ImageSet;
-  /** A data preview or a schematic for this episode, outside the essay. Null when it has neither. */
+  /** A data preview for this episode, outside the essay. Null when it has none. */
   context: EpisodeContextView | null;
+  /** Inline mechanism figure for six episodes. Null for every other page. */
+  diagram: string | null;
 };
 
 // Lightweight "save for later": a slug set in localStorage, no server. Toggles aria-pressed. Read as an external
@@ -381,6 +383,9 @@ export function PostDetail({ data }: { data: DetailData }) {
             </div>
             <div className="min-w-0 lg:order-2">
               {data.context ? <EpisodeContext context={data.context} /> : null}
+              {data.diagram ? (
+                <div className="mb-10" dangerouslySetInnerHTML={{ __html: data.diagram }} />
+              ) : null}
               {post.bodyHtml ? (
                 <div ref={bodyRef}>
                   <BodyRenderer html={post.bodyHtml} />
