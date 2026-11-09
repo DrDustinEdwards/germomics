@@ -35,7 +35,9 @@ describe("episode context", () => {
     expect(cholera.href).toBe("/data/cholera-soho-1854");
     expect(flu.href).toBe("/data/influenza-1918");
     expect(cholera.heading).toBe("John Snow's own tally of cholera deaths around Broad Street");
-    expect(cholera.summary).toBe("They peaked at 127 on September 2, then collapsed within ten days.");
+    expect(cholera.summary).toBe(
+      "They peaked at 127 on September 2, then collapsed within ten days.",
+    );
     expect(cholera.link).toBe("See his map and the full numbers on the data page");
     expect(flu.heading).toBe("The Registrar-General's weekly count of influenza deaths in London");
     expect(flu.summary).toBe("The worst week ended on November 2, 1918, with 2,651.");

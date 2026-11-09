@@ -7,7 +7,9 @@ function DataPreview({ preview }: { preview: DataPreviewView }) {
   return (
     <figure id={preview.id} className="rounded-xl border border-border bg-card p-4">
       <figcaption>
-        <p className="font-display text-lg font-semibold leading-snug text-ink">{preview.heading}</p>
+        <p className="font-display text-lg font-semibold leading-snug text-ink">
+          {preview.heading}
+        </p>
       </figcaption>
       <div
         className="mt-3 [--enarratio-series-1:var(--brand)] forced-colors:[--enarratio-series-1:CanvasText] [&_svg]:block [&_svg]:h-auto [&_svg]:w-full"
