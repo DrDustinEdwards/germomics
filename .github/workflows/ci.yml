@@ -132,7 +132,7 @@ jobs:
 
   # deploy needs verify. The 18:11Z push of efc26c1 ran audit and skipped deploy because
   # verify was never created. GitHub reported an Actions incident at 18:12Z ("Incident with
-  # Actions and Checks API"). The workflow file was the same as the 92c30fc deploy.
+  # Actions and Checks API") and marked it mitigated at 18:43Z. The workflow file was the same as the 92c30fc deploy.
   # A later push to main runs verify and, when it passes, deploy.
   # A merge to main deploys once both jobs are green: migrations first, then the Worker, so a migration is never a
   # manual step. Dormant until the repo variable CF_DEPLOY is 'true' (with the secrets CLOUDFLARE_API_TOKEN and
