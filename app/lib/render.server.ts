@@ -200,9 +200,11 @@ type Stored = {
 };
 
 /**
- * The HTML a public read shows: the stored render while it is current, else a render in memory (the cron stores it
- * that night). A body that no longer renders keeps its last stored HTML, so a page never fails on its own text. The
- * HTML is wrapped in the version it was rendered at, which prelum-content reads to see a page left behind.
+ * The HTML a public read shows. A stored render at Prelum's version is used as it is, except a Mermaid figure this
+ * site now draws inline: that figure is replaced in memory and its caption stays, so the page is current before the
+ * row is saved again. A render older than Prelum's is rendered in memory, and the every-minute cron stores it. A body
+ * that no longer renders keeps its last stored HTML, so a page never fails on its own text. The HTML is wrapped in
+ * the version it was rendered at, which prelum-content reads to see a page left behind.
  */
 export async function storedBody(env: Env, row: Stored): Promise<{ html: string; meta: BodyMeta }> {
   if (row.renderVersion === null) return { html: row.body, meta: EMPTY_META };
