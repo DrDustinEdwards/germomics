@@ -1,4 +1,4 @@
-// Shared post detail view — reused by the public route ($slug) and the tokenized preview route.
+// Shared post detail view, reused by the public route ($slug) and the tokenized preview route.
 // Episodes keep their existing experience (player, chapters, transcript, guests); articles get an
 // editorial layout (cover, byline + reading time, table of contents, share, prev/next, related).
 // Body is rendered once via BodyRenderer for both kinds.
@@ -40,6 +40,8 @@ import {
   useHideBrokenFigures,
   FigureLightbox,
 } from "./EpisodeExtras";
+import { EpisodeContext } from "./EpisodeContext";
+import type { EpisodeContextView } from "~/lib/episode-context";
 import { usePlayer } from "~/components/player/player-context";
 import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 import { ExternalCue } from "~/components/ExternalCue";
@@ -63,6 +65,8 @@ export type DetailData = {
   preview?: boolean;
   /** Sizes from /media for the cover, artwork and people photos the loader could size (app/lib/images.server.ts). */
   images?: ImageSet;
+  /** A data preview or a schematic for this episode, outside the essay. Null when it has neither. */
+  context: EpisodeContextView | null;
 };
 
 // Lightweight "save for later": a slug set in localStorage, no server. Toggles aria-pressed. Read as an external
@@ -376,6 +380,7 @@ export function PostDetail({ data }: { data: DetailData }) {
               <EpisodeToc items={toc} />
             </div>
             <div className="min-w-0 lg:order-2">
+              {data.context ? <EpisodeContext context={data.context} /> : null}
               {post.bodyHtml ? (
                 <div ref={bodyRef}>
                   <BodyRenderer html={post.bodyHtml} />
@@ -426,7 +431,7 @@ export function PostDetail({ data }: { data: DetailData }) {
       {data.preview ? <PreviewBanner post={post} /> : null}
       <SectionTrail trail={postTrail(post)} />
       {post.coverImage ? (
-        // Cover is the article LCP element — load it eagerly with high priority; the fixed aspect
+        // Cover is the article LCP element. Load it eagerly with high priority; the fixed aspect
         // ratio reserves space so it doesn't shift layout (CLS).
         <Picture
           src={post.coverImage}

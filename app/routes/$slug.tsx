@@ -19,6 +19,7 @@ import { faqPage, jsonLd } from "@drdustinedwards/site-helpers/schema";
 import type { HeadImage } from "@drdustinedwards/site-helpers/head";
 import { pageToc, storedBody } from "~/lib/render.server";
 import { postImages, shareImage } from "~/lib/images.server";
+import { episodeContext } from "~/lib/episode-context.server";
 import { PostDetail, type DetailData } from "~/components/content/PostDetail";
 
 // An episode's page is the player's own (its surface, waveform, transcript read-along, chapters and progress), so it
@@ -117,6 +118,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     cover,
     readingMinutes: post.readingTime ?? 1,
     toc: pageToc(meta),
+    context: post.kind === "episode" ? episodeContext(post.slug) : null,
     seriesTitle: show.title,
     ogImage,
   };

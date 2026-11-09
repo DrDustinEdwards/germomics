@@ -14,6 +14,7 @@
 //
 // Prelum is imported on first use, so the public routes that only read stored HTML never load the pipeline.
 import type * as Prelum from "@drdustinedwards/site-helpers/render/nomath";
+import { diagramPack } from "~/lib/diagram-pack";
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { and, eq, inArray, isNotNull, like, ne, sql } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
@@ -134,6 +135,9 @@ export async function renderMarkdown(
     },
     options: {
       assertSafe: true,
+      // :::diagram only. editorialPack also loads enarratio/plot for :::chart, which this site does not
+      // ship (hard rule 4). The drawing is still Prelum's: buildDiagramModel, renderDiagramHast, drawDiagrams.
+      packs: [diagramPack()],
       priority: { taken: lcpAbove },
       media: {
         keyOf: imageKeyOf,
