@@ -51,8 +51,5 @@ function previewOf(
 export function episodeContext(slug: string): EpisodeContextView | null {
   const spec = EPISODE_CONTEXT[slug];
   if (!spec) return null;
-  return {
-    preview: spec.preview ? previewOf(spec.preview) : null,
-    schematic: spec.schematic ?? null,
-  };
+  return { preview: previewOf(spec.preview) };
 }

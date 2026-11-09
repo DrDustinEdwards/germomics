@@ -219,3 +219,38 @@
   /* The first level's text lines up with the page's edge; its hover background reaches into the gutter. */
   margin-inline-start: calc(-1 * var(--space-2));
 }
+
+/* Prelum :::diagram: one drawing per theme. The SVG is an image, so it cannot follow the page variables.
+   The light drawing shows unless the page is dark. */
+.diagram-title {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-align: center;
+}
+.diagram-figure .diagram-image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin: 0.75rem auto 0;
+  border: 0;
+}
+.diagram-dark {
+  display: none;
+}
+:root[data-theme="dark"] .diagram-light {
+  display: none;
+}
+:root[data-theme="dark"] .diagram-dark {
+  display: block;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .diagram-light {
+    display: none;
+  }
+  :root:not([data-theme="light"]) .diagram-dark {
+    display: block;
+  }
+}
