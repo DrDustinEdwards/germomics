@@ -1,59 +1,63 @@
 import { describe, expect, it } from "vitest";
-import { buildDiagramModel, diagramAssetPath } from "@drdustinedwards/site-helpers/render/diagram";
-import { DIAGRAM_ASSET_PREFIX } from "~/lib/diagram-colors";
+import { buildDiagramModel } from "@drdustinedwards/site-helpers/render/diagram";
 import { EPISODE_DIAGRAMS, diagramMarkdown } from "~/lib/episode-diagrams";
+import { diagramKey, inlineBlogDiagrams, type DiagramFiles } from "~/lib/blog-diagram.server";
 import { renderMarkdown } from "~/lib/render.server";
-import diagramSizes from "../public/diagrams/sizes.json";
+import pcr from "../public/blog-diagrams/on-the-right-taq.html?raw";
+import cholera from "../public/blog-diagrams/confessions-of-a-cholera-girl.html?raw";
+import prion from "../public/blog-diagrams/one-flew-over-the-kuru-nest.html?raw";
+import rabies from "../public/blog-diagrams/rabies-day-out.html?raw";
+import lepto from "../public/blog-diagrams/hell-on-weils.html?raw";
+import diphtheria from "../public/blog-diagrams/antitoxin-togo-please.html?raw";
 
-const BANNED = [
-  "you should",
-  "see a doctor",
-  "see a healthcare",
-  "post-exposure",
-  "wash the wound",
-];
-const sizes = diagramSizes as Record<string, { width: number; height: number }>;
+const RAW: Record<string, string> = {
+  "on-the-right-taq": pcr,
+  "confessions-of-a-cholera-girl": cholera,
+  "one-flew-over-the-kuru-nest": prion,
+  "rabies-day-out": rabies,
+  "hell-on-weils": lepto,
+  "antitoxin-togo-please": diphtheria,
+};
 
-describe("the proposed mechanism diagrams", () => {
-  it("is one Mermaid figure for each of the six episodes", () => {
-    expect(EPISODE_DIAGRAMS.map((d) => d.slug)).toEqual([
-      "on-the-right-taq",
-      "confessions-of-a-cholera-girl",
-      "one-flew-over-the-kuru-nest",
-      "rabies-day-out",
-      "hell-on-weils",
-      "antitoxin-togo-please",
-    ]);
+function files(): DiagramFiles {
+  return new Map(
+    EPISODE_DIAGRAMS.map((diagram) => [diagramKey(diagram.mermaid), RAW[diagram.slug] ?? ""]),
+  );
+}
+
+describe("the mechanism diagrams", () => {
+  it("keeps each inline figure where the essay's diagram block sits, with its caption", async () => {
+    const drawings = files();
+    for (const diagram of EPISODE_DIAGRAMS) {
+      const key = buildDiagramModel(
+        { title: diagram.title, alt: diagram.alt },
+        diagram.mermaid,
+      ).key;
+      expect(diagramKey(diagram.mermaid), diagram.slug).toBe(key);
+      expect(RAW[diagram.slug], diagram.slug).toContain('class="blog-diagram"');
+      expect(RAW[diagram.slug], diagram.slug).toContain(`<title>${diagram.title}</title>`);
+      expect(RAW[diagram.slug], diagram.slug).toContain("<desc>");
+
+      const markdown = `Before the figure.\n\n${diagramMarkdown(diagram)}\n\nAfter the figure.`;
+      const { html } = await renderMarkdown(markdown, async () => [], { diagrams: drawings });
+      const figureAt = html.indexOf('class="blog-diagram"');
+      const beforeAt = html.indexOf("Before the figure.");
+      const afterAt = html.indexOf("After the figure.");
+      expect(beforeAt, diagram.slug).toBeGreaterThanOrEqual(0);
+      expect(figureAt, diagram.slug).toBeGreaterThan(beforeAt);
+      expect(afterAt, diagram.slug).toBeGreaterThan(figureAt);
+      expect(html, diagram.slug).toContain(`<title id="bd-${key}-title">${diagram.title}</title>`);
+      expect(html, diagram.slug).toContain(`<desc id="bd-${key}-desc">`);
+      expect(html, diagram.slug).toContain("<figcaption>");
+      expect(html, diagram.slug).toContain("doi.org");
+      expect(html, diagram.slug).not.toContain("diagram-image");
+      expect(html, diagram.slug).not.toContain("/diagrams/");
+      expect(html, diagram.slug).toContain('width="680"');
+    }
   });
 
-  it("renders each block through Prelum as a sized light and dark drawing", async () => {
-    for (const diagram of EPISODE_DIAGRAMS) {
-      const markdown = diagramMarkdown(diagram);
-      expect(markdown, diagram.slug).toContain("```mermaid");
-      expect(markdown.toLowerCase(), diagram.slug).toContain("schematic");
-      expect(markdown, diagram.slug).not.toContain("/games/");
-      for (const phrase of BANNED)
-        expect(markdown.toLowerCase(), diagram.slug).not.toContain(phrase);
-
-      const model = buildDiagramModel({ title: diagram.title, alt: diagram.alt }, diagram.mermaid);
-      const light = diagramAssetPath(model.key, "light", DIAGRAM_ASSET_PREFIX);
-      const dark = diagramAssetPath(model.key, "dark", DIAGRAM_ASSET_PREFIX);
-      const lightName = light.slice(light.lastIndexOf("/") + 1);
-      const darkName = dark.slice(dark.lastIndexOf("/") + 1);
-      expect(sizes[lightName]?.width, lightName).toBeGreaterThan(0);
-      expect(sizes[darkName]?.height, darkName).toBeGreaterThan(0);
-
-      const { html } = await renderMarkdown(markdown, async () => []);
-      expect(html, diagram.slug).toContain('class="diagram-figure"');
-      expect(html, diagram.slug).toContain(`>${diagram.title}<`);
-      expect(html, diagram.slug).toContain(diagram.alt.replaceAll("'", "&#x27;").slice(0, 40));
-      expect(html, diagram.slug).toContain(`class="diagram-image diagram-light"`);
-      expect(html, diagram.slug).toContain(`class="diagram-image diagram-dark"`);
-      expect(html, diagram.slug).toContain(`src="${light}"`);
-      expect(html, diagram.slug).toContain(`src="${dark}"`);
-      expect(html, diagram.slug).toContain(`width="${sizes[lightName].width}"`);
-      expect(html, diagram.slug).toContain("<figcaption>");
-      expect(html, diagram.slug).not.toContain("<pre>");
-    }
-  }, 60_000);
+  it("leaves a stored figure alone when this site has no drawing for its key", () => {
+    const stored = `<p>Before.</p><figure class="diagram-figure"><img src="/diagrams/germomics-aaaaaaaa-light.svg" alt="x"><figcaption><p>Keep.</p></figcaption></figure><p>After.</p>`;
+    expect(inlineBlogDiagrams(stored, files())).toBe(stored);
+  });
 });

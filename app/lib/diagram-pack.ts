@@ -1,28 +1,21 @@
-// The site's :::diagram pack. It calls Prelum's diagram model and HTML (render/diagram) and the
-// drawings scripts/draw-diagrams.ts committed. It does not use editorialPack, because that pack also
-// loads enarratio/plot for :::chart, and this site does not ship Observable Plot.
+// :::diagram stays in the essay. This pack turns the Mermaid fence into the same figure Prelum
+// would name (a light image whose address carries the source hash) plus the author's caption.
+// render.server.ts then swaps that image for the inline drawing of the same hash.
 import { visit } from "unist-util-visit";
-import {
-  DIAGRAM_THEMES,
-  buildDiagramModel,
-  diagramAssetPath,
-  diagramSize,
-  renderDiagramHast,
-} from "@drdustinedwards/site-helpers/render/diagram";
-import diagramSizes from "../../public/diagrams/sizes.json";
-import { DIAGRAM_ASSET_PREFIX } from "~/lib/diagram-colors";
+import { diagramKey } from "~/lib/blog-diagram.server";
 
-type Model = ReturnType<typeof buildDiagramModel>;
-type Warn = (warning: { line: number | null; message: string }) => void;
+type Diagram = { key: string; alt: string };
 
-const sizes = diagramSizes as Record<string, { width: number; height: number }>;
+function h(tagName: string, properties: Record<string, unknown>, children: unknown[] = []) {
+  return { type: "element", tagName, properties, children };
+}
 
 function attributesOf(node: { attributes?: Record<string, string> }): Record<string, string> {
   return node.attributes ?? {};
 }
 
-/** remark plugin: (file, sink) => (tree) => void, the shape render()'s packs use. */
-function remarkDiagram(file: string, sink: Model[]) {
+/** remark plugin: (sink) => (tree) => void, the shape render()'s packs use. */
+function remarkDiagram(sink: Diagram[]) {
   return (tree: unknown) => {
     visit(
       tree as never,
@@ -44,15 +37,15 @@ function remarkDiagram(file: string, sink: Model[]) {
             `:::diagram${line ? ` on line ${line}` : ""} requires exactly one \`\`\`mermaid fence, found ${fences.length}`,
           );
         }
-        let model: Model;
-        try {
-          model = buildDiagramModel(attributesOf(node), fence.value ?? "");
-        } catch (error) {
+        const attrs = attributesOf(node);
+        const alt = (attrs.alt ?? "").trim();
+        if (!alt) {
           throw new Error(
-            `${error instanceof Error ? error.message : "The diagram could not be read"}${line ? ` (line ${line})` : ""}`,
+            `:::diagram "${attrs.title ?? "untitled"}" requires an alt attribute${line ? ` (line ${line})` : ""}`,
           );
         }
-        const index = sink.push(model) - 1;
+        const key = diagramKey(fence.value ?? "");
+        const index = sink.push({ key, alt }) - 1;
         node.data = {
           ...node.data,
           hName: "figure",
@@ -65,8 +58,7 @@ function remarkDiagram(file: string, sink: Model[]) {
 }
 
 /** rehype plugin: (models) => (tree) => void. */
-function rehypeDiagram(models: Model[]) {
-  const render = renderDiagramHast(DIAGRAM_ASSET_PREFIX, sizes);
+function rehypeDiagram(models: Diagram[]) {
   return (tree: unknown) => {
     visit(
       tree as never,
@@ -75,9 +67,24 @@ function rehypeDiagram(models: Model[]) {
         const at = node.properties?.["data-diagram"] ?? node.properties?.dataDiagram;
         if (at === undefined) return;
         const model = models[Number(at)];
+        if (!model) return;
         delete node.properties?.["data-diagram"];
         delete node.properties?.dataDiagram;
-        node.children = render(model, (node.children ?? []) as never);
+        const caption = node.children ?? [];
+        node.children = [
+          h(
+            "img",
+            {
+              className: ["diagram-image", "diagram-light"],
+              src: `/diagrams/germomics-${model.key}-light.svg`,
+              alt: model.alt,
+              width: 680,
+              height: 188,
+            },
+            [],
+          ),
+          ...(caption.length > 0 ? [h("figcaption", {}, caption)] : []),
+        ];
       },
     );
   };
@@ -87,26 +94,12 @@ export function diagramPack() {
   return {
     name: "diagram",
     directives: ["diagram"] as const,
-    setup({ file, warn }: { file: string; body: string; warn: Warn }) {
-      const diagrams: Model[] = [];
+    setup() {
+      const diagrams: Diagram[] = [];
       return {
-        remark: [[remarkDiagram, file, diagrams]] as [unknown, ...unknown[]][],
+        remark: [[remarkDiagram, diagrams]] as [unknown, ...unknown[]][],
         rehype: [[rehypeDiagram, diagrams]] as [unknown, ...unknown[]][],
-        result: () => {
-          for (const diagram of diagrams) {
-            const drawn = DIAGRAM_THEMES.every((theme) =>
-              diagramSize(sizes, diagramAssetPath(diagram.key, theme, DIAGRAM_ASSET_PREFIX)),
-            );
-            if (drawn) continue;
-            warn({
-              line: null,
-              message: `:::diagram "${diagram.title || diagram.key}" is not drawn yet, so its images are unsized until it is and the body is rendered again`,
-            });
-          }
-          return {
-            diagrams: diagrams.map((diagram) => ({ key: diagram.key, source: diagram.source })),
-          };
-        },
+        result: () => ({ diagrams: diagrams.map((diagram) => ({ key: diagram.key })) }),
       };
     },
   };

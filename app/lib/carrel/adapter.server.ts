@@ -869,7 +869,7 @@ export function createCarrelAdapter(
             ({ title, body } = { title: null, body: source });
           }
         }
-        const { html } = await rendered(() => renderMarkdown(body, libraryMedia(env)));
+        const { html } = await rendered(() => renderMarkdown(body, libraryMedia(env), { env }));
         const heading = (title ?? "Untitled").replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
         return previewDocument({
           title: title ?? "Untitled",

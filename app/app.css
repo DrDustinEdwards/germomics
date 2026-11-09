@@ -220,11 +220,8 @@
   margin-inline-start: calc(-1 * var(--space-2));
 }
 
-/* Prelum :::diagram. The SVG is an image, so it cannot follow the page variables, and it cannot
-   load the site's webfont. Prelum draws the labels in a system sans at 16px, inside a box about
-   168 to 216 px wide. Width 100% would scale that box up to the column and the type with it.
-   Keep the intrinsic size, center it, and shrink it only when the column is narrower.
-   Prose images get a rounded border. A diagram is a drawing, so it does not. */
+/* Inline mechanism figures use the page's color and font variables. A stored Mermaid
+   image, if one is still in the HTML, keeps the width Prelum measured and is not stretched. */
 .diagram-title {
   margin: 0 0 0.5rem;
   font-family: var(--font-display);
@@ -259,4 +256,116 @@
   :root:not([data-theme="light"]) .diagram-figure .diagram-dark {
     display: block;
   }
+}
+
+.blog-diagram-block {
+  margin: 0 auto 2.5rem;
+  max-width: 680px;
+}
+.blog-diagram {
+  margin: 0;
+}
+.blog-diagram svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+}
+.blog-diagram .node-neutral {
+  fill: var(--surface);
+  stroke: var(--brand);
+  color: var(--brand);
+}
+.blog-diagram .node-accent {
+  fill: color-mix(in srgb, var(--brand) 16%, var(--card));
+  stroke: var(--brand);
+  color: var(--brand);
+}
+.blog-diagram .node-success {
+  fill: color-mix(in srgb, var(--accent) 14%, var(--card));
+  stroke: var(--accent);
+  color: var(--accent);
+}
+.blog-diagram .node-warning {
+  fill: color-mix(in srgb, var(--brand-strong) 18%, var(--card));
+  stroke: var(--brand-strong);
+  color: var(--brand-strong);
+}
+.blog-diagram .node-info {
+  fill: var(--surface);
+  stroke: var(--accent);
+  color: var(--accent);
+}
+.blog-diagram .node-neutral,
+.blog-diagram .node-accent,
+.blog-diagram .node-success,
+.blog-diagram .node-warning,
+.blog-diagram .node-info {
+  stroke-width: 1.5;
+}
+.blog-diagram .glyph {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.blog-diagram .glyph.primer {
+  stroke-width: 4;
+}
+.blog-diagram .glyph.stop {
+  stroke-width: 3;
+}
+.blog-diagram .bead {
+  fill: var(--card);
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+.blog-diagram .enzyme {
+  fill: currentColor;
+  stroke: none;
+}
+.blog-diagram .organ,
+.blog-diagram .membrane {
+  fill: var(--surface);
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+.blog-diagram .membrane {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 6;
+}
+.blog-diagram .label-primary {
+  fill: var(--ink);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+}
+.blog-diagram .label-secondary {
+  fill: var(--muted);
+  font-family: var(--font-display);
+  font-size: 11px;
+}
+.blog-diagram .connector {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+}
+.blog-diagram .connector.quiet {
+  stroke: var(--border);
+}
+.blog-diagram .arrow-head {
+  fill: var(--muted);
+}
+.blog-diagram-credit {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.blog-diagram-credit a {
+  color: var(--accent);
 }

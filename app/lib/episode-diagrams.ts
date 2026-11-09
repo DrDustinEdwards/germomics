@@ -1,7 +1,5 @@
-// The six mechanism figures, as Prelum :::diagram blocks. They are not in the published essays.
-// Each `markdown` value is the exact addition for a Carrel draft of that episode, inserted at
-// `placement` and changing none of the surrounding prose. scripts/draw-diagrams.ts draws the
-// Mermaid, and app/lib/render.server.ts renders a saved block into the two themed images.
+// The :::diagram blocks saved in the six essays. The Mermaid fence is the key. The renderer
+// swaps that figure for the inline SVG in public/blog-diagrams and keeps the caption.
 
 export type EpisodeDiagram = {
   slug: string;

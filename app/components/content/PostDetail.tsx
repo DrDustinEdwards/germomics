@@ -65,7 +65,7 @@ export type DetailData = {
   preview?: boolean;
   /** Sizes from /media for the cover, artwork and people photos the loader could size (app/lib/images.server.ts). */
   images?: ImageSet;
-  /** A data preview or a schematic for this episode, outside the essay. Null when it has neither. */
+  /** A data preview for this episode, outside the essay. Null when it has none. */
   context: EpisodeContextView | null;
 };
 

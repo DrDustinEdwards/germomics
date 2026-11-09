@@ -19,6 +19,7 @@ import { logEvent } from "@dustinedwards/site-runtime/log";
 import { and, eq, inArray, isNotNull, like, ne, sql } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { contentBlocks, media, posts, type Post } from "~/db/schema";
+import { inlineBlogDiagrams, loadBlogDiagrams, type DiagramFiles } from "~/lib/blog-diagram.server";
 import { imageKeyOf, images, mediaPath, type ImageUseName } from "~/lib/images";
 import { SITE_ORIGIN } from "~/lib/site";
 import type { BodyMeta } from "~/lib/types";
@@ -96,7 +97,11 @@ export function lcpAboveBody(post: { kind?: string | null; coverImage?: string |
 export async function renderMarkdown(
   body: string,
   lookup: MediaLookup,
-  { lcpAbove = false }: { lcpAbove?: boolean } = {},
+  {
+    lcpAbove = false,
+    env,
+    diagrams,
+  }: { lcpAbove?: boolean; env?: Env; diagrams?: DiagramFiles } = {},
 ): Promise<Rendered> {
   const { render } = await import("@drdustinedwards/site-helpers/render/nomath");
   const keys = [
@@ -135,8 +140,8 @@ export async function renderMarkdown(
     },
     options: {
       assertSafe: true,
-      // :::diagram only. editorialPack also loads enarratio/plot for :::chart, which this site does not
-      // ship (hard rule 4). The drawing is still Prelum's: buildDiagramModel, renderDiagramHast, drawDiagrams.
+      // :::diagram names its Mermaid by hash. The inline drawing replaces that image below.
+      // editorialPack is not used: it also loads enarratio/plot for :::chart, which this site does not ship.
       packs: [diagramPack()],
       priority: { taken: lcpAbove },
       media: {
@@ -158,8 +163,9 @@ export async function renderMarkdown(
       },
     },
   });
+  const files = diagrams ?? (env ? await loadBlogDiagrams(env) : new Map());
   return {
-    html: String(out.html),
+    html: inlineBlogDiagrams(String(out.html), files),
     meta: { toc: out.toc, faq: out.faq },
     renderVersion: out.renderVersion,
     readingMinutes: out.readingMinutes,
@@ -168,7 +174,7 @@ export async function renderMarkdown(
 
 /** What a save writes for a post body: the Markdown, its render and the reading time. */
 export async function postBodyFields(env: Env, body: string, lcpAbove: boolean) {
-  const r = await renderMarkdown(body, libraryMedia(env), { lcpAbove });
+  const r = await renderMarkdown(body, libraryMedia(env), { lcpAbove, env });
   return {
     body,
     bodyHtml: r.html,
@@ -180,7 +186,7 @@ export async function postBodyFields(env: Env, body: string, lcpAbove: boolean) 
 
 /** What a save writes for a page: the Markdown and its render. */
 export async function pageFields(env: Env, value: string) {
-  const r = await renderMarkdown(value, libraryMedia(env));
+  const r = await renderMarkdown(value, libraryMedia(env), { env });
   return { value, bodyHtml: r.html, renderVersion: r.renderVersion };
 }
 
@@ -194,9 +200,11 @@ type Stored = {
 };
 
 /**
- * The HTML a public read shows: the stored render while it is current, else a render in memory (the cron stores it
- * that night). A body that no longer renders keeps its last stored HTML, so a page never fails on its own text. The
- * HTML is wrapped in the version it was rendered at, which prelum-content reads to see a page left behind.
+ * The HTML a public read shows. A stored render at Prelum's version is used as it is, except a Mermaid figure this
+ * site now draws inline: that figure is replaced in memory and its caption stays, so the page is current before the
+ * row is saved again. A render older than Prelum's is rendered in memory, and the every-minute cron stores it. A body
+ * that no longer renders keeps its last stored HTML, so a page never fails on its own text. The HTML is wrapped in
+ * the version it was rendered at, which prelum-content reads to see a page left behind.
  */
 export async function storedBody(env: Env, row: Stored): Promise<{ html: string; meta: BodyMeta }> {
   if (row.renderVersion === null) return { html: row.body, meta: EMPTY_META };
@@ -204,10 +212,17 @@ export async function storedBody(env: Env, row: Stored): Promise<{ html: string;
     html: html && `<div data-render-version="${version}">${html}</div>`,
     meta,
   });
-  if (row.renderVersion === RENDER_VERSION && row.bodyHtml !== null)
-    return shown(row.bodyHtml, RENDER_VERSION, row.bodyMeta ?? EMPTY_META);
+  if (row.renderVersion === RENDER_VERSION && row.bodyHtml !== null) {
+    const html = row.bodyHtml.includes("diagram-figure")
+      ? inlineBlogDiagrams(row.bodyHtml, await loadBlogDiagrams(env))
+      : row.bodyHtml;
+    return shown(html, RENDER_VERSION, row.bodyMeta ?? EMPTY_META);
+  }
   try {
-    const r = await renderMarkdown(row.body, libraryMedia(env), { lcpAbove: lcpAboveBody(row) });
+    const r = await renderMarkdown(row.body, libraryMedia(env), {
+      lcpAbove: lcpAboveBody(row),
+      env,
+    });
     return shown(r.html, r.renderVersion, r.meta);
   } catch (err) {
     console.error(
@@ -256,7 +271,7 @@ export async function rerenderUsing(env: Env, key: string): Promise<number> {
   let done = 0;
   for (const p of postRows) {
     try {
-      const r = await renderMarkdown(p.body, lookup, { lcpAbove: lcpAboveBody(p) });
+      const r = await renderMarkdown(p.body, lookup, { lcpAbove: lcpAboveBody(p), env });
       await db
         .update(posts)
         .set({
@@ -277,7 +292,7 @@ export async function rerenderUsing(env: Env, key: string): Promise<number> {
   }
   for (const b of pageRows) {
     try {
-      const r = await renderMarkdown(b.value, lookup);
+      const r = await renderMarkdown(b.value, lookup, { env });
       await db
         .update(contentBlocks)
         .set({ bodyHtml: r.html, renderVersion: r.renderVersion })
@@ -332,7 +347,7 @@ export async function rerenderStale(
   };
   for (const p of postRows) {
     await attempt(`post ${p.id}`, async () => {
-      const r = await renderMarkdown(p.body, lookup, { lcpAbove: lcpAboveBody(p) });
+      const r = await renderMarkdown(p.body, lookup, { lcpAbove: lcpAboveBody(p), env });
       await db
         .update(posts)
         .set({
@@ -346,7 +361,7 @@ export async function rerenderStale(
   }
   for (const b of pageRows) {
     await attempt(b.key, async () => {
-      const r = await renderMarkdown(b.value, lookup);
+      const r = await renderMarkdown(b.value, lookup, { env });
       await db
         .update(contentBlocks)
         .set({ bodyHtml: r.html, renderVersion: r.renderVersion })
