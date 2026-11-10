@@ -295,6 +295,19 @@
 .blog-diagram .ln.tint-accent {
   fill: color-mix(in srgb, var(--accent) 14%, transparent);
 }
+.blog-diagram .ln.tint2-brand {
+  fill: color-mix(in srgb, var(--brand) 30%, transparent);
+}
+.blog-diagram .ln.tint2-accent {
+  fill: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.blog-diagram .ln.tint-ink {
+  fill: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+.blog-diagram .ln.dots {
+  stroke-width: 5;
+  stroke-dasharray: 0 7;
+}
 .blog-diagram .label-primary {
   fill: var(--ink);
   font-family: var(--font-display);

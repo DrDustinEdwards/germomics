@@ -129,32 +129,6 @@ Sources: [Gazik, Holodniy and Bayat, Viruses (2025)](https://doi.org/10.3390/v18
     placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
   },
   {
-    slug: "a-sky-full-of-sars",
-    file: "a-sky-full-of-sars--spike",
-    title: "SARS coronavirus: spike, receptor and host range",
-    alt: "The SARS coronavirus has a crown of spike proteins. A spike binds ACE2, a receptor on a human cell, like a key in a lock. The 2002 to 2003 outbreak in people was followed by the discovery of related coronaviruses in bats, and of a closely related virus in palm civets sold in markets in southern China.",
-    mermaid: `flowchart TD
-  sars0["Spike binds ACE2"] --> sars1["Related viruses in bats"]
-  sars1["Related viruses in bats"] --> sars2["Civets, then people"]`,
-    caption: `A schematic of binding and of the host chain, not a measurement of affinity. The route to people is simplified.
-
-Sources: [Li and colleagues, Nature (2003)](https://doi.org/10.1038/nature02145); [Li and colleagues, Science (2005)](https://doi.org/10.1126/science.1118391); [Guan and colleagues, Science (2003)](https://doi.org/10.1126/science.1087139).`,
-    placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
-  },
-  {
-    slug: "theres-something-about-typhoid-mary",
-    file: "theres-something-about-typhoid-mary--carrier",
-    title: "How Salmonella Typhi becomes a carrier state",
-    alt: "Salmonella Typhi is swallowed in food or water, crosses the gut wall carried inside macrophages, and can reach the gallbladder, where it can persist on gallstones in a biofilm. A carrier can shed it in stool for months or years, sometimes without symptoms.",
-    mermaid: `flowchart TD
-  typhoid0["Swallowed"] --> typhoid1["Carried in macrophages"]
-  typhoid1["Carried in macrophages"] --> typhoid2["Persists in the gallbladder"]`,
-    caption: `A schematic of the carrier state, not a timeline for one person. Not every infected person becomes a carrier.
-
-Sources: [Gonzalez-Escobedo, Marshall and Gunn, Nature Reviews Microbiology (2011)](https://doi.org/10.1038/nrmicro2490); [Crawford and colleagues, PNAS (2010)](https://doi.org/10.1073/pnas.1000862107).`,
-    placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
-  },
-  {
     slug: "on-the-right-taq",
     file: "on-the-right-taq--heat",
     title: "Why PCR uses a heat-stable polymerase",
@@ -195,31 +169,6 @@ Sources: [CDC, About Syphilis](https://www.cdc.gov/syphilis/about/index.html); [
     placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
   },
   {
-    slug: "confessions-of-a-cholera-girl",
-    file: "confessions-of-a-cholera-girl--rehydration",
-    title: "Why oral rehydration works in cholera",
-    alt: "Cholera toxin keeps a chloride channel in the gut cell membrane open, so chloride and water leave the cell. The transporter that pulls sodium in together with glucose still works. An oral rehydration solution with glucose and salt uses that transporter, and water follows the sodium into the cell.",
-    mermaid: `flowchart TD
-  ors0["Toxin holds the channel open"] --> ors1["Glucose carries sodium"]
-  ors1["Glucose carries sodium"] --> ors2["Water follows"]`,
-    caption: `A schematic of the transport idea, not a dosing guide.
-
-Sources: [Field, Journal of Clinical Investigation (2003)](https://doi.org/10.1172/JCI18326).`,
-    placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
-  },
-  {
-    slug: "antitoxin-togo-please",
-    file: "antitoxin-togo-please--antitoxin-vaccine",
-    title: "Antitoxin and vaccine are different protection",
-    alt: "Antitoxin is borrowed antibodies: an animal is immunized, and its serum is given to a patient who is already infected, which neutralizes the toxin now. A vaccine uses a harmless form of the toxin, a toxoid, so the person's own cells make antibodies and keep a memory that lasts years, with boosters.",
-    mermaid: `flowchart TD
-  antitoxin0["Borrowed antibodies"] --> antitoxin1["Own antibodies"]`,
-    caption: `A schematic of two kinds of protection, not a treatment or vaccination schedule.
-
-Sources: [Centers for Disease Control and Prevention, Pink Book, Diphtheria](https://www.cdc.gov/pinkbook/hcp/table-of-contents/chapter-8-diphtheria.html).`,
-    placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
-  },
-  {
     slug: "hell-on-weils",
     file: "hell-on-weils--course",
     title: "The two phases of leptospirosis",
@@ -230,19 +179,6 @@ Sources: [Centers for Disease Control and Prevention, Pink Book, Diphtheria](htt
     caption: `A schematic of the usual course, not a measured fever curve. Many infections stay mild and never reach the second phase.
 
 Sources: [Haake and Levett, Current Topics in Microbiology and Immunology (2015)](https://doi.org/10.1007/978-3-662-45059-8_5); [Levett, Clinical Microbiology Reviews (2001)](https://doi.org/10.1128/CMR.14.2.296-326.2001).`,
-    placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
-  },
-  {
-    slug: "one-flew-over-the-kuru-nest",
-    file: "one-flew-over-the-kuru-nest--incubation",
-    title: "Kuru: the incubation period",
-    alt: "Kuru has a very long incubation period. From an exposure, often in childhood, the average was about a dozen years, and some cases appeared after 50 years or more. Symptoms of lost coordination and tremor then lead to death, usually within a year or so.",
-    mermaid: `flowchart TD
-  kuru0["Exposure"] --> kuru1["Years of incubation"]
-  kuru1["Years of incubation"] --> kuru2["Symptoms"]`,
-    caption: `A schematic of reported incubation periods, not a measurement from one case.
-
-Sources: [Alpers, Philosophical Transactions of the Royal Society B (2008)](https://doi.org/10.1098/rstb.2008.0071); [Collinge and colleagues, The Lancet (2006)](https://doi.org/10.1016/S0140-6736(06)68930-7); [Alpers, Communicable Diseases Intelligence (2005)](https://doi.org/10.33321/cdi.2005.29.46).`,
     placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
   },
   {
@@ -279,6 +215,70 @@ Sources: [Moore and Larsen, Public Health Reports (1957), Table 1](https://stack
     caption: `Every death the surveillance team recorded in these nine years. It does not show the peak of the epidemic in the late 1950s, which has no annual table.
 
 Sources: [Alpers for the Kuru Surveillance Team, Communicable Diseases Intelligence (2005), Table 1](https://doi.org/10.33321/cdi.2005.29.46).`,
+    placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
+  },
+  {
+    slug: "a-sky-full-of-sars",
+    file: "a-sky-full-of-sars--spike",
+    title: "SARS coronavirus: spike, receptor and host range",
+    alt: "The SARS coronavirus has a crown of spike proteins. A spike binds ACE2, a receptor on a human cell, like a key in a lock. The 2002 to 2003 outbreak in people was followed by the discovery of related coronaviruses in bats, and of a closely related virus in palm civets sold in markets in southern China.",
+    mermaid: `flowchart TD
+  sars0["Spike binds ACE2"] --> sars1["Related viruses in bats"]
+  sars1["Related viruses in bats"] --> sars2["Civets, then people"]`,
+    caption: `A schematic of binding and of the host chain, not a measurement of affinity. The route to people is simplified.
+
+Sources: [Li and colleagues, Nature (2003)](https://doi.org/10.1038/nature02145); [Li and colleagues, Science (2005)](https://doi.org/10.1126/science.1118391); [Guan and colleagues, Science (2003)](https://doi.org/10.1126/science.1087139).`,
+    placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
+  },
+  {
+    slug: "theres-something-about-typhoid-mary",
+    file: "theres-something-about-typhoid-mary--carrier",
+    title: "How Salmonella Typhi becomes a carrier state",
+    alt: "Salmonella Typhi is swallowed in food or water, crosses the gut wall carried inside macrophages, and can reach the gallbladder, where it can persist on gallstones in a biofilm. A carrier can shed it in stool for months or years, sometimes without symptoms.",
+    mermaid: `flowchart TD
+  typhoid0["Swallowed"] --> typhoid1["Carried in macrophages"]
+  typhoid1["Carried in macrophages"] --> typhoid2["Persists in the gallbladder"]`,
+    caption: `A schematic of the carrier state, not a timeline for one person. Not every infected person becomes a carrier.
+
+Sources: [Gonzalez-Escobedo, Marshall and Gunn, Nature Reviews Microbiology (2011)](https://doi.org/10.1038/nrmicro2490); [Crawford and colleagues, PNAS (2010)](https://doi.org/10.1073/pnas.1000862107).`,
+    placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
+  },
+  {
+    slug: "confessions-of-a-cholera-girl",
+    file: "confessions-of-a-cholera-girl--rehydration",
+    title: "Why oral rehydration works in cholera",
+    alt: "Cholera toxin keeps a chloride channel in the gut cell membrane open, so chloride and water leave the cell. The transporter that pulls sodium in together with glucose still works. An oral rehydration solution with glucose and salt uses that transporter, and water follows the sodium into the cell.",
+    mermaid: `flowchart TD
+  ors0["Toxin holds the channel open"] --> ors1["Glucose carries sodium"]
+  ors1["Glucose carries sodium"] --> ors2["Water follows"]`,
+    caption: `A schematic of the transport idea, not a dosing guide.
+
+Sources: [Field, Journal of Clinical Investigation (2003)](https://doi.org/10.1172/JCI18326).`,
+    placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
+  },
+  {
+    slug: "one-flew-over-the-kuru-nest",
+    file: "one-flew-over-the-kuru-nest--incubation",
+    title: "Kuru: the incubation period",
+    alt: "Kuru has a very long incubation period. From an exposure, often in childhood, the average was about a dozen years, and some cases appeared after 50 years or more. Symptoms of lost coordination and tremor then lead to death, usually within a year or so.",
+    mermaid: `flowchart TD
+  kuru0["Exposure"] --> kuru1["Years of incubation"]
+  kuru1["Years of incubation"] --> kuru2["Symptoms"]`,
+    caption: `A schematic of reported incubation periods, not a measurement from one case.
+
+Sources: [Alpers, Philosophical Transactions of the Royal Society B (2008)](https://doi.org/10.1098/rstb.2008.0071); [Collinge and colleagues, The Lancet (2006)](https://doi.org/10.1016/S0140-6736(06)68930-7); [Alpers, Communicable Diseases Intelligence (2005)](https://doi.org/10.33321/cdi.2005.29.46).`,
+    placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
+  },
+  {
+    slug: "antitoxin-togo-please",
+    file: "antitoxin-togo-please--antitoxin-vaccine",
+    title: "Antitoxin and vaccine are different protection",
+    alt: "Antitoxin is borrowed antibodies: an animal is immunized, and its serum is given to a patient who is already infected, which neutralizes the toxin now. A vaccine uses a harmless form of the toxin, a toxoid, so the person's own cells make antibodies and keep a memory that lasts years, with boosters.",
+    mermaid: `flowchart TD
+  antitoxin0["Borrowed antibodies"] --> antitoxin1["Own antibodies"]`,
+    caption: `A schematic of two kinds of protection, not a treatment or vaccination schedule.
+
+Sources: [Centers for Disease Control and Prevention, Pink Book, Diphtheria](https://www.cdc.gov/pinkbook/hcp/table-of-contents/chapter-8-diphtheria.html).`,
     placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
   },
 ];
