@@ -1,0 +1,23 @@
+{
+  "hell-on-weils": {
+    "source": "leptospirosis-cycle",
+    "title": "Leptospirosis: reservoir, environment, exposure",
+    "desc": "Reservoir kidney leads to Shed in urine, which leads to Fresh water and wet soil. That water and soil lead back to Reservoir kidney, and also to Broken skin or a mucous membrane. Infected mammals, rats in particular, can carry Leptospira in the kidney and shed it in urine. A person is exposed the same way and is not what keeps the cycle going. Some infections cause no illness. Weil's disease is a severe form.",
+    "sources": "Sources: <a href=\"https://doi.org/10.1128/CMR.14.2.296-326.2001\">Levett, Clinical Microbiology Reviews (2001)</a>; <a href=\"https://doi.org/10.1007/978-3-662-45059-8_5\">Haake and Levett, Current Topics in Microbiology and Immunology (2015)</a>.",
+    "trace": [
+      "--blank", "786,44,1010,164", "--blank", "828,44,1010,196",
+      "--tint", "258,150,316,238", "--tint", "468,412,602,508",
+      "--ink", "300,6,714,128", "--ink", "232,284,372,476", "--ink", "592,230,708,406"
+    ],
+    "labels": [
+      [230, 124, "Rat reservoir", "label", "middle"],
+      [365, 170, "<tspan font-style=\"italic\">Leptospira</tspan> in the", "note", null],
+      [365, 196, "kidney tubules", "note", null],
+      [318, 364, "Urine", "note", null],
+      [521, 562, "Fresh water and wet soil", "note", "middle"],
+      [755, 46, "An incidental host", "label", "middle"],
+      [800, 318, "In through broken skin", "note", null],
+      [800, 340, "or mucosa", "note", null]
+    ]
+  }
+}

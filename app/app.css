@@ -433,6 +433,45 @@
 .blog-diagram .ln.tint2-ink {
   fill: color-mix(in srgb, var(--ink) 18%, transparent);
 }
+/* Traced drawings (scripts/figures/vectorize.py --hairline). A region is opaque and filled with
+   the page, so a near shape hides the far one instead of mixing with it, and it is told apart by
+   its stroke alone: silhouette bright, inner crease dim, one coloured stroke on what the figure is
+   about. Stacked fills are what made the earlier figures muddy. After Hairline's rules 04, 06 and
+   09 (github.com/lucasmarkes/hairline, MIT). */
+.blog-diagram .fig {
+  fill: var(--bg);
+  stroke: var(--fig-n11);
+  stroke-width: 0.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.blog-diagram .fig.in {
+  stroke: var(--fig-n9);
+}
+.blog-diagram .fig.v {
+  stroke: var(--fig-v9);
+}
+.blog-diagram .fig.c {
+  stroke: var(--fig-c9);
+}
+.blog-diagram .fig.ink {
+  fill: var(--fig-n12);
+  stroke: none;
+}
+/* Labels on a traced drawing, whose viewBox is 1024 wide rather than 680, so the sizes are the
+   same on the page as .label-primary and .label-secondary are on a drawn one. */
+.blog-diagram .fig-label {
+  fill: var(--ink);
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+}
+.blog-diagram .fig-note {
+  fill: var(--muted);
+  font-family: var(--font-display);
+  font-size: 19px;
+}
 .blog-diagram .ln.dots {
   stroke-width: 5;
   stroke-dasharray: 0 7;

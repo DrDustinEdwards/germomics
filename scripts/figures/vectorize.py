@@ -334,21 +334,17 @@ def main() -> int:
                     # a surface, however thin it is: a crescent of shadow, a worm, a shoreline.
                     # Inside an --ink region every shape is ink, so a gradient arrow the tracer split
                     # into a dark half and a pale one comes back whole.
-                    shape = re.sub(r'fill="[^"]*"', 'fill="var(--fig-n12)"', shape)
+                    shape = re.sub(r'fill="[^"]*"', 'class="fig ink"', shape)
                 else:
                     line = re.search(r'fill="var\(--fig-([vcn])', shape)
                     family = line.group(1) if line else "n"
-                    edge = (
-                        f"--fig-{family}9"
-                        if family != "n"
-                        else ("--fig-n11" if hull > 0.004 * canvas else "--fig-n9")
+                    # The classes are in app.css: fig is a surface, filled with the page and
+                    # stroked at the silhouette's weight; in is an inner crease, dimmer; v and c
+                    # carry the one coloured stroke; ink is a drawn line, filled.
+                    part = (
+                        f" {family}" if family != "n" else ("" if hull > 0.004 * canvas else " in")
                     )
-                    shape = re.sub(r'fill="[^"]*"', 'fill="var(--bg)"', shape)
-                    shape = shape.replace(
-                        "/>",
-                        f'stroke="var({edge})" stroke-width="0.9" vector-effect="non-scaling-stroke" '
-                        'stroke-linejoin="round" stroke-linecap="round"/>',
-                    )
+                    shape = re.sub(r'fill="[^"]*"', f'class="fig{part}"', shape)
                 kept.append(shape)
                 continue
             if args.outline:
