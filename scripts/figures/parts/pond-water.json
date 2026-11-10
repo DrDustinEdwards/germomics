@@ -1,0 +1,35 @@
+{
+  "name": "pond-water",
+  "source": "drawn",
+  "note": "Standing fresh water with a wet bank along its near rim, and Leptospira in it. Traced from the reference, the bank came out as a silhouette that read as an animal; drawn, it is a bank. No ripples: they competed with the organisms, which are what the figure is about (Hairline rule 09, draw less).",
+  "origin": [0, 0],
+  "width": 300,
+  "height": 124,
+  "shapes": [
+    {
+      "role": "ln accent tint-accent",
+      "at": [0, 0],
+      "d": "M2 62A148 60 0 1 0 298 62A148 60 0 1 0 2 62Z"
+    },
+    {
+      "role": "ln tint-ink",
+      "at": [0, 0],
+      "d": "M289 82A148 60 0 0 1 99 118Q194 94 289 82Z"
+    },
+    {
+      "role": "ln brand",
+      "at": [46, 40],
+      "d": "M0 6C2 0 5 0 7 6S12 12 14 6S19 0 21 6S26 12 28 6S33 0 35 6S40 12 42 6"
+    },
+    {
+      "role": "ln brand",
+      "at": [128, 26],
+      "d": "M0 6C2 0 5 0 7 6S12 12 14 6S19 0 21 6S26 12 28 6S33 0 35 6S40 12 42 6"
+    },
+    {
+      "role": "ln brand",
+      "at": [74, 78],
+      "d": "M0 6C2 0 5 0 7 6S12 12 14 6S19 0 21 6S26 12 28 6S33 0 35 6S40 12 42 6"
+    }
+  ]
+}

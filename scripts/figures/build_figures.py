@@ -15,6 +15,7 @@ The reference drawings are not in this repository (they are licensed stock), so 
 
 import argparse
 import json
+import math
 import re
 import subprocess
 import sys
@@ -28,6 +29,31 @@ TRACE = [
 ]
 
 
+def arrow(item: dict) -> tuple[str, tuple[float, float, float, float]]:
+    """One arrow, drawn rather than traced.
+
+    A reference's arrows are tapered brush strokes; traced, they come out as solid black wedges
+    far heavier than anything else on the page. The hand-built figures draw an arrow as a 1.25px
+    line with an open chevron at its end, so the traced ones draw the same arrow. "from" and "to"
+    are the ends; "bend" curves it, positive to the left of the run.
+    """
+    (x1, y1), (x2, y2) = item["from"], item["to"]
+    dx, dy = x2 - x1, y2 - y1
+    run = math.hypot(dx, dy) or 1
+    bend = item.get("bend", 0)
+    # The control point sits on the perpendicular at the midpoint, so bend is a distance in the
+    # figure's own units rather than a number only this function understands.
+    cx, cy = (x1 + x2) / 2 - dy / run * bend, (y1 + y2) / 2 + dx / run * bend
+    line = f"M{x1:g} {y1:g}Q{cx:g} {cy:g} {x2:g} {y2:g}"
+    # The head points along the tangent at the end, which for a quadratic is the last control leg.
+    angle = math.degrees(math.atan2(y2 - cy, x2 - cx))
+    klass = "ln " + item.get("tone", "muted")
+    head = f'<path class="{klass}" d="M-5 -5L1 0L-5 5" transform="translate({x2:g},{y2:g}) rotate({angle:.1f})"/>'
+    drawn = f'<path class="{klass}" fill="none" d="{line}"/>\n      {head}'
+    xs, ys = [x1, x2, cx], [y1, y2, cy]
+    return drawn, (min(xs) - 6, min(ys) - 6, max(xs) + 6, max(ys) + 6)
+
+
 def place(items: list) -> tuple[str, list[tuple[float, float, float, float]]]:
     """Put the library's parts where the figure says, and report the boxes they fill.
 
@@ -37,6 +63,11 @@ def place(items: list) -> tuple[str, list[tuple[float, float, float, float]]]:
     """
     drawn, boxes = [], []
     for item in items:
+        if "from" in item:
+            path, box = arrow(item)
+            drawn.append(path)
+            boxes.append(box)
+            continue
         part = json.loads((HERE / "parts" / f"{item['part']}.json").read_text())
         # A part remembers where it sat in its reference, so a figure that keeps that layout says
         # nothing; one that moves the part says "at".
@@ -45,8 +76,13 @@ def place(items: list) -> tuple[str, list[tuple[float, float, float, float]]]:
         shapes = []
         for shape in part["shapes"]:
             role = shape["role"]
-            if item.get("subject") and role in ("fig", "fig in"):
-                role = f"{role} v" if role == "fig" else "fig v"
+            if item.get("subject"):
+                # A traced region says it is the subject with its stroke; a drawn one with the
+                # same brand stroke the hand-built figures use.
+                if role in ("fig", "fig in"):
+                    role = "fig v"
+                elif role.startswith("ln") and " brand" not in role:
+                    role = role.replace("ln", "ln brand", 1)
             at = shape["at"]
             shapes.append(
                 f'<path class="{role}" d="{shape["d"]}" transform="translate({at[0]},{at[1]})"/>'
