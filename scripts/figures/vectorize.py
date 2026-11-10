@@ -26,6 +26,7 @@ Options:
     --crop L,T,R,B   trace only this part of the reference
     --part NAME      write a figure-library part rather than an svg
     --tint L,T,R,B   paint this region in brand, whatever its color: the figure's subject
+    --accent L,T,R,B paint this region in the accent: the other thing the figure names
     --grey L,T,R,B   paint this region in the neutral, whatever its color
     --ink L,T,R,B    in this region every thin shape is ink, whatever its tone
     --cut L,T,R,B    drop every path that fits whole inside this region
@@ -256,6 +257,14 @@ def main() -> int:
         "moved to the origin, for a figure to place wherever it needs them",
     )
     parser.add_argument(
+        "--accent",
+        action="append",
+        default=[],
+        metavar="L,T,R,B",
+        help="paint this region of the drawing in the accent: the other thing a figure names, "
+        "such as the strand a primer binds to; repeatable",
+    )
+    parser.add_argument(
         "--tint",
         action="append",
         default=[],
@@ -321,7 +330,7 @@ def main() -> int:
 
     if args.crop:
         left, top = (float(v) for v in args.crop.split(",")[:2])
-        for field in ("blank", "tint", "grey", "ink", "cut"):
+        for field in ("blank", "tint", "accent", "grey", "ink", "cut"):
             setattr(args, field, shift(getattr(args, field), left, top))
     traced = trace(prepare(image, args.scale, args.blank, args.crop), args)
     size = re.search(r'width="(\d+)" height="(\d+)"', traced)
@@ -361,6 +370,8 @@ def main() -> int:
                     # that covers it: the strand is the subject, the primer lying along it is not.
                     if within(box, args.grey, args.scale):
                         fill = re.sub(r"--fig-[vc]", "--fig-n", fill)
+                    elif within(box, args.accent, args.scale):
+                        fill = re.sub(r"--fig-[vn]", "--fig-c", fill)
                     elif within(box, args.tint, args.scale):
                         fill = re.sub(r"--fig-[cn]", "--fig-v", fill)
                 shape = HEX.sub(f'fill="{fill}"', shape)

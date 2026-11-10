@@ -165,7 +165,17 @@ def build(name: str, spec: dict, refs: Path) -> None:
     )
     paths = "\n      ".join(re.findall(r"<path [^>]*/>", art.read_text()))
 
-    write(name, spec, paths, frame(paths, spec["labels"], 1024, 572))
+    # "add" puts drawn pieces on a traced drawing: an arrow, a mark, a part from the library. A
+    # reference's arrows trace badly, so a figure blanks them and draws them instead.
+    extra, boxes = place(spec["add"]) if "add" in spec else ("", [])
+    if extra:
+        paths = f"{paths}\n      {extra}"
+
+    left, top, right, bottom = frame(paths, spec["labels"], 1024, 572)
+    for box in boxes:
+        left, top = min(left, round(box[0]) - 14), min(top, round(box[1]) - 14)
+        right, bottom = max(right, round(box[2]) + 14), max(bottom, round(box[3]) + 14)
+    write(name, spec, paths, (max(0, left), max(0, top), right, bottom))
 
 
 def write(name: str, spec: dict, paths: str, box: tuple[int, int, int, int]) -> None:
