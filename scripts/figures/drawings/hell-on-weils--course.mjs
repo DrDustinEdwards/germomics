@@ -41,9 +41,9 @@ const severe =
       .map(([x, y, label]) => text(x + 34, y + 4, label, { anchor: "start" }))
       .join(""),
   ) +
-  // jaundice: a yellowed eye
+  // jaundice: a yellowed eye, which reads at icon size where a yellowed hand does not
   at(492, 96, path("M-14 0C-8 -8 8 -8 14 0C8 8 -8 8 -14 0Z", "brand tint2-brand") + circle(0, 0, 4.5, "brand")) +
-  kidney(488, 112, 0.34) +
+  kidney(490, 126, 0.4, "brand", { detail: false }) +
   drop(492, 154, "brand", 0.9);
 
 export default {

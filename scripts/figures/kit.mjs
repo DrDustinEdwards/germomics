@@ -250,24 +250,33 @@ export function rat(x, y, s = 1, dir = 1) {
 }
 
 /**
- * A kidney cut lengthwise: cortex, medulla with pyramids, pelvis and ureter. With detail false it
- * is the bean and the pelvis alone, for the sizes where the pyramids turn into noise.
+ * A kidney, traced from the reference drawing with scripts/figures/trace.py and restyled flat: the
+ * bean with the hilum notch, the renal vessels in it, and the ureter leaving. 62 x 78 at s = 1,
+ * centred on the point it is given. With detail false it is the bean and the ureter alone, for the
+ * sizes where the vessels turn into noise.
  */
 export function kidney(x, y, s = 1, cls = "brand", { detail = true } = {}) {
-  const inner =
-    path(
-      "M10 -44C34 -44 46 -20 44 4C42 30 26 46 6 44C-12 42 -14 28 -8 18C-4 12 -4 -10 -8 -16C-16 -30 -10 -44 10 -44Z",
-      `${cls} tint-${cls}`,
-    ) +
-    (detail
-      ? path("M12 -34C28 -32 36 -14 34 4C32 22 22 34 8 34", cls, {
-          opacity: ".7",
-          "stroke-dasharray": "2 3",
-        }) + path("M16 -22L26 -12L14 -6ZM18 2L30 4L18 12ZM14 22L24 28L10 30Z", `${cls} tint2-${cls}`)
-      : "") +
-    path("M-4 -10C6 -8 8 18 -4 20", cls) +
-    path("M-6 18C-10 26 -16 36 -18 54", cls);
-  return at(x, y, inner, 0, s);
+  const bean =
+    "M3.6 71.4C2.8 69.4 2.6 61.4 3.0 53.4C3.8 41.6 3.2 38.8 0.0 38.0C-7.2 36.0 -4.4 25.4 3.0 26.2" +
+    "C9.0 27.0 9.2 26.6 8.0 15.0C6.4 -3.2 20.8 -10.4 38.0 0.0C55.2 10.6 59.0 49.6 44.0 63.2" +
+    "C34.0 72.0 23.8 72.2 15.8 63.6L10.0 57.2L10.0 66.0C10.0 74.8 6.2 78.0 3.6 71.4Z";
+  return at(
+    x,
+    y,
+    at(
+      -26,
+      -34,
+      path(bean, `${cls} tint-${cls}`) +
+        (detail
+          ? path("M4 30H-6M4 36H-8M4 42H-6", cls, { opacity: ".8" }) +
+            path("M30 12C40 20 44 38 38 54", cls, { opacity: ".6", "stroke-dasharray": "3 4" })
+          : "") +
+        // the ureter, leaving the hilum and running down
+        path("M5 46C2 56 0 66 0 78", cls, { style: "fill: none" }),
+    ),
+    0,
+    s,
+  );
 }
 
 /** Water over soil, in section: wavy surface, the water as an accent tint, the soil as grains. */
@@ -448,4 +457,22 @@ export function pool(x, y, id, s = 1) {
     0,
     s,
   );
+}
+
+/**
+ * A part traced from a reference drawing as a stack of tones (scripts/figures/trace_layers.py),
+ * restyled flat: the whole shape stroked as a hairline over a tint, each darker region stacked on
+ * it as a fill with no stroke of its own. The reference's anatomy survives; its shading does not.
+ */
+export function layered(layers, { cls = "muted", tint = "ink", steps = null } = {}) {
+  const fills = steps || [0.12, 0.85];
+  return layers
+    .map((d, i) =>
+      i === 0
+        ? path(d, `${cls} tint-${tint}`)
+        : path(d, cls, {
+            style: `stroke: none; fill: var(--${tint === "ink" ? "ink" : tint}); fill-opacity: ${fills[Math.min(i, fills.length - 1)]}`,
+          }),
+    )
+    .join("");
 }
