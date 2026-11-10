@@ -326,7 +326,7 @@
   }
 }
 @supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) and (not print) {
+  @media screen and (prefers-reduced-motion: no-preference) {
     .blog-diagram :is(.m-fade, .m-draw, .m-slide) {
       animation-timing-function: ease-out;
       animation-fill-mode: both;
