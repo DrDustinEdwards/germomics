@@ -326,12 +326,14 @@ def main() -> int:
                 left, top, right, bottom = extent(shape)
                 hull = (right - left) * (bottom - top)
                 thin = bool(hull) and area(shape) / hull < 0.5
-                dark = luminance(color.group(1)) < 80 or within(box, args.ink, args.scale)
-                if "fig-n12" in shape or (thin and dark):
+                marked = within(box, args.ink, args.scale)
+                if "fig-n12" in shape or marked or (thin and luminance(color.group(1)) < 80):
                     # Ink: an arrow or a drawn edge, which the reference drew in near-black and the
                     # tracer gave back as a long thin region. It is filled and never stroked, or the
                     # stroke would draw the same line twice, as a tube. Everything paler than ink is
                     # a surface, however thin it is: a crescent of shadow, a worm, a shoreline.
+                    # Inside an --ink region every shape is ink, so a gradient arrow the tracer split
+                    # into a dark half and a pale one comes back whole.
                     shape = re.sub(r'fill="[^"]*"', 'fill="var(--fig-n12)"', shape)
                 else:
                     line = re.search(r'fill="var\(--fig-([vcn])', shape)
