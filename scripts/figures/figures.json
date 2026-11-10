@@ -4,31 +4,83 @@
     "title": "Leptospirosis: reservoir, environment, exposure",
     "desc": "Reservoir kidney leads to Shed in urine, which leads to Fresh water and wet soil. That water and soil lead back to Reservoir kidney, and also to Broken skin or a mucous membrane. Infected mammals, rats in particular, can carry Leptospira in the kidney and shed it in urine. A person is exposed the same way and is not what keeps the cycle going. Some infections cause no illness. Weil's disease is a severe form.",
     "sources": "Sources: <a href=\"https://doi.org/10.1128/CMR.14.2.296-326.2001\">Levett, Clinical Microbiology Reviews (2001)</a>; <a href=\"https://doi.org/10.1007/978-3-662-45059-8_5\">Haake and Levett, Current Topics in Microbiology and Immunology (2015)</a>.",
-    "trace": [
-      "--blank",
-      "786,44,1010,164",
-      "--blank",
-      "828,44,1010,196",
-      "--tint",
-      "258,150,316,238",
-      "--tint",
-      "468,412,602,508",
-      "--ink",
-      "300,6,714,128",
-      "--ink",
-      "232,284,372,476",
-      "--ink",
-      "592,230,708,406"
+    "parts": [
+      {
+        "part": "arrow-arc"
+      },
+      {
+        "part": "arrow-urine"
+      },
+      {
+        "part": "arrow-entry"
+      },
+      {
+        "part": "rat"
+      },
+      {
+        "part": "person"
+      },
+      {
+        "part": "pond"
+      }
     ],
     "labels": [
-      [230, 124, "Rat reservoir", "label", "middle"],
-      [365, 170, "<tspan font-style=\"italic\">Leptospira</tspan> in the", "note", null],
-      [365, 196, "kidney tubules", "note", null],
-      [318, 364, "Urine", "note", null],
-      [521, 562, "Fresh water and wet soil", "note", "middle"],
-      [755, 46, "An incidental host", "label", "middle"],
-      [800, 318, "In through broken skin", "note", null],
-      [800, 340, "or mucosa", "note", null]
+      [
+        230,
+        124,
+        "Rat reservoir",
+        "label",
+        "middle"
+      ],
+      [
+        365,
+        170,
+        "<tspan font-style=\"italic\">Leptospira</tspan> in the",
+        "note",
+        null
+      ],
+      [
+        365,
+        196,
+        "kidney tubules",
+        "note",
+        null
+      ],
+      [
+        318,
+        364,
+        "Urine",
+        "note",
+        null
+      ],
+      [
+        521,
+        562,
+        "Fresh water and wet soil",
+        "note",
+        "middle"
+      ],
+      [
+        755,
+        46,
+        "An incidental host",
+        "label",
+        "middle"
+      ],
+      [
+        800,
+        318,
+        "In through broken skin",
+        "note",
+        null
+      ],
+      [
+        800,
+        340,
+        "or mucosa",
+        "note",
+        null
+      ]
     ]
   },
   "a-sky-full-of-sars--spike": {
@@ -36,12 +88,38 @@
     "title": "SARS coronavirus: spike, receptor and host range",
     "desc": "The SARS coronavirus has a crown of spike proteins. A spike binds ACE2, a receptor on a human cell, like a key in a lock. The 2002 to 2003 outbreak in people was followed by the discovery of related coronaviruses in bats, and of a closely related virus in palm civets sold in markets in southern China.",
     "sources": "Sources: <a href=\"https://doi.org/10.1038/nature02145\">Li and colleagues, Nature (2003)</a>; <a href=\"https://doi.org/10.1126/science.1118391\">Li and colleagues, Science (2005)</a>; <a href=\"https://doi.org/10.1126/science.1087139\">Guan and colleagues, Science (2003)</a>.",
-    "skip": [5, 6],
-    "trace": ["--length", "8", "--grey", "0,400,1024,572"],
+    "skip": [
+      5,
+      6
+    ],
+    "trace": [
+      "--length",
+      "8",
+      "--grey",
+      "0,400,1024,572"
+    ],
     "labels": [
-      [737, 140, "Spike protein", "note", null],
-      [738, 353, "ACE2 receptor", "note", null],
-      [732, 405, "Host cell membrane", "note", null]
+      [
+        737,
+        140,
+        "Spike protein",
+        "note",
+        null
+      ],
+      [
+        738,
+        353,
+        "ACE2 receptor",
+        "note",
+        null
+      ],
+      [
+        732,
+        405,
+        "Host cell membrane",
+        "note",
+        null
+      ]
     ]
   },
   "one-flew-over-the-kuru-nest": {
@@ -63,12 +141,48 @@
       "618,188,802,362"
     ],
     "labels": [
-      [278, 182, "PrP<tspan font-size=\"13\" dy=\"-7\">C</tspan>", "note", null],
-      [344, 389, "PrP<tspan font-size=\"13\" dy=\"-7\">Sc</tspan>", "note", null],
-      [440, 258, "conversion", "note", null],
-      [80, 399, "neuron", "note", null],
-      [631, 399, "aggregate", "note", null],
-      [899, 399, "neuron", "note", null]
+      [
+        278,
+        182,
+        "PrP<tspan font-size=\"13\" dy=\"-7\">C</tspan>",
+        "note",
+        null
+      ],
+      [
+        344,
+        389,
+        "PrP<tspan font-size=\"13\" dy=\"-7\">Sc</tspan>",
+        "note",
+        null
+      ],
+      [
+        440,
+        258,
+        "conversion",
+        "note",
+        null
+      ],
+      [
+        80,
+        399,
+        "neuron",
+        "note",
+        null
+      ],
+      [
+        631,
+        399,
+        "aggregate",
+        "note",
+        null
+      ],
+      [
+        899,
+        399,
+        "neuron",
+        "note",
+        null
+      ]
     ]
   },
   "on-the-right-taq": {
@@ -91,9 +205,27 @@
       "866,178,996,212"
     ],
     "labels": [
-      [143, 172, "Denature", "note", null],
-      [437, 172, "Anneal primers", "note", null],
-      [818, 172, "Extend", "note", null]
+      [
+        143,
+        172,
+        "Denature",
+        "note",
+        null
+      ],
+      [
+        437,
+        172,
+        "Anneal primers",
+        "note",
+        null
+      ],
+      [
+        818,
+        172,
+        "Extend",
+        "note",
+        null
+      ]
     ]
   },
   "its-on-the-syphilis--stages": {
@@ -101,20 +233,99 @@
     "title": "The four stages of untreated syphilis",
     "desc": "Untreated syphilis moves through four stages. In the primary stage a sore appears where it entered and lasts 3 to 6 weeks. The secondary stage brings a rash, which can be on the palms and soles, starting as the sore heals or several weeks later. The latent stage has no visible signs or symptoms. A tertiary stage, 10 to 30 years after infection began, can damage the heart and blood vessels and the brain and nervous system.",
     "sources": "Sources: <a href=\"https://www.cdc.gov/syphilis/about/index.html\">CDC, About Syphilis</a>; <a href=\"https://doi.org/10.15585/mmwr.rr7004a1\" >Workowski and colleagues, MMWR Recommendations and Reports 70(4) (2021)</a >; <a href=\"https://doi.org/10.15698/mic2016.09.523\">Stamm, Microbial Cell (2016)</a>.",
-    "trace": ["--tint", "36,236,138,308", "--tint", "786,182,994,344", "--grey", "594,212,722,344"],
+    "trace": [
+      "--tint",
+      "36,236,138,308",
+      "--tint",
+      "786,182,994,344",
+      "--grey",
+      "594,212,722,344"
+    ],
     "labels": [
-      [32, 158, "<tspan font-style=\"italic\">Treponema</tspan>", "note", null],
-      [32, 180, "<tspan font-style=\"italic\">pallidum</tspan>", "note", null],
-      [228, 170, "Primary", "label", "start"],
-      [405, 170, "Secondary", "label", "start"],
-      [627, 170, "Latent", "label", "start"],
-      [843, 170, "Tertiary", "label", "start"],
-      [260, 374, "Weeks after", "note", "middle"],
-      [260, 396, "infection", "note", "middle"],
-      [657, 375, "No symptoms", "note", "middle"],
-      [888, 375, "Years later", "note", "middle"],
-      [888, 422, "Heart, blood vessels,", "note", "middle"],
-      [888, 444, "brain, nerves", "note", "middle"]
+      [
+        32,
+        158,
+        "<tspan font-style=\"italic\">Treponema</tspan>",
+        "note",
+        null
+      ],
+      [
+        32,
+        180,
+        "<tspan font-style=\"italic\">pallidum</tspan>",
+        "note",
+        null
+      ],
+      [
+        228,
+        170,
+        "Primary",
+        "label",
+        "start"
+      ],
+      [
+        405,
+        170,
+        "Secondary",
+        "label",
+        "start"
+      ],
+      [
+        627,
+        170,
+        "Latent",
+        "label",
+        "start"
+      ],
+      [
+        843,
+        170,
+        "Tertiary",
+        "label",
+        "start"
+      ],
+      [
+        260,
+        374,
+        "Weeks after",
+        "note",
+        "middle"
+      ],
+      [
+        260,
+        396,
+        "infection",
+        "note",
+        "middle"
+      ],
+      [
+        657,
+        375,
+        "No symptoms",
+        "note",
+        "middle"
+      ],
+      [
+        888,
+        375,
+        "Years later",
+        "note",
+        "middle"
+      ],
+      [
+        888,
+        422,
+        "Heart, blood vessels,",
+        "note",
+        "middle"
+      ],
+      [
+        888,
+        444,
+        "brain, nerves",
+        "note",
+        "middle"
+      ]
     ]
   }
 }

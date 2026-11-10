@@ -28,6 +28,35 @@ TRACE = [
 ]
 
 
+def place(items: list) -> tuple[str, list[tuple[float, float, float, float]]]:
+    """Put the library's parts where the figure says, and report the boxes they fill.
+
+    A part is traced once, by hand, with its own crop and its own options, and then any figure that
+    needs it places it. Which part is the figure's subject is said here, so the pixel rectangles
+    that used to say "the kidney is at 258,150,316,238" are gone.
+    """
+    drawn, boxes = [], []
+    for item in items:
+        part = json.loads((HERE / "parts" / f"{item['part']}.json").read_text())
+        # A part remembers where it sat in its reference, so a figure that keeps that layout says
+        # nothing; one that moves the part says "at".
+        x, y = item.get("at", part.get("origin", [0, 0]))
+        size = item.get("scale", 1)
+        shapes = []
+        for shape in part["shapes"]:
+            role = shape["role"]
+            if item.get("subject") and role in ("fig", "fig in"):
+                role = f"{role} v" if role == "fig" else "fig v"
+            at = shape["at"]
+            shapes.append(
+                f'<path class="{role}" d="{shape["d"]}" transform="translate({at[0]},{at[1]})"/>'
+            )
+        move = f"translate({x},{y})" + (f" scale({size})" if size != 1 else "")
+        drawn.append(f'<g transform="{move}">\n        ' + "\n        ".join(shapes) + "\n      </g>")
+        boxes.append((x, y, x + part["width"] * size, y + part["height"] * size))
+    return "\n      ".join(drawn), boxes
+
+
 def frame(paths: str, rows: list, width: int, height: int) -> tuple[int, int, int, int]:
     """The box the drawing and its labels actually occupy, so the figure is not mostly margin.
 
@@ -37,7 +66,7 @@ def frame(paths: str, rows: list, width: int, height: int) -> tuple[int, int, in
     sys.path.insert(0, str(HERE))
     from vectorize import PATH, extent
 
-    boxes = [extent(path) for path in PATH.findall(paths)]
+    boxes = [extent(path) for path in PATH.findall(paths)] if paths else []
     for x, y, text, kind, anchor in rows:
         size = 20 if kind == "label" else 19
         # Text has no geometry here, so it is measured as an em box: a little wide, which is the
@@ -63,6 +92,8 @@ def labels(rows: list) -> str:
 
 
 def build(name: str, spec: dict, refs: Path) -> None:
+    if "parts" in spec:
+        return compose(name, spec)
     source = refs / f"{spec['source']}.png"
     if not source.exists():
         raise SystemExit(f"{source} is missing: pass --refs with the folder holding the references")
@@ -89,7 +120,12 @@ def build(name: str, spec: dict, refs: Path) -> None:
     )
     paths = "\n      ".join(re.findall(r"<path [^>]*/>", art.read_text()))
 
-    left, top, right, bottom = frame(paths, spec["labels"], 1024, 572)
+    write(name, spec, paths, frame(paths, spec["labels"], 1024, 572))
+
+
+def write(name: str, spec: dict, paths: str, box: tuple[int, int, int, int]) -> None:
+    """The figure's file: the drawing, its labels, and what it says it is."""
+    left, top, right, bottom = box
     view = f"{left} {top} {right - left} {bottom - top}"
     desc = spec["desc"]
     out = REPO / "public" / "blog-diagrams" / f"{name}.html"
@@ -114,6 +150,17 @@ def build(name: str, spec: dict, refs: Path) -> None:
     if formatter.returncode:
         print(f"  oxfmt did not run ({formatter.returncode}): run npm run format before committing")
     print(f"{out.relative_to(REPO)}: {out.stat().st_size // 1024} KB")
+
+
+def compose(name: str, spec: dict) -> None:
+    """A figure made of library parts rather than one traced canvas."""
+    paths, boxes = place(spec["parts"])
+    left, top, right, bottom = frame("", spec["labels"], 1024, 572)
+    for box in boxes:
+        left, top = min(left, round(box[0]) - 14), min(top, round(box[1]) - 14)
+        right, bottom = max(right, round(box[2]) + 14), max(bottom, round(box[3]) + 14)
+    left, top = max(0, left), max(0, top)
+    write(name, spec, paths, (left, top, right, bottom))
 
 
 def main() -> int:

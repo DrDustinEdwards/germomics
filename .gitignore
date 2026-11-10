@@ -25,3 +25,4 @@ scripts/_generated/
 # Stryker (job_f5acaeb4e003)
 /reports/
 .stryker-tmp/
+__pycache__/

@@ -23,6 +23,8 @@ Options:
     --precision N    decimal places kept in the path data (default 1)
     --drop-pale N    drop a path whose fill is paler than this luminance, 0 to 255 (default 240)
     --blank L,T,R,B  paint this box of the image white before tracing; repeatable
+    --crop L,T,R,B   trace only this part of the reference
+    --part NAME      write a figure-library part rather than an svg
     --tint L,T,R,B   paint this region in brand, whatever its color: the figure's subject
     --grey L,T,R,B   paint this region in the neutral, whatever its color
     --ink L,T,R,B    in this region every thin shape is ink, whatever its tone
@@ -173,14 +175,25 @@ def luminance(color: str) -> float:
     return 0.2126 * r + 0.7152 * g + 0.0722 * b
 
 
-def prepare(image: Path, scale: float, blanks: list[str]) -> Path:
+def shift(boxes: list[str], dx: float, dy: float) -> list[str]:
+    """Move every box by the crop's corner, so a figure's boxes are always read off the reference."""
+    moved = []
+    for box in boxes:
+        left, top, right, bottom = (float(v) for v in box.split(","))
+        moved.append(f"{left - dx},{top - dy},{right - dx},{bottom - dy}")
+    return moved
+
+
+def prepare(image: Path, scale: float, blanks: list[str], crop: str | None) -> Path:
     from PIL import Image, ImageDraw
 
     picture = Image.open(image).convert("RGB")
+    if crop:
+        picture = picture.crop(tuple(int(v) for v in crop.split(",")))
     if blanks:
         painter = ImageDraw.Draw(picture)
         for box in blanks:
-            painter.rectangle([int(v) for v in box.split(",")], fill=(255, 255, 255))
+            painter.rectangle([round(float(v)) for v in box.split(",")], fill=(255, 255, 255))
     if scale != 1:
         picture = picture.resize(
             (round(picture.width * scale), round(picture.height * scale)), Image.LANCZOS
@@ -230,6 +243,18 @@ def main() -> int:
     parser.add_argument("--precision", type=int, default=1)
     parser.add_argument("--drop-pale", type=float, default=240)
     parser.add_argument("--blank", action="append", default=[], metavar="L,T,R,B")
+    parser.add_argument(
+        "--crop",
+        metavar="L,T,R,B",
+        help="trace only this part of the reference. Every other box is still given in the "
+        "reference's own coordinates, so they can be read off the picture as usual",
+    )
+    parser.add_argument(
+        "--part",
+        metavar="NAME",
+        help="write a part of the figure library rather than an svg: the shapes with their roles, "
+        "moved to the origin, for a figure to place wherever it needs them",
+    )
     parser.add_argument(
         "--tint",
         action="append",
@@ -288,7 +313,11 @@ def main() -> int:
     image = Path(args.image)
     out = Path(args.out) if args.out else image.with_suffix(".svg")
 
-    traced = trace(prepare(image, args.scale, args.blank), args)
+    if args.crop:
+        left, top = (float(v) for v in args.crop.split(",")[:2])
+        for field in ("blank", "tint", "grey", "ink", "cut"):
+            setattr(args, field, shift(getattr(args, field), left, top))
+    traced = trace(prepare(image, args.scale, args.blank, args.crop), args)
     size = re.search(r'width="(\d+)" height="(\d+)"', traced)
     if not size:
         print("vtracer wrote no size", file=sys.stderr)
@@ -373,6 +402,51 @@ def main() -> int:
     if not kept:
         print("every traced path was paler than --drop-pale", file=sys.stderr)
         return 1
+
+    if args.part:
+        # A part is traced once, by hand, and then placed by any figure that needs it. Its shapes
+        # are moved to the origin so a figure says where it goes and nothing else.
+        import json
+
+        shapes = []
+        box = [min(extent(shape)[0] for shape in kept), min(extent(shape)[1] for shape in kept)]
+        for shape in kept:
+            role = re.search(r'class="([^"]*)"', shape)
+            data = re.search(r' d="([^"]*)"', shape)
+            move = TRANSLATE.search(shape)
+            at = (float(move.group(1)), float(move.group(2))) if move else (0.0, 0.0)
+            shapes.append(
+                {
+                    "d": data.group(1) if data else "",
+                    "at": [round(at[0] - box[0]), round(at[1] - box[1])],
+                    "role": role.group(1) if role else "fig",
+                }
+            )
+        extents = [extent(shape) for shape in kept]
+        out.write_text(
+            json.dumps(
+                {
+                    "name": args.part,
+                    "source": image.stem,
+                    # Where the part sits in the reference it came from, so a figure that wants the
+                    # reference's own layout places it with nothing to work out.
+                    "origin": [
+                        round(box[0] + (float(args.crop.split(",")[0]) if args.crop else 0)),
+                        round(box[1] + (float(args.crop.split(",")[1]) if args.crop else 0)),
+                    ],
+                    "width": round(max(e[2] for e in extents) - box[0]),
+                    "height": round(max(e[3] for e in extents) - box[1]),
+                    "shapes": shapes,
+                },
+                indent=2,
+            )
+            + "\n"
+        )
+        print(f"{out}: part {args.part}, {len(shapes)} shapes, {out.stat().st_size // 1024} KB")
+        if args.palette:
+            for color, count in fills.most_common():
+                print(f"  {color}  {count:4d} paths  luminance {luminance(color):.0f}")
+        return 0
 
     out.write_text(
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}">\n'
