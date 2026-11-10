@@ -7,6 +7,7 @@
     "dev": "react-router dev",
     "test": "vitest run",
     "check:console": "devkit-console",
+    "check:figures": "python3 scripts/figures/check_figures.py --quiet",
     "check:migrations": "devkit-migrations drizzle",
     "typecheck": "devkit-bootstrap --types-only && react-router typegen && tsc -b",
     "lint": "oxlint --type-aware --deny-warnings --report-unused-disable-directives-severity=error",
