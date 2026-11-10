@@ -119,13 +119,13 @@ Sources: [Freeman, Journal of Bacteriology (1951)](https://doi.org/10.1128/jb.61
     slug: "a-boy-named-flu",
     file: "a-boy-named-flu--surface",
     title: "Influenza A: surface proteins, drift and shift",
-    alt: "Influenza A has two main surface proteins. Hemagglutinin, H, binds receptors on a cell. Neuraminidase, N, cuts new virus free of the cell. In drift, small changes to H add up over seasons. In shift, a cell infected by two viruses, can package gene segments from both into a new virus, sometimes with a new H.",
+    alt: "Influenza A viruses are divided into subtypes by two proteins on their surface, hemagglutinin, H, and neuraminidase, N, which the immune system recognizes. Drift is gradual genetic and antigenic change over time. In shift, a cell infected by two viruses can swap gene segments between them, giving a new mix of segments.",
     mermaid: `flowchart TD
   flu0["H and N on the surface"] --> flu1["Drift changes H slowly"]
   flu1["Drift changes H slowly"] --> flu2["Shift swaps whole segments"]`,
     caption: `A schematic of the two surface proteins and of drift and shift, not a map of one strain's mutations.
 
-Sources: [Webster and colleagues, Microbiological Reviews (1992)](https://doi.org/10.1128/mr.56.1.152-179.1992).`,
+Sources: [CDC, Types of influenza viruses](https://www.cdc.gov/flu/about/viruses-types.html); [Webster and colleagues, Microbiological Reviews (1992)](https://doi.org/10.1128/mr.56.1.152-179.1992).`,
     placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
   },
   {
@@ -157,8 +157,8 @@ Sources: [Gonzalez-Escobedo, Marshall and Gunn, Nature Reviews Microbiology (201
   {
     slug: "on-the-right-taq",
     file: "on-the-right-taq--heat",
-    title: "Why PCR needed a heat-stable polymerase",
-    alt: "A PCR cycle swings between about 95 degrees Celsius to separate the DNA strands, about 55 to let primers bind, and about 72 to copy. The E. coli polymerase used first did not survive 95 degrees, so fresh enzyme had to be added each cycle. Taq polymerase, from Thermus aquaticus, survives the heat, so a single addition runs every cycle.",
+    title: "Why PCR uses a heat-stable polymerase",
+    alt: "A PCR cycle swings between heat that separates the DNA strands, a cooler step where primers bind, and a middle step where the polymerase copies. Taq polymerase comes from Thermus aquaticus, a bacterium of hot springs. It is heat-stable, so the reaction can run at higher temperatures.",
     mermaid: `flowchart TD
   pcr0["Heat separates the strands"] --> pcr1["E. coli polymerase fails"]
   pcr1["E. coli polymerase fails"] --> pcr2["Taq survives"]`,
@@ -177,21 +177,21 @@ Sources: [Saiki and colleagues, Science (1988)](https://doi.org/10.1126/science.
   rabies1["Nerve travel"] --> rabies2["Treat before symptoms"]`,
     caption: `A schematic. The time from bite to symptoms varies a great deal, and this is not a treatment protocol.
 
-Sources: [World Health Organization, Rabies fact sheet](https://www.who.int/news-room/fact-sheets/detail/rabies); [Fooks and colleagues, Nature Reviews Disease Primers (2017)](https://doi.org/10.1038/nrdp.2017.91).`,
+Sources: [World Health Organization, Rabies fact sheet](https://www.who.int/news-room/fact-sheets/detail/rabies); [Davis, Rall and Schnell, Annual Review of Virology (2015)](https://doi.org/10.1146/annurev-virology-100114-055157); [Fooks and colleagues, Nature Reviews Disease Primers (2017)](https://doi.org/10.1038/nrdp.2017.91).`,
     placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
   },
   {
     slug: "its-on-the-syphilis",
     file: "its-on-the-syphilis--stages",
     title: "The four stages of untreated syphilis",
-    alt: "Untreated syphilis moves through four stages. The primary stage is a painless sore where it entered, about three weeks after exposure. The secondary stage brings a rash, often on the palms and soles, over weeks to months. The latent stage has no signs for years but the person is still infected. In some people a tertiary stage, years to decades later, damages the heart or nervous system.",
+    alt: "Untreated syphilis moves through four stages. In the primary stage a sore appears where it entered and lasts 3 to 6 weeks. The secondary stage brings a rash, which can be on the palms and soles, starting as the sore heals or several weeks later. The latent stage has no visible signs or symptoms. A tertiary stage, 10 to 30 years after infection began, can damage the heart and blood vessels and the brain and nervous system.",
     mermaid: `flowchart TD
   syphilis0["Primary"] --> syphilis1["Secondary"]
   syphilis1["Secondary"] --> syphilis2["Latent"]
   syphilis2["Latent"] --> syphilis3["Tertiary"]`,
     caption: `A schematic of the usual order and timing, not a prediction for one person. Many people do not reach the later stages.
 
-Sources: [Workowski and colleagues, MMWR Recommendations and Reports 70(4), Sexually Transmitted Infections Treatment Guidelines (2021)](https://doi.org/10.15585/mmwr.rr7004a1).`,
+Sources: [CDC, About Syphilis](https://www.cdc.gov/syphilis/about/index.html); [Workowski and colleagues, MMWR Recommendations and Reports 70(4), Sexually Transmitted Infections Treatment Guidelines (2021)](https://doi.org/10.15585/mmwr.rr7004a1).`,
     placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
   },
   {

@@ -2,73 +2,51 @@
   <figure
     class="blog-diagram"
     role="img"
-    aria-label="A PCR cycle swings between about 95 degrees Celsius to separate the DNA strands, about 55 to let primers bind, and about 72 to copy. The E. coli polymerase used first did not survive 95 degrees, so fresh enzyme had to be added each cycle. Taq polymerase, from Thermus aquaticus, survives the heat, so a single addition runs every cycle."
+    aria-label="A PCR cycle swings between heat that separates the DNA strands, a cooler step where primers bind, and a middle step where the polymerase copies. Taq polymerase comes from Thermus aquaticus, a bacterium of hot springs. It is heat-stable, so the reaction can run at higher temperatures."
   >
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 190" width="760" height="190">
-      <title>Why PCR needed a heat-stable polymerase</title>
+      <title>Why PCR uses a heat-stable polymerase</title>
       <desc>
-        A PCR cycle swings between about 95 degrees Celsius to separate the DNA strands, about 55 to
-        let primers bind, and about 72 to copy. The E. coli polymerase used first did not survive 95
-        degrees, so fresh enzyme had to be added each cycle. Taq polymerase, from Thermus aquaticus,
-        survives the heat, so a single addition runs every cycle.
+        A PCR cycle swings between heat that separates the DNA strands, a cooler step where primers
+        bind, and a middle step where the polymerase copies. Taq polymerase comes from Thermus
+        aquaticus, a bacterium of hot springs. It is heat-stable, so the reaction can run at higher
+        temperatures.
       </desc>
-      <path class="ln" d="M70 24V150H440" />
+      <path class="ln" d="M50 24V150H440" />
       <g transform="translate(440 150)"><path class="ln muted" d="M-4 -6L3 0L-4 6" /></g>
-      <g transform="translate(70 22)"><path class="ln muted" d="M-4 6L0 0L4 6" /></g>
-      <text class="label-secondary" x="62" y="48" text-anchor="end">95 °C</text>
-      <path class="ln muted" d="M67 44H70" />
-      <path class="ln rule-line muted" d="M70 44H440" stroke-dasharray="1 5" />
-      <text class="label-secondary" x="62" y="88" text-anchor="end">72 °C</text>
-      <path class="ln muted" d="M67 84H70" />
-      <path class="ln rule-line muted" d="M70 84H440" stroke-dasharray="1 5" />
-      <text class="label-secondary" x="62" y="116" text-anchor="end">55 °C</text>
-      <path class="ln muted" d="M67 112H70" />
-      <path class="ln rule-line muted" d="M70 112H440" stroke-dasharray="1 5" />
+      <g transform="translate(50 22)"><path class="ln muted" d="M-4 6L0 0L4 6" /></g>
+      <text class="label-secondary" x="42" y="70" text-anchor="end">heat</text>
+      <path class="ln rule-line muted" d="M50 44H440" stroke-dasharray="1 5" />
+      <path class="ln rule-line muted" d="M50 84H440" stroke-dasharray="1 5" />
+      <path class="ln rule-line muted" d="M50 112H440" stroke-dasharray="1 5" />
       <path
         class="ln m-draw accent"
         pathLength="1"
         style="--i: 0"
-        d="M70 112L90 44H130L150 112H190L210 84H260L280 44H320L340 112H380L400 84H440"
+        d="M50 112L70 44H110L130 112H170L190 84H240L260 44H300L320 112H360L380 84H430"
       />
-      <text class="label-secondary" x="110" y="36" text-anchor="middle">denature</text>
-      <text class="label-secondary" x="170" y="128" text-anchor="middle">anneal</text>
-      <text class="label-secondary" x="235" y="76" text-anchor="middle">extend</text>
+      <text class="label-secondary" x="90" y="36" text-anchor="middle">denature</text>
+      <text class="label-secondary" x="150" y="128" text-anchor="middle">anneal</text>
+      <text class="label-secondary" x="215" y="76" text-anchor="middle">extend</text>
+      <text class="label-secondary" x="245" y="172" text-anchor="middle">
+        temperature over repeated cycles, not to scale
+      </text>
       <g class="m-fade" style="--i: 1">
-        <g transform="translate(110 60)">
-          <circle class="ln brand" r="9" />
-          <path class="ln brand" d="M-5 -5L5 5M5 -5L-5 5" />
-        </g>
-      </g>
-      <g class="m-fade" style="--i: 2">
-        <g transform="translate(300 60)">
-          <circle class="ln accent tint-accent" r="9" />
+        <g transform="translate(510 62)">
+          <circle class="ln accent tint-accent" r="10" />
           <path class="ln accent" d="M-4 0L-1 3L5 -4" />
         </g>
       </g>
-      <text class="label-secondary" x="255" y="172" text-anchor="middle">
-        typical temperatures, times not to scale
+      <text class="label-primary" x="534" y="52" text-anchor="start">Taq polymerase</text>
+      <text class="label-secondary" x="534" y="70" text-anchor="start">
+        from Thermus aquaticus,
       </text>
-      <g transform="translate(490 56)">
-        <circle class="ln brand" r="9" />
-        <path class="ln brand" d="M-5 -5L5 5M5 -5L-5 5" />
-      </g>
-      <text class="label-primary" x="512" y="52" text-anchor="start">E. coli polymerase</text>
-      <text class="label-secondary" x="512" y="69" text-anchor="start">
-        does not survive 95 °C, so
+      <text class="label-secondary" x="534" y="85" text-anchor="start">a hot-spring bacterium</text>
+      <text class="label-secondary" x="534" y="118" text-anchor="start">
+        heat-stable, so the reaction
       </text>
-      <text class="label-secondary" x="512" y="84" text-anchor="start">
-        fresh enzyme is added each cycle
-      </text>
-      <g transform="translate(490 126)">
-        <circle class="ln accent tint-accent" r="9" />
-        <path class="ln accent" d="M-4 0L-1 3L5 -4" />
-      </g>
-      <text class="label-primary" x="512" y="122" text-anchor="start">Taq polymerase</text>
-      <text class="label-secondary" x="512" y="139" text-anchor="start">
-        survives the heat, so one
-      </text>
-      <text class="label-secondary" x="512" y="154" text-anchor="start">
-        addition runs every cycle
+      <text class="label-secondary" x="534" y="133" text-anchor="start">
+        can run at higher temperatures
       </text>
     </svg>
   </figure>
