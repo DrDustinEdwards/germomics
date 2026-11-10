@@ -5,7 +5,8 @@
 // SCOPE.
 //   Articles and episodes: every field a writer sets (./source.ts), from a first draft to publish, schedule, unpublish,
 //     rename, trash, restore and delete. An episode is created in the germomics admin with its audio, and its audio and
-//     transcript stay there (files measured or converted in the browser); Carrel puts it live once it has both. A save
+//     first transcript are uploaded there (files measured or converted in the browser); Carrel puts it live once it has
+//     both, and fixes the transcript's words afterward (TRANSCRIPTS, below). A save
 //     to a live post changes the live page.
 //   Pages: the content_blocks pages written in Markdown (about, the bio, privacy, terms, contact, txasm), id
 //     `page.<name>` for the block `page:<name>`. Each is a route, so Carrel saves and publishes one but cannot create,
@@ -15,6 +16,9 @@
 // the reading time and the render version, which meta names (renderVersion); a source Prelum refuses (a figure without
 // alt text, say) is refused with its reason and nothing is written. A snapshot goes into post_versions before every
 // edit of a post, the episode's people with it, and the guid is generated once at first publish and never rewritten.
+//
+// TRANSCRIPTS. Carrel replaces an episode's transcript through setTranscript (site-api v0.36.0), checked against the
+//   transcript's own version; the post's version, which never includes the transcript, stays as it was.
 //
 // IDS AND VERSIONS. A post's id is its slug. A version is a hash of everything Carrel can see or change (the source,
 // the status and the schedule, the trash, and an update waiting on a live post), so any change anywhere gives a new
@@ -36,6 +40,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import {
   contentVersion,
   NotFoundError,
+  transcriptVersion,
   previewDocument,
   RefusedError,
   VersionConflictError,
@@ -673,6 +678,32 @@ export function createCarrelAdapter(
       return write("restore", id, changeId, expectedVersion, async () => ({
         fields: { trashedAt: null, status: "draft" },
       }));
+    },
+
+    // An episode's transcript (site-api v0.36.0), live at once like the admin's save: checked against the transcript's own
+    // version, written only while the row is the one checked, with the row snapshotted first. The post's version stays.
+    async setTranscript(id, { transcript, expectedTranscriptVersion, changeId }) {
+      if (await findPage(env, id)) throw new RefusedError("A page has no transcript.");
+      const current = await findPost(id);
+      if (!current) throw new NotFoundError();
+      if (current.kind !== "episode") throw new RefusedError("Only an episode has a transcript.");
+      const held = current.transcript?.trim() ? await transcriptVersion(current.transcript) : null;
+      if (held !== expectedTranscriptVersion) throw new VersionConflictError(held);
+      const written = await db
+        .update(posts)
+        .set({ transcript, updatedAt: nextUpdatedAt })
+        .where(and(eq(posts.id, current.id), eq(posts.updatedAt, current.updatedAt)))
+        .returning({ id: posts.id });
+      if (written.length === 0) {
+        const now = await findPost(id);
+        throw new VersionConflictError(
+          now?.transcript?.trim() ? await transcriptVersion(now.transcript) : null,
+        );
+      }
+      await snapshotVersion(env, current);
+      const version = await versionOf(current, await waiting(id));
+      recordChange("transcript", id, version, changeId);
+      return { version };
     },
 
     // For good, and only from the trash: the row, its snapshots, people and redirects (cascade) and any waiting update.

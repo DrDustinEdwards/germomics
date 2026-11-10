@@ -1,6 +1,6 @@
 import { env } from "cloudflare:test";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { RefusedError, VersionConflictError } from "@dustinedwards/site-api";
+import { RefusedError, transcriptVersion, VersionConflictError } from "@dustinedwards/site-api";
 import { createCarrelAdapter } from "~/lib/carrel/adapter.server";
 import { RENDER_VERSION } from "~/lib/render.server";
 import { carrelApi } from "~/lib/carrel/handler.server";
@@ -468,6 +468,55 @@ describe("an episode", () => {
     expect(
       (await content.unpublish("ep", { expectedVersion: live.version, changeId: "c" })).status,
     ).toBe("draft");
+  });
+});
+
+describe("an episode's transcript", () => {
+  const VTT = (words: string) => `WEBVTT\n\n00:00:01.000 --> 00:00:04.000\n${words}\n`;
+
+  it("is replaced at its own version, live, the row snapshotted and the post's version kept", async () => {
+    await insert(
+      "INSERT INTO posts (kind, title, slug, body, status, transcript) VALUES ('episode', 'Ep', 'ep', 'Notes', 'published', ?)",
+      VTT("Wheel's disease"),
+    );
+    await insert(
+      "INSERT INTO posts (kind, title, slug, body, status) VALUES ('article', 'A', 'a', 'x', 'draft')",
+    );
+    const before = (await content.get("ep"))!;
+    const held = await transcriptVersion(VTT("Wheel's disease"));
+    await expect(
+      content.setTranscript!("ep", {
+        transcript: VTT("Weil's disease"),
+        expectedTranscriptVersion: "stale",
+        changeId: "t0",
+      }),
+    ).rejects.toMatchObject({ currentVersion: held });
+    const written = await content.setTranscript!("ep", {
+      transcript: VTT("Weil's disease"),
+      expectedTranscriptVersion: held,
+      changeId: "t1",
+    });
+    expect(written.version).toBe(before.version);
+    expect((await content.get("ep"))!.transcript).toBe(VTT("Weil's disease"));
+    const snaps = await e.DB.prepare("SELECT snapshot FROM post_versions").all<{
+      snapshot: string;
+    }>();
+    expect(snaps.results.map((r) => JSON.parse(r.snapshot).transcript)).toEqual([
+      VTT("Wheel's disease"),
+    ]);
+    expect(logged.at(-1)).toEqual({
+      event: "carrel.transcript",
+      id: "ep",
+      version: before.version,
+      changeId: "t1",
+    });
+    await expect(
+      content.setTranscript!("a", {
+        transcript: VTT("x"),
+        expectedTranscriptVersion: null,
+        changeId: "t2",
+      }),
+    ).rejects.toThrow(RefusedError);
   });
 });
 
