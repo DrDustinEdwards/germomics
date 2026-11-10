@@ -265,10 +265,10 @@
 /* ── Figure shades ─────────────────────────────────────────────────────────
    A drawing needs more than the interface's handful of tokens. These are Capsomer's own
    12-step scales, palest to deepest, for the two families this site is built from: the purple
-   family, whose step 11 is this site's #4f2d7f, the cerulean family for water and fluids, and the
-   amber family for fur, soil and everything earthen, so a brown animal is not the same color as the
-   tissue inside it.
-   The values are copied from capsomer/tokens/color.css, family-cerulean.css and family-amber.css, so a figure is
+   family, whose step 11 is this site's #4f2d7f, the cerulean family for water and fluids, and a
+   neutral built from the family's own greys for line work, stone and anything without a color of
+   its own. Purple, cyan and grey are all a figure uses.
+   The values are copied from capsomer/tokens/color.css, family-cerulean.css and its neutral roles, so a figure is
    in the family's real scale and not in anything invented for it. Every step is a solid color,
    never a wash over the page, because stacked transparency turns every overlap to mud.
    The site's own interface tokens are untouched: moving germomics onto Capsomer is its own job. */
@@ -297,18 +297,18 @@
   --fig-c10: #0478a0;
   --fig-c11: #025572;
   --fig-c12: #0b1d26;
-  --fig-a1: #fefdfa;
-  --fig-a2: #fcf9f2;
-  --fig-a3: #f9f1e2;
-  --fig-a4: #f5e8d0;
-  --fig-a5: #efddbd;
-  --fig-a6: #e5d0a9;
-  --fig-a7: #d8bd8c;
-  --fig-a8: #c7a45f;
-  --fig-a9: #b68508;
-  --fig-a10: #a37705;
-  --fig-a11: #845802;
-  --fig-a12: #231904;
+  --fig-n1: #fdfdfe;
+  --fig-n2: #fbf9ff;
+  --fig-n3: #f7f6fc;
+  --fig-n4: #efedf4;
+  --fig-n5: #e9e6ef;
+  --fig-n6: #dfdce5;
+  --fig-n7: #c9c6d0;
+  --fig-n8: #aaa7b2;
+  --fig-n9: #918e96;
+  --fig-n10: #686471;
+  --fig-n11: #413d4b;
+  --fig-n12: #1c1727;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -336,18 +336,18 @@
     --fig-c10: #52bae8;
     --fig-c11: #a3d7f0;
     --fig-c12: #e2edf3;
-    --fig-a1: #0f0d09;
-    --fig-a2: #17130d;
-    --fig-a3: #261e0f;
-    --fig-a4: #332710;
-    --fig-a5: #3f3012;
-    --fig-a6: #4e3d1a;
-    --fig-a7: #654f22;
-    --fig-a8: #866622;
-    --fig-a9: #f0b429;
-    --fig-a10: #ffc54a;
-    --fig-a11: #eccc8f;
-    --fig-a12: #f1eadd;
+    --fig-n1: #0e0c12;
+    --fig-n2: #18161c;
+    --fig-n3: #211f25;
+    --fig-n4: #2b292f;
+    --fig-n5: #343238;
+    --fig-n6: #434147;
+    --fig-n7: #55535a;
+    --fig-n8: #6a6871;
+    --fig-n9: #7d7b82;
+    --fig-n10: #9b99a2;
+    --fig-n11: #b7b5bf;
+    --fig-n12: #efedf3;
   }
 }
 :root[data-theme="dark"] {
@@ -375,18 +375,18 @@
   --fig-c10: #52bae8;
   --fig-c11: #a3d7f0;
   --fig-c12: #e2edf3;
-  --fig-a1: #0f0d09;
-  --fig-a2: #17130d;
-  --fig-a3: #261e0f;
-  --fig-a4: #332710;
-  --fig-a5: #3f3012;
-  --fig-a6: #4e3d1a;
-  --fig-a7: #654f22;
-  --fig-a8: #866622;
-  --fig-a9: #f0b429;
-  --fig-a10: #ffc54a;
-  --fig-a11: #eccc8f;
-  --fig-a12: #f1eadd;
+  --fig-n1: #0e0c12;
+  --fig-n2: #18161c;
+  --fig-n3: #211f25;
+  --fig-n4: #2b292f;
+  --fig-n5: #343238;
+  --fig-n6: #434147;
+  --fig-n7: #55535a;
+  --fig-n8: #6a6871;
+  --fig-n9: #7d7b82;
+  --fig-n10: #9b99a2;
+  --fig-n11: #b7b5bf;
+  --fig-n12: #efedf3;
 }
 .blog-diagram {
   margin: 0;

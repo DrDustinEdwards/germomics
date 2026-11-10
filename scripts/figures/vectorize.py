@@ -58,11 +58,12 @@ def extent(path: str) -> tuple[float, float, float, float]:
 # Three flat steps per token, mixed with the page rather than laid over it. A stack of
 # translucent fills turns every overlap to mud; a solid color from this ladder cannot.
 # The figure shade ladders in app/app.css: Capsomer's own 12-step scales, 1 palest to 12 deepest.
-# Purple is tissue and bodies, cerulean is water and fluids, amber is fur, soil and everything
-# earthen. Steps 1 and 2 are page backgrounds in a Radix-style scale and 12 is text, so a drawing
+# Purple is anything with a color of its own: tissue, bodies, fur and skin. Cerulean is water and
+# fluids. The neutral is line work, stone, soil and anything grey in the drawing. Purple, cyan and
+# grey are all a figure uses. Steps 1 and 2 are page backgrounds in a Radix-style scale and 12 is text, so a drawing
 # uses 3 to 11 for its regions and keeps 12 for its line work: that way nothing in it can vanish
 # into the page in either theme.
-FAMILIES = {"brand": "v", "accent": "c", "earth": "a"}
+FAMILIES = {"brand": "v", "accent": "c", "neutral": "n"}
 FIRST_STEP = 7
 LAST_STEP = 11
 
@@ -70,9 +71,9 @@ LAST_STEP = 11
 def token(color: str) -> str:
     """The figure shade for one of the drawing's colors.
 
-    The reference draws with hue: blue is water, pink and red are tissue, brown and yellow are fur
-    and soil, and near-black is its line work. Each picks a family, and the color's own lightness
-    picks the step on that family's scale, so the drawing keeps the depth it was drawn with.
+    The reference draws with hue: blue is water, every other color is something living, a grey is
+    grey, and near-black is its line work. Each picks a family, and the color's own lightness picks
+    the step on that family's scale, so the drawing keeps the depth it was drawn with.
     """
     import colorsys
 
@@ -82,13 +83,14 @@ def token(color: str) -> str:
     # The line work is the deepest step, which is near-black on a light page and near-white on a
     # dark one, so a drawn edge stays an edge in both themes.
     if light < 0.2:
-        return "var(--fig-v12)"
-    if 170 <= degrees <= 265 and saturation >= 0.1:
+        return "var(--fig-n12)"
+    if saturation < 0.12:
+        family = "neutral"
+    elif 170 <= degrees <= 265:
         family = "accent"
-    elif 18 <= degrees <= 65 and saturation >= 0.1:
-        family = "earth"
-    elif saturation < 0.1:
-        family = "earth" if light > 0.5 else "brand"
+    elif 20 <= degrees <= 60:
+        # Browns and tans: ground, stone, fur and skin, which carry no color of their own here.
+        family = "neutral"
     else:
         family = "brand"
     span = LAST_STEP - FIRST_STEP
@@ -201,10 +203,10 @@ def main() -> int:
             # A flat drawing reads by its edges, so every region that is not the line work itself
             # gets the same hairline in ink.
             left, top, right, bottom = extent(shape)
-            if (right - left) * (bottom - top) > args.outline * canvas and "fig-v12" not in shape:
+            if (right - left) * (bottom - top) > args.outline * canvas and "fig-n12" not in shape:
                 shape = shape.replace(
                     "/>",
-                    'stroke="var(--fig-v12)" stroke-width="1" '
+                    'stroke="var(--fig-n12)" stroke-width="1" '
                     'vector-effect="non-scaling-stroke" stroke-opacity="0.7"/>',
                 )
         kept.append(shape)
