@@ -119,13 +119,13 @@ Sources: [Freeman, Journal of Bacteriology (1951)](https://doi.org/10.1128/jb.61
     slug: "a-boy-named-flu",
     file: "a-boy-named-flu--surface",
     title: "Influenza A: surface proteins, drift and shift",
-    alt: "Influenza A has two main surface proteins. Hemagglutinin, H, binds receptors on a cell. Neuraminidase, N, cuts new virus free of the cell. In drift, small changes to H add up over seasons. In shift, a cell infected by two viruses, a pig cell for example, can package gene segments from both into a new virus, sometimes with a new H.",
+    alt: "Influenza A has two main surface proteins. Hemagglutinin, H, binds receptors on a cell. Neuraminidase, N, cuts new virus free of the cell. In drift, small changes to H add up over seasons. In shift, a cell infected by two viruses, can package gene segments from both into a new virus, sometimes with a new H.",
     mermaid: `flowchart TD
   flu0["H and N on the surface"] --> flu1["Drift changes H slowly"]
   flu1["Drift changes H slowly"] --> flu2["Shift swaps whole segments"]`,
     caption: `A schematic of the two surface proteins and of drift and shift, not a map of one strain's mutations.
 
-Sources: [Taubenberger and Morens, Emerging Infectious Diseases (2006)](https://doi.org/10.3201/eid1201.050979).`,
+Sources: [Webster and colleagues, Microbiological Reviews (1992)](https://doi.org/10.1128/mr.56.1.152-179.1992).`,
     placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
   },
   {
@@ -243,6 +243,42 @@ Sources: [Haake and Levett, Current Topics in Microbiology and Immunology (2015)
     caption: `A schematic of reported incubation periods, not a measurement from one case.
 
 Sources: [Alpers, Philosophical Transactions of the Royal Society B (2008)](https://doi.org/10.1098/rstb.2008.0071); [Collinge and colleagues, The Lancet (2006)](https://doi.org/10.1016/S0140-6736(06)68930-7).`,
+    placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
+  },
+  {
+    slug: "its-on-the-syphilis",
+    file: "its-on-the-syphilis--cases",
+    title: "Primary and secondary syphilis in the United States, 1941 to 2019",
+    alt: "A line chart of reported primary and secondary syphilis cases per 100,000 people in the United States. The rate was 51.7 in 1941, peaked at 70.9 in 1946, fell to 2.1 in 2000, and rose to 11.9 in 2019.",
+    mermaid: `flowchart TD
+  cases0["Primary and secondary syphilis in the United States, 1941 to 2019"] --> cases1["Data"]`,
+    caption: `Reported cases from state health departments, with changes in case definitions over time. Not every infection is reported.
+
+Sources: [CDC, Sexually Transmitted Disease Surveillance 2019, Table 1](https://www.cdc.gov/sti-statistics/media/pdfs/2024/07/std-surveillance-2019.pdf).`,
+    placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
+  },
+  {
+    slug: "antitoxin-togo-please",
+    file: "antitoxin-togo-please--us-cases",
+    title: "Diphtheria in the United States, 1933 to 1955",
+    alt: "A line chart of reported diphtheria cases and deaths in the United States. Reported cases fell from 50,462 in 1933 to 2,039 in 1955. Deaths fell from 4,937 in 1933 to 156 in 1953; the source prints no deaths for 1954 or 1955.",
+    mermaid: `flowchart TD
+  uscases0["Diphtheria in the United States, 1933 to 1955"] --> uscases1["Data"]`,
+    caption: `Reported cases and registered deaths, not every infection. This is the period after the 1925 serum run and not a before-and-after test of any one measure.
+
+Sources: [Moore and Larsen, Public Health Reports (1957), Table 1](https://stacks.cdc.gov/view/cdc/72811/cdc_72811_DS1.pdf).`,
+    placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
+  },
+  {
+    slug: "one-flew-over-the-kuru-nest",
+    file: "one-flew-over-the-kuru-nest--deaths",
+    title: "Deaths from kuru, 1987 to 1995",
+    alt: "A bar chart of deaths from kuru each year from 1987 to 1995: 12, 8, 11, 9, 3, 7, 4, 5 and 7, a total of 66 deaths, 17 of men and 49 of women.",
+    mermaid: `flowchart TD
+  deaths0["Deaths from kuru, 1987 to 1995"] --> deaths1["Data"]`,
+    caption: `Every death the surveillance team recorded in these nine years. It does not show the peak of the epidemic in the late 1950s, which has no annual table.
+
+Sources: [Alpers for the Kuru Surveillance Team, Communicable Diseases Intelligence (2005), Table 1](https://doi.org/10.33321/cdi.2005.29.46).`,
     placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
   },
 ];

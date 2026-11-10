@@ -21,6 +21,9 @@ const FILES: Record<string, string> = {
   b461e289: "/blog-diagrams/antitoxin-togo-please--antitoxin-vaccine.html",
   "94953409": "/blog-diagrams/hell-on-weils--course.html",
   d56f7ad3: "/blog-diagrams/one-flew-over-the-kuru-nest--incubation.html",
+  "127ea6bc": "/blog-diagrams/its-on-the-syphilis--cases.html",
+  "432c8f43": "/blog-diagrams/antitoxin-togo-please--us-cases.html",
+  "2605b9a5": "/blog-diagrams/one-flew-over-the-kuru-nest--deaths.html",
 };
 
 export type DiagramFiles = ReadonlyMap<string, string>;
