@@ -311,7 +311,13 @@ def main() -> int:
     args = parser.parse_args()
 
     image = Path(args.image)
-    out = Path(args.out) if args.out else image.with_suffix(".svg")
+    # A part belongs in the library, not beside the reference it was cut from.
+    default = (
+        Path(__file__).resolve().parent / "parts" / f"{args.part}.json"
+        if args.part
+        else image.with_suffix(".svg")
+    )
+    out = Path(args.out) if args.out else default
 
     if args.crop:
         left, top = (float(v) for v in args.crop.split(",")[:2])

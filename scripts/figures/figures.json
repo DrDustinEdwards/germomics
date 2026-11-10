@@ -118,7 +118,6 @@
     "title": "The four stages of untreated syphilis",
     "desc": "Untreated syphilis moves through four stages. In the primary stage a sore appears where it entered and lasts 3 to 6 weeks. The secondary stage brings a rash, which can be on the palms and soles, starting as the sore heals or several weeks later. The latent stage has no visible signs or symptoms. A tertiary stage, 10 to 30 years after infection began, can damage the heart and blood vessels and the brain and nervous system.",
     "sources": "Sources: <a href=\"https://www.cdc.gov/syphilis/about/index.html\">CDC, About Syphilis</a>; <a href=\"https://doi.org/10.15585/mmwr.rr7004a1\" >Workowski and colleagues, MMWR Recommendations and Reports 70(4) (2021)</a >; <a href=\"https://doi.org/10.15698/mic2016.09.523\">Stamm, Microbial Cell (2016)</a>.",
-    "trace": ["--tint", "36,236,138,308", "--tint", "786,182,994,344", "--grey", "594,212,722,344"],
     "labels": [
       [32, 158, "<tspan font-style=\"italic\">Treponema</tspan>", "note", null],
       [32, 180, "<tspan font-style=\"italic\">pallidum</tspan>", "note", null],
@@ -132,6 +131,60 @@
       [888, 375, "Years later", "note", "middle"],
       [888, 422, "Heart, blood vessels,", "note", "middle"],
       [888, 444, "brain, nerves", "note", "middle"]
+    ],
+    "parts": [
+      {
+        "part": "spirochete",
+        "at": [36, 250],
+        "scale": 2.6
+      },
+      {
+        "part": "person-standing",
+        "at": [231, 195],
+        "scale": 3
+      },
+      {
+        "dot": [[270, 300]],
+        "r": 5
+      },
+      {
+        "part": "person-standing",
+        "at": [423, 195],
+        "scale": 3
+      },
+      {
+        "dot": [
+          [440, 252],
+          [462, 246],
+          [484, 254],
+          [447, 270],
+          [470, 274],
+          [492, 266],
+          [456, 290],
+          [480, 292]
+        ],
+        "r": 3.5
+      },
+      {
+        "part": "person-standing",
+        "at": [622, 195],
+        "scale": 3
+      },
+      {
+        "part": "organs-tertiary"
+      },
+      {
+        "from": [316, 280],
+        "to": [400, 280]
+      },
+      {
+        "from": [508, 280],
+        "to": [610, 280]
+      },
+      {
+        "from": [710, 280],
+        "to": [778, 280]
+      }
     ]
   }
 }

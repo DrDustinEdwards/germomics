@@ -68,6 +68,15 @@ def place(items: list) -> tuple[str, list[tuple[float, float, float, float]]]:
             drawn.append(path)
             boxes.append(box)
             continue
+        if "dot" in item:
+            # A mark on a part: the sore where it entered, a rash spot, a molecule. Small enough
+            # that it is always a circle, so it is said as a point and a radius.
+            radius = item.get("r", 4)
+            klass = "ln " + item.get("tone", "brand") + " tint2-" + item.get("tone", "brand")
+            for x, y in item["dot"]:
+                drawn.append(f'<circle class="{klass}" cx="{x:g}" cy="{y:g}" r="{radius:g}"/>')
+                boxes.append((x - radius, y - radius, x + radius, y + radius))
+            continue
         part = json.loads((HERE / "parts" / f"{item['part']}.json").read_text())
         # A part remembers where it sat in its reference, so a figure that keeps that layout says
         # nothing; one that moves the part says "at".
