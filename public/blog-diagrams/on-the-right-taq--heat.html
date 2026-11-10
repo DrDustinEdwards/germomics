@@ -2,57 +2,66 @@
   <figure
     class="blog-diagram"
     role="img"
-    aria-label="A PCR cycle swings between heat that separates the DNA strands, a cooler step where primers bind, and a middle step where the polymerase copies. Taq polymerase comes from Thermus aquaticus, a bacterium of hot springs. It is heat-stable, so the reaction can run at higher temperatures."
+    aria-label="A PCR cycle denatures the DNA at about 94 to 98 degrees Celsius, anneals primers at 50 to 65, and extends at about 72. Taq polymerase comes from Thermus aquaticus, a bacterium of hot springs. It is heat-stable, so the hot denaturation step does not inactivate it."
   >
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 190" width="760" height="190">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 190" width="800" height="190">
       <title>Why PCR uses a heat-stable polymerase</title>
       <desc>
-        A PCR cycle swings between heat that separates the DNA strands, a cooler step where primers
-        bind, and a middle step where the polymerase copies. Taq polymerase comes from Thermus
-        aquaticus, a bacterium of hot springs. It is heat-stable, so the reaction can run at higher
-        temperatures.
+        A PCR cycle denatures the DNA at about 94 to 98 degrees Celsius, anneals primers at 50 to
+        65, and extends at about 72. Taq polymerase comes from Thermus aquaticus, a bacterium of hot
+        springs. It is heat-stable, so the hot denaturation step does not inactivate it.
       </desc>
-      <path class="ln" d="M50 24V150H440" />
+      <path class="ln" d="M100 24V150H440" />
       <g transform="translate(440 150)"><path class="ln muted" d="M-4 -6L3 0L-4 6" /></g>
-      <g transform="translate(50 22)"><path class="ln muted" d="M-4 6L0 0L4 6" /></g>
-      <text class="label-secondary" x="42" y="70" text-anchor="end">heat</text>
-      <path class="ln rule-line muted" d="M50 44H440" stroke-dasharray="1 5" />
-      <path class="ln rule-line muted" d="M50 84H440" stroke-dasharray="1 5" />
-      <path class="ln rule-line muted" d="M50 112H440" stroke-dasharray="1 5" />
+      <g transform="translate(100 22)"><path class="ln muted" d="M-4 6L0 0L4 6" /></g>
+      <text class="label-secondary" x="92" y="48" text-anchor="end">94–98 °C</text>
+      <path class="ln muted" d="M97 44H100" />
+      <text class="label-secondary" x="92" y="88" text-anchor="end">about 72 °C</text>
+      <path class="ln muted" d="M97 84H100" />
+      <text class="label-secondary" x="92" y="116" text-anchor="end">50–65 °C</text>
+      <path class="ln muted" d="M97 112H100" />
+      <path class="ln rule-line muted" d="M100 44H440" stroke-dasharray="1 5" />
+      <path class="ln rule-line muted" d="M100 84H440" stroke-dasharray="1 5" />
+      <path class="ln rule-line muted" d="M100 112H440" stroke-dasharray="1 5" />
       <path
         class="ln m-draw accent"
         pathLength="1"
         style="--i: 0"
-        d="M50 112L70 44H110L130 112H170L190 84H240L260 44H300L320 112H360L380 84H430"
+        d="M100 112L120 44H160L180 112H220L240 84H290L310 44H350L370 112H410L430 84H470"
       />
-      <text class="label-secondary" x="90" y="36" text-anchor="middle">denature</text>
-      <text class="label-secondary" x="150" y="128" text-anchor="middle">anneal</text>
-      <text class="label-secondary" x="215" y="76" text-anchor="middle">extend</text>
-      <text class="label-secondary" x="245" y="172" text-anchor="middle">
+      <text class="label-secondary" x="140" y="36" text-anchor="middle">denature</text>
+      <text class="label-secondary" x="200" y="128" text-anchor="middle">anneal</text>
+      <text class="label-secondary" x="265" y="76" text-anchor="middle">extend</text>
+      <text class="label-secondary" x="280" y="172" text-anchor="middle">
         temperature over repeated cycles, not to scale
       </text>
       <g class="m-fade" style="--i: 1">
-        <g transform="translate(510 62)">
+        <g transform="translate(550 62)">
           <circle class="ln accent tint-accent" r="10" />
           <path class="ln accent" d="M-4 0L-1 3L5 -4" />
         </g>
       </g>
-      <text class="label-primary" x="534" y="52" text-anchor="start">Taq polymerase</text>
-      <text class="label-secondary" x="534" y="70" text-anchor="start">
+      <text class="label-primary" x="574" y="52" text-anchor="start">Taq polymerase</text>
+      <text class="label-secondary" x="574" y="70" text-anchor="start">
         from Thermus aquaticus,
       </text>
-      <text class="label-secondary" x="534" y="85" text-anchor="start">a hot-spring bacterium</text>
-      <text class="label-secondary" x="534" y="118" text-anchor="start">
-        heat-stable, so the reaction
+      <text class="label-secondary" x="574" y="85" text-anchor="start">a hot-spring bacterium</text>
+      <text class="label-secondary" x="574" y="118" text-anchor="start">
+        heat-stable, so it is not
       </text>
-      <text class="label-secondary" x="534" y="133" text-anchor="start">
-        can run at higher temperatures
+      <text class="label-secondary" x="574" y="133" text-anchor="start">
+        inactivated by the hot step
       </text>
     </svg>
   </figure>
   <p class="blog-diagram-credit">
     Sources:
-    <a href="https://doi.org/10.1126/science.2448875">Saiki and colleagues, Science (1988)</a>;
+    <a href="https://doi.org/10.1038/s41378-025-00898-3"
+      >Shamsian and colleagues, Microsystems and Nanoengineering (2025)</a
+    >;
+    <a href="https://doi.org/10.3389/fmicb.2014.00465"
+      >Ishino and Ishino, Frontiers in Microbiology (2014)</a
+    >; <a href="https://doi.org/10.1126/science.2448875">Saiki and colleagues, Science (1988)</a>;
     <a href="https://doi.org/10.1128/jb.98.1.289-297.1969"
       >Brock and Freeze, Journal of Bacteriology (1969)</a
     >.

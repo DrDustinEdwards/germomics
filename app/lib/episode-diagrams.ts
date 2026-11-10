@@ -119,13 +119,13 @@ Sources: [Freeman, Journal of Bacteriology (1951)](https://doi.org/10.1128/jb.61
     slug: "a-boy-named-flu",
     file: "a-boy-named-flu--surface",
     title: "Influenza A: surface proteins, drift and shift",
-    alt: "Influenza A viruses are divided into subtypes by two proteins on their surface, hemagglutinin, H, and neuraminidase, N, which the immune system recognizes. Drift is gradual genetic and antigenic change over time. In shift, a cell infected by two viruses can swap gene segments between them, giving a new mix of segments.",
+    alt: "Influenza A viruses are divided into subtypes by two surface proteins. Hemagglutinin, H, binds sialic acid receptors on the host cell. Neuraminidase, N, cleaves sialic acid and frees new virus from the cell. Drift is the accumulation of point mutations in the H and N genes, which changes their antigenic properties a little at a time. In shift, a cell infected by two viruses can reassort gene segments between them, giving a new mix of segments.",
     mermaid: `flowchart TD
   flu0["H and N on the surface"] --> flu1["Drift changes H slowly"]
   flu1["Drift changes H slowly"] --> flu2["Shift swaps whole segments"]`,
     caption: `A schematic of the two surface proteins and of drift and shift, not a map of one strain's mutations.
 
-Sources: [CDC, Types of influenza viruses](https://www.cdc.gov/flu/about/viruses-types.html); [Webster and colleagues, Microbiological Reviews (1992)](https://doi.org/10.1128/mr.56.1.152-179.1992).`,
+Sources: [Gazik, Holodniy and Bayat, Viruses (2025)](https://doi.org/10.3390/v18010054); [CDC, Types of influenza viruses](https://www.cdc.gov/flu/about/viruses-types.html); [Webster and colleagues, Microbiological Reviews (1992)](https://doi.org/10.1128/mr.56.1.152-179.1992).`,
     placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
   },
   {
@@ -158,13 +158,13 @@ Sources: [Gonzalez-Escobedo, Marshall and Gunn, Nature Reviews Microbiology (201
     slug: "on-the-right-taq",
     file: "on-the-right-taq--heat",
     title: "Why PCR uses a heat-stable polymerase",
-    alt: "A PCR cycle swings between heat that separates the DNA strands, a cooler step where primers bind, and a middle step where the polymerase copies. Taq polymerase comes from Thermus aquaticus, a bacterium of hot springs. It is heat-stable, so the reaction can run at higher temperatures.",
+    alt: "A PCR cycle denatures the DNA at about 94 to 98 degrees Celsius, anneals primers at 50 to 65, and extends at about 72. Taq polymerase comes from Thermus aquaticus, a bacterium of hot springs. It is heat-stable, so the hot denaturation step does not inactivate it.",
     mermaid: `flowchart TD
   pcr0["Heat separates the strands"] --> pcr1["E. coli polymerase fails"]
   pcr1["E. coli polymerase fails"] --> pcr2["Taq survives"]`,
     caption: `Typical temperatures, and the times are not to scale. Real protocols vary with the primers and the enzyme.
 
-Sources: [Saiki and colleagues, Science (1988)](https://doi.org/10.1126/science.2448875); [Brock and Freeze, Journal of Bacteriology (1969)](https://doi.org/10.1128/jb.98.1.289-297.1969).`,
+Sources: [Shamsian and colleagues, Microsystems and Nanoengineering (2025)](https://doi.org/10.1038/s41378-025-00898-3); [Ishino and Ishino, Frontiers in Microbiology (2014)](https://doi.org/10.3389/fmicb.2014.00465); [Saiki and colleagues, Science (1988)](https://doi.org/10.1126/science.2448875); [Brock and Freeze, Journal of Bacteriology (1969)](https://doi.org/10.1128/jb.98.1.289-297.1969).`,
     placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
   },
   {
