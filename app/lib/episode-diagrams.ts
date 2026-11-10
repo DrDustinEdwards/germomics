@@ -132,13 +132,13 @@ Sources: [Webster and colleagues, Microbiological Reviews (1992)](https://doi.or
     slug: "a-sky-full-of-sars",
     file: "a-sky-full-of-sars--spike",
     title: "SARS coronavirus: spike, receptor and host range",
-    alt: "The SARS coronavirus has a crown of spike proteins. A spike binds ACE2, a receptor on a human cell, like a key in a lock. Related coronaviruses were found in bats, and a closely related virus in palm civets sold in markets in southern China, before the 2002 to 2003 outbreak in people.",
+    alt: "The SARS coronavirus has a crown of spike proteins. A spike binds ACE2, a receptor on a human cell, like a key in a lock. The 2002 to 2003 outbreak in people was followed by the discovery of related coronaviruses in bats, and of a closely related virus in palm civets sold in markets in southern China.",
     mermaid: `flowchart TD
   sars0["Spike binds ACE2"] --> sars1["Related viruses in bats"]
   sars1["Related viruses in bats"] --> sars2["Civets, then people"]`,
     caption: `A schematic of binding and of the host chain, not a measurement of affinity. The route to people is simplified.
 
-Sources: [Li and colleagues, Science (2005)](https://doi.org/10.1126/science.1118391); [Guan and colleagues, Science (2003)](https://doi.org/10.1126/science.1087139).`,
+Sources: [Li and colleagues, Nature (2003)](https://doi.org/10.1038/nature02145); [Li and colleagues, Science (2005)](https://doi.org/10.1126/science.1118391); [Guan and colleagues, Science (2003)](https://doi.org/10.1126/science.1087139).`,
     placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
   },
   {
@@ -211,7 +211,7 @@ Sources: [Field, Journal of Clinical Investigation (2003)](https://doi.org/10.11
     slug: "antitoxin-togo-please",
     file: "antitoxin-togo-please--antitoxin-vaccine",
     title: "Antitoxin and vaccine are different protection",
-    alt: "Antitoxin is borrowed antibodies: an animal is immunized, and its serum is given to a patient who is already infected, which neutralizes the toxin now but protects only for a short time. A vaccine uses a harmless form of the toxin, a toxoid, so the person's own cells make antibodies and keep a memory that lasts years, with boosters.",
+    alt: "Antitoxin is borrowed antibodies: an animal is immunized, and its serum is given to a patient who is already infected, which neutralizes the toxin now. A vaccine uses a harmless form of the toxin, a toxoid, so the person's own cells make antibodies and keep a memory that lasts years, with boosters.",
     mermaid: `flowchart TD
   antitoxin0["Borrowed antibodies"] --> antitoxin1["Own antibodies"]`,
     caption: `A schematic of two kinds of protection, not a treatment or vaccination schedule.
@@ -242,7 +242,7 @@ Sources: [Haake and Levett, Current Topics in Microbiology and Immunology (2015)
   kuru1["Years of incubation"] --> kuru2["Symptoms"]`,
     caption: `A schematic of reported incubation periods, not a measurement from one case.
 
-Sources: [Alpers, Philosophical Transactions of the Royal Society B (2008)](https://doi.org/10.1098/rstb.2008.0071); [Collinge and colleagues, The Lancet (2006)](https://doi.org/10.1016/S0140-6736(06)68930-7).`,
+Sources: [Alpers, Philosophical Transactions of the Royal Society B (2008)](https://doi.org/10.1098/rstb.2008.0071); [Collinge and colleagues, The Lancet (2006)](https://doi.org/10.1016/S0140-6736(06)68930-7); [Alpers, Communicable Diseases Intelligence (2005)](https://doi.org/10.33321/cdi.2005.29.46).`,
     placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
   },
   {
