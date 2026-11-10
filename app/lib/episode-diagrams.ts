@@ -278,7 +278,7 @@ Sources: [Alpers, Philosophical Transactions of the Royal Society B (2008)](http
   antitoxin0["Borrowed antibodies"] --> antitoxin1["Own antibodies"]`,
     caption: `A schematic of two kinds of protection, not a treatment or vaccination schedule.
 
-Sources: [Centers for Disease Control and Prevention, Pink Book, Diphtheria](https://www.cdc.gov/pinkbook/hcp/table-of-contents/chapter-8-diphtheria.html).`,
+Sources: [Centers for Disease Control and Prevention, Pink Book, Diphtheria](https://www.cdc.gov/pinkbook/hcp/table-of-contents/chapter-7-diphtheria.html).`,
     placement: "Draft in Carrel only: pick the spot in the essay with Dustin.",
   },
 ];

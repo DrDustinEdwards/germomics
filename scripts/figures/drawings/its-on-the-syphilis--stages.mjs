@@ -1,5 +1,5 @@
 // The four stages of untreated syphilis, with what each one shows and when.
-import { arrow, at, bilayer, brain, caption, circle, ellipse, g, heart, path, person, spirochete, text } from "../kit.mjs";
+import { arrow, at, brain, caption, circle, g, heart, path, person, spirochete, text } from "../kit.mjs";
 
 /** A chancre: a firm, round sore with a raised rim, on a patch of skin. */
 const chancre = (x, y) =>

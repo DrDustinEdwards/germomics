@@ -1,5 +1,5 @@
 // Influenza A: the two surface proteins, and the two ways the virus changes.
-import { arrow, at, caption, circle, ellipse, envelopedVirus, g, path, rect, text } from "../kit.mjs";
+import { arrow, at, caption, circle, ellipse, g, path, rect, text } from "../kit.mjs";
 
 /** The eight RNA segments inside a virion, as short coiled strands. */
 const segments = (r, cls = "muted") =>

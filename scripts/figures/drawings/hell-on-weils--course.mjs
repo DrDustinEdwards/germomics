@@ -36,7 +36,7 @@ const severe =
     [
       [478, 96, "jaundice"],
       [478, 128, "kidney failure"],
-      [478, 160, "bleeding is common"],
+      [478, 160, "bleeding"],
     ]
       .map(([x, y, label]) => text(x + 34, y + 4, label, { anchor: "start" }))
       .join(""),
