@@ -21,6 +21,11 @@ import { pageToc, storedBody } from "~/lib/render.server";
 import { postImages, shareImage } from "~/lib/images.server";
 import { episodeContext } from "~/lib/episode-context.server";
 import { PostDetail, type DetailData } from "~/components/content/PostDetail";
+import diagramsCss from "~/diagrams.css?url";
+
+// An essay is the only page that shows a figure, so the figure CSS loads here rather than
+// on every route, as charts.css does on /data/:slug.
+export const links: Route.LinksFunction = () => [{ rel: "stylesheet", href: diagramsCss }];
 
 // An episode's page is the player's own (its surface, waveform, transcript read-along, chapters and progress), so it
 // hydrates on load; an article sends no React (lib/hydration.ts).

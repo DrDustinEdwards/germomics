@@ -26,7 +26,11 @@ const WIDTHS = [
 ];
 const THEMES = ["light", "dark"];
 
-const css = fs.readFileSync(path.join(ROOT, "app/app.css"), "utf8");
+// Both stylesheets, the way the essay route loads them: the figure CSS lives in diagrams.css
+// so it reaches only the route that shows a figure.
+const css = ["app/app.css", "app/diagrams.css"]
+  .map((f) => fs.readFileSync(path.join(ROOT, f), "utf8"))
+  .join("\n");
 const wanted = process.argv.slice(2);
 const names = fs
   .readdirSync(FIGURES)

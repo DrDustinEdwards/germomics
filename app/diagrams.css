@@ -1,0 +1,232 @@
+/* The essay figures: the hairline drawings, their shades, labels and motion.
+ *
+ * These load only on the route that renders an essay body, the way charts.css loads only on
+ * /data/:slug. Every page on the site was carrying a kilobyte of figure CSS for figures it
+ * never shows (germomics CLAUDE.md, hard rule 4: what only one route needs loads on that
+ * route). */
+
+.blog-diagram-block {
+  margin: 0 auto 2.5rem;
+  max-width: 680px;
+}
+/* ── Figure shades ─────────────────────────────────────────────────────────
+   A drawing needs more than the interface's handful of tokens. These are Capsomer's own
+   12-step scales, palest to deepest, for the two families this site is built from: the purple
+   family, whose step 11 is this site's #4f2d7f, the cerulean family for water and fluids, and a
+   neutral built from the family's own greys for line work, stone and anything without a color of
+   its own. Purple, cyan and grey are all a figure uses.
+   The values are copied from capsomer/tokens/color.css, family-cerulean.css and its neutral roles, so a figure is
+   in the family's real scale and not in anything invented for it. Every step is a solid color,
+   never a wash over the page, because stacked transparency turns every overlap to mud.
+   The site's own interface tokens are untouched: moving germomics onto Capsomer is its own job. */
+:root {
+  --fig-v7: #c8b6ed;
+  --fig-v8: #b29ae3;
+  --fig-v9: #8c5fd2;
+  --fig-v10: #7d50c1;
+  --fig-v11: #4f2d7f;
+  --fig-v12: #1d162c;
+  --fig-c7: #9ec8dd;
+  --fig-c8: #79b2ce;
+  --fig-c9: #0588b4;
+  --fig-c10: #0478a0;
+  --fig-c11: #025572;
+  --fig-c12: #0b1d26;
+  --fig-n7: #c9c6d0;
+  --fig-n8: #aaa7b2;
+  --fig-n9: #918e96;
+  --fig-n10: #686471;
+  --fig-n11: #413d4b;
+  --fig-n12: #1c1727;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fig-v7: #584976;
+    --fig-v8: #745d9f;
+    --fig-v9: #8c5fd2;
+    --fig-v10: #c09eff;
+    --fig-v11: #d8c7ff;
+    --fig-v12: #ede8f7;
+    --fig-c7: #33586a;
+    --fig-c8: #3d738d;
+    --fig-c9: #0588b4;
+    --fig-c10: #52bae8;
+    --fig-c11: #a3d7f0;
+    --fig-c12: #e2edf3;
+    --fig-n7: #55535a;
+    --fig-n8: #6a6871;
+    --fig-n9: #7d7b82;
+    --fig-n10: #9b99a2;
+    --fig-n11: #b7b5bf;
+    --fig-n12: #efedf3;
+  }
+}
+:root[data-theme="dark"] {
+  --fig-v7: #584976;
+  --fig-v8: #745d9f;
+  --fig-v9: #8c5fd2;
+  --fig-v10: #c09eff;
+  --fig-v11: #d8c7ff;
+  --fig-v12: #ede8f7;
+  --fig-c7: #33586a;
+  --fig-c8: #3d738d;
+  --fig-c9: #0588b4;
+  --fig-c10: #52bae8;
+  --fig-c11: #a3d7f0;
+  --fig-c12: #e2edf3;
+  --fig-n7: #55535a;
+  --fig-n8: #6a6871;
+  --fig-n9: #7d7b82;
+  --fig-n10: #9b99a2;
+  --fig-n11: #b7b5bf;
+  --fig-n12: #efedf3;
+}
+.blog-diagram {
+  margin: 0;
+}
+.blog-diagram svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+}
+/* Flat hairline drawings: one 1px stroke at any width, almost no fill. */
+.blog-diagram .ln {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.blog-diagram .ln.brand {
+  stroke: var(--brand);
+}
+.blog-diagram .ln.accent {
+  stroke: var(--accent);
+}
+.blog-diagram .ln.muted {
+  stroke: var(--muted);
+}
+.blog-diagram .ln.tint-brand {
+  fill: color-mix(in srgb, var(--brand) 14%, transparent);
+}
+.blog-diagram .ln.tint-accent {
+  fill: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.blog-diagram .ln.tint2-brand {
+  fill: color-mix(in srgb, var(--brand) 30%, transparent);
+}
+.blog-diagram .ln.tint2-accent {
+  fill: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.blog-diagram .ln.tint-ink {
+  fill: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+.blog-diagram .ln.tint2-ink {
+  fill: color-mix(in srgb, var(--ink) 18%, transparent);
+}
+/* Traced drawings (scripts/figures/vectorize.py --hairline). A region is opaque and filled with
+   the page, so a near shape hides the far one instead of mixing with it, and it is told apart by
+   its stroke alone: silhouette bright, inner crease dim, one coloured stroke on what the figure is
+   about. Stacked fills are what made the earlier figures muddy. After Hairline's rules 04, 06 and
+   09 (github.com/lucasmarkes/hairline, MIT). */
+.blog-diagram .fig {
+  fill: var(--bg);
+  stroke: var(--fig-n11);
+  stroke-width: 0.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.blog-diagram .fig.in {
+  stroke: var(--fig-n9);
+}
+.blog-diagram .fig.v {
+  stroke: var(--fig-v9);
+}
+.blog-diagram .fig.c {
+  stroke: var(--fig-c9);
+}
+.blog-diagram .fig.ink {
+  fill: var(--fig-n12);
+  stroke: none;
+}
+/* Labels on a traced drawing, whose viewBox is 1024 wide rather than 680, so the sizes are the
+   same on the page as .label-primary and .label-secondary are on a drawn one. */
+.blog-diagram .fig-label {
+  fill: var(--ink);
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+}
+.blog-diagram .fig-note {
+  fill: var(--muted);
+  font-family: var(--font-display);
+  font-size: 19px;
+}
+.blog-diagram .ln.dots {
+  stroke-width: 5;
+  stroke-dasharray: 0 7;
+}
+.blog-diagram .label-primary {
+  fill: var(--ink);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 500;
+}
+.blog-diagram .label-secondary {
+  fill: var(--muted);
+  font-family: var(--font-display);
+  font-size: 12px;
+}
+/* Motion: one rule for every figure. Each part is drawn complete and at rest. Where the browser
+   can tie an animation to the figure scrolling into view, and the visitor has not asked for
+   reduced motion, a part starts from its first state and settles into the drawn one. Nothing
+   loops, so there is nothing to pause (WCAG 2.2.2). Print and older browsers show the drawing. */
+@keyframes bd-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes bd-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes bd-slide {
+  from {
+    transform: translate(var(--fx, 0px), var(--fy, 0px));
+  }
+}
+@supports (animation-timeline: view()) {
+  @media screen and (prefers-reduced-motion: no-preference) {
+    .blog-diagram :is(.m-fade, .m-draw, .m-slide) {
+      animation-timing-function: ease-out;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: entry calc(8% + var(--i, 0) * 7%) entry calc(45% + var(--i, 0) * 7%);
+    }
+    .blog-diagram .m-fade {
+      animation-name: bd-fade;
+    }
+    .blog-diagram .m-draw {
+      vector-effect: none;
+      stroke-dasharray: 1;
+      animation-name: bd-draw;
+    }
+    .blog-diagram .m-slide {
+      animation-name: bd-slide;
+    }
+  }
+}
+.blog-diagram-credit {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.blog-diagram-credit a {
+  color: var(--accent);
+}
