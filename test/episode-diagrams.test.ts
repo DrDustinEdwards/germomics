@@ -60,7 +60,9 @@ describe("the mechanism diagrams", () => {
       expect(html, diagram.slug).toContain('<a href="https://');
       expect(html, diagram.slug).not.toContain("diagram-image");
       expect(html, diagram.slug).not.toContain("/diagrams/");
-      expect(html, diagram.slug).toMatch(/viewBox="0 0 \d+ \d+"/);
+      // A viewBox, so the figure scales; it is cropped to what the drawing fills, so it does
+      // not always start at the origin.
+      expect(html, diagram.slug).toMatch(/viewBox="-?\d+ -?\d+ \d+ \d+"/);
     }
   });
 
