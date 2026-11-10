@@ -78,6 +78,13 @@ def build(name: str, spec: dict, refs: Path) -> None:
         f'  <p class="blog-diagram-credit">{spec["sources"]}</p>\n'
         f'</div>\n'
     )
+    # The repository formats its own files, and CI checks that, so the generated figure is handed
+    # to oxfmt rather than left for a later run to rewrite.
+    formatter = subprocess.run(
+        ["npx", "--no-install", "oxfmt", str(out)], capture_output=True, text=True, cwd=REPO
+    )
+    if formatter.returncode:
+        print(f"  oxfmt did not run ({formatter.returncode}): run npm run format before committing")
     print(f"{out.relative_to(REPO)}: {out.stat().st_size // 1024} KB")
 
 

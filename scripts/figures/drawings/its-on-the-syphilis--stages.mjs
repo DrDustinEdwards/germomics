@@ -1,5 +1,17 @@
 // The four stages of untreated syphilis, with what each one shows and when.
-import { arrow, at, brain, caption, circle, g, heart, path, person, spirochete, text } from "../kit.mjs";
+import {
+  arrow,
+  at,
+  brain,
+  caption,
+  circle,
+  g,
+  heart,
+  path,
+  person,
+  spirochete,
+  text,
+} from "../kit.mjs";
 
 /** A chancre: a firm, round sore with a raised rim, on a patch of skin. */
 const chancre = (x, y) =>
@@ -53,9 +65,7 @@ const tertiary = (x, y) => heart(x - 20, y, 0.9, "brand") + brain(x + 22, y - 4,
 const T = 118; // the timeline
 
 const stage = (x, label, when, lines) =>
-  circle(x, T, 4.5, "muted tint-ink") +
-  text(x, T - 14, when) +
-  caption(x, T + 30, label, lines);
+  circle(x, T, 4.5, "muted tint-ink") + text(x, T - 14, when) + caption(x, T + 30, label, lines);
 
 export default {
   width: 680,

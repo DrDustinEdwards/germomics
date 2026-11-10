@@ -25,7 +25,10 @@ const bracket = (x1, x2, y, label, lines) =>
 const phases =
   bracket(66, 196, 38, "Blood phase", ["bacteria in the blood:", "fever, headache, muscle pain"]) +
   bracket(204, 252, 38, "A lull", ["a brief", "improvement"]) +
-  bracket(262, 398, 38, "Immune phase", ["antibodies appear and the", "bacteria leave in the urine"]);
+  bracket(262, 398, 38, "Immune phase", [
+    "antibodies appear and the",
+    "bacteria leave in the urine",
+  ]);
 
 // Most illness stays mild; a minority develop the severe form.
 const severe =
@@ -42,7 +45,12 @@ const severe =
       .join(""),
   ) +
   // jaundice: a yellowed eye, which reads at icon size where a yellowed hand does not
-  at(492, 96, path("M-14 0C-8 -8 8 -8 14 0C8 8 -8 8 -14 0Z", "brand tint2-brand") + circle(0, 0, 4.5, "brand")) +
+  at(
+    492,
+    96,
+    path("M-14 0C-8 -8 8 -8 14 0C8 8 -8 8 -14 0Z", "brand tint2-brand") +
+      circle(0, 0, 4.5, "brand"),
+  ) +
   kidney(490, 126, 0.4, "brand", { detail: false }) +
   drop(492, 154, "brand", 0.9);
 
@@ -51,7 +59,10 @@ export default {
   height: 206,
   body: chart + phases + severe,
   sources: [
-    ["Levett, Clinical Microbiology Reviews (2001)", "https://doi.org/10.1128/CMR.14.2.296-326.2001"],
+    [
+      "Levett, Clinical Microbiology Reviews (2001)",
+      "https://doi.org/10.1128/CMR.14.2.296-326.2001",
+    ],
     [
       "Haake and Levett, Current Topics in Microbiology and Immunology (2015)",
       "https://doi.org/10.1007/978-3-662-45059-8_5",

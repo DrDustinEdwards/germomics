@@ -22,12 +22,25 @@ const muscle = (x, y) =>
     y,
     g(
       [-14, -4, 6, 16]
-        .map((dy) => path(`M-38 ${dy}q10 -5 20 0t20 0t20 0q10 0 14 2q-4 2 -14 2t-20 0t-20 0t-20 0Z`, "brand tint-brand"))
+        .map((dy) =>
+          path(
+            `M-38 ${dy}q10 -5 20 0t20 0t20 0q10 0 14 2q-4 2 -14 2t-20 0t-20 0t-20 0Z`,
+            "brand tint-brand",
+          ),
+        )
         .join("") +
         [-14, -4, 6, 16]
-          .map((dy) => path(`M-24 ${dy - 1}v3M-12 ${dy - 1}v3M0 ${dy - 1}v3M12 ${dy - 1}v3M24 ${dy - 1}v3`, "brand", { opacity: ".45" }))
+          .map((dy) =>
+            path(
+              `M-24 ${dy - 1}v3M-12 ${dy - 1}v3M0 ${dy - 1}v3M12 ${dy - 1}v3M24 ${dy - 1}v3`,
+              "brand",
+              { opacity: ".45" },
+            ),
+          )
           .join(""),
-    ) + bullet(-26, -30, 10, "brand", 0.8) + bullet(14, -32, -20, "brand", 0.8),
+    ) +
+      bullet(-26, -30, 10, "brand", 0.8) +
+      bullet(14, -32, -20, "brand", 0.8),
   );
 
 /** The spinal cord and brain, cut in section. */
@@ -51,7 +64,12 @@ const glands = (x, y) =>
       [12, 4, 12],
       [-6, 10, 9],
     ]
-      .map(([dx, dy, r]) => path(`M${dx} ${dy}m${-r} 0a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`, "brand tint-brand"))
+      .map(([dx, dy, r]) =>
+        path(
+          `M${dx} ${dy}m${-r} 0a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`,
+          "brand tint-brand",
+        ),
+      )
       .join("") + path("M18 12C26 18 30 24 32 32", "muted"),
   );
 
@@ -99,6 +117,9 @@ export default {
       "Davis, Rall and Schnell, Annual Review of Virology (2015)",
       "https://doi.org/10.1146/annurev-virology-100114-055157",
     ],
-    ["Fooks and colleagues, Nature Reviews Disease Primers (2017)", "https://doi.org/10.1038/nrdp.2017.91"],
+    [
+      "Fooks and colleagues, Nature Reviews Disease Primers (2017)",
+      "https://doi.org/10.1038/nrdp.2017.91",
+    ],
   ],
 };

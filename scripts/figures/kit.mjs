@@ -16,16 +16,14 @@ export const el = (tag, a = {}, inner) =>
   inner === undefined ? `<${tag}${attrs(a)} />` : `<${tag}${attrs(a)}>${inner}</${tag}>`;
 export const g = (inner, a = {}) => el("g", a, inner);
 export const at = (x, y, inner, rot = 0, scale = 1) =>
-  g(
-    inner,
-    {
-      transform:
-        `translate(${n(x)} ${n(y)})` +
-        (rot ? ` rotate(${n(rot)})` : "") +
-        (scale !== 1 ? ` scale(${scale})` : ""),
-    },
-  );
-export const path = (d, cls = "", extra = {}) => el("path", { class: `ln ${cls}`.trim(), d, ...extra });
+  g(inner, {
+    transform:
+      `translate(${n(x)} ${n(y)})` +
+      (rot ? ` rotate(${n(rot)})` : "") +
+      (scale !== 1 ? ` scale(${scale})` : ""),
+  });
+export const path = (d, cls = "", extra = {}) =>
+  el("path", { class: `ln ${cls}`.trim(), d, ...extra });
 export const circle = (cx, cy, r, cls = "", extra = {}) =>
   el("circle", { class: `ln ${cls}`.trim(), cx, cy, r, ...extra });
 export const ellipse = (cx, cy, rx, ry, cls = "", extra = {}) =>
@@ -59,7 +57,8 @@ export function caption(x, y, head, lines = [], anchor = "middle") {
 
 // Arrows
 
-export const chevron = (x, y, rot = 0, cls = "muted") => at(x, y, path("M-4 -6L3 0L-4 6", cls), rot);
+export const chevron = (x, y, rot = 0, cls = "muted") =>
+  at(x, y, path("M-4 -6L3 0L-4 6", cls), rot);
 
 /** A straight arrow with its head at the end point. */
 export function arrow(x1, y1, x2, y2, cls = "muted", extra = {}) {
@@ -102,7 +101,8 @@ export function ringBilayer(cx, cy, r, { gap = 10, cls = "muted", from = 0, to =
     const a1 = (to * Math.PI) / 180;
     const p0 = [cx + rad * Math.cos(a0), cy + rad * Math.sin(a0)];
     const p1 = [cx + rad * Math.cos(a1), cy + rad * Math.sin(a1)];
-    if (to - from >= 360) return `M${n(cx - rad)} ${cy}a${rad} ${rad} 0 1 0 ${2 * rad} 0a${rad} ${rad} 0 1 0 -${2 * rad} 0`;
+    if (to - from >= 360)
+      return `M${n(cx - rad)} ${cy}a${rad} ${rad} 0 1 0 ${2 * rad} 0a${rad} ${rad} 0 1 0 -${2 * rad} 0`;
     return `M${n(p0[0])} ${n(p0[1])}A${rad} ${rad} 0 ${to - from > 180 ? 1 : 0} 1 ${n(p1[0])} ${n(p1[1])}`;
   };
   let tails = "";
@@ -124,7 +124,8 @@ export function cellBody(x, y, w, h, { nucleus = null, r = 14 } = {}) {
   let out = path(body, "tint-ink", { style: "stroke: none" });
   if (nucleus) {
     const [nx, ny] = nucleus;
-    out += ellipse(nx, ny, 18, 12, "muted tint-ink") + ellipse(nx + 3, ny - 1, 5, 4, "muted tint-ink");
+    out +=
+      ellipse(nx, ny, 18, 12, "muted tint-ink") + ellipse(nx + 3, ny - 1, 5, 4, "muted tint-ink");
   }
   return out;
 }
@@ -190,7 +191,13 @@ export function envelopedVirus(x, y, r = 18, cls = "brand", spikeCls = "accent",
   let out = circle(0, 0, r, `${cls} tint-${cls}`) + circle(0, 0, r - 4, cls, { opacity: ".6" });
   for (let i = 0; i < spikes; i += 1) {
     const a = (i * 360) / spikes;
-    out += at(0, 0, path(`M0 ${-r}V${-r - 7}`, spikeCls) + circle(0, -r - 9, 2.4, `${spikeCls} tint2-${spikeCls}`), a);
+    out += at(
+      0,
+      0,
+      path(`M0 ${-r}V${-r - 7}`, spikeCls) +
+        circle(0, -r - 9, 2.4, `${spikeCls} tint2-${spikeCls}`),
+      a,
+    );
   }
   return at(x, y, out);
 }
@@ -297,7 +304,13 @@ export function waterSoil(x1, x2, y, { depth = 34, soil = 22 } = {}) {
 
 /** A drop of urine or water. */
 export const drop = (x, y, cls = "accent", s = 1) =>
-  at(x, y, path("M0 -12C5 -4 8 0 8 4A8 8 0 0 1 -8 4C-8 0 -5 -4 0 -12Z", `${cls} tint2-${cls}`), 0, s);
+  at(
+    x,
+    y,
+    path("M0 -12C5 -4 8 0 8 4A8 8 0 0 1 -8 4C-8 0 -5 -4 0 -12Z", `${cls} tint2-${cls}`),
+    0,
+    s,
+  );
 
 /** One DNA strand as a narrow ribbon, so a strand reads as a molecule and not a rule. */
 export const strand = (x1, x2, y, cls = "brand") =>
@@ -312,7 +325,9 @@ export function rungs(x1, x2, y1, y2) {
 
 /** A DNA duplex from x1 to x2: two strand ribbons with rungs. Classes color each strand. */
 export function duplex(x1, x2, y, { gap = 14, top = "brand", bottom = "brand" } = {}) {
-  return rungs(x1, x2, y + 3, y + gap - 3) + strand(x1, x2, y, top) + strand(x1, x2, y + gap, bottom);
+  return (
+    rungs(x1, x2, y + 3, y + gap - 3) + strand(x1, x2, y, top) + strand(x1, x2, y + gap, bottom)
+  );
 }
 
 /** A ribosome: two subunits on a strand of mRNA. */
@@ -332,8 +347,10 @@ export const heart = (x, y, s = 1, cls = "brand") =>
   at(
     x,
     y,
-    path("M0 14C-14 4 -20 -4 -20 -10C-20 -18 -10 -22 0 -12C10 -22 20 -18 20 -10C20 -4 14 4 0 14Z", `${cls} tint-${cls}`) +
-      path("M-4 -12C-4 -18 -2 -22 2 -24M4 -13C6 -18 10 -20 12 -20", cls),
+    path(
+      "M0 14C-14 4 -20 -4 -20 -10C-20 -18 -10 -22 0 -12C10 -22 20 -18 20 -10C20 -4 14 4 0 14Z",
+      `${cls} tint-${cls}`,
+    ) + path("M-4 -12C-4 -18 -2 -22 2 -24M4 -13C6 -18 10 -20 12 -20", cls),
     0,
     s,
   );
@@ -346,7 +363,12 @@ export const brain = (x, y, s = 1, cls = "brand") =>
     path(
       "M-24 6C-30 -6 -24 -20 -10 -22C-4 -28 10 -28 16 -20C28 -18 32 -6 28 4C30 12 22 18 14 16C10 22 -2 22 -6 16C-16 20 -26 16 -24 6Z",
       `${cls} tint-${cls}`,
-    ) + path("M-14 -10C-8 -14 -4 -6 2 -10S12 -14 16 -8M-18 4C-10 0 -6 8 2 4S14 2 20 6M0 -22C-2 -14 4 -12 2 -4", cls, { opacity: ".7" }),
+    ) +
+      path(
+        "M-14 -10C-8 -14 -4 -6 2 -10S12 -14 16 -8M-18 4C-10 0 -6 8 2 4S14 2 20 6M0 -22C-2 -14 4 -12 2 -4",
+        cls,
+        { opacity: ".7" },
+      ),
     0,
     s,
   );
@@ -435,11 +457,10 @@ export function pool(x, y, id, s = 1) {
           g(path(soil, "muted tint-ink"), { "clip-path": `url(#${id})` }) +
           path("M96 -12C92 2 104 8 100 20C96 32 84 38 88 54", "muted") +
           // ripples on the water side, as rings so they do not read as bacteria
-          path(
-            "M22 26a20 7 0 0 0 40 0M28 20a14 5 0 0 0 28 0M16 34a26 9 0 0 0 52 0",
-            "accent",
-            { style: "fill: none", opacity: ".55" },
-          ) +
+          path("M22 26a20 7 0 0 0 40 0M28 20a14 5 0 0 0 28 0M16 34a26 9 0 0 0 52 0", "accent", {
+            style: "fill: none",
+            opacity: ".55",
+          }) +
           // grains on the soil side
           [
             [112, 10],
@@ -450,7 +471,11 @@ export function pool(x, y, id, s = 1) {
             [108, 34],
             [130, 40],
           ]
-            .map(([gx, gy], i) => circle(gx, gy, 1.4 + (i % 2) * 0.6, "muted", { style: "fill: var(--muted); fill-opacity: .45" }))
+            .map(([gx, gy], i) =>
+              circle(gx, gy, 1.4 + (i % 2) * 0.6, "muted", {
+                style: "fill: var(--muted); fill-opacity: .45",
+              }),
+            )
             .join("") +
           path(outline, "accent", { style: "fill: none" }),
       ),

@@ -1,5 +1,17 @@
 // One cycle of PCR: the strands part, primers bind, Taq copies, and the copies become templates.
-import { at, caption, duplex, ellipse, fade, g, path, rungs, slide, step, strand } from "../kit.mjs";
+import {
+  at,
+  caption,
+  duplex,
+  ellipse,
+  fade,
+  g,
+  path,
+  rungs,
+  slide,
+  step,
+  strand,
+} from "../kit.mjs";
 
 const T = "brand"; // template strands
 const N = "accent"; // new DNA and primers
@@ -33,7 +45,11 @@ const denature =
   curved("M70 77.5C98 77.5 110 92 152 95.5") +
   fade(heat(96, 34), 0);
 
-const anneal = top(186, 324) + bottom(186, 324) + slide(onTop(196, 222), 1, 0, 8) + slide(onBottom(288, 314), 1, 0, -8);
+const anneal =
+  top(186, 324) +
+  bottom(186, 324) +
+  slide(onTop(196, 222), 1, 0, 8) +
+  slide(onBottom(288, 314), 1, 0, -8);
 
 const extend =
   top(356, 494) +
@@ -44,7 +60,8 @@ const extend =
   taq(398, 92) +
   "";
 
-const repeat = duplex(526, 666, 46, { top: T, bottom: N }) + duplex(526, 666, 88, { top: N, bottom: T });
+const repeat =
+  duplex(526, 666, 46, { top: T, bottom: N }) + duplex(526, 666, 88, { top: N, bottom: T });
 
 export default {
   width: 680,
@@ -63,7 +80,13 @@ export default {
     caption(596, 148, "Repeat", ["copies become templates"]),
   sources: [
     ["Saiki and colleagues, Science (1988)", "https://doi.org/10.1126/science.2448875"],
-    ["Chien, Edgar and Trela, Journal of Bacteriology (1976)", "https://doi.org/10.1128/jb.127.3.1550-1557.1976"],
-    ["Mullis and Faloona, Methods in Enzymology (1987)", "https://doi.org/10.1016/0076-6879(87)55023-6"],
+    [
+      "Chien, Edgar and Trela, Journal of Bacteriology (1976)",
+      "https://doi.org/10.1128/jb.127.3.1550-1557.1976",
+    ],
+    [
+      "Mullis and Faloona, Methods in Enzymology (1987)",
+      "https://doi.org/10.1016/0076-6879(87)55023-6",
+    ],
   ],
 };

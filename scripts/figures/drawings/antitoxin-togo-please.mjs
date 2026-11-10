@@ -16,9 +16,21 @@ import {
 } from "../kit.mjs";
 
 const A = (x, y) =>
-  at(x, y, path("M-11 -4C-11 -12 -2 -14 4 -10C11 -5 11 6 4 10C-3 14 -11 9 -11 -4Z", "accent tint2-accent") + text(-2, 4, "A"));
+  at(
+    x,
+    y,
+    path(
+      "M-11 -4C-11 -12 -2 -14 4 -10C11 -5 11 6 4 10C-3 14 -11 9 -11 -4Z",
+      "accent tint2-accent",
+    ) + text(-2, 4, "A"),
+  );
 const B = (x, y) =>
-  at(x, y, path("M-9 -9C-2 -13 8 -9 9 -1C10 7 4 12 -3 11C-10 10 -13 -5 -9 -9Z", "brand tint2-brand") + text(-1, 4, "B"));
+  at(
+    x,
+    y,
+    path("M-9 -9C-2 -13 8 -9 9 -1C10 7 4 12 -3 11C-10 10 -13 -5 -9 -9Z", "brand tint2-brand") +
+      text(-1, 4, "B"),
+  );
 
 // 1. The bacterium, with the phage genome and its tox gene.
 const cell1 =
@@ -74,7 +86,10 @@ export default {
   sources: [
     ["Freeman, Journal of Bacteriology (1951)", "https://doi.org/10.1128/jb.61.6.675-688.1951"],
     ["Holmes, Journal of Infectious Diseases (2000)", "https://doi.org/10.1086/315554"],
-    ["Naglich, Metherall, Russell and Eidels, Cell (1992)", "https://doi.org/10.1016/0092-8674(92)90623-k"],
+    [
+      "Naglich, Metherall, Russell and Eidels, Cell (1992)",
+      "https://doi.org/10.1016/0092-8674(92)90623-k",
+    ],
     ["Collier, Toxicon (2001)", "https://doi.org/10.1016/s0041-0101(01)00165-9"],
   ],
 };

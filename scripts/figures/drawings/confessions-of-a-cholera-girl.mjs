@@ -39,7 +39,8 @@ const cyclase = (x) =>
 
 /** CFTR, the chloride channel, open: two halves with a gap. */
 const cftr = (x) =>
-  rect(x - 14, M - 8, 10, 30, 5, "brand tint2-brand") + rect(x + 4, M - 8, 10, 30, 5, "brand tint2-brand");
+  rect(x - 14, M - 8, 10, 30, 5, "brand tint2-brand") +
+  rect(x + 4, M - 8, 10, 30, 5, "brand tint2-brand");
 
 const camp = (x, y) =>
   g(

@@ -22,7 +22,11 @@ const segments = (r, cls = "muted") =>
  * One virion: the envelope, the eight segments, and the two surface proteins. H is a stalk with a
  * three-lobed head; N is a stalk with a flat four-lobed head. Spots mark changed H and N.
  */
-function virion(x, y, { r = 26, scale = 1, spots = 0, cls = "brand", hCls = "brand", nCls = "accent" } = {}) {
+function virion(
+  x,
+  y,
+  { r = 26, scale = 1, spots = 0, cls = "brand", hCls = "brand", nCls = "accent" } = {},
+) {
   const spikes = [];
   for (let i = 0; i < 14; i += 1) {
     const a = (i * 360) / 14;
@@ -32,7 +36,14 @@ function virion(x, y, { r = 26, scale = 1, spots = 0, cls = "brand", hCls = "bra
       : path(`M-4 ${-r - 6}h8l-2 -6h-4Z`, `${hCls} tint2-${hCls}`);
     const marked = spots > 0 && i % Math.max(1, Math.round(14 / spots)) === 0;
     spikes.push(
-      at(0, 0, path(`M0 ${-r}V${-r - 6}`, isN ? nCls : hCls) + head + (marked ? circle(0, -r - 14, 2.6, `${hCls} tint2-${hCls}`) : ""), a),
+      at(
+        0,
+        0,
+        path(`M0 ${-r}V${-r - 6}`, isN ? nCls : hCls) +
+          head +
+          (marked ? circle(0, -r - 14, 2.6, `${hCls} tint2-${hCls}`) : ""),
+        a,
+      ),
     );
   }
   return at(x, y, circle(0, 0, r, `${cls} tint-${cls}`) + segments(r) + spikes.join(""), 0, scale);
@@ -99,6 +110,9 @@ export default {
     ["CDC, Types of influenza viruses", "https://www.cdc.gov/flu/about/viruses-types.html"],
     ["CDC, How influenza viruses change", "https://www.cdc.gov/flu/php/viruses/change.html"],
     ["Bouvier and Palese, Vaccine (2008)", "https://doi.org/10.1016/j.vaccine.2008.07.039"],
-    ["Webster and colleagues, Microbiological Reviews (1992)", "https://doi.org/10.1128/mr.56.1.152-179.1992"],
+    [
+      "Webster and colleagues, Microbiological Reviews (1992)",
+      "https://doi.org/10.1128/mr.56.1.152-179.1992",
+    ],
   ],
 };

@@ -1,7 +1,21 @@
 // Leptospirosis: the cycle through reservoir mammals, and how a person is exposed and stops it.
 // Laid out as a cycle: the rat sheds into water and soil, a person picks it up there through
 // broken skin or a mucous membrane, and the cycle itself carries on through the next animal.
-import { arrow, at, bust, caption, circle, curve, kidney, path, pool, rat, rect, spirochete, text } from "../kit.mjs";
+import {
+  arrow,
+  at,
+  bust,
+  caption,
+  circle,
+  curve,
+  kidney,
+  path,
+  pool,
+  rat,
+  rect,
+  spirochete,
+  text,
+} from "../kit.mjs";
 
 // The water is the accent, so the bacteria are drawn in the brand color to stay apart from it.
 const BUG = "brand";
@@ -17,7 +31,8 @@ const reservoir =
   text(212, 148, "the kidney tubules", { anchor: "start" });
 
 // Shed in urine, into the water and soil where the bacteria survive for weeks.
-const shed = curve(104, 198, 128, 252, 198, 284, "muted") + text(178, 234, "Urine", { anchor: "start" });
+const shed =
+  curve(104, 198, 128, 252, 198, 284, "muted") + text(178, 234, "Urine", { anchor: "start" });
 
 const water =
   pool(302, 304, "lepto-pool") +
@@ -64,7 +79,10 @@ export default {
   height: 392,
   body: reservoir + shed + water + human + inset + back,
   sources: [
-    ["Levett, Clinical Microbiology Reviews (2001)", "https://doi.org/10.1128/CMR.14.2.296-326.2001"],
+    [
+      "Levett, Clinical Microbiology Reviews (2001)",
+      "https://doi.org/10.1128/CMR.14.2.296-326.2001",
+    ],
     [
       "Haake and Levett, Current Topics in Microbiology and Immunology (2015)",
       "https://doi.org/10.1007/978-3-662-45059-8_5",

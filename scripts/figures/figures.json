@@ -21,62 +21,14 @@
       "592,230,708,406"
     ],
     "labels": [
-      [
-        230,
-        124,
-        "Rat reservoir",
-        "label",
-        "middle"
-      ],
-      [
-        365,
-        170,
-        "<tspan font-style=\"italic\">Leptospira</tspan> in the",
-        "note",
-        null
-      ],
-      [
-        365,
-        196,
-        "kidney tubules",
-        "note",
-        null
-      ],
-      [
-        318,
-        364,
-        "Urine",
-        "note",
-        null
-      ],
-      [
-        521,
-        562,
-        "Fresh water and wet soil",
-        "note",
-        "middle"
-      ],
-      [
-        755,
-        46,
-        "An incidental host",
-        "label",
-        "middle"
-      ],
-      [
-        800,
-        318,
-        "In through broken skin",
-        "note",
-        null
-      ],
-      [
-        800,
-        340,
-        "or mucosa",
-        "note",
-        null
-      ]
+      [230, 124, "Rat reservoir", "label", "middle"],
+      [365, 170, "<tspan font-style=\"italic\">Leptospira</tspan> in the", "note", null],
+      [365, 196, "kidney tubules", "note", null],
+      [318, 364, "Urine", "note", null],
+      [521, 562, "Fresh water and wet soil", "note", "middle"],
+      [755, 46, "An incidental host", "label", "middle"],
+      [800, 318, "In through broken skin", "note", null],
+      [800, 340, "or mucosa", "note", null]
     ]
   },
   "a-sky-full-of-sars--spike": {
@@ -84,38 +36,12 @@
     "title": "SARS coronavirus: spike, receptor and host range",
     "desc": "The SARS coronavirus has a crown of spike proteins. A spike binds ACE2, a receptor on a human cell, like a key in a lock. The 2002 to 2003 outbreak in people was followed by the discovery of related coronaviruses in bats, and of a closely related virus in palm civets sold in markets in southern China.",
     "sources": "Sources: <a href=\"https://doi.org/10.1038/nature02145\">Li and colleagues, Nature (2003)</a>; <a href=\"https://doi.org/10.1126/science.1118391\">Li and colleagues, Science (2005)</a>; <a href=\"https://doi.org/10.1126/science.1087139\">Guan and colleagues, Science (2003)</a>.",
-    "skip": [
-      5,
-      6
-    ],
-    "trace": [
-      "--length",
-      "8",
-      "--grey",
-      "0,400,1024,572"
-    ],
+    "skip": [5, 6],
+    "trace": ["--length", "8", "--grey", "0,400,1024,572"],
     "labels": [
-      [
-        737,
-        140,
-        "Spike protein",
-        "note",
-        null
-      ],
-      [
-        738,
-        353,
-        "ACE2 receptor",
-        "note",
-        null
-      ],
-      [
-        732,
-        405,
-        "Host cell membrane",
-        "note",
-        null
-      ]
+      [737, 140, "Spike protein", "note", null],
+      [738, 353, "ACE2 receptor", "note", null],
+      [732, 405, "Host cell membrane", "note", null]
     ]
   }
 }

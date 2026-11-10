@@ -1,5 +1,18 @@
 // Prion templating: cells make PrPC, PrPSc refolds it into more PrPSc, and the misfolded form spreads.
-import { arrow, at, bilayer, caption, cellBody, ellipse, g, neuron, path, rect, slide, step } from "../kit.mjs";
+import {
+  arrow,
+  at,
+  bilayer,
+  caption,
+  cellBody,
+  ellipse,
+  g,
+  neuron,
+  path,
+  rect,
+  slide,
+  step,
+} from "../kit.mjs";
 
 /** PrPC, the normal fold: a globular protein with three helices. */
 export const prpc = (x, y, rot = 0) =>
@@ -18,14 +31,19 @@ export const prpsc = (x, y, rot = 0) =>
   at(
     x,
     y,
-    [-6, 0, 6].map((dy) => path(`M-12 ${dy - 2}H6V${dy - 4}L12 ${dy}L6 ${dy + 4}V${dy + 2}H-12Z`, "brand tint2-brand")).join(""),
+    [-6, 0, 6]
+      .map((dy) =>
+        path(`M-12 ${dy - 2}H6V${dy - 4}L12 ${dy}L6 ${dy + 4}V${dy + 2}H-12Z`, "brand tint2-brand"),
+      )
+      .join(""),
     rot,
   );
 
 /** A fibril: PrPSc units in a stack, from y upward. */
-const fibril = (x, y, count) => g(Array.from({ length: count }, (_, i) => prpsc(x, y - i * 22)).join(""));
+const fibril = (x, y, count) =>
+  g(Array.from({ length: count }, (_, i) => prpsc(x, y - i * 22)).join(""));
 
-const small = (x, y) => prpsc(x, y).replace(/\)">/, ") scale(.55)\">");
+const small = (x, y) => prpsc(x, y).replace(/\)">/, ') scale(.55)">');
 
 // 1. A cell membrane with PrPC on its surface.
 const make =
@@ -67,6 +85,9 @@ export default {
     ["Prusiner, Science (1982)", "https://doi.org/10.1126/science.6801762"],
     ["Pan and colleagues, PNAS (1993)", "https://doi.org/10.1073/pnas.90.23.10962"],
     ["Gajdusek, Gibbs and Alpers, Nature (1966)", "https://doi.org/10.1038/209794a0"],
-    ["Alpers, Philosophical Transactions of the Royal Society B (2008)", "https://doi.org/10.1098/rstb.2008.0071"],
+    [
+      "Alpers, Philosophical Transactions of the Royal Society B (2008)",
+      "https://doi.org/10.1098/rstb.2008.0071",
+    ],
   ],
 };
