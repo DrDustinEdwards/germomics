@@ -36,6 +36,64 @@ from pathlib import Path
 HEX = re.compile(r'fill="(#[0-9A-Fa-f]{6})"')
 PATH = re.compile(r"<path [^>]*/>")
 NUMBER = re.compile(r"-?\d+\.\d+")
+COORD = re.compile(r"(-?\d+(?:\.\d+)?)[ ,](-?\d+(?:\.\d+)?)")
+TRANSLATE = re.compile(r"translate\((-?[\d.]+),(-?[\d.]+)\)")
+
+
+def extent(path: str) -> tuple[float, float, float, float]:
+    """The path's bounding box, read straight from its coordinates and its translate."""
+    data = re.search(r' d="([^"]*)"', path)
+    if not data:
+        return (0.0, 0.0, 0.0, 0.0)
+    points = [(float(a), float(b)) for a, b in COORD.findall(data.group(1))]
+    if not points:
+        return (0.0, 0.0, 0.0, 0.0)
+    move = TRANSLATE.search(path)
+    dx, dy = (float(move.group(1)), float(move.group(2))) if move else (0.0, 0.0)
+    xs = [x + dx for x, _ in points]
+    ys = [y + dy for _, y in points]
+    return (min(xs), min(ys), max(xs), max(ys))
+
+
+# Three flat steps per token, mixed with the page rather than laid over it. A stack of
+# translucent fills turns every overlap to mud; a solid color from this ladder cannot.
+# The figure shade ladders in app/app.css: Capsomer's own 12-step scales, 1 palest to 12 deepest.
+# Purple is tissue and bodies, cerulean is water and fluids, amber is fur, soil and everything
+# earthen. Steps 1 and 2 are page backgrounds in a Radix-style scale and 12 is text, so a drawing
+# uses 3 to 11 for its regions and keeps 12 for its line work: that way nothing in it can vanish
+# into the page in either theme.
+FAMILIES = {"brand": "v", "accent": "c", "earth": "a"}
+FIRST_STEP = 7
+LAST_STEP = 11
+
+
+def token(color: str) -> str:
+    """The figure shade for one of the drawing's colors.
+
+    The reference draws with hue: blue is water, pink and red are tissue, brown and yellow are fur
+    and soil, and near-black is its line work. Each picks a family, and the color's own lightness
+    picks the step on that family's scale, so the drawing keeps the depth it was drawn with.
+    """
+    import colorsys
+
+    r, g, b = (int(color[i : i + 2], 16) / 255 for i in (1, 3, 5))
+    hue, light, saturation = colorsys.rgb_to_hls(r, g, b)
+    degrees = hue * 360
+    # The line work is the deepest step, which is near-black on a light page and near-white on a
+    # dark one, so a drawn edge stays an edge in both themes.
+    if light < 0.2:
+        return "var(--fig-v12)"
+    if 170 <= degrees <= 265 and saturation >= 0.1:
+        family = "accent"
+    elif 18 <= degrees <= 65 and saturation >= 0.1:
+        family = "earth"
+    elif saturation < 0.1:
+        family = "earth" if light > 0.5 else "brand"
+    else:
+        family = "brand"
+    span = LAST_STEP - FIRST_STEP
+    step = FIRST_STEP + round((1 - min(max(light, 0.1), 0.95)) / 0.85 * span)
+    return f"var(--fig-{FAMILIES[family]}{min(LAST_STEP, max(FIRST_STEP, step))})"
 
 
 def luminance(color: str) -> float:
@@ -93,6 +151,21 @@ def main() -> int:
     parser.add_argument("--drop-pale", type=float, default=240)
     parser.add_argument("--blank", action="append", default=[], metavar="L,T,R,B")
     parser.add_argument("--palette", action="store_true")
+    parser.add_argument(
+        "--outline",
+        type=float,
+        nargs="?",
+        const=0.0015,
+        default=0,
+        metavar="SHARE",
+        help="give every region bigger than this share of the canvas a hairline ink outline",
+    )
+    parser.add_argument(
+        "--map",
+        action="store_true",
+        help="rewrite every fill onto the site's tokens: the line work as ink, water as accent, "
+        "tissue as brand, fur and soil as muted, each at a flat opacity from its lightness",
+    )
     args = parser.parse_args()
 
     image = Path(args.image)
@@ -106,13 +179,35 @@ def main() -> int:
     width, height = (int(v) for v in size.groups())
 
     kept, fills = [], Counter()
+    canvas = float(width) * float(height)
     for path in PATH.findall(traced):
         color = HEX.search(path)
-        # A path paler than the page is the tracer's own antialiasing halo, not part of the drawing.
-        if not color or luminance(color.group(1)) > args.drop_pale:
+        if not color:
             continue
+        if luminance(color.group(1)) > args.drop_pale:
+            # A pale path is either the page itself or one of the tracer's antialiasing halos:
+            # the page covers most of the canvas, a halo covers almost none, and a pale part of the
+            # drawing, such as skin, sits between the two and is kept.
+            left, top, right, bottom = extent(path)
+            share = ((right - left) * (bottom - top)) / canvas if canvas else 0
+            if share > 0.5 or share < 0.004:
+                continue
         fills[color.group(1)] += 1
-        kept.append(NUMBER.sub(lambda m: f"{float(m.group(0)):.{args.precision}f}", path))
+        shape = NUMBER.sub(lambda m: f"{float(m.group(0)):.{args.precision}f}", path)
+        if args.map:
+            fill = token(color.group(1))
+            shape = HEX.sub(f'fill="{fill}"', shape)
+        if args.outline:
+            # A flat drawing reads by its edges, so every region that is not the line work itself
+            # gets the same hairline in ink.
+            left, top, right, bottom = extent(shape)
+            if (right - left) * (bottom - top) > args.outline * canvas and "fig-v12" not in shape:
+                shape = shape.replace(
+                    "/>",
+                    'stroke="var(--fig-v12)" stroke-width="1" '
+                    'vector-effect="non-scaling-stroke" stroke-opacity="0.7"/>',
+                )
+        kept.append(shape)
 
     if not kept:
         print("every traced path was paler than --drop-pale", file=sys.stderr)
