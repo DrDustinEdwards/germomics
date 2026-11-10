@@ -172,7 +172,11 @@ def main() -> int:
     for name in args.names or figures:
         if name not in figures:
             raise SystemExit(f"{name} is not in figures.json")
-        build(name, figures[name], Path(args.refs))
+        spec = figures[name]
+        if "parts" in spec:
+            compose(name, spec)
+        else:
+            build(name, spec, Path(args.refs))
     return 0
 
 

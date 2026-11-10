@@ -8,6 +8,7 @@
     "test": "vitest run",
     "check:console": "devkit-console",
     "check:figures": "python3 scripts/figures/check_figures.py --quiet",
+    "figures": "python3 scripts/figures/build_figures.py && npm run check:figures && NODE_PATH=$(npm root -g) node scripts/figures/look.mjs",
     "check:migrations": "devkit-migrations drizzle",
     "typecheck": "devkit-bootstrap --types-only && react-router typegen && tsc -b",
     "lint": "oxlint --type-aware --deny-warnings --report-unused-disable-directives-severity=error",

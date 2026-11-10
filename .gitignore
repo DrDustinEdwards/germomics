@@ -26,3 +26,4 @@ scripts/_generated/
 /reports/
 .stryker-tmp/
 __pycache__/
+/.figures/
