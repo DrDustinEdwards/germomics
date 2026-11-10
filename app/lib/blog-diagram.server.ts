@@ -1,4 +1,4 @@
-// The six episode figures. The essay keeps its :::diagram block. Prelum's hash of that Mermaid
+// The episode figures. The essay keeps its :::diagram block. Prelum's hash of that Mermaid
 // selects the drawing, and the author's caption stays under it. The SVG text lives in a static
 // file so the Worker script does not carry it. Reading it needs the ASSETS binding in
 // wrangler.jsonc. The files are still served to browsers without that binding, and then
@@ -11,6 +11,16 @@ const FILES: Record<string, string> = {
   "37c8d7c7": "/blog-diagrams/rabies-day-out.html",
   eddeb2d1: "/blog-diagrams/hell-on-weils.html",
   "56832a80": "/blog-diagrams/antitoxin-togo-please.html",
+  a9e7c699: "/blog-diagrams/a-boy-named-flu--surface.html",
+  "423c9a8d": "/blog-diagrams/a-sky-full-of-sars--spike.html",
+  b62309ed: "/blog-diagrams/theres-something-about-typhoid-mary--carrier.html",
+  b6d8a8cd: "/blog-diagrams/on-the-right-taq--heat.html",
+  "862881f5": "/blog-diagrams/rabies-day-out--window.html",
+  "4eba03a1": "/blog-diagrams/its-on-the-syphilis--stages.html",
+  "9a54eda7": "/blog-diagrams/confessions-of-a-cholera-girl--rehydration.html",
+  b461e289: "/blog-diagrams/antitoxin-togo-please--antitoxin-vaccine.html",
+  "94953409": "/blog-diagrams/hell-on-weils--course.html",
+  d56f7ad3: "/blog-diagrams/one-flew-over-the-kuru-nest--incubation.html",
 };
 
 export type DiagramFiles = ReadonlyMap<string, string>;

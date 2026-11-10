@@ -275,7 +275,7 @@
 .blog-diagram .ln {
   fill: none;
   stroke: var(--ink);
-  stroke-width: 1;
+  stroke-width: 1.25;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
@@ -304,7 +304,47 @@
 .blog-diagram .label-secondary {
   fill: var(--muted);
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 12px;
+}
+/* Motion: one rule for every figure. Each part is drawn complete and at rest. Where the browser
+   can tie an animation to the figure scrolling into view, and the visitor has not asked for
+   reduced motion, a part starts from its first state and settles into the drawn one. Nothing
+   loops, so there is nothing to pause (WCAG 2.2.2). Print and older browsers show the drawing. */
+@keyframes bd-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes bd-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes bd-slide {
+  from {
+    transform: translate(var(--fx, 0px), var(--fy, 0px));
+  }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) and (not print) {
+    .blog-diagram :is(.m-fade, .m-draw, .m-slide) {
+      animation-timing-function: ease-out;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: entry calc(8% + var(--i, 0) * 7%) entry calc(45% + var(--i, 0) * 7%);
+    }
+    .blog-diagram .m-fade {
+      animation-name: bd-fade;
+    }
+    .blog-diagram .m-draw {
+      vector-effect: none;
+      stroke-dasharray: 1;
+      animation-name: bd-draw;
+    }
+    .blog-diagram .m-slide {
+      animation-name: bd-slide;
+    }
+  }
 }
 .blog-diagram-credit {
   margin: 0.75rem 0 0;

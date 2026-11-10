@@ -8,30 +8,32 @@ import {
   type DiagramFiles,
 } from "~/lib/blog-diagram.server";
 import { renderMarkdown } from "~/lib/render.server";
-import pcr from "../public/blog-diagrams/on-the-right-taq.html?raw";
-import cholera from "../public/blog-diagrams/confessions-of-a-cholera-girl.html?raw";
-import prion from "../public/blog-diagrams/one-flew-over-the-kuru-nest.html?raw";
-import rabies from "../public/blog-diagrams/rabies-day-out.html?raw";
-import lepto from "../public/blog-diagrams/hell-on-weils.html?raw";
-import diphtheria from "../public/blog-diagrams/antitoxin-togo-please.html?raw";
 import storedPcr from "./fixtures/pcr-stored-figure.txt?raw";
 
-const RAW: Record<string, string> = {
-  "on-the-right-taq": pcr,
-  "confessions-of-a-cholera-girl": cholera,
-  "one-flew-over-the-kuru-nest": prion,
-  "rabies-day-out": rabies,
-  "hell-on-weils": lepto,
-  "antitoxin-togo-please": diphtheria,
-};
+const RAW: Record<string, string> = Object.fromEntries(
+  Object.entries(
+    import.meta.glob("../public/blog-diagrams/*.html", {
+      eager: true,
+      query: "?raw",
+      import: "default",
+    }),
+  ).map(([path, html]) => [path.replace(/^.*\/|\.html$/g, ""), html as string]),
+);
+const pcr = RAW["on-the-right-taq"]!;
 
 function files(): DiagramFiles {
   return new Map(
-    EPISODE_DIAGRAMS.map((diagram) => [diagramKey(diagram.mermaid), RAW[diagram.slug] ?? ""]),
+    EPISODE_DIAGRAMS.map((diagram) => [diagramKey(diagram.mermaid), RAW[diagram.file] ?? ""]),
   );
 }
 
 describe("the mechanism diagrams", () => {
+  it("serves every drawing in public/blog-diagrams from a diagram", () => {
+    const served = new Set(EPISODE_DIAGRAMS.map((d) => d.file));
+    expect([...served].sort()).toEqual(Object.keys(RAW).sort());
+    expect(new Set(EPISODE_DIAGRAMS.map((d) => diagramKey(d.mermaid))).size).toBe(served.size);
+  });
+
   it("keeps each inline figure where the essay's diagram block sits, with its caption", async () => {
     const drawings = files();
     for (const diagram of EPISODE_DIAGRAMS) {
@@ -40,9 +42,9 @@ describe("the mechanism diagrams", () => {
         diagram.mermaid,
       ).key;
       expect(diagramKey(diagram.mermaid), diagram.slug).toBe(key);
-      expect(RAW[diagram.slug], diagram.slug).toContain('class="blog-diagram"');
-      expect(RAW[diagram.slug], diagram.slug).toContain(`<title>${diagram.title}</title>`);
-      expect(RAW[diagram.slug], diagram.slug).toContain("<desc>");
+      expect(RAW[diagram.file], diagram.slug).toContain('class="blog-diagram"');
+      expect(RAW[diagram.file], diagram.slug).toContain(`<title>${diagram.title}</title>`);
+      expect(RAW[diagram.file], diagram.slug).toContain("<desc>");
 
       const markdown = `Before the figure.\n\n${diagramMarkdown(diagram)}\n\nAfter the figure.`;
       const { html } = await renderMarkdown(markdown, async () => [], { diagrams: drawings });
@@ -55,10 +57,10 @@ describe("the mechanism diagrams", () => {
       expect(html, diagram.slug).toContain(`<title id="bd-${key}-title">${diagram.title}</title>`);
       expect(html, diagram.slug).toContain(`<desc id="bd-${key}-desc">`);
       expect(html, diagram.slug).toContain("<figcaption>");
-      expect(html, diagram.slug).toContain("doi.org");
+      expect(html, diagram.slug).toContain('<a href="https://');
       expect(html, diagram.slug).not.toContain("diagram-image");
       expect(html, diagram.slug).not.toContain("/diagrams/");
-      expect(html, diagram.slug).toContain('width="680"');
+      expect(html, diagram.slug).toMatch(/viewBox="0 0 \d+ \d+"/);
     }
   });
 
