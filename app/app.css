@@ -271,93 +271,40 @@
   height: auto;
   margin-inline: auto;
 }
-.blog-diagram .node-neutral {
-  fill: var(--surface);
-  stroke: var(--brand);
-  color: var(--brand);
-}
-.blog-diagram .node-accent {
-  fill: color-mix(in srgb, var(--brand) 16%, var(--card));
-  stroke: var(--brand);
-  color: var(--brand);
-}
-.blog-diagram .node-success {
-  fill: color-mix(in srgb, var(--accent) 14%, var(--card));
-  stroke: var(--accent);
-  color: var(--accent);
-}
-.blog-diagram .node-warning {
-  fill: color-mix(in srgb, var(--brand-strong) 18%, var(--card));
-  stroke: var(--brand-strong);
-  color: var(--brand-strong);
-}
-.blog-diagram .node-info {
-  fill: var(--surface);
-  stroke: var(--accent);
-  color: var(--accent);
-}
-.blog-diagram .node-neutral,
-.blog-diagram .node-accent,
-.blog-diagram .node-success,
-.blog-diagram .node-warning,
-.blog-diagram .node-info {
-  stroke-width: 1.5;
-}
-.blog-diagram .glyph {
+/* Flat hairline drawings: one 1px stroke at any width, almost no fill. */
+.blog-diagram .ln {
   fill: none;
-  stroke: currentColor;
-  stroke-width: 1.75;
+  stroke: var(--ink);
+  stroke-width: 1;
   stroke-linecap: round;
   stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
 }
-.blog-diagram .glyph.primer {
-  stroke-width: 4;
-}
-.blog-diagram .glyph.stop {
-  stroke-width: 3;
-}
-.blog-diagram .bead {
-  fill: var(--card);
-  stroke: currentColor;
-  stroke-width: 1.5;
-}
-.blog-diagram .enzyme {
-  fill: currentColor;
-  stroke: none;
-}
-.blog-diagram .organ,
-.blog-diagram .membrane {
-  fill: var(--surface);
-  stroke: currentColor;
-  stroke-width: 1.5;
-  stroke-linecap: round;
-}
-.blog-diagram .membrane {
-  fill: none;
+.blog-diagram .ln.brand {
   stroke: var(--brand);
-  stroke-width: 6;
+}
+.blog-diagram .ln.accent {
+  stroke: var(--accent);
+}
+.blog-diagram .ln.muted {
+  stroke: var(--muted);
+}
+.blog-diagram .ln.tint-brand {
+  fill: color-mix(in srgb, var(--brand) 14%, transparent);
+}
+.blog-diagram .ln.tint-accent {
+  fill: color-mix(in srgb, var(--accent) 14%, transparent);
 }
 .blog-diagram .label-primary {
   fill: var(--ink);
   font-family: var(--font-display);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
 }
 .blog-diagram .label-secondary {
   fill: var(--muted);
   font-family: var(--font-display);
   font-size: 11px;
-}
-.blog-diagram .connector {
-  fill: none;
-  stroke: var(--muted);
-  stroke-width: 1.5;
-}
-.blog-diagram .connector.quiet {
-  stroke: var(--border);
-}
-.blog-diagram .arrow-head {
-  fill: var(--muted);
 }
 .blog-diagram-credit {
   margin: 0.75rem 0 0;
