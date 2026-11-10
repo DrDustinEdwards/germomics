@@ -5,19 +5,117 @@
     "desc": "Reservoir kidney leads to Shed in urine, which leads to Fresh water and wet soil. That water and soil lead back to Reservoir kidney, and also to Broken skin or a mucous membrane. Infected mammals, rats in particular, can carry Leptospira in the kidney and shed it in urine. A person is exposed the same way and is not what keeps the cycle going. Some infections cause no illness. Weil's disease is a severe form.",
     "sources": "Sources: <a href=\"https://doi.org/10.1128/CMR.14.2.296-326.2001\">Levett, Clinical Microbiology Reviews (2001)</a>; <a href=\"https://doi.org/10.1007/978-3-662-45059-8_5\">Haake and Levett, Current Topics in Microbiology and Immunology (2015)</a>.",
     "trace": [
-      "--blank", "786,44,1010,164", "--blank", "828,44,1010,196",
-      "--tint", "258,150,316,238", "--tint", "468,412,602,508",
-      "--ink", "300,6,714,128", "--ink", "232,284,372,476", "--ink", "592,230,708,406"
+      "--blank",
+      "786,44,1010,164",
+      "--blank",
+      "828,44,1010,196",
+      "--tint",
+      "258,150,316,238",
+      "--tint",
+      "468,412,602,508",
+      "--ink",
+      "300,6,714,128",
+      "--ink",
+      "232,284,372,476",
+      "--ink",
+      "592,230,708,406"
     ],
     "labels": [
-      [230, 124, "Rat reservoir", "label", "middle"],
-      [365, 170, "<tspan font-style=\"italic\">Leptospira</tspan> in the", "note", null],
-      [365, 196, "kidney tubules", "note", null],
-      [318, 364, "Urine", "note", null],
-      [521, 562, "Fresh water and wet soil", "note", "middle"],
-      [755, 46, "An incidental host", "label", "middle"],
-      [800, 318, "In through broken skin", "note", null],
-      [800, 340, "or mucosa", "note", null]
+      [
+        230,
+        124,
+        "Rat reservoir",
+        "label",
+        "middle"
+      ],
+      [
+        365,
+        170,
+        "<tspan font-style=\"italic\">Leptospira</tspan> in the",
+        "note",
+        null
+      ],
+      [
+        365,
+        196,
+        "kidney tubules",
+        "note",
+        null
+      ],
+      [
+        318,
+        364,
+        "Urine",
+        "note",
+        null
+      ],
+      [
+        521,
+        562,
+        "Fresh water and wet soil",
+        "note",
+        "middle"
+      ],
+      [
+        755,
+        46,
+        "An incidental host",
+        "label",
+        "middle"
+      ],
+      [
+        800,
+        318,
+        "In through broken skin",
+        "note",
+        null
+      ],
+      [
+        800,
+        340,
+        "or mucosa",
+        "note",
+        null
+      ]
+    ]
+  },
+  "a-sky-full-of-sars--spike": {
+    "source": "sars-spike",
+    "title": "SARS coronavirus: spike, receptor and host range",
+    "desc": "The SARS coronavirus has a crown of spike proteins. A spike binds ACE2, a receptor on a human cell, like a key in a lock. The 2002 to 2003 outbreak in people was followed by the discovery of related coronaviruses in bats, and of a closely related virus in palm civets sold in markets in southern China.",
+    "sources": "Sources: <a href=\"https://doi.org/10.1038/nature02145\">Li and colleagues, Nature (2003)</a>; <a href=\"https://doi.org/10.1126/science.1118391\">Li and colleagues, Science (2005)</a>; <a href=\"https://doi.org/10.1126/science.1087139\">Guan and colleagues, Science (2003)</a>.",
+    "skip": [
+      5,
+      6
+    ],
+    "trace": [
+      "--length",
+      "8",
+      "--grey",
+      "0,400,1024,572"
+    ],
+    "labels": [
+      [
+        737,
+        140,
+        "Spike protein",
+        "note",
+        null
+      ],
+      [
+        738,
+        353,
+        "ACE2 receptor",
+        "note",
+        null
+      ],
+      [
+        732,
+        405,
+        "Host cell membrane",
+        "note",
+        null
+      ]
     ]
   }
 }

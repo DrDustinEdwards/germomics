@@ -41,10 +41,19 @@ def build(name: str, spec: dict, refs: Path) -> None:
     if not source.exists():
         raise SystemExit(f"{source} is missing: pass --refs with the folder holding the references")
 
-    found = subprocess.run(
+    # find_labels prints one "--blank l,t,r,b" per line of lettering it found. It is looking for
+    # runs of small dark blobs, and a drawing sometimes has one: a row of lipid heads reads as a
+    # word. "skip" drops those boxes by their 1-based place in its output.
+    boxes = subprocess.run(
         [sys.executable, str(HERE / "find_labels.py"), str(source)],
         check=True, capture_output=True, text=True,
-    ).stdout.split()
+    ).stdout.split("\n")
+    boxes = [line.split()[1] for line in boxes if line.strip()]
+    skip = set(spec.get("skip", []))
+    found = []
+    for index, box in enumerate(boxes, 1):
+        if index not in skip:
+            found += ["--blank", box]
 
     art = Path(tempfile.mkdtemp()) / f"{name}.svg"
     subprocess.run(

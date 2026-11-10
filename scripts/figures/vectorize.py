@@ -19,6 +19,7 @@ Options:
     --colors N       color precision, 1 to 8; higher keeps more tones and more paths (default 6)
     --speckle N      drop a traced region smaller than N pixels (default 6)
     --layer N        how far two colors must differ to become separate layers (default 12)
+    --length N       the shortest segment the tracer may draw; higher is lighter (default 4)
     --precision N    decimal places kept in the path data (default 1)
     --drop-pale N    drop a path whose fill is paler than this luminance, 0 to 255 (default 240)
     --blank L,T,R,B  paint this box of the image white before tracing; repeatable
@@ -90,7 +91,7 @@ def token(color: str) -> str:
         return "var(--fig-n12)"
     if saturation < 0.12:
         family = "neutral"
-    elif 170 <= degrees <= 265:
+    elif 170 <= degrees <= 240:
         family = "accent"
     elif degrees <= 60 or degrees >= 340:
         # Every warm color in these references is a material: brown fur, a pink tail, tan skin,
@@ -203,7 +204,7 @@ def trace(prepared: Path, args) -> str:
         color_precision=args.colors,
         layer_difference=args.layer,
         corner_threshold=60,
-        length_threshold=4.0,
+        length_threshold=args.length,
         splice_threshold=45,
         path_precision=2,
     )
@@ -218,6 +219,14 @@ def main() -> int:
     parser.add_argument("--colors", type=int, default=6)
     parser.add_argument("--speckle", type=int, default=6)
     parser.add_argument("--layer", type=int, default=12)
+    parser.add_argument(
+        "--length",
+        type=float,
+        default=4.0,
+        help="the shortest segment the tracer may draw. A long wiggly outline, such as a membrane's "
+        "row of lipids, is most of a figure's weight; a longer threshold draws the same line with "
+        "fewer points",
+    )
     parser.add_argument("--precision", type=int, default=1)
     parser.add_argument("--drop-pale", type=float, default=240)
     parser.add_argument("--blank", action="append", default=[], metavar="L,T,R,B")
