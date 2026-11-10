@@ -28,6 +28,32 @@ TRACE = [
 ]
 
 
+def frame(paths: str, rows: list, width: int, height: int) -> tuple[int, int, int, int]:
+    """The box the drawing and its labels actually occupy, so the figure is not mostly margin.
+
+    A reference is drawn on a 1024 by 572 card with whatever space its own layout left. On the page
+    the figure is as wide as the column, so that space becomes a band of nothing above and below it.
+    """
+    sys.path.insert(0, str(HERE))
+    from vectorize import PATH, extent
+
+    boxes = [extent(path) for path in PATH.findall(paths)]
+    for x, y, text, kind, anchor in rows:
+        size = 20 if kind == "label" else 19
+        # Text has no geometry here, so it is measured as an em box: a little wide, which is the
+        # safe way to be wrong.
+        run = len(re.sub(r"<[^>]*>", "", text)) * size * 0.58
+        left = x - run / 2 if anchor == "middle" else x
+        boxes.append((left, y - size, left + run, y + size * 0.25))
+    pad = 14
+    return (
+        max(0, round(min(b[0] for b in boxes) - pad)),
+        max(0, round(min(b[1] for b in boxes) - pad)),
+        min(width, round(max(b[2] for b in boxes) + pad)),
+        min(height, round(max(b[3] for b in boxes) + pad)),
+    )
+
+
 def labels(rows: list) -> str:
     out = []
     for x, y, text, kind, anchor in rows:
@@ -63,12 +89,14 @@ def build(name: str, spec: dict, refs: Path) -> None:
     )
     paths = "\n      ".join(re.findall(r"<path [^>]*/>", art.read_text()))
 
+    left, top, right, bottom = frame(paths, spec["labels"], 1024, 572)
+    view = f"{left} {top} {right - left} {bottom - top}"
     desc = spec["desc"]
     out = REPO / "public" / "blog-diagrams" / f"{name}.html"
     out.write_text(
         f'<div class="blog-diagram-block">\n'
         f'  <figure class="blog-diagram" role="img" aria-label="{desc}">\n'
-        f'    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 572" width="1024" height="572">\n'
+        f'    <svg xmlns="http://www.w3.org/2000/svg" viewBox="{view}" width="{right - left}" height="{bottom - top}">\n'
         f'      <title>{spec["title"]}</title>\n'
         f'      <desc>{desc}</desc>\n'
         f'      {paths}\n'

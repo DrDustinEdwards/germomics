@@ -21,14 +21,62 @@
       "592,230,708,406"
     ],
     "labels": [
-      [230, 124, "Rat reservoir", "label", "middle"],
-      [365, 170, "<tspan font-style=\"italic\">Leptospira</tspan> in the", "note", null],
-      [365, 196, "kidney tubules", "note", null],
-      [318, 364, "Urine", "note", null],
-      [521, 562, "Fresh water and wet soil", "note", "middle"],
-      [755, 46, "An incidental host", "label", "middle"],
-      [800, 318, "In through broken skin", "note", null],
-      [800, 340, "or mucosa", "note", null]
+      [
+        230,
+        124,
+        "Rat reservoir",
+        "label",
+        "middle"
+      ],
+      [
+        365,
+        170,
+        "<tspan font-style=\"italic\">Leptospira</tspan> in the",
+        "note",
+        null
+      ],
+      [
+        365,
+        196,
+        "kidney tubules",
+        "note",
+        null
+      ],
+      [
+        318,
+        364,
+        "Urine",
+        "note",
+        null
+      ],
+      [
+        521,
+        562,
+        "Fresh water and wet soil",
+        "note",
+        "middle"
+      ],
+      [
+        755,
+        46,
+        "An incidental host",
+        "label",
+        "middle"
+      ],
+      [
+        800,
+        318,
+        "In through broken skin",
+        "note",
+        null
+      ],
+      [
+        800,
+        340,
+        "or mucosa",
+        "note",
+        null
+      ]
     ]
   },
   "a-sky-full-of-sars--spike": {
@@ -36,12 +84,101 @@
     "title": "SARS coronavirus: spike, receptor and host range",
     "desc": "The SARS coronavirus has a crown of spike proteins. A spike binds ACE2, a receptor on a human cell, like a key in a lock. The 2002 to 2003 outbreak in people was followed by the discovery of related coronaviruses in bats, and of a closely related virus in palm civets sold in markets in southern China.",
     "sources": "Sources: <a href=\"https://doi.org/10.1038/nature02145\">Li and colleagues, Nature (2003)</a>; <a href=\"https://doi.org/10.1126/science.1118391\">Li and colleagues, Science (2005)</a>; <a href=\"https://doi.org/10.1126/science.1087139\">Guan and colleagues, Science (2003)</a>.",
-    "skip": [5, 6],
-    "trace": ["--length", "8", "--grey", "0,400,1024,572"],
+    "skip": [
+      5,
+      6
+    ],
+    "trace": [
+      "--length",
+      "8",
+      "--grey",
+      "0,400,1024,572"
+    ],
     "labels": [
-      [737, 140, "Spike protein", "note", null],
-      [738, 353, "ACE2 receptor", "note", null],
-      [732, 405, "Host cell membrane", "note", null]
+      [
+        737,
+        140,
+        "Spike protein",
+        "note",
+        null
+      ],
+      [
+        738,
+        353,
+        "ACE2 receptor",
+        "note",
+        null
+      ],
+      [
+        732,
+        405,
+        "Host cell membrane",
+        "note",
+        null
+      ]
+    ]
+  },
+  "one-flew-over-the-kuru-nest": {
+    "source": "prion-templating",
+    "title": "Prion templating",
+    "desc": "Cells make PrPC leads to PrPSc templates more PrPSc, which leads to The misfolded form can spread. Cells make the prion protein as PrPC. PrPSc can bind PrPC and favor its refolding into more PrPSc. Kuru is a human disease of this kind among the Fore and their neighbors, and it was transmitted experimentally.",
+    "sources": "Sources: <a href=\"https://doi.org/10.1126/science.6801762\">Prusiner, Science (1982)</a>; <a href=\"https://doi.org/10.1073/pnas.90.23.10962\">Pan and colleagues, PNAS (1993)</a>; <a href=\"https://doi.org/10.1038/209794a0\">Gajdusek, Gibbs and Alpers, Nature (1966)</a>; <a href=\"https://doi.org/10.1098/rstb.2008.0071\">Alpers, Philosophical Transactions of the Royal Society B (2008)</a>.",
+    "skip": [],
+    "trace": [
+      "--grey",
+      "0,168,272,382",
+      "--grey",
+      "258,185,356,305",
+      "--grey",
+      "846,168,1024,382",
+      "--tint",
+      "333,238,437,362",
+      "--tint",
+      "618,188,802,362"
+    ],
+    "labels": [
+      [
+        278,
+        182,
+        "PrP<tspan font-size=\"13\" dy=\"-7\">C</tspan>",
+        "note",
+        null
+      ],
+      [
+        344,
+        389,
+        "PrP<tspan font-size=\"13\" dy=\"-7\">Sc</tspan>",
+        "note",
+        null
+      ],
+      [
+        440,
+        258,
+        "conversion",
+        "note",
+        null
+      ],
+      [
+        80,
+        399,
+        "neuron",
+        "note",
+        null
+      ],
+      [
+        631,
+        399,
+        "aggregate",
+        "note",
+        null
+      ],
+      [
+        899,
+        399,
+        "neuron",
+        "note",
+        null
+      ]
     ]
   }
 }
