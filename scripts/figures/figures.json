@@ -70,5 +70,30 @@
       [631, 399, "aggregate", "note", null],
       [899, 399, "neuron", "note", null]
     ]
+  },
+  "on-the-right-taq": {
+    "source": "pcr-cycle",
+    "title": "One cycle of PCR",
+    "desc": "Denature leads to Anneal, which leads to Extend, which leads to Repeat. Denature is heat separating the two DNA strands. Anneal is primers binding, at a temperature that depends on the primers. Extend is Taq polymerase, from Thermus aquaticus, copying each strand and staying active through the heat. Repeat is those copies becoming templates.",
+    "sources": "Sources: <a href=\"https://doi.org/10.1126/science.2448875\">Saiki and colleagues, Science (1988)</a>; <a href=\"https://doi.org/10.1128/jb.127.3.1550-1557.1976\" >Chien, Edgar and Trela, Journal of Bacteriology (1976)</a >; <a href=\"https://doi.org/10.1016/0076-6879(87)55023-6\" >Mullis and Faloona, Methods in Enzymology (1987)</a >.",
+    "trace": [
+      "--tint",
+      "18,254,1002,346",
+      "--grey",
+      "396,236,474,266",
+      "--grey",
+      "786,284,878,316",
+      "--grey",
+      "756,210,876,274",
+      "--grey",
+      "866,276,956,344",
+      "--ink",
+      "866,178,996,212"
+    ],
+    "labels": [
+      [143, 172, "Denature", "note", null],
+      [437, 172, "Anneal primers", "note", null],
+      [818, 172, "Extend", "note", null]
+    ]
   }
 }

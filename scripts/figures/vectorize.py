@@ -322,10 +322,12 @@ def main() -> int:
                 if fill != "var(--fig-n12)":
                     # A region counts as in the box only when it fits inside it: the kidney is the
                     # subject, the rat it sits in is not, and the rat's own outline runs out of the box.
-                    if within(box, args.tint, args.scale):
-                        fill = re.sub(r"--fig-[cn]", "--fig-v", fill)
-                    elif within(box, args.grey, args.scale):
+                    # --grey is read first, so a small region can be taken back out of a --tint
+                    # that covers it: the strand is the subject, the primer lying along it is not.
+                    if within(box, args.grey, args.scale):
                         fill = re.sub(r"--fig-[vc]", "--fig-n", fill)
+                    elif within(box, args.tint, args.scale):
+                        fill = re.sub(r"--fig-[cn]", "--fig-v", fill)
                 shape = HEX.sub(f'fill="{fill}"', shape)
             if args.hairline:
                 # Hairline's rule 06: a solid is opaque, filled with the ground colour, so a near
