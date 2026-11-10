@@ -304,6 +304,9 @@
 .blog-diagram .ln.tint-ink {
   fill: color-mix(in srgb, var(--ink) 7%, transparent);
 }
+.blog-diagram .ln.tint2-ink {
+  fill: color-mix(in srgb, var(--ink) 18%, transparent);
+}
 .blog-diagram .ln.dots {
   stroke-width: 5;
   stroke-dasharray: 0 7;

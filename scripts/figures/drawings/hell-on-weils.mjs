@@ -1,48 +1,68 @@
 // Leptospirosis: the cycle through reservoir mammals, and how a person is exposed and stops it.
-import { arrow, caption, curve, drop, kidney, path, person, rat, spirochete, text } from "../kit.mjs";
+// Laid out as a cycle: the rat sheds into water and soil, a person picks it up there through
+// broken skin or a mucous membrane, and the cycle itself carries on through the next animal.
+import { arrow, at, bust, caption, circle, curve, kidney, path, pool, rat, rect, spirochete, text } from "../kit.mjs";
 
-/** The pond in perspective: water over wet soil, as a flat ellipse. */
-const pond = (cx, cy) =>
-  path(`M${cx - 110} ${cy}a110 36 0 1 0 220 0a110 36 0 1 0 -220 0`, "accent tint-accent") +
-  path(`M${cx - 110} ${cy}a110 36 0 0 0 220 0`, "muted tint-ink") +
-  path(`M${cx - 60} ${cy - 14}q8 -5 16 0t16 0M${cx + 14} ${cy - 20}q8 -5 16 0t16 0`, "accent", { opacity: ".7" });
+// The water is the accent, so the bacteria are drawn in the brand color to stay apart from it.
+const BUG = "brand";
 
-// The reservoir: a rat, with the kidney it carries leptospires in.
+// The reservoir: a rat, with the kidney it carries leptospires in, called out.
 const reservoir =
-  rat(108, 104, 1) +
-  kidney(240, 50, 0.6) +
-  path("M178 92L216 68", "muted", { "stroke-dasharray": "2 3" }) +
-  spirochete(250, 38, 17, 20, "accent") +
-  spirochete(256, 58, 17, -14, "accent") +
-  text(242, 104, "Leptospira in the kidney") +
-  caption(112, 166, "Reservoir mammals", ["rats above all"]);
+  text(112, 86, "Reservoir mammals, rats above all", { primary: true }) +
+  rat(112, 150, 1) +
+  kidney(150, 142, 0.4, "brand", { detail: false }) +
+  path("M163 138H204", "muted", { "stroke-dasharray": "2 3" }) +
+  circle(205, 138, 1.8, "muted", { style: "fill: var(--muted)" }) +
+  text(212, 133, "Leptospira live in", { anchor: "start" }) +
+  text(212, 148, "the kidney tubules", { anchor: "start" });
 
-// Shed in urine, into the water and soil where the bacteria survive.
-const shed = drop(176, 196) + arrow(158, 208, 212, 212, "muted") + text(150, 230, "urine");
+// Shed in urine, into the water and soil where the bacteria survive for weeks.
+const shed = curve(104, 198, 128, 252, 198, 284, "muted") + text(178, 234, "Urine", { anchor: "start" });
 
 const water =
-  pond(300, 226) +
-  spirochete(262, 220, 22, 8) +
-  spirochete(320, 232, 22, -12) +
-  spirochete(348, 214, 22, 16) +
-  caption(300, 282, "Fresh water and wet soil", ["they survive outside a host"]);
+  pool(302, 304, "lepto-pool") +
+  spirochete(268, 294, 20, 12, BUG) +
+  spirochete(300, 314, 20, -16, BUG) +
+  spirochete(240, 312, 20, 6, BUG) +
+  caption(288, 352, "Fresh water and wet soil", ["they stay alive outside a host"]);
 
-// The cycle closes when another reservoir animal picks them up.
-const back =
-  curve(412, 198, 448, 24, 196, 32, "muted", { "stroke-dasharray": "4 4" }) +
-  text(330, 20, "another reservoir animal is infected");
-
-// A person is exposed through broken skin or a mucous membrane, and does not continue the cycle.
+// A person is exposed through broken skin or a mucous membrane, and does not pass it on.
 const human =
-  person(576, 128, 1.6) +
-  arrow(432, 214, 536, 168, "accent") +
-  caption(576, 200, "A person", ["through broken skin or", "a mucous membrane"]) +
-  text(576, 252, "the cycle stops here");
+  curve(390, 292, 442, 272, 458, 204, "muted") +
+  text(516, 86, "An incidental host", { primary: true }) +
+  bust(468, 96, 1.05) +
+  caption(516, 244, "A person", ["the cycle stops here:", "we do not pass it on"]);
+
+// The inset: how it gets in. Skin in section, with a break the bacteria go through.
+const IX = 576;
+const IY = 100;
+const inset =
+  rect(IX, IY, 88, 68, 3, "muted", { style: "fill: var(--bg)" }) +
+  at(
+    IX,
+    IY,
+    // the dermis below, the epidermis as a band across it, and a cut straight through both
+    rect(0, 38, 88, 30, 0, "muted tint-ink") +
+      rect(0, 28, 34, 10, 0, "muted tint2-ink") +
+      rect(50, 28, 38, 10, 0, "muted tint2-ink") +
+      path("M34 28L42 54L50 28", "muted") +
+      spirochete(18, 14, 16, 16, BUG) +
+      spirochete(68, 12, 16, -14, BUG) +
+      spirochete(44, 60, 13, 70, BUG) +
+      arrow(30, 18, 41, 44, BUG),
+  ) +
+  path(`M${IX} ${IY}L556 140M${IX} ${IY + 68}L556 146`, "muted", { opacity: ".45" }) +
+  caption(IX + 44, IY + 90, "Broken skin", ["or mucosa"]);
+
+// The cycle closes through the animals, not through us.
+const back =
+  curve(516, 72, 330, 18, 150, 70, "muted", { "stroke-dasharray": "4 4" }) +
+  text(334, 14, "the cycle carries on through the animals");
 
 export default {
   width: 680,
-  height: 316,
-  body: reservoir + shed + water + back + human,
+  height: 392,
+  body: reservoir + shed + water + human + inset + back,
   sources: [
     ["Levett, Clinical Microbiology Reviews (2001)", "https://doi.org/10.1128/CMR.14.2.296-326.2001"],
     [
