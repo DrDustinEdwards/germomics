@@ -708,11 +708,23 @@ export function createCarrelAdapter(
         .from(postVersions)
         .where(eq(postVersions.postId, p.id))
         .orderBy(postVersions.id);
-      const items = [];
+      // The post as it stands is the newest revision: the snapshots are the states before each edit, so without it
+      // the live version (and who published it) would never show in the history until the next edit.
+      const currentVersion = await versionOf(p, await waiting(id));
+      const items = [
+        {
+          version: currentVersion,
+          at: iso(p.updatedAt) ?? new Date(0).toISOString(),
+          author: "germomics",
+          message: `The post as it stands now (${p.title})`,
+        },
+      ];
       for (const r of rows.reverse()) {
         const snap = r.snapshot as Item;
+        const version = await versionOf(snap);
+        if (version === currentVersion) continue;
         items.push({
-          version: await versionOf(snap),
+          version,
           at: iso(r.createdAt) ?? new Date(0).toISOString(),
           author: "germomics",
           message: `Saved before an edit (${snap.title})`,

@@ -399,11 +399,16 @@ describe("reading", () => {
     expect(await content.revisionSource("nope", "a".repeat(32))).toBeNull();
     const v1 = await save("rev", '---\ntitle: "One"\n---\n<p>1</p>');
     const v2 = await save("rev", '---\ntitle: "Two"\n---\n<p>2</p>', v1.version);
-    await save("rev", '---\ntitle: "Three"\n---\n<p>3</p>', v2.version);
+    const v3 = await save("rev", '---\ntitle: "Three"\n---\n<p>3</p>', v2.version);
     const items = (await content.revisions("rev"))!;
-    expect(items.map((i) => i.version)).toEqual([v2.version, v1.version]);
-    expect(items[0]).toMatchObject({ author: "germomics", message: "Saved before an edit (Two)" });
-    expect(items[0].at).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.000Z$/);
+    // The live version comes first, so its publisher shows in Carrel's history before the next edit.
+    expect(items.map((i) => i.version)).toEqual([v3.version, v2.version, v1.version]);
+    expect(items[0]).toMatchObject({
+      author: "germomics",
+      message: "The post as it stands now (Three)",
+    });
+    expect(items[1]).toMatchObject({ message: "Saved before an edit (Two)" });
+    expect(items[1].at).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.000Z$/);
     expect(await content.revisionSource("rev", v1.version)).toBe(
       '---\ntitle: "One"\n---\n<p>1</p>',
     );
