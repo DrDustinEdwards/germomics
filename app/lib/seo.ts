@@ -4,15 +4,17 @@
 // (+ MediaObject + partOfSeries) for episodes.
 import type { Post } from "~/db/schema";
 import type { GuestView, Host } from "~/lib/types";
+import { type ArticleFacts, type HeadImage, defineHead } from "@drdustinedwards/site-helpers/head";
 import {
-  type ArticleFacts,
-  type HeadImage,
-  articleDates,
-  defineHead,
-} from "@drdustinedwards/site-helpers/head";
-import { article, thing } from "@drdustinedwards/site-helpers/schema";
-import { htmlToText, isoDuration } from "@drdustinedwards/site-helpers/text";
-import { DEFAULT_CARD, SITE_ORIGIN, postalAddressLd, type Address } from "~/lib/site";
+  article,
+  organization,
+  person,
+  podcastEpisode,
+  podcastSeries,
+  sameAs,
+} from "@drdustinedwards/site-helpers/schema";
+import { htmlToText } from "@drdustinedwards/site-helpers/text";
+import { DEFAULT_CARD, SITE_ADDRESS, SITE_ORIGIN, type Address } from "~/lib/site";
 
 /**
  * Demote a rendered body's headings one level (h1->h2 ... h5->h6) so the page keeps a single h1 (the post
@@ -56,36 +58,24 @@ export function buildJsonLd({ post, author, seriesTitle, guests = [], hosts = []
   const datePublished = post.publishedAt ?? post.publishAt ?? undefined;
 
   if (post.kind === "episode") {
-    const { published, modified } = articleDates({
-      published: datePublished,
-      modified: post.updatedAt,
-    });
-    return thing("PodcastEpisode", {
+    return podcastEpisode({
       name: post.title,
       url,
-      datePublished: published,
-      dateModified: modified,
+      published: datePublished,
+      modified: post.updatedAt,
       description,
       image,
-      episodeNumber: post.episodeNumber || undefined,
-      timeRequired: isoDuration(post.audioDuration),
-      associatedMedia: post.audioUrl
-        ? {
-            "@type": "MediaObject",
-            contentUrl: post.audioUrl,
-            encodingFormat: post.audioMimeType ?? "audio/mpeg",
-            ...(post.audioByteSize ? { contentSize: String(post.audioByteSize) } : {}),
-            duration: isoDuration(post.audioDuration),
-          }
-        : undefined,
-      partOfSeries: { "@type": "PodcastSeries", name: seriesTitle, url: `${SITE_ORIGIN}/` },
+      episodeNumber: post.episodeNumber,
+      durationSeconds: post.audioDuration,
+      audio: post.audioUrl
+        ? { url: post.audioUrl, type: post.audioMimeType, bytes: post.audioByteSize }
+        : null,
+      series: { name: seriesTitle, url: `${SITE_ORIGIN}/` },
       // Hosts are the authors/creators of the episode; per-episode guests map to actor.
-      author: (hosts.length ? hosts : [{ name: author }]).map((h) => ({
-        "@type": "Person",
-        name: h.name,
-        ...("href" in h && h.href ? { url: h.href } : {}),
-      })),
-      actor: guests.map((g) => ({ "@type": "Person", name: g.name })),
+      hosts: hosts.length
+        ? hosts.map((h) => ({ name: h.name, url: "href" in h ? h.href : undefined }))
+        : [{ name: author }],
+      guests,
     });
   }
 
@@ -139,33 +129,42 @@ export function socialLinks(s: SocialHandles): SocialLink[] {
 
 /** The same profiles as schema.org sameAs URLs, so footer and schema stay consistent. */
 export function socialSameAs(s: SocialHandles): string[] {
-  return socialLinks(s).map((l) => l.url);
+  return sameAs(socialLinks(s).map((l) => l.url)) ?? [];
 }
+
+/** The show's address from the contact.address setting, each missing part from SITE_ADDRESS. */
+const addressOf = (a: Partial<Address> = {}): Address => ({
+  streetAddress: a.streetAddress ?? SITE_ADDRESS.streetAddress,
+  locality: a.locality ?? SITE_ADDRESS.locality,
+  region: a.region ?? SITE_ADDRESS.region,
+  postalCode: a.postalCode ?? SITE_ADDRESS.postalCode,
+  country: a.country ?? SITE_ADDRESS.country,
+});
 
 /** Organization node for the publisher (home + About). Address + sameAs are DB-driven. */
 export function buildOrganizationLd(show: ShowLike, opts: SiteLdOpts = {}) {
-  return thing("Organization", {
+  return organization({
     name: show.title,
     url: `${SITE_ORIGIN}/`,
     description: show.description,
     logo: show.artwork,
     founder: { "@type": "Person", name: show.author },
-    address: postalAddressLd(opts.address),
-    sameAs: opts.sameAs ? [...opts.sameAs] : undefined,
+    address: addressOf(opts.address),
+    sameAs: opts.sameAs,
   });
 }
 
 /** PodcastSeries node tying the show to its immutable feed (home). */
 export function buildPodcastSeriesLd(show: ShowLike, opts: SiteLdOpts = {}) {
-  return thing("PodcastSeries", {
+  return podcastSeries({
     name: show.title,
     url: `${SITE_ORIGIN}/`,
     description: show.description,
     image: show.artwork,
     webFeed: `${SITE_ORIGIN}/feed/podcast/`,
     author: { "@type": "Person", name: show.author },
-    address: postalAddressLd(opts.address),
-    sameAs: opts.sameAs ? [...opts.sameAs] : undefined,
+    address: addressOf(opts.address),
+    sameAs: opts.sameAs,
   });
 }
 
@@ -184,17 +183,17 @@ type PersonLd = {
 
 /** Person node for the credentialed author (author bio page). Fields per Vault site-config.md. */
 export function buildPersonLd(author: PersonLd) {
-  return thing("Person", {
+  return person({
     name: author.name,
     honorificPrefix: author.honorific,
     url: `${SITE_ORIGIN}/about/${author.slug}`,
     jobTitle: author.jobTitle,
     description: author.bio,
-    affiliation: { "@type": "Organization", name: author.affiliation },
-    memberOf: { "@type": "Organization", name: author.memberOf },
-    alumniOf: author.alumniOf.map((name) => ({ "@type": "Organization", name })),
-    knowsAbout: [...author.knowsAbout],
-    sameAs: [...author.sameAs],
+    affiliation: author.affiliation,
+    memberOf: author.memberOf,
+    alumniOf: author.alumniOf,
+    knowsAbout: author.knowsAbout,
+    sameAs: author.sameAs,
   });
 }
 
