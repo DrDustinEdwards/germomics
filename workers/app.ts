@@ -26,7 +26,12 @@ import { canonicalRedirect } from "@dustinedwards/site-runtime/url";
 import { runJobs } from "@dustinedwards/site-runtime/cron";
 import { markdownCopies } from "@drdustinedwards/site-helpers/markdown-copy";
 import { maintenanceOn, maintenanceResponse } from "@dustinedwards/site-runtime/maintenance";
-import { logEvent, requestFields, withRequestLog } from "@dustinedwards/site-runtime/log";
+import {
+  logEvent,
+  requestFields,
+  routeNamer,
+  withRequestLog,
+} from "@dustinedwards/site-runtime/log";
 import { countNotFound } from "@dustinedwards/site-runtime/not-found";
 import { cloudflareContext, cspNonceContext } from "../app/lib/context.server";
 import { enforceRateLimit } from "../app/lib/security.server";
@@ -51,6 +56,21 @@ const PREVIEW_TOKEN = /\/(preview)\/[^/?#\s'"]+/g;
 // Node API. Read them with getEnv(context) from context.server.
 const serverBuild = () => import("virtual:react-router/server-build") as Promise<ServerBuild>;
 const requestHandler = createRequestHandler(serverBuild, import.meta.env.MODE);
+
+// The route pattern each `request` log line names (`/blog/:slug`), from the React Router build's route table, made once
+// per isolate (site-runtime ./log's routeNamer). Requests the Worker answers itself (/api, /health, /mcp, /media) carry
+// the path alone. The build loads beside the request, so the first few lines in an isolate may go without a route.
+let nameRoute: ((request: Request) => string | undefined) | undefined;
+function routeName(request: Request): string | undefined {
+  if (!nameRoute)
+    void serverBuild().then(
+      (build) => (nameRoute ??= routeNamer(build.routes)),
+      () => undefined,
+    );
+  return /^\/(api|health|mcp|media)(\/|$)/.test(new URL(request.url).pathname)
+    ? undefined
+    : nameRoute?.(request);
+}
 
 // Each render gets its own CSP nonce (React, React Router and the theme script carry it) and leaves with the security
 // headers. A stored page's nonce is renewed for every reader in the gateway (security-headers.ts, `renew`), so no two
@@ -329,5 +349,6 @@ export default {
   fetch: withRequestLog(withMarkdownCopies, {
     sha: (env) => env.DEPLOY_SHA,
     tokenPath: PREVIEW_TOKEN,
+    route: routeName,
   }),
 } satisfies ExportedHandler<Env>;
