@@ -49,7 +49,7 @@ export function SoundbiteClips({ track, clips }: { track: PlayerTrack; clips: So
                 <span className="block truncate font-display text-sm text-ink">
                   {c.title || "Clip"}
                 </span>
-                <span className="font-mono text-[11px] text-muted">
+                <span className="font-mono text-[0.6875rem] text-muted">
                   {timecode(c.start * 1000)} · {c.duration}s
                 </span>
               </span>

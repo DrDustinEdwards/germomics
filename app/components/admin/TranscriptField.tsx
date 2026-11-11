@@ -83,14 +83,14 @@ export function TranscriptField({
       {value ? (
         cues.length ? (
           <div className="rounded-xl border border-border bg-surface p-3">
-            <p className="mb-2 font-mono text-[11px] text-muted">
+            <p className="mb-2 font-mono text-[0.6875rem] text-muted">
               Parsed {cues.length} cues ·{" "}
               {timecode(Math.round(cues[cues.length - 1]?.end ?? 0) * 1000)}
             </p>
             <ul className="space-y-1 text-xs text-ink">
               {cues.slice(0, 4).map((c, i) => (
                 <li key={i} className="flex gap-2">
-                  <span className="font-mono text-[11px] text-accent">
+                  <span className="font-mono text-[0.6875rem] text-accent">
                     {timecode(Math.floor(c.start) * 1000)}
                   </span>
                   <span className="line-clamp-1">{c.text}</span>
