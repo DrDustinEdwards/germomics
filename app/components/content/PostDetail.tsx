@@ -37,6 +37,7 @@ import { parseCueText, parseVtt } from "@drdustinedwards/site-helpers/vtt";
 import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 import { ExternalCue } from "~/components/ExternalCue";
 import { postTrail } from "~/lib/trails";
+import { toPlayerTrack } from "~/lib/posts";
 import { SectionTrail } from "./SectionTrail";
 import "~/prose.css";
 
@@ -169,12 +170,14 @@ export function PostDetail({ data }: { data: DetailData }) {
     </section>
   ) : null;
 
+  // A related episode plays from its card, as in the listings; the queue is the related episodes.
+  const relatedTracks = related.filter((r) => r.kind === "episode").map(toPlayerTrack);
   const Related = related.length ? (
     <section className="mt-12">
       <h2 className="mb-3 font-display text-xl font-semibold">Related</h2>
       <div className="grid gap-3">
         {related.map((r) => (
-          <PostCard key={r.id} post={r} />
+          <PostCard key={r.id} post={r} queue={relatedTracks} />
         ))}
       </div>
     </section>

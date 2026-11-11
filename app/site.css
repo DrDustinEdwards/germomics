@@ -11,6 +11,8 @@
 @import "capsomer/chips.css";
 @import "capsomer/save-toggle.css";
 @import "capsomer/subscribe-links.css";
+/* Post cards in listings and under a post (components/content/PostCard.tsx), in the cap layer. */
+@import "capsomer/card.css";
 /* The site header and its theme button, and the parts it shares with the player's settings. */
 @import "capsomer/utilities.css";
 @import "capsomer/site-header.css";
