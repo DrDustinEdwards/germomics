@@ -5,6 +5,7 @@
 // style Prelum's output (README, "The markdown pipeline") in the germomics palette.
 import { useMemo } from "react";
 import { demoteHeadings } from "~/lib/seo";
+import { markup } from "capsomer/behavior/trusted-html";
 
 // Heading ladder: clear, legible steps in size, weight, and top spacing so the section hierarchy reads at a glance.
 // In a post the body's headings are demoted one level (authored ## -> h3, ### -> h4), below the page's own h2s, so
@@ -77,7 +78,7 @@ export function BodyRenderer({
     <div
       className={`${PROSE} ${page ? PAGE_HEADINGS : SECTION_HEADINGS} ${className}`}
       data-island={island}
-      dangerouslySetInnerHTML={{ __html: shown }}
+      dangerouslySetInnerHTML={markup(shown)}
     />
   );
 }

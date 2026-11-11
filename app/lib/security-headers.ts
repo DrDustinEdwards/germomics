@@ -5,6 +5,7 @@
 import { CSP_REPORT_PATH } from "@dustinedwards/site-runtime/csp";
 import { receiveCspReport } from "@dustinedwards/site-runtime/csp-report";
 import { pageSecurity } from "@dustinedwards/site-runtime/page-headers";
+import { TRUSTED_TYPES_NAMES } from "@dustinedwards/site-runtime/trusted-types";
 
 import { SECURITY_HEADERS } from "~/lib/header-set";
 import { MEDIA_ORIGIN, OP3_ORIGIN } from "~/lib/site";
@@ -61,7 +62,9 @@ export const security = pageSecurity({
         }
       : site;
   },
-  staged: { trustedTypes: true, denyUnlisted: true },
+  // The Trusted Types policies a page may create: the network's (site-runtime TRUSTED_TYPES_NAMES) and the one that
+  // runs the held hydration scripts on a press of play (app/site/hydrate.ts).
+  staged: { trustedTypes: [...TRUSTED_TYPES_NAMES, "germomics-hydrate"], denyUnlisted: true },
 });
 
 /**

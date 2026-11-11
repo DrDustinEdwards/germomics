@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { ImageAttributes } from "~/lib/images";
 import { Picture } from "./Picture";
 import wordmarkRaw from "~/components/brand/germomics-wordmark.svg?raw";
+import { markup } from "capsomer/behavior/trusted-html";
 
 // Single shared cover. If the item has its own artwork, render that raster; otherwise render the
 // brand default as crisp SVG: the white wordmark on the crystal-violet field, instead of the raster
@@ -68,7 +69,7 @@ export function CoverArt({
         aria-hidden="true"
         className="absolute text-white [&>svg]:block [&>svg]:h-full [&>svg]:w-full"
         style={{ left: LOGO.left, top: LOGO.top, width: LOGO.width, height: LOGO.height }}
-        dangerouslySetInnerHTML={{ __html: WORDMARK }}
+        dangerouslySetInnerHTML={markup(WORDMARK)}
       />
     </div>
   );
