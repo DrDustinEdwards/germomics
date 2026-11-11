@@ -2,6 +2,7 @@
 import { Link } from "capsomer/react/link";
 import { ExternalCue } from "~/components/ExternalCue";
 import type { DataPreviewView, EpisodeContextView } from "~/lib/episode-context";
+import { markup } from "capsomer/behavior/trusted-html";
 
 function DataPreview({ preview }: { preview: DataPreviewView }) {
   return (
@@ -14,7 +15,7 @@ function DataPreview({ preview }: { preview: DataPreviewView }) {
       <div
         className="mt-3 [--enarratio-series-1:var(--brand)] forced-colors:[--enarratio-series-1:CanvasText] [&_svg]:block [&_svg]:h-auto [&_svg]:w-full"
         aria-hidden="true"
-        dangerouslySetInnerHTML={{ __html: preview.svg }}
+        dangerouslySetInnerHTML={markup(preview.svg)}
       />
       <p className="mt-3 text-sm leading-relaxed text-ink">{preview.summary}</p>
       <p className="mt-3 text-sm">

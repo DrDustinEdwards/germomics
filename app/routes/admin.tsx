@@ -20,6 +20,7 @@ import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runti
 import { isolationVerdict, refuseCrossSite } from "@dustinedwards/site-runtime/origin";
 import { applyTheme, effectiveTheme } from "~/lib/theme";
 import type { Theme } from "~/lib/types";
+import { markup } from "capsomer/behavior/trusted-html";
 
 const PRIVATE = { "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex, nofollow" };
 
@@ -162,7 +163,7 @@ export default function AdminLayout({ loaderData }: Route.ComponentProps) {
       suppressHydrationWarning
       style={{ display: "contents" }}
     >
-      <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+      <script dangerouslySetInnerHTML={markup(THEME_BOOT)} />
       <AdminShell
         title="Germomics"
         apps={[
