@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@base-ui/react": "1.8.0",
-    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.47.0",
+    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.50.0",
     "@dustinedwards/d1-dump": "github:DrDustinEdwards/d1-dump#v0.16.0",
     "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.36.0",
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.132.0",
