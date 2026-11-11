@@ -314,6 +314,8 @@
 /* Capsomer's tap target reads --target; the site's is the WCAG 2.5.8 minimum. */
 :root {
   --target: 1.5rem;
+}
+
 /* Capsomer's save toggle and subscribe links in germomics' own tokens, as the breadcrumb above: the
    pills keep the site's look (the Save pill in JetBrains Mono on the card color, the listen links in
    Space Grotesk, cyan under the pointer, the saved bookmark in cyan). */
