@@ -5,7 +5,9 @@
     "public/_headers": "not by hand: site-runtime-headers writes it on every build from the registry entry the Worker's set comes from (buildSecurityHeaders({ site: germomics })); committed so the /assets/* cache rule can be read"
   },
   "spelling": {
-    "skip": ["docs/research/kill-matrix.json"]
+    "skip": [
+      "docs/research/kill-matrix.json"
+    ]
   },
   "tokens": {
     "--surface": "germomics.com keeps its own public palette (products on their own domains keep their own looks, Dustin 2026-10-26)",
@@ -23,6 +25,7 @@
     "--primary": "same: the error page draws Capsomer's button and Empty in the site's own palette (app/error-page.css), as the /data charts do",
     "--primary-hover": "same: the error page draws Capsomer's button and Empty in the site's own palette (app/error-page.css), as the /data charts do",
     "--primary-line": "same: the error page draws Capsomer's button and Empty in the site's own palette (app/error-page.css), as the /data charts do",
-    "--primary-fg": "same: the error page draws Capsomer's button and Empty in the site's own palette (app/error-page.css), as the /data charts do"
+    "--primary-fg": "same: the error page draws Capsomer's button and Empty in the site's own palette (app/error-page.css), as the /data charts do",
+    "--target": "germomics.com keeps its own look until its Capsomer move (CLAUDE.md): its touch-target size is its own"
   }
 }

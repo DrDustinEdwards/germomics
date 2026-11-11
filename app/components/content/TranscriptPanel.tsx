@@ -4,7 +4,7 @@ import { useCopy } from "capsomer/react/copy";
 import { usePrefersReducedMotion } from "capsomer/react/hooks";
 import { usePlayer, activeChapterIndex } from "~/components/player/player-context";
 import { formatDuration } from "~/lib/format";
-import { parseVtt, toParagraphs, parseCueText } from "~/lib/vtt";
+import { parseCueText, parseVtt, toParagraphs } from "@drdustinedwards/site-helpers/vtt";
 import type { PlayerTrack } from "~/lib/types";
 
 // Read-along transcript. The stored value is raw WebVTT; we parse it, group caption cues into

@@ -24,11 +24,11 @@ export function meta({ loaderData }: Route.MetaArgs) {
     description: loaderData?.homeDescription ?? SNIPPET_DEFAULTS["snippet:meta.home_description"],
   });
   if (!loaderData?.show) return head;
-  const { show, address, sameAs } = loaderData;
+  const { show, address, profiles } = loaderData;
   return [
     ...head,
-    jsonLd(buildOrganizationLd(show, { address, sameAs })),
-    jsonLd(buildPodcastSeriesLd(show, { address, sameAs })),
+    jsonLd(buildOrganizationLd(show, { address, sameAs: profiles })),
+    jsonLd(buildPodcastSeriesLd(show, { address, sameAs: profiles })),
     jsonLd(
       website({
         origin: SITE_ORIGIN,
@@ -51,7 +51,7 @@ export async function loader({ context }: Route.LoaderArgs) {
   const tracks = episodes.map(toPlayerTrack);
   // Org/PodcastSeries sameAs = the real socials (settings social.*) + the podcast-directory
   // subscribe_links (show_config), so it stays DB-driven and never duplicates a show_config fact.
-  const sameAs = [
+  const profiles = [
     ...socialSameAs({
       facebook: setting(settings, "social.facebook"),
       twitter: setting(settings, "social.twitter"),
@@ -67,7 +67,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     tracks,
     show,
     address: settingAddress(settings),
-    sameAs,
+    profiles,
     homeTitle: snippet(snippets, "snippet:meta.home_title"),
     homeDescription: snippet(snippets, "snippet:meta.home_description"),
   };
