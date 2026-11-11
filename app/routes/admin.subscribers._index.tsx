@@ -6,7 +6,7 @@ import type { Route } from "./+types/admin.subscribers._index";
 import { getEnv } from "~/lib/context.server";
 import { getDb } from "~/db/index.server";
 import { subscribers } from "~/db/schema";
-import { formatDate } from "~/lib/format";
+import { formatDate } from "capsomer/behavior/time";
 import { EmptyState } from "~/components/admin/ui";
 import { useSnippet } from "~/lib/content";
 

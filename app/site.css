@@ -1,0 +1,202 @@
+/* The public pages' own parts, loaded by their layout (routes/_site.tsx), so the admin never downloads them: the
+   header, the persistent player and the parts its settings use, and the reading contexts. The layer order repeats app.css's, so
+   whichever stylesheet arrives first, the order is the same. */
+@layer cap-tokens, theme, base, cap, components, utilities;
+/* Capsomer's scale and palette first of all (cap-tokens), so a name both define (--radius-xl, --ease-out) keeps
+   Tailwind's value on germomics' own classes, and germomics' palette (app.css, unlayered) wins over both. */
+@import "capsomer/tokens.css" layer(cap-tokens);
+/* The visible trail of a page inside a section (components/content/SectionTrail.tsx), in the cap layer. */
+@import "capsomer/breadcrumb.css";
+/* The site header and its theme button, and the parts it shares with the player's settings. */
+@import "capsomer/utilities.css";
+@import "capsomer/site-header.css";
+@import "capsomer/theme-switch.css";
+@import "capsomer/button.css";
+@import "capsomer/popover.css";
+@import "capsomer/dialog.css";
+/* The persistent player (dock, surface, transcript, chapters, key moments, hosts); its speed and volume settings are
+   a menu and a field. */
+@import "capsomer/field.css";
+@import "capsomer/menu.css";
+@import "capsomer/player.css";
+/* Reading contexts: the legal pages and the essays' diagrams. */
+@import "capsomer/prose-blocks.css";
+
+/* The player keeps the site's faces: titles in Space Grotesk, times and the status line in JetBrains Mono. */
+:is(
+  .cap-player-dock,
+  .cap-player-surface,
+  .cap-player-sheet,
+  .cap-player-transcript,
+  .cap-player-list,
+  .cap-player-wave,
+  .cap-player-wave-preview
+) {
+  --cap-player-face: var(--font-display);
+  --cap-player-meta-face: var(--font-mono);
+  /* The site's controls: 44px, the play button 48px. */
+  --cap-player-btn: 2.75rem;
+  --cap-player-btn-lg: 3rem;
+}
+/* The lists under the player keep the page's rhythm: a section's room above, the body's size for a title. */
+.cap-player-list {
+  margin-block-start: 3rem;
+  --fs-body: 1.125rem;
+  --fs-h3: 1.25rem;
+}
+
+/* Reading contexts (Capsomer's prose blocks): the legal and about pages, and each diagram in an essay
+   (lib/blog-diagram.server.ts holds it in one). Faces stay the page's own; the legal pages keep their compact rhythm. */
+[data-context="prose"] {
+  --prose: var(--font-serif);
+  --fs-prose: 18px;
+  --prose-heading-face: var(--font-display);
+  --prose-heading-ink: var(--ink);
+  --prose-heading-weight: 600;
+  --prose-h2-size: 1.25rem;
+  --prose-heading-space: 2rem;
+  --prose-flow: 0.75rem;
+  --link-decoration: underline;
+}
+
+/* The mechanism figures in germomics' palette: violet nodes, cyan for the second tone, labels in Space Grotesk. */
+.blog-diagram {
+  --diagram-face: var(--font-display);
+  --diagram-stroke: 1.5px;
+  --diagram-label-weight: 600;
+  --diagram-neutral: var(--surface);
+  --diagram-neutral-line: var(--brand);
+  --diagram-accent: color-mix(in srgb, var(--brand) 16%, var(--card));
+  --diagram-accent-line: var(--brand);
+  --diagram-success: color-mix(in srgb, var(--accent) 14%, var(--card));
+  --diagram-success-line: var(--accent);
+  --diagram-warning: color-mix(in srgb, var(--brand-strong) 18%, var(--card));
+  --diagram-warning-line: var(--brand-strong);
+  --diagram-info: var(--surface);
+  --diagram-info-line: var(--accent);
+  --diagram-ink: var(--ink);
+  --diagram-ink-muted: var(--muted);
+  --diagram-arrow: var(--muted);
+  --diagram-rule: var(--border);
+  --diagram-ground: var(--card);
+}
+/* A drawing sits flush in its block, as it always has: the body's figure spacing (Tailwind's, in the utilities layer)
+   stops at the diagram; a drawing with its credit keeps its 2.5rem below, and the credit is the body's serif at
+   0.75rem. */
+.diagram-context .blog-diagram {
+  margin-block: 0;
+}
+/* The context ends its own flow at its last child, so the room under a drawing with its credit is the context's. */
+.diagram-context:has(> .blog-diagram-block) {
+  margin-block-end: 2.5rem;
+}
+.diagram-context .blog-diagram-credit {
+  --ui: var(--font-serif);
+  --fs-label: 0.75rem;
+}
+.diagram-context .diagram-title {
+  --diagram-title-face: var(--font-display);
+  --diagram-title-size: 1.125rem;
+  --diagram-title-align: center;
+}
+
+/* A listing's play button wears the cyan of the site's now-playing states, as it always has. */
+.cap-player-btn[data-play-intent] {
+  --primary: var(--accent);
+  --primary-hover: color-mix(in srgb, var(--accent) 85%, var(--ink));
+  --primary-fg: var(--bg);
+}
+
+/* Capsomer's components in germomics' own look: the family's roles named from the palette above, on every public
+   page (not the admin, whose shell keeps Capsomer's own on [data-cap-theme]). Unlayered, so the palette's light and
+   dark both reach them. Faces: Space Grotesk for the interface, JetBrains Mono for times and figures. */
+:root:not(:has([data-cap-theme])) {
+  /* The header's band, 60px as it always was. */
+  --header-h: 3.75rem;
+  --ui: var(--font-display);
+  --mono: var(--font-mono);
+  --ground: var(--bg);
+  --raised: var(--card);
+  --sunken: var(--surface);
+  --text: var(--ink);
+  --dim: var(--muted);
+  --line: var(--border);
+  --line-strong: color-mix(in srgb, var(--muted) 55%, var(--border));
+  --accent-text: var(--accent);
+  --accent-hover: var(--ink);
+  --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--card));
+  --accent-line: var(--accent);
+  --sel: color-mix(in srgb, var(--accent) 10%, var(--card));
+  --primary: var(--brand);
+  --primary-hover: var(--brand-strong);
+  --primary-fg: var(--on-brand);
+  --primary-line: var(--brand);
+  --on: var(--brand);
+  --on-hover: var(--brand-strong);
+  --ring: var(--accent);
+  --ring-width: 2px;
+  --link-hover-bg: var(--surface);
+}
+
+/* The breadcrumb is quiet, like the site's other small navigation: JetBrains Mono at the meta size, the levels muted
+   until the pointer reaches them, the current page in ink. */
+.cap-breadcrumb {
+  --ui: var(--font-mono);
+  --fs-body: 0.75rem;
+  --accent-text: var(--muted);
+  --accent-hover: var(--ink);
+  --accent-soft: var(--surface);
+  --target: 1.5rem;
+  --line-strong: var(--muted);
+  --raised: var(--surface);
+  --sunken: var(--surface);
+  --control: 2rem;
+  /* The first level's text lines up with the page's edge; its hover background reaches into the gutter. */
+  margin-inline-start: calc(-1 * var(--space-2));
+}
+
+/* The public header (not the admin shell's): the page's ground at 85%, blurred (translucent), in the site's faces with
+   its violet button; the logo and controls line up with the page's column (max-w-5xl, 1rem gutters), as they always have. */
+.cap-site-header:not([data-cap-theme] .cap-site-header) {
+  --font-ui: var(--font-display);
+  --header-bg: var(--bg);
+  --header-fg: var(--ink);
+  --header-fg-muted: var(--muted);
+  --header-line: var(--border);
+  --header-cta: var(--brand);
+  --header-cta-fg: var(--on-brand);
+  --header-side: max(1rem, calc((100% - 64rem) / 2 + 1rem));
+  --header-accent: var(--brand);
+  /* Round icon controls with the site's hairline, and a pill for Subscribe. */
+  --icon-border: 1px;
+  --icon-radius: 999px;
+  --header-hover: var(--surface);
+  /* 34px circles on the surface with 16px glyphs, 4px apart, no divider; Subscribe first, then Search and the theme.
+     The phone's bar: the theme first, then Search and Subscribe, and a bare menu button. */
+  --header-icon-size: 34px;
+  --header-icon-glyph: 16px;
+  --header-icon-stroke: 2;
+  --header-icon-bg: var(--surface);
+  --header-tools-gap: 0.25rem;
+  --header-sep: none;
+  --header-cta-order: -1;
+  --header-menu-line: transparent;
+  --header-menu-bg: none;
+  --header-menu-size: 44px;
+  --header-menu-glyph: 20px;
+}
+@media (max-width: 767.98px) {
+  .cap-site-header:not([data-cap-theme] .cap-site-header) {
+    --header-cta-order: 0;
+    --header-theme-order: -1;
+  }
+}
+.cap-site-header:not([data-cap-theme] .cap-site-header) .cap-site-header-cta {
+  border-radius: 999px;
+}
+.germomics-logo {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}

@@ -2,14 +2,9 @@
 // small and client-side. Every motion (smooth scroll, auto-scroll, progress bar) is reduced-motion
 // aware. now-playing highlights use the cyan accent only.
 import { useEffect, useRef, useState } from "react";
-import { ChevronRight, ExternalLink, X } from "lucide-react";
-import type { KeyMoment, Source, Host, Chapter } from "~/lib/types";
+import { ExternalLink, X } from "lucide-react";
+import type { Source } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
-import type { PlayerTrack } from "~/lib/types";
-import { usePlayer } from "~/components/player/player-context";
-import { GMark } from "~/components/brand/GMark";
-import { imageFor, type ImageSet } from "~/lib/images";
-import { Picture } from "./Picture";
 
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false);
@@ -21,13 +16,6 @@ function usePrefersReducedMotion(): boolean {
     return () => mq.removeEventListener("change", on);
   }, []);
   return reduced;
-}
-
-function fmt(s: number): string {
-  if (!Number.isFinite(s) || s < 0) s = 0;
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
 // ── Reading progress bar ─────────────────────────────────────────────────────
@@ -51,68 +39,6 @@ export function ReadingProgress() {
     <div className="fixed inset-x-0 top-0 z-50 h-0.5" aria-hidden>
       <div className="h-full bg-gradient-to-r from-brand to-accent" style={{ width: `${pct}%` }} />
     </div>
-  );
-}
-
-// ── "In this episode" key moments ────────────────────────────────────────────
-export function KeyMoments({ moments, track }: { moments: KeyMoment[]; track: PlayerTrack }) {
-  const p = usePlayer();
-  const reduced = usePrefersReducedMotion();
-  const [toast, setToast] = useState<string | null>(null);
-  const isActive = p.current?.id === track.id;
-  const now = isActive ? p.currentTime : -1;
-
-  const go = (m: KeyMoment) => {
-    if (isActive) p.seek(m.seconds);
-    else p.playTrackAt(track, m.seconds);
-    document
-      .getElementById("player")
-      ?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
-    setToast(`Jumped to ${fmt(m.seconds)}`);
-    window.setTimeout(() => setToast(null), 1800);
-  };
-
-  if (!moments.length) return null;
-  return (
-    <section aria-labelledby="key-moments" className="mt-10">
-      <h2 id="key-moments" className="mb-3 font-display text-xl font-semibold">
-        In this episode
-      </h2>
-      <ol className="grid gap-2 sm:grid-cols-2">
-        {moments.map((m, i) => {
-          const nextAt = moments[i + 1]?.seconds ?? Infinity;
-          const active = now >= m.seconds && now < nextAt;
-          return (
-            <li key={`${m.seconds}-${i}`}>
-              <button
-                type="button"
-                onClick={() => go(m)}
-                className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
-                  active ? "border-accent bg-accent/10" : "border-border bg-card hover:border-brand"
-                }`}
-              >
-                <span
-                  className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-xs tabular-nums ${
-                    active ? "text-accent" : "text-brand"
-                  }`}
-                >
-                  {fmt(m.seconds)}
-                </span>
-                <span className="text-sm text-ink">{m.label}</span>
-              </button>
-            </li>
-          );
-        })}
-      </ol>
-      <div aria-live="polite" className="sr-only">
-        {toast}
-      </div>
-      {toast ? (
-        <div className="pointer-events-none fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-ink px-3 py-1.5 font-mono text-xs text-bg shadow-lg">
-          {toast}
-        </div>
-      ) : null}
-    </section>
   );
 }
 
@@ -235,90 +161,6 @@ export function Sources({ sources }: { sources: Source[] }) {
           ))}
         </ol>
       </details>
-    </section>
-  );
-}
-
-// ── Hosts byline ─────────────────────────────────────────────────────────────
-export function Hosts({ hosts, images }: { hosts: Host[]; images?: ImageSet }) {
-  if (!hosts.length) return null;
-  return (
-    <section aria-labelledby="hosts" className="mt-12">
-      <h2 id="hosts" className="mb-3 font-display text-xl font-semibold">
-        Hosts
-      </h2>
-      <div className="grid gap-4 sm:grid-cols-2">
-        {hosts.map((h) => (
-          <div
-            key={h.name}
-            className="flex items-center gap-3 rounded-xl border border-border bg-card p-4"
-          >
-            {h.img ? (
-              <Picture
-                src={h.img}
-                image={imageFor(images, "avatar", h.img)}
-                alt={h.name}
-                width={48}
-                height={48}
-                className="h-12 w-12 shrink-0 rounded-full border border-border object-cover"
-              />
-            ) : (
-              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-border bg-surface">
-                <GMark className="h-6 w-auto" />
-              </span>
-            )}
-            <div className="min-w-0">
-              {h.href ? (
-                <a
-                  href={h.href}
-                  rel="me"
-                  className="font-display font-medium text-ink hover:text-brand"
-                >
-                  {h.name}
-                </a>
-              ) : (
-                <span className="font-display font-medium text-ink">{h.name}</span>
-              )}
-              {h.role ? <p className="font-mono text-xs text-muted">{h.role}</p> : null}
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-// ── Chapters list (current-chapter highlight) ────────────────────────────────
-export function ChapterList({ chapters, track }: { chapters: Chapter[]; track: PlayerTrack }) {
-  const p = usePlayer();
-  const isActive = p.current?.id === track.id;
-  const now = isActive ? p.currentTime : -1;
-  const seek = (s: number) => (isActive ? p.seek(s) : p.playTrackAt(track, s));
-  if (!chapters.length) return null;
-  return (
-    <section aria-labelledby="chapters" className="mt-10">
-      <h2 id="chapters" className="mb-3 font-display text-xl font-semibold">
-        Chapters
-      </h2>
-      <ol className="grid gap-1">
-        {chapters.map((c, i) => {
-          const nextAt = chapters[i + 1]?.start ?? Infinity;
-          const on = now >= c.start && now < nextAt;
-          return (
-            <li key={i}>
-              <button
-                type="button"
-                onClick={() => seek(c.start)}
-                className={`flex w-full items-center gap-3 rounded px-2 py-1.5 text-left hover:bg-surface ${on ? "text-accent" : ""}`}
-              >
-                <span className="font-mono text-xs tabular-nums text-accent">{fmt(c.start)}</span>
-                <span className={on ? "text-accent" : "text-ink"}>{c.title}</span>
-                {on ? <ChevronRight size={14} aria-hidden className="ml-auto text-accent" /> : null}
-              </button>
-            </li>
-          );
-        })}
-      </ol>
     </section>
   );
 }

@@ -5,7 +5,7 @@
 import type { Post, ShowConfig, Soundbite } from "~/db/schema";
 import type { GuestView } from "~/lib/types";
 import { absolutizeUrls, cdata, escapeXml, rfc822 } from "@drdustinedwards/site-helpers/xml";
-import { formatHMS } from "~/lib/format";
+import { timecode } from "capsomer/behavior/time";
 import { OP3_ORIGIN } from "~/lib/site";
 
 const PODCAST_NS =
@@ -125,7 +125,7 @@ function itemXml(
     <description>${cdata(e.excerpt ?? body)}</description>
     <content:encoded>${cdata(body)}</content:encoded>
     <enclosure url="${escapeXml(op3Enclosure(e.audioUrl!))}" length="${e.audioByteSize ?? 0}" type="${e.audioMimeType ?? "audio/mpeg"}"/>
-    <itunes:duration>${formatHMS(e.audioDuration)}</itunes:duration>
+    <itunes:duration>${timecode((e.audioDuration ?? 0) * 1000, { hours: "always" })}</itunes:duration>
     <itunes:explicit>${e.explicit ? "true" : "false"}</itunes:explicit>
     <itunes:episodeType>${e.episodeType ?? "full"}</itunes:episodeType>${
       e.episodeNumber ? `\n    <itunes:episode>${e.episodeNumber}</itunes:episode>` : ""

@@ -26,7 +26,7 @@ export function meta() {
 
 export default function Accessibility() {
   return (
-    <article className="prose-legal mx-auto max-w-2xl">
+    <article data-context="prose" className="mx-auto max-w-2xl">
       <h1 className="font-display text-4xl font-semibold leading-tight">{statement.title}</h1>
       <BodyRenderer html={statement.html} page />
     </article>

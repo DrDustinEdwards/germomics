@@ -56,7 +56,7 @@ export default function AuthorBio({ loaderData }: Route.ComponentProps) {
       </h1>
       <p className="mt-2 font-mono text-sm text-muted">{AUTHOR.jobTitle}</p>
 
-      <div className="prose-legal mt-6">
+      <div data-context="prose" className="mt-6">
         <BodyRenderer html={loaderData.bioHtml} />
       </div>
 

@@ -17,10 +17,10 @@ function ReviewBanner() {
       role="note"
       className="my-6 rounded-xl border border-dashed border-amber-500/50 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-200"
     >
-      <p className="flex items-center gap-2 font-display font-semibold">
+      <p className="mt-3 mb-0 flex items-center gap-2 font-display font-semibold">
         <Info size={15} aria-hidden /> Draft, pending review
       </p>
-      <p className="mt-1 text-muted">
+      <p className="mt-1 mb-0 text-muted">
         This is a plain-language draft for completeness, not legal advice. It should be reviewed by
         the site owner (and, where appropriate, a professional) before the public launch.
       </p>
@@ -30,7 +30,7 @@ function ReviewBanner() {
 
 export function LegalPage({ title, html }: { title: string; html: string }) {
   return (
-    <article className="prose-legal mx-auto max-w-2xl">
+    <article data-context="prose" className="mx-auto max-w-2xl">
       <h1 className="font-display text-4xl font-semibold leading-tight">{title}</h1>
       <LegalDate />
       <ReviewBanner />

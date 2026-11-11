@@ -4,8 +4,8 @@
 import { useEffect, useRef } from "react";
 import { Scissors, Play } from "lucide-react";
 import type { PlayerTrack, SoundbiteView } from "~/lib/types";
-import { formatDuration } from "~/lib/format";
-import { usePlayer } from "~/components/player/player-context";
+import { timecode } from "capsomer/behavior/time";
+import { usePlayer } from "capsomer/react/player";
 
 export function SoundbiteClips({ track, clips }: { track: PlayerTrack; clips: SoundbiteView[] }) {
   const player = usePlayer();
@@ -50,7 +50,7 @@ export function SoundbiteClips({ track, clips }: { track: PlayerTrack; clips: So
                   {c.title || "Clip"}
                 </span>
                 <span className="font-mono text-[11px] text-muted">
-                  {formatDuration(c.start)} · {c.duration}s
+                  {timecode(c.start * 1000)} · {c.duration}s
                 </span>
               </span>
             </button>

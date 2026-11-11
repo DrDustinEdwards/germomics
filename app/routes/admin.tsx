@@ -18,8 +18,8 @@ import { getEnv } from "~/lib/context.server";
 import { accessAdmin } from "@dustinedwards/site-runtime/access";
 import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runtime/log";
 import { isolationVerdict, refuseCrossSite } from "@dustinedwards/site-runtime/origin";
-import { applyTheme, effectiveTheme } from "~/lib/theme";
-import type { Theme } from "~/lib/types";
+import { effectiveTheme, toggleTheme, type ThemeChoice } from "capsomer/behavior/theme-switch";
+import { THEME_KEY } from "~/lib/theme";
 import { markup } from "capsomer/behavior/trusted-html";
 
 const PRIVATE = { "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex, nofollow" };
@@ -126,8 +126,8 @@ const ENTRIES: Array<AdminEntry & { match: (path: string) => boolean }> = [
 
 // Capsomer's tokens are keyed on data-cap-theme; the site's own switch is data-theme on <html>
 // (or the system preference when none is set). Follow it, so the admin never disagrees with it.
-function useCapTheme(): Theme {
-  const [theme, setTheme] = useState<Theme>("light");
+function useCapTheme(): ThemeChoice {
+  const [theme, setTheme] = useState<ThemeChoice>("light");
   useEffect(() => {
     const sync = () => setTheme(effectiveTheme());
     sync();
@@ -184,7 +184,7 @@ export default function AdminLayout({ loaderData }: Route.ComponentProps) {
             { label: "View site", href: "/" },
             {
               label: theme === "dark" ? "Switch to light theme" : "Switch to dark theme",
-              onClick: () => applyTheme(theme === "dark" ? "light" : "dark"),
+              onClick: () => toggleTheme(THEME_KEY),
             },
           ],
           // Access owns sign-out: it ends the Access session, then returns to its own login.

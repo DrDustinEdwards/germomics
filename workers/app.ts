@@ -57,6 +57,16 @@ const PREVIEW_TOKEN = /\/(preview)\/[^/?#\s'"]+/g;
 const serverBuild = () => import("virtual:react-router/server-build") as Promise<ServerBuild>;
 const requestHandler = createRequestHandler(serverBuild, import.meta.env.MODE);
 
+/**
+ * The stylesheets every public page loads: the root's (app.css) and its layout's (routes/_site.tsx, site.css: the
+ * header, the player and the reading contexts), for the Early Hints preload and for a Carrel preview drawn as a post is.
+ */
+async function pageStylesheets() {
+  const build = await serverBuild();
+  const layout = build.assets.routes["routes/_site"]?.css ?? [];
+  return [...rootStylesheets(build), ...layout.map((href) => ({ href, as: "style" as const }))];
+}
+
 // The route pattern each `request` log line names (`/blog/:slug`), from the React Router build's route table, made once
 // per isolate (site-runtime ./log's routeNamer). Requests the Worker answers itself (/api, /health, /mcp, /media) carry
 // the path alone. The build loads beside the request, so the first few lines in an isolate may go without a route.
@@ -165,7 +175,7 @@ export class Renderer extends withPurgePages(WorkerEntrypoint<Env>) {
     // render-blocking stylesheet and the hero's font while the Worker still renders (site-runtime ./preload).
     const hints = withPreloadHeader(
       page,
-      preloads([...rootStylesheets(await serverBuild()), ...FONT_PRELOADS]).header,
+      preloads([...(await pageStylesheets()), ...FONT_PRELOADS]).header,
     );
     // Last: anything but a shared 200 (/health, a 404, an error) or one rendered for a cookie leaves private, no-store.
     return settleCacheHeaders(hints, request);
@@ -200,9 +210,7 @@ const site = {
       // everything under /api/carrel/v1; nothing else is served by it. An accepted write purges the stored pages.
       // Only its own requests load it; a preview reads the site's stylesheets when it draws.
       if (isSiteApiRequest(url)) {
-        const carrel = carrelApi(env, async () =>
-          rootStylesheets(await serverBuild()).map((s) => s.href),
-        );
+        const carrel = carrelApi(env, async () => (await pageStylesheets()).map((s) => s.href));
         if (carrel.matches(request)) {
           const response = await carrel.handle(request, ctx);
           purgeAfterWrite(request, response, ctx, `carrel ${request.method} ${url.pathname}`);
