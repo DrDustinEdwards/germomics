@@ -1,7 +1,8 @@
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/guests.$guest";
 import { getEnv } from "~/lib/context.server";
-import { postsByGuest, slugifyGuest, toPlayerTrack } from "~/lib/posts.server";
+import { slugify } from "@drdustinedwards/site-helpers/slug";
+import { postsByGuest, toPlayerTrack } from "~/lib/posts.server";
 import { getPersonBySlug, postsByPerson } from "~/lib/people.server";
 import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
@@ -38,7 +39,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
   const legacy = episodes
     .flatMap((e) => e.guests ?? [])
-    .find((g) => slugifyGuest(g.name) === params.guest);
+    .find((g) => slugify(g.name) === params.guest);
   const name = person?.name ?? legacy?.name ?? params.guest;
   const photo = person?.photo ? { src: person.photo, alt: person.photoAlt ?? name } : null;
 

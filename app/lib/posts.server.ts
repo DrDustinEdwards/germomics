@@ -20,11 +20,12 @@ import {
 import { toMatchExpression } from "@drdustinedwards/site-helpers/search";
 import { getDb } from "~/db/index.server";
 import { postRedirects, posts, type Post } from "~/db/schema";
-import { slugifyGuest, toPlayerTrack } from "~/lib/posts";
+import { slugify } from "@drdustinedwards/site-helpers/slug";
+import { toPlayerTrack } from "~/lib/posts";
 import { storedBody } from "~/lib/render.server";
 
 // Re-export the client-safe pure helpers so existing server callers keep working.
-export { slugifyGuest, toPlayerTrack };
+export { toPlayerTrack };
 
 type Kind = "episode" | "article";
 
@@ -240,7 +241,7 @@ export async function postsByTag(env: Env, tag: string): Promise<Post[]> {
 
 export async function postsByGuest(env: Env, guestSlug: string): Promise<Post[]> {
   const all = await listEpisodes(env);
-  return all.filter((p) => (p.guests ?? []).some((g) => slugifyGuest(g.name) === guestSlug));
+  return all.filter((p) => (p.guests ?? []).some((g) => slugify(g.name) === guestSlug));
 }
 
 // adjacentPosts and relatedPosts work on one listPosts(env) result, so the post page reads the list

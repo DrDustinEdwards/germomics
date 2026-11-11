@@ -5,7 +5,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { inList, chunked, rowsPerInsert } from "@dustinedwards/site-runtime/d1";
 import { getDb } from "~/db/index.server";
 import { people, episodePeople, posts, type Person, type Post } from "~/db/schema";
-import { slugifyGuest } from "~/lib/posts";
+import { slugify } from "@drdustinedwards/site-helpers/slug";
 import type { GuestView, PersonLink } from "~/lib/types";
 
 export async function listPeople(env: Env): Promise<Person[]> {
@@ -18,7 +18,7 @@ export async function getPerson(env: Env, id: number): Promise<Person | null> {
 }
 
 async function uniqueSlug(env: Env, name: string, excludeId?: number): Promise<string> {
-  const base = slugifyGuest(name) || "person";
+  const base = slugify(name) || "person";
   const db = getDb(env);
   let slug = base;
   for (let i = 2; i < 50; i++) {
@@ -136,7 +136,7 @@ export async function getEpisodeGuests(env: Env, post: Post): Promise<GuestView[
   // Legacy fallback — map the JSON guests onto the same view shape.
   return (post.guests ?? []).map((g) => ({
     name: g.name,
-    slug: slugifyGuest(g.name),
+    slug: slugify(g.name),
     role: g.role ?? null,
     bio: g.bio ?? null,
     photo: g.img ?? null,
