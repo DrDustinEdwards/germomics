@@ -17,8 +17,8 @@ import { MEDIA_ORIGIN, OP3_ORIGIN } from "~/lib/site";
 // pages' map is Enarratio's, drawn on the server, so no map host is listed. The only frames are the post players
 // (`embeds`). Styles keep 'unsafe-inline' for TipTap (so the nonce stays off style-src, which would switch it off).
 // Violations go to CSP_REPORT_PATH, which logs them through site-runtime's receiver, so Workers Logs hold anything the
-// policy blocks. What the registry entry stages (Trusted Types, default-src 'none') goes beside it as
-// Content-Security-Policy-Report-Only (buildStagedPolicy) until the reports are quiet.
+// policy blocks. Trusted Types is enforced (site-runtime 0.132.0); what the registry entry still stages (default-src
+// 'none') goes beside it as Content-Security-Policy-Report-Only (buildStagedPolicy) until the reports are quiet.
 export { CSP_REPORT_PATH };
 const sitePolicy = (nonce: string | undefined) =>
   ({
@@ -41,6 +41,9 @@ const sitePolicy = (nonce: string | undefined) =>
       "manifest-src 'self'",
       "upgrade-insecure-requests",
     ],
+    // The Trusted Types policies a page may create: the network's (site-runtime TRUSTED_TYPES_NAMES) and the one that
+    // runs the held hydration scripts on a press of play (app/site/hydrate.ts).
+    trustedTypes: [...TRUSTED_TYPES_NAMES, "germomics-hydrate"],
   }) as const;
 
 /**
@@ -62,9 +65,7 @@ export const security = pageSecurity({
         }
       : site;
   },
-  // The Trusted Types policies a page may create: the network's (site-runtime TRUSTED_TYPES_NAMES) and the one that
-  // runs the held hydration scripts on a press of play (app/site/hydrate.ts).
-  staged: { trustedTypes: [...TRUSTED_TYPES_NAMES, "germomics-hydrate"], denyUnlisted: true },
+  staged: { denyUnlisted: true },
 });
 
 /**
