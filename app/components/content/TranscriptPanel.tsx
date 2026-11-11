@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search, Copy, Check, ArrowDownToLine } from "lucide-react";
 import { usePlayer, activeChapterIndex } from "~/components/player/player-context";
 import { formatDuration } from "~/lib/format";
-import { parseVtt, toParagraphs, parseCueText } from "~/lib/vtt";
+import { parseVtt, toParagraphs, parseCueText } from "@drdustinedwards/site-helpers/vtt";
 import type { PlayerTrack } from "~/lib/types";
 
 // Read-along transcript. The stored value is raw WebVTT; we parse it, group caption cues into
@@ -223,7 +223,7 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
     const chap = activeChapterIndex(chapters, para[0].start);
     const showChapter = !q && chap !== -1 && chap !== lastChapter;
     if (showChapter) lastChapter = chap;
-    const speaker = parseCueText(para[0].text).speaker;
+    const speaker = para[0].speaker ?? parseCueText(para[0].text).speaker;
     const showSpeaker = !!speaker && speaker !== lastSpeaker;
     if (speaker) lastSpeaker = speaker;
     heads.push({ chap, showChapter, speaker, showSpeaker });

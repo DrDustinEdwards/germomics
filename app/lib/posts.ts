@@ -4,14 +4,6 @@
 import type { Post } from "~/db/schema";
 import type { PlayerTrack } from "~/lib/types";
 
-export function slugifyGuest(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^\p{L}\p{N}]+/gu, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
 /** Map a published episode to the minimal shape the player consumes. */
 export function toPlayerTrack(p: Post): PlayerTrack {
   return {

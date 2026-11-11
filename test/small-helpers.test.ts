@@ -2,22 +2,11 @@ import { describe, expect, it } from "vitest";
 import { APPLE_CATEGORIES } from "~/lib/apple-categories";
 import { getDataset, listDatasets } from "~/lib/datasets.server";
 import { computePeaks } from "~/lib/peaks";
-import { slugifyGuest } from "~/lib/posts";
 import { DEFAULT_SHOW } from "~/lib/show.server";
 
 // The small pure helpers. Where a hardcoded list mirrors a source of truth, the test derives the
 // list and fails both ways, missing and extra (portfolio rule 3.4), with a count so an empty list
 // cannot pass (rule 3.3).
-
-describe("slugifyGuest", () => {
-  it("lowercases, joins runs of other characters with one dash, and trims dashes", () => {
-    expect(slugifyGuest("  Ada  Lovelace ")).toBe("ada-lovelace");
-    expect(slugifyGuest("Dr. John O'Neil, Jr.")).toBe("dr-john-o-neil-jr");
-    expect(slugifyGuest("Zoë Müller")).toBe("zoë-müller");
-    expect(slugifyGuest("--A--")).toBe("a");
-    expect(slugifyGuest("!!!")).toBe("");
-  });
-});
 
 describe("the Apple Podcasts categories", () => {
   it("accepts every category the show ships with, so the editor never rejects its own default", () => {

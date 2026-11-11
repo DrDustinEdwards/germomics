@@ -4,7 +4,7 @@
 import { useMemo, useRef, useState } from "react";
 import { Captions, ClipboardPaste, FileUp } from "lucide-react";
 import { Tabs, inputCx } from "./ui";
-import { parseVtt, srtToVtt, isProbablyVtt } from "~/lib/vtt";
+import { parseVtt, srtToVtt, isVtt } from "@drdustinedwards/site-helpers/vtt";
 import { formatDuration } from "~/lib/format";
 
 export function TranscriptField({
@@ -21,8 +21,7 @@ export function TranscriptField({
 
   async function readFile(file: File) {
     const text = await file.text();
-    const isSrt =
-      file.name.toLowerCase().endsWith(".srt") || (!isProbablyVtt(text) && /-->/.test(text));
+    const isSrt = file.name.toLowerCase().endsWith(".srt") || (!isVtt(text) && /-->/.test(text));
     const vtt = isSrt ? srtToVtt(text) : text;
     onChange(vtt);
     setNote(isSrt ? "Converted SRT → VTT." : "Loaded VTT.");
