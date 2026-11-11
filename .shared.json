@@ -6,9 +6,7 @@
     "app/components/player/player-context.tsx": "the persistent player's provider, tied to /site.js's pre-React audio start (app/site/hydrate.ts, AUDIO_STARTED_ATTRIBUTE) and its own storage keys; moving it to Capsomer's PlayerProvider is its own change with browser tests of start, resume and handoff, since the audio player is the site's highest-risk accessibility component (CLAUDE.md rule 3)"
   },
   "spelling": {
-    "skip": [
-      "docs/research/kill-matrix.json"
-    ]
+    "skip": ["docs/research/kill-matrix.json"]
   },
   "tokens": {
     "--surface": "germomics.com keeps its own public palette (products on their own domains keep their own looks, Dustin 2026-10-26)",

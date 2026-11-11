@@ -21,8 +21,7 @@ export function TranscriptField({
 
   async function readFile(file: File) {
     const text = await file.text();
-    const isSrt =
-      file.name.toLowerCase().endsWith(".srt") || (!isVtt(text) && /-->/.test(text));
+    const isSrt = file.name.toLowerCase().endsWith(".srt") || (!isVtt(text) && /-->/.test(text));
     const vtt = isSrt ? srtToVtt(text) : text;
     onChange(vtt);
     setNote(isSrt ? "Converted SRT → VTT." : "Loaded VTT.");
