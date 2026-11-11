@@ -25,3 +25,6 @@ export function listGames(): GameMeta[] {
 export function getGame(slug: string): GameMeta | null {
   return Object.hasOwn(GAMES, slug) ? GAMES[slug] : null;
 }
+
+/** The edge-cache tag a game's page is stored under beside the pages tag, so a score purges only that page. */
+export const gameCacheTag = (slug: string) => `game-${slug}`;
