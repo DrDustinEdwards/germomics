@@ -7,6 +7,7 @@ import { getSnippets } from "~/lib/context.server";
 import { dataMap, timelineChart } from "~/lib/charts.server";
 import type { Source } from "~/lib/datasets.server";
 import chartsCss from "~/charts.css?url";
+import { markup } from "capsomer/behavior/trusted-html";
 
 // The map and the chart are drawn on the server by Enarratio, so a data page sends no React (lib/hydration.ts); their
 // stylesheet and island (app/islands/charts.ts) load on this route alone.
@@ -102,7 +103,7 @@ export default function DataDetail({ loaderData }: Route.ComponentProps) {
           data-island="charts"
           data-client="visible"
           data-client-root-margin="200px"
-          dangerouslySetInnerHTML={{ __html: map }}
+          dangerouslySetInnerHTML={markup(map)}
         />
       ) : null}
 
@@ -112,7 +113,7 @@ export default function DataDetail({ loaderData }: Route.ComponentProps) {
           data-island="charts"
           data-client="visible"
           data-client-root-margin="200px"
-          dangerouslySetInnerHTML={{ __html: chart }}
+          dangerouslySetInnerHTML={markup(chart)}
         />
       ) : null}
 

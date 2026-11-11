@@ -2,7 +2,8 @@
 // inherits the surrounding text color through currentColor and can never drift from the artwork the way
 // hand-copied path data did (the old inline copy was truncated before the mic glyph and read "GER OMICS").
 // Source of truth: ./germomics-wordmark.svg (mirrors public/brand/germomics-wordmark-currentcolor.svg).
-import markup from "./germomics-wordmark.svg?raw";
+import wordmarkSvg from "./germomics-wordmark.svg?raw";
+import { markup } from "capsomer/behavior/trusted-html";
 
 export function Wordmark({
   className = "",
@@ -19,7 +20,7 @@ export function Wordmark({
       role="img"
       aria-label={title}
       className={`inline-flex text-brand [&>svg]:h-full [&>svg]:w-auto ${className}`}
-      dangerouslySetInnerHTML={{ __html: markup }}
+      dangerouslySetInnerHTML={markup(wordmarkSvg)}
     />
   );
 }
