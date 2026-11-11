@@ -26,7 +26,12 @@ import { canonicalRedirect } from "@dustinedwards/site-runtime/url";
 import { runJobs } from "@dustinedwards/site-runtime/cron";
 import { markdownCopies } from "@drdustinedwards/site-helpers/markdown-copy";
 import { maintenanceOn, maintenanceResponse } from "@dustinedwards/site-runtime/maintenance";
-import { logEvent, requestFields, routeNamer, withRequestLog } from "@dustinedwards/site-runtime/log";
+import {
+  logEvent,
+  requestFields,
+  routeNamer,
+  withRequestLog,
+} from "@dustinedwards/site-runtime/log";
 import { countNotFound } from "@dustinedwards/site-runtime/not-found";
 import { cloudflareContext, cspNonceContext } from "../app/lib/context.server";
 import { enforceRateLimit } from "../app/lib/security.server";
