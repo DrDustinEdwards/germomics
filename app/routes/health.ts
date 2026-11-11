@@ -8,6 +8,7 @@
 // Not probed: BACKUPS (the backup check reads it, so a dead bucket shows as a stale or failed backup), and the two rate
 // limit bindings (CARREL_RATE_LIMIT, CSP_REPORT_RATE_LIMIT), which have no read that does not spend a request's count.
 import { cronCheck } from "@dustinedwards/site-runtime/cron";
+import { deployedAt, deployedSha } from "@dustinedwards/site-runtime/deploy";
 import {
   durableObjectCheck,
   emailCheck,
@@ -26,7 +27,7 @@ export function loader({ context }: Route.LoaderArgs) {
   return healthResponse({
     ping: () => env.DB.prepare("select 1").first(),
     backup: () => backupStatus(env),
-    sha: env.DEPLOY_SHA,
+    sha: deployedSha(env),
     checks: [
       { ...r2Check("audio", env.MEDIA), level: "warn" },
       { ...r2Check("images", env.BLOG_IMAGES), level: "warn" },
@@ -37,7 +38,7 @@ export function loader({ context }: Route.LoaderArgs) {
       durableObjectCheck("rate-limiter", env.RATE_LIMITER),
       cronCheck(env.DB, {
         jobs: allCronJobs(env),
-        deployedAt: new Date(env.CF_VERSION_METADATA.timestamp),
+        deployedAt: deployedAt(env),
       }),
     ],
   });
