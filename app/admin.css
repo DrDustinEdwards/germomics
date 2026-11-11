@@ -10,6 +10,10 @@
 @import "capsomer/dialog.css";
 @import "capsomer/segmented.css";
 @import "capsomer/popover.css";
+@import "capsomer/button.css";
+@import "capsomer/field.css";
+@import "capsomer/repeater-field.css";
+@import "capsomer/schema-form.css";
 
 /* Capsomer's faces from capsomer/fonts.css, loaded only with the admin, so public pages do not
    download them. Numbers keep the site's JetBrains Mono. */

@@ -2,16 +2,24 @@
 // (app/lib/carrel/source.ts), so a person is added here first.
 import { useState } from "react";
 import { useFetcher } from "react-router";
-import { UserPlus, Trash2, Plus, X, Users } from "lucide-react";
+import { UserPlus, Trash2, Users } from "lucide-react";
 import type { Route } from "./+types/admin.people._index";
 import { getEnv } from "~/lib/context.server";
 import { listPeople, upsertPerson, deletePerson } from "~/lib/people.server";
-import { Card, Field, Button, inputCx, EmptyState } from "~/components/admin/ui";
+import {
+  Card,
+  Field,
+  Button,
+  inputCx,
+  EmptyState,
+} from "~/components/admin/ui";
 import { ImageField } from "~/components/admin/ImageField";
 import { useSnippet } from "~/lib/content";
 import type { Person, PersonLink } from "~/db/schema";
 import { ADMIN_FORM, readForm } from "~/lib/body.server";
 import { confirmSubmit } from "capsomer/behavior/confirm-dialog";
+import { TextField } from "capsomer/react/field";
+import { RepeaterField } from "capsomer/react/repeater-field";
 
 export async function loader({ context }: Route.LoaderArgs) {
   return { people: await listPeople(getEnv(context)) };
@@ -61,7 +69,10 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
   const del = useFetcher();
   const [draft, setDraft] = useState(blank);
   const editing = draft.id !== 0;
-  const emptyPeople = useSnippet("snippet:empty.people", "No people yet. Create one on the right.");
+  const emptyPeople = useSnippet(
+    "snippet:empty.people",
+    "No people yet. Create one on the right.",
+  );
 
   function load(p: Person) {
     setDraft({
@@ -105,9 +116,13 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                     </span>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-display font-medium text-ink">{p.name}</p>
+                    <p className="truncate font-display font-medium text-ink">
+                      {p.name}
+                    </p>
                     {p.role ? (
-                      <p className="truncate font-mono text-[11px] text-muted">{p.role}</p>
+                      <p className="truncate font-mono text-[11px] text-muted">
+                        {p.role}
+                      </p>
                     ) : null}
                   </div>
                   <button
@@ -120,7 +135,10 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                   <del.Form
                     method="post"
                     onSubmit={(e) =>
-                      confirmSubmit(e, { title: `Delete ${p.name}?`, action: "Delete person" })
+                      confirmSubmit(e, {
+                        title: `Delete ${p.name}?`,
+                        action: "Delete person",
+                      })
                     }
                   >
                     <input type="hidden" name="intent" value="delete" />
@@ -156,10 +174,11 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
             }
           >
             <save.Form method="post" className="space-y-4">
-              {editing ? <input type="hidden" name="id" value={draft.id} /> : null}
+              {editing ? (
+                <input type="hidden" name="id" value={draft.id} />
+              ) : null}
               <input type="hidden" name="photo" value={draft.photo} />
               <input type="hidden" name="photoAlt" value={draft.photoAlt} />
-              <input type="hidden" name="links" value={JSON.stringify(draft.links)} />
 
               <Field label="Name" required>
                 {({ id }) => (
@@ -167,7 +186,9 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                     id={id}
                     name="name"
                     value={draft.name}
-                    onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
+                    onChange={(e) =>
+                      setDraft((d) => ({ ...d, name: e.target.value }))
+                    }
                     className={inputCx}
                     required
                   />
@@ -179,7 +200,9 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                     id={id}
                     name="role"
                     value={draft.role}
-                    onChange={(e) => setDraft((d) => ({ ...d, role: e.target.value }))}
+                    onChange={(e) =>
+                      setDraft((d) => ({ ...d, role: e.target.value }))
+                    }
                     className={inputCx}
                   />
                 )}
@@ -191,7 +214,9 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                     name="bio"
                     value={draft.bio}
                     rows={3}
-                    onChange={(e) => setDraft((d) => ({ ...d, bio: e.target.value }))}
+                    onChange={(e) =>
+                      setDraft((d) => ({ ...d, bio: e.target.value }))
+                    }
                     className={inputCx}
                   />
                 )}
@@ -202,73 +227,52 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                 url={draft.photo}
                 alt={draft.photoAlt}
                 postId="people"
-                onChange={({ url, alt }) => setDraft((d) => ({ ...d, photo: url, photoAlt: alt }))}
+                onChange={({ url, alt }) =>
+                  setDraft((d) => ({ ...d, photo: url, photoAlt: alt }))
+                }
               />
 
-              <div>
-                <span className="font-display text-sm font-medium text-ink">Links</span>
-                <div className="mt-2 space-y-2">
-                  {draft.links.map((l, i) => (
-                    <div key={i} className="flex gap-2">
-                      <input
-                        aria-label="Link label"
-                        placeholder="label"
-                        value={l.label}
-                        onChange={(e) =>
-                          setDraft((d) => ({
-                            ...d,
-                            links: d.links.map((x, idx) =>
-                              idx === i ? { ...x, label: e.target.value } : x,
-                            ),
-                          }))
-                        }
-                        className={`${inputCx} w-28 text-xs`}
-                      />
-                      <input
-                        aria-label="Link URL"
-                        placeholder="https://"
-                        value={l.url}
-                        onChange={(e) =>
-                          setDraft((d) => ({
-                            ...d,
-                            links: d.links.map((x, idx) =>
-                              idx === i ? { ...x, url: e.target.value } : x,
-                            ),
-                          }))
-                        }
-                        className={`${inputCx} flex-1 text-xs`}
-                      />
-                      <button
-                        type="button"
-                        aria-label="Remove link"
-                        onClick={() =>
-                          setDraft((d) => ({ ...d, links: d.links.filter((_, idx) => idx !== i) }))
-                        }
-                        className="grid h-8 w-8 place-items-center rounded text-muted hover:text-brand"
-                      >
-                        <X size={14} aria-hidden />
-                      </button>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() =>
-                      setDraft((d) => ({ ...d, links: [...d.links, { label: "", url: "" }] }))
-                    }
-                  >
-                    <Plus size={13} aria-hidden /> Add link
-                  </Button>
-                </div>
-              </div>
+              <RepeaterField
+                legend="Links"
+                rows={draft.links}
+                onChange={(links) => setDraft((d) => ({ ...d, links }))}
+                newRow={() => ({ label: "", url: "" })}
+                rowLabel={(i) => `Link ${i + 1}`}
+                addLabel="Add link"
+                name="links"
+                json
+              >
+                {(link, { set }) => (
+                  <>
+                    <TextField
+                      label="Link label"
+                      placeholder="label"
+                      value={link.label}
+                      onChange={(e) => set({ label: e.target.value })}
+                    />
+                    <TextField
+                      label="Link URL"
+                      placeholder="https://"
+                      value={link.url}
+                      onChange={(e) => set({ url: e.target.value })}
+                    />
+                  </>
+                )}
+              </RepeaterField>
 
               <input type="hidden" name="intent" value="upsert" />
               <div className="flex items-center gap-3">
-                <Button type="submit" variant="primary" disabled={save.state !== "idle"}>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={save.state !== "idle"}
+                >
                   {editing ? "Save" : "Create"}
                 </Button>
                 {save.data?.ok ? (
-                  <span className="font-mono text-xs text-accent">{save.data.message}</span>
+                  <span className="font-mono text-xs text-accent">
+                    {save.data.message}
+                  </span>
                 ) : null}
               </div>
             </save.Form>
