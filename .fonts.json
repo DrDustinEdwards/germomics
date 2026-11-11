@@ -1,0 +1,9 @@
+{
+  "css_url": "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Space+Grotesk:wght@400..700&family=JetBrains+Mono:wght@400..500&display=swap",
+  "subsets": ["latin", "latin-ext"],
+  "dir": "public/fonts",
+  "url_prefix": "/fonts/",
+  "css": "app/fonts.css",
+  "display": "optional",
+  "header": "Space Grotesk (display/UI), Fraunces (body), JetBrains Mono (numbers)."
+}
