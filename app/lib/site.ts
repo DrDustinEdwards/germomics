@@ -31,7 +31,7 @@ export const NO_PREFETCH = ["/unsubscribe", "/subscribe/confirm", "/preview", "/
 /** OP3 (op3.dev), the download analytics prefix the podcast feed wraps enclosures in. */
 export const OP3_ORIGIN = "https://op3.dev";
 
-const SITE_ADDRESS = {
+export const SITE_ADDRESS = {
   streetAddress: "Box T-0100",
   locality: "Stephenville",
   region: "TX",
@@ -49,21 +49,6 @@ export type Address = {
   postalCode: string;
   country: string;
 };
-
-/**
- * schema.org PostalAddress node, for embedding in Organization / PodcastSeries. Accepts a partial
- * address (from the contact.address setting); any missing field falls back to SITE_ADDRESS.
- */
-export function postalAddressLd(a: Partial<Address> = {}) {
-  return {
-    "@type": "PostalAddress",
-    streetAddress: a.streetAddress ?? SITE_ADDRESS.streetAddress,
-    addressLocality: a.locality ?? SITE_ADDRESS.locality,
-    addressRegion: a.region ?? SITE_ADDRESS.region,
-    postalCode: a.postalCode ?? SITE_ADDRESS.postalCode,
-    addressCountry: a.country ?? SITE_ADDRESS.country,
-  };
-}
 
 /** Paths no crawler needs, in /robots.txt and /ai.txt alike. */
 export const ROBOTS_DISALLOW = ["/admin", "/preview/"];

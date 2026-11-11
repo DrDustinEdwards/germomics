@@ -13,6 +13,7 @@ import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { AUTHOR } from "~/lib/about";
 import { sectionPageTrail } from "~/lib/trails";
 import { SectionTrail } from "~/components/content/SectionTrail";
+import "~/prose.css";
 
 const authorTrail = sectionPageTrail(
   { name: "About", path: "/about" },
@@ -56,7 +57,7 @@ export default function AuthorBio({ loaderData }: Route.ComponentProps) {
       </h1>
       <p className="mt-2 font-mono text-sm text-muted">{AUTHOR.jobTitle}</p>
 
-      <div className="prose-legal mt-6">
+      <div data-context="prose" className="mt-6">
         <BodyRenderer html={loaderData.bioHtml} />
       </div>
 

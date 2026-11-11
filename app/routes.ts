@@ -1,33 +1,39 @@
-import { type RouteConfig, index, route } from "@react-router/dev/routes";
+import { type RouteConfig, index, layout, route } from "@react-router/dev/routes";
 
 export default [
-  index("routes/_index.tsx"),
+  // The public pages, under one layout that loads their own stylesheet (routes/_site.tsx). Resource routes and the
+  // admin stay outside it.
+  layout("routes/_site.tsx", [
+    index("routes/_index.tsx"),
 
-  // sections
-  route("episodes", "routes/episodes._index.tsx"),
-  route("season/:num", "routes/season.$num.tsx"),
-  route("writing", "routes/writing._index.tsx"),
-  route("archive", "routes/archive.tsx"),
-  route("search", "routes/search.tsx"),
-  route("data", "routes/data._index.tsx"),
-  route("data/:slug", "routes/data.$slug.tsx"),
-  route("games", "routes/games._index.tsx"),
+    // sections
+    route("episodes", "routes/episodes._index.tsx"),
+    route("season/:num", "routes/season.$num.tsx"),
+    route("writing", "routes/writing._index.tsx"),
+    route("archive", "routes/archive.tsx"),
+    route("search", "routes/search.tsx"),
+    route("data", "routes/data._index.tsx"),
+    route("data/:slug", "routes/data.$slug.tsx"),
+    route("games", "routes/games._index.tsx"),
+    route("games/:slug", "routes/games.$slug.tsx"),
+    route("tag/:tag", "routes/tag.$tag.tsx"),
+    route("guests/:guest", "routes/guests.$guest.tsx"),
+    route("subscribe", "routes/subscribe.tsx"),
+    route("subscribe/confirm", "routes/subscribe.confirm.tsx"),
+    route("unsubscribe", "routes/unsubscribe.tsx"),
+    route("about", "routes/about.tsx"),
+    route("about/dustin-edwards", "routes/about.dustin-edwards.tsx"),
+    route("privacy", "routes/privacy.tsx"),
+    route("terms", "routes/terms.tsx"),
+    route("accessibility", "routes/accessibility.tsx"),
+    route("contact", "routes/contact.tsx"),
+    route("txasm", "routes/txasm.tsx"),
+    // episode/article detail — single dynamic segment, ranked below every static route.
+    route(":slug", "routes/$slug.tsx"),
+  ]),
   route("games/assets/*", "routes/games.assets.$.ts"),
   // resized images from BLOG_IMAGES (app/lib/images.ts)
   route("media/*", "routes/media.$.ts"),
-  route("games/:slug", "routes/games.$slug.tsx"),
-  route("tag/:tag", "routes/tag.$tag.tsx"),
-  route("guests/:guest", "routes/guests.$guest.tsx"),
-  route("subscribe", "routes/subscribe.tsx"),
-  route("subscribe/confirm", "routes/subscribe.confirm.tsx"),
-  route("unsubscribe", "routes/unsubscribe.tsx"),
-  route("about", "routes/about.tsx"),
-  route("about/dustin-edwards", "routes/about.dustin-edwards.tsx"),
-  route("privacy", "routes/privacy.tsx"),
-  route("terms", "routes/terms.tsx"),
-  route("accessibility", "routes/accessibility.tsx"),
-  route("contact", "routes/contact.tsx"),
-  route("txasm", "routes/txasm.tsx"),
 
   // ops
   route("health", "routes/health.ts"),
@@ -72,7 +78,4 @@ export default [
   ]),
 
   // Carrel's preview links (/preview/<token>) are answered by the Worker before the app (workers/app.ts).
-
-  // episode/article detail — single dynamic segment, ranked below every static route above.
-  route(":slug", "routes/$slug.tsx"),
 ] satisfies RouteConfig;

@@ -40,7 +40,7 @@ export default function DataHub({ loaderData }: Route.ComponentProps) {
             to={`/data/${d.slug}`}
             className="rounded-xl border border-border bg-card p-5 transition hover:border-brand"
           >
-            <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-accent">
+            <div className="flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wide text-accent">
               {d.kind === "virus" ? (
                 <Dna size={13} aria-hidden />
               ) : (

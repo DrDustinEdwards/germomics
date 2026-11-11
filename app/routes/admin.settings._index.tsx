@@ -114,7 +114,11 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
       </p>
 
       <fetcher.Form method="post" className="mt-6 space-y-5">
-        <input type="hidden" name="categories" value={JSON.stringify(categories)} />
+        <input
+          type="hidden"
+          name="categories"
+          value={JSON.stringify(categories.filter((c) => c.category))}
+        />
         <input type="hidden" name="hosts" value={JSON.stringify(hosts)} />
 
         <Card title="Show" icon={<Megaphone size={15} aria-hidden />}>

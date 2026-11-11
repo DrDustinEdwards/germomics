@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { usePlayer } from "~/components/player/player-context";
+import { usePlayer } from "capsomer/react/player";
 import type { PlayerTrack } from "~/lib/types";
 
 // Seeds the player queue (newest episodes first) without autoplay, only if nothing is queued

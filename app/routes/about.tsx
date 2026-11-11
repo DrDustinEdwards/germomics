@@ -12,6 +12,7 @@ import { jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { buildOrganizationLd, pageHead } from "~/lib/seo";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { AUTHOR } from "~/lib/about";
+import "~/prose.css";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "About Germomics" }];
@@ -54,7 +55,7 @@ export default function About({ loaderData }: Route.ComponentProps) {
     <div className="mx-auto max-w-2xl">
       <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent">About</p>
       <h1 className="mt-3 font-display text-4xl font-semibold leading-tight">{title}</h1>
-      <div className="prose-legal mt-4">
+      <div data-context="prose" className="mt-4">
         <BodyRenderer html={aboutHtml} />
       </div>
 
@@ -62,7 +63,7 @@ export default function About({ loaderData }: Route.ComponentProps) {
         <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
           <User size={18} aria-hidden /> The author
         </h2>
-        <div className="prose-legal mt-2">
+        <div data-context="prose" className="mt-2">
           <BodyRenderer html={bioHtml} />
         </div>
         <Link

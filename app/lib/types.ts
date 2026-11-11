@@ -49,16 +49,5 @@ export type GuestView = {
 /** A soundbite as rendered by the public clip player. */
 export type SoundbiteView = { id: number; start: number; duration: number; title: string | null };
 
-export type Theme = "light" | "dark";
-
-/** The minimal episode shape the persistent player needs. Built from loader data. */
-export type PlayerTrack = {
-  id: number;
-  slug: string;
-  title: string;
-  audioUrl: string;
-  durationSec: number | null;
-  artwork: string | null;
-  episodeNumber: number | null;
-  chapters: Chapter[];
-};
+/** The track Capsomer's persistent player plays. Built from loader data (lib/posts.ts toPlayerTrack). */
+export type { PlayerTrack } from "capsomer/react/player";

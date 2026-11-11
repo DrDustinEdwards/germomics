@@ -16,16 +16,23 @@
 import type * as Prelum from "@drdustinedwards/site-helpers/render/nomath";
 import { diagramPack } from "~/lib/diagram-pack";
 import { logEvent } from "@dustinedwards/site-runtime/log";
-import { and, eq, inArray, isNotNull, like, ne, sql } from "drizzle-orm";
+import { and, eq, isNotNull, like, ne, sql } from "drizzle-orm";
+import { inList } from "@dustinedwards/site-runtime/d1";
 import { getDb } from "~/db/index.server";
 import { contentBlocks, media, posts, type Post } from "~/db/schema";
-import { inlineBlogDiagrams, loadBlogDiagrams, type DiagramFiles } from "~/lib/blog-diagram.server";
+import {
+  drawsDiagrams,
+  inDiagramContext,
+  inlineBlogDiagrams,
+  loadBlogDiagrams,
+  type DiagramFiles,
+} from "~/lib/blog-diagram.server";
 import { imageKeyOf, images, mediaPath, type ImageUseName } from "~/lib/images";
 import { SITE_ORIGIN } from "~/lib/site";
 import type { BodyMeta } from "~/lib/types";
 
 /** Prelum's RENDER_VERSION, kept here so a read can compare without loading the pipeline. */
-export const RENDER_VERSION = "24";
+export const RENDER_VERSION = "25";
 // A Prelum upgrade that moves its version fails the typecheck here until this constant moves with it.
 RENDER_VERSION satisfies typeof Prelum.RENDER_VERSION;
 
@@ -57,7 +64,7 @@ export function libraryMedia(env: Env): MediaLookup {
             sha256: media.sha256,
           })
           .from(media)
-          .where(inArray(media.key, keys));
+          .where(inList(media.key, keys));
 }
 
 const escape = (s: string) => s.replace(/[.]/g, "\\.");
@@ -200,22 +207,23 @@ type Stored = {
 };
 
 /**
- * The HTML a public read shows. A stored render at Prelum's version is used as it is, except a Mermaid figure this
- * site now draws inline: that figure is replaced in memory and its caption stays, so the page is current before the
+ * The HTML a public read shows. A stored render at Prelum's version is used as it is, except its diagrams: a Mermaid
+ * figure this site now draws inline, or a drawing inlined at an earlier render, is drawn from the site's current file in
+ * memory and its caption stays, so the page is current before the
  * row is saved again. A render older than Prelum's is rendered in memory, and the every-minute cron stores it. A body
  * that no longer renders keeps its last stored HTML, so a page never fails on its own text. The HTML is wrapped in
  * the version it was rendered at, which prelum-content reads to see a page left behind.
  */
 export async function storedBody(env: Env, row: Stored): Promise<{ html: string; meta: BodyMeta }> {
-  if (row.renderVersion === null) return { html: row.body, meta: EMPTY_META };
+  if (row.renderVersion === null) return { html: inDiagramContext(row.body), meta: EMPTY_META };
   const shown = (html: string, version: string, meta: BodyMeta) => ({
     html: html && `<div data-render-version="${version}">${html}</div>`,
     meta,
   });
   if (row.renderVersion === RENDER_VERSION && row.bodyHtml !== null) {
-    const html = row.bodyHtml.includes("diagram-figure")
+    const html = drawsDiagrams(row.bodyHtml)
       ? inlineBlogDiagrams(row.bodyHtml, await loadBlogDiagrams(env))
-      : row.bodyHtml;
+      : inDiagramContext(row.bodyHtml);
     return shown(html, RENDER_VERSION, row.bodyMeta ?? EMPTY_META);
   }
   try {
@@ -231,7 +239,11 @@ export async function storedBody(env: Env, row: Stored): Promise<{ html: string;
         error: err instanceof Error ? err.message : String(err),
       }),
     );
-    return shown(row.bodyHtml ?? "", row.renderVersion, row.bodyMeta ?? EMPTY_META);
+    return shown(
+      inDiagramContext(row.bodyHtml ?? ""),
+      row.renderVersion,
+      row.bodyMeta ?? EMPTY_META,
+    );
   }
 }
 

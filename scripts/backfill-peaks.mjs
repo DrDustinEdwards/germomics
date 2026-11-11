@@ -10,7 +10,7 @@
 //   node scripts/backfill-peaks.mjs           # fill only episodes with null audio_peaks
 //   node scripts/backfill-peaks.mjs --force    # recompute every episode
 import { execSync } from "node:child_process";
-import { computePeaks } from "../app/lib/peaks.ts";
+import { computePeaks } from "capsomer/behavior/player";
 import decodeAudio from "audio-decode";
 
 const N = 400;

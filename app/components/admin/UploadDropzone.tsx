@@ -117,7 +117,7 @@ export function UploadDropzone({
           <div className="h-1.5 overflow-hidden rounded-full bg-surface">
             <div className="h-full bg-accent transition-all" style={{ width: `${progress}%` }} />
           </div>
-          <p className="mt-1 font-mono text-[11px] text-muted">Uploading… {progress}%</p>
+          <p className="mt-1 font-mono text-[0.6875rem] text-muted">Uploading… {progress}%</p>
         </div>
       ) : null}
       {error ? (

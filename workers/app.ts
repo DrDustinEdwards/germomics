@@ -108,6 +108,9 @@ const site = defineSite<Env>({
     };
   },
   preloads: FONT_PRELOADS,
+  // Every public page renders inside routes/_site, whose stylesheet (site.css: the header, the player and the reading
+  // contexts) joins the root's in the Early Hints header and in the stylesheets a Carrel preview draws with.
+  stylesheetRoutes: ["routes/_site"],
   // A path Carrel removed answers 410 (site-api's tombstones).
   onNotFound: (response, request, env) =>
     tombstoned(response, new URL(request.url).pathname, d1SiteApiStore(env.DB)),

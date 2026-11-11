@@ -1,7 +1,7 @@
 import { Link } from "capsomer/react/link";
 import { Headphones, FileText } from "lucide-react";
-import { formatDate, formatDuration } from "~/lib/format";
-import { PlayButton } from "./PlayButton";
+import { formatDate, timecode } from "capsomer/behavior/time";
+import { PlayTrackButton } from "capsomer/react/player";
 import type { Post } from "~/db/schema";
 import type { PlayerTrack } from "~/lib/types";
 
@@ -22,14 +22,14 @@ export function PostCard({
   return (
     <article className="flex gap-4 rounded-xl border border-border bg-card p-4">
       {isEpisode && track ? (
-        <PlayButton track={track} queue={queue} />
+        <PlayTrackButton track={track} queue={queue} />
       ) : (
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-brand">
           <FileText size={18} aria-hidden />
         </span>
       )}
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-x-2 font-mono text-[11px] uppercase tracking-wide text-muted">
+        <div className="flex flex-wrap items-center gap-x-2 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
           <span className="flex items-center gap-1 text-brand">
             {isEpisode ? <Headphones size={12} aria-hidden /> : <FileText size={12} aria-hidden />}
             {isEpisode ? "Episode" : "Article"}
@@ -37,7 +37,7 @@ export function PostCard({
           {isEpisode && post.episodeNumber ? <span>#{post.episodeNumber}</span> : null}
           {post.publishedAt ? <span>{formatDate(post.publishedAt)}</span> : null}
           {isEpisode && post.audioDuration ? (
-            <span className="tabular-nums">{formatDuration(post.audioDuration)}</span>
+            <span className="tabular-nums">{timecode(post.audioDuration * 1000)}</span>
           ) : null}
           {post.readingTime ? (
             <span className="tabular-nums">{post.readingTime} min read</span>
@@ -55,7 +55,7 @@ export function PostCard({
               <Link
                 key={t}
                 to={`/tag/${encodeURIComponent(t)}`}
-                className="rounded-full border border-border px-2 py-0.5 font-mono text-[11px] text-muted hover:border-brand hover:text-brand"
+                className="rounded-full border border-border px-2 py-0.5 font-mono text-[0.6875rem] text-muted hover:border-brand hover:text-brand"
               >
                 {t}
               </Link>

@@ -1,6 +1,6 @@
-import { useState } from "react";
-import type { ImageAttributes } from "~/lib/images";
-import { Picture } from "./Picture";
+import { useEffect, useRef, useState } from "react";
+import { imageOrPlain, type ImageAttributes } from "~/lib/images";
+import { Picture } from "capsomer/react/picture";
 import wordmarkRaw from "~/components/brand/germomics-wordmark.svg?raw";
 import { markup } from "capsomer/behavior/trusted-html";
 
@@ -40,21 +40,32 @@ export function CoverArt({
   image?: ImageAttributes;
 }) {
   const [failed, setFailed] = useState(false);
+  const holder = useRef<HTMLSpanElement | null>(null);
   const frame = "aspect-square w-full rounded-2xl";
+
+  // An image's error event does not bubble, so the wrapper listens in the capture phase; one that failed before this
+  // ran (the page was server-rendered) is seen by its size.
+  useEffect(() => {
+    const el = holder.current;
+    if (!el) return;
+    const fail = () => setFailed(true);
+    el.addEventListener("error", fail, true);
+    const img = el.querySelector("img");
+    if (img?.complete && img.naturalWidth === 0) fail();
+    return () => el.removeEventListener("error", fail, true);
+  }, [src, failed]);
 
   // Per-item raster wins; fall through to the SVG square if it 404s or fails to decode.
   if (src && !failed) {
     return (
-      <Picture
-        src={src}
-        image={image}
-        alt={alt}
-        width={1400}
-        height={1400}
-        priority={eager}
-        onError={() => setFailed(true)}
-        className={`${frame} object-cover ${className}`}
-      />
+      <span ref={holder} className="contents">
+        <Picture
+          attrs={imageOrPlain(image, src, 1400, 1400)}
+          alt={alt}
+          priority={eager}
+          className={`${frame} object-cover ${className}`}
+        />
+      </span>
     );
   }
 

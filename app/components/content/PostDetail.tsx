@@ -2,51 +2,43 @@
 // Episodes keep their existing experience (player, chapters, transcript, guests); articles get an
 // editorial layout (cover, byline + reading time, table of contents, share, prev/next, related).
 // Body is rendered once via BodyRenderer for both kinds.
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef } from "react";
 import { useSearchParams } from "react-router";
-import {
-  Calendar,
-  Clock,
-  ArrowLeft,
-  ArrowRight,
-  FileText,
-  Rss,
-  Bookmark,
-  BookmarkCheck,
-} from "lucide-react";
+import { Calendar, Clock, ArrowLeft, ArrowRight, FileText, Rss } from "lucide-react";
 import { Link } from "capsomer/react/link";
+import { SaveToggle } from "capsomer/react/save-toggle";
+import { SubscribeLinks } from "capsomer/react/subscribe-links";
 import type { Post } from "~/db/schema";
 import type { GuestView, Host, PlayerTrack, SoundbiteView } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
-import { imageFor, type ImageSet } from "~/lib/images";
-import { Picture } from "./Picture";
+import { imageFor, imageOrPlain, type ImageSet } from "~/lib/images";
+import { Picture } from "capsomer/react/picture";
+import { GMark } from "~/components/brand/GMark";
 import { wasUpdatedAfterPublish } from "~/lib/seo";
-import { formatDate, formatDuration } from "~/lib/format";
+import { formatDate, timecode } from "capsomer/behavior/time";
 import { BodyRenderer } from "./BodyRenderer";
 import { PostCard } from "./PostCard";
 import { SoundbiteClips } from "./SoundbiteClips";
-import { TranscriptPanel } from "./TranscriptPanel";
 import { CopyLink, ShareTimestamp } from "./CopyLink";
 import { AUTHOR } from "~/lib/about";
-import { EpisodePlayerSurface } from "./EpisodePlayerSurface";
 import { CoverArt } from "./CoverArt";
-import {
-  ReadingProgress,
-  KeyMoments,
-  EpisodeToc,
-  Sources,
-  Hosts,
-  ChapterList,
-  useHideBrokenFigures,
-  FigureLightbox,
-} from "./EpisodeExtras";
+import { EpisodeToc, Sources, useHideBrokenFigures, FigureLightbox } from "./EpisodeExtras";
 import { EpisodeContext } from "./EpisodeContext";
 import type { EpisodeContextView } from "~/lib/episode-context";
-import { usePlayer } from "~/components/player/player-context";
+import {
+  ChapterList,
+  Hosts,
+  KeyMoments,
+  PlayerSurface,
+  PlayerTranscript,
+  usePlayer,
+} from "capsomer/react/player";
+import { parseCueText, parseVtt } from "@drdustinedwards/site-helpers/vtt";
 import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 import { ExternalCue } from "~/components/ExternalCue";
 import { postTrail } from "~/lib/trails";
 import { SectionTrail } from "./SectionTrail";
+import "~/prose.css";
 
 export type DetailData = {
   post: Post;
@@ -69,106 +61,41 @@ export type DetailData = {
   context: EpisodeContextView | null;
 };
 
-// Lightweight "save for later": a slug set in localStorage, no server. Toggles aria-pressed. Read as an external
-// store, so the server and hydration render "Save" and the stored state follows (another tab's change too).
+// "Save for later" is Capsomer's SaveToggle: a slug list in localStorage under germomics-saved, no server.
 const SAVED_KEY = "germomics-saved";
-const savedListeners = new Set<() => void>();
-function subscribeSaved(onChange: () => void) {
-  savedListeners.add(onChange);
-  window.addEventListener("storage", onChange);
-  return () => {
-    savedListeners.delete(onChange);
-    window.removeEventListener("storage", onChange);
-  };
-}
-function savedList(): string {
-  try {
-    return localStorage.getItem(SAVED_KEY) || "[]";
-  } catch {
-    return "[]";
-  }
-}
-function isSaved(raw: string, slug: string): boolean {
-  try {
-    return (JSON.parse(raw) as string[]).includes(slug);
-  } catch {
-    return false;
-  }
-}
-
-function SaveButton({ slug }: { slug: string }) {
-  const saved = isSaved(
-    useSyncExternalStore(subscribeSaved, savedList, () => "[]"),
-    slug,
-  );
-  const toggle = () => {
-    try {
-      const list: string[] = JSON.parse(savedList());
-      const next = list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug];
-      localStorage.setItem(SAVED_KEY, JSON.stringify(next));
-    } catch {
-      /* ignore */
-    }
-    for (const onChange of savedListeners) onChange();
-  };
-  return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-pressed={saved}
-      className="tap-target inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 font-mono text-xs text-ink hover:border-brand"
-    >
-      {saved ? (
-        <BookmarkCheck size={14} aria-hidden className="text-accent" />
-      ) : (
-        <Bookmark size={14} aria-hidden />
-      )}
-      {saved ? "Saved" : "Save"}
-    </button>
-  );
-}
 
 // Compact in-page listen row: the five primary apps + RSS, links out (the footer carries the rest).
+// Capsomer's SubscribeLinks; the away cue is the site's own ExternalCue.
 function SubscribeRow({ links }: { links: Record<string, string> }) {
   const primary = PRIMARY_KEYS.filter((k) => links[k]);
   if (!primary.length) return null;
   return (
-    <section
-      aria-labelledby="listen"
-      className="mt-12 rounded-2xl border border-border bg-surface p-5"
-    >
-      <h2 id="listen" className="mb-3 font-display text-lg font-semibold">
-        Listen and subscribe
-      </h2>
-      <div className="flex flex-wrap gap-2">
-        {primary.map((k) => {
+    <SubscribeLinks
+      headingId="listen"
+      links={[
+        ...primary.map((k) => {
           const d = SUBSCRIBE_DESTINATIONS[k];
           const Icon = d.icon;
-          return (
-            <a
-              key={k}
-              href={links[k]}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-accent hover:text-accent"
-            >
-              <Icon size={14} aria-hidden /> {d.label}
-              <ExternalCue />
-            </a>
-          );
-        })}
-        <a
-          href="/feed/podcast/"
-          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-accent hover:text-accent"
-        >
-          <Rss size={14} aria-hidden /> RSS
-        </a>
-        <Link
-          to="/subscribe"
-          className="inline-flex items-center rounded-full px-3 py-1.5 text-sm text-muted hover:text-ink"
-        >
-          More ways to listen →
+          return {
+            href: links[k]!,
+            icon: <Icon size={14} aria-hidden />,
+            label: (
+              <>
+                {d.label}
+                <ExternalCue />
+              </>
+            ),
+          };
+        }),
+        { href: "/feed/podcast/", icon: <Rss size={14} aria-hidden />, label: "RSS" },
+      ]}
+      more={{ href: "/subscribe", label: "More ways to listen →" }}
+      renderLink={({ href, className, children }) => (
+        <Link to={href} className={className}>
+          {children}
         </Link>
-      </div>
-    </section>
+      )}
+    />
   );
 }
 
@@ -212,11 +139,8 @@ export function PostDetail({ data }: { data: DetailData }) {
           <div key={g.slug} className="flex gap-3 rounded-xl border border-border bg-card p-4">
             {g.photo ? (
               <Picture
-                src={g.photo}
-                image={imageFor(data.images, "avatar", g.photo)}
+                attrs={imageOrPlain(imageFor(data.images, "avatar", g.photo), g.photo, 48, 48)}
                 alt={g.photoAlt ?? g.name}
-                width={48}
-                height={48}
                 className="h-12 w-12 shrink-0 rounded-full border border-border object-cover"
               />
             ) : null}
@@ -230,7 +154,7 @@ export function PostDetail({ data }: { data: DetailData }) {
               {g.role ? <p className="font-mono text-xs text-muted">{g.role}</p> : null}
               {g.bio ? <p className="mt-1 text-sm text-muted">{g.bio}</p> : null}
               {(g.links ?? []).length ? (
-                <div className="mt-1.5 flex flex-wrap gap-2 font-mono text-[11px]">
+                <div className="mt-1.5 flex flex-wrap gap-2 font-mono text-[0.6875rem]">
                   {(g.links ?? []).map((l) => (
                     <a key={l.url} href={l.url} className="text-accent hover:underline">
                       {l.label || "link"}
@@ -267,7 +191,7 @@ export function PostDetail({ data }: { data: DetailData }) {
             to={`/${prev.slug}`}
             className="group flex max-w-[48%] flex-col rounded-xl border border-border bg-card p-3 hover:border-brand"
           >
-            <span className="flex items-center gap-1 font-mono text-[11px] text-muted">
+            <span className="flex items-center gap-1 font-mono text-[0.6875rem] text-muted">
               <ArrowLeft size={12} aria-hidden /> Previous
             </span>
             <span className="mt-1 font-display text-sm text-ink group-hover:text-brand">
@@ -282,7 +206,7 @@ export function PostDetail({ data }: { data: DetailData }) {
             to={`/${next.slug}`}
             className="group flex max-w-[48%] flex-col rounded-xl border border-border bg-card p-3 text-right hover:border-brand"
           >
-            <span className="flex items-center justify-end gap-1 font-mono text-[11px] text-muted">
+            <span className="flex items-center justify-end gap-1 font-mono text-[0.6875rem] text-muted">
               Next <ArrowRight size={12} aria-hidden />
             </span>
             <span className="mt-1 font-display text-sm text-ink group-hover:text-brand">
@@ -314,8 +238,9 @@ export function PostDetail({ data }: { data: DetailData }) {
 
     return (
       <>
-        <ReadingProgress />
-        <article className="mx-auto max-w-5xl">
+        {/* Capsomer's reading bar: CSS only, filling through the article below (app.css sets its look). */}
+        <div className="cap-reading-progress" aria-hidden="true" />
+        <article data-cap-reading className="mx-auto max-w-5xl">
           {data.preview ? <PreviewBanner post={post} /> : null}
           <SectionTrail trail={postTrail(post)} />
 
@@ -335,7 +260,7 @@ export function PostDetail({ data }: { data: DetailData }) {
                 ) : null}
                 {post.audioDuration ? (
                   <span className="flex items-center gap-1 tabular-nums">
-                    <Clock size={12} aria-hidden /> {formatDuration(post.audioDuration)}
+                    <Clock size={12} aria-hidden /> {timecode(post.audioDuration * 1000)}
                   </span>
                 ) : null}
                 {wasUpdatedAfterPublish(post) ? (
@@ -363,16 +288,27 @@ export function PostDetail({ data }: { data: DetailData }) {
               directly below it (the hero no longer carries a second play button). */}
           {track ? (
             <div id="player" className="mt-8 scroll-mt-20">
-              <EpisodePlayerSurface track={track} peaks={post.audioPeaks ?? null} />
+              <PlayerSurface
+                track={track}
+                peaks={post.audioPeaks ?? null}
+                transcriptHref="#transcript"
+              />
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <ShareTimestamp slug={post.slug} />
-                <SaveButton slug={post.slug} />
+                <SaveToggle storageKey={SAVED_KEY} id={post.slug} />
               </div>
             </div>
           ) : null}
 
           {/* In this episode */}
-          {track ? <KeyMoments moments={moments} track={track} /> : null}
+          {track ? (
+            <KeyMoments
+              track={track}
+              moments={moments}
+              heading="In this episode"
+              playerId="player"
+            />
+          ) : null}
 
           {/* TOC rail + article body */}
           <div className="mt-12 grid gap-8 lg:grid-cols-[15rem_1fr]">
@@ -392,9 +328,24 @@ export function PostDetail({ data }: { data: DetailData }) {
 
           {/* Everything below the body returns to a single readable measure. */}
           <div className="mx-auto max-w-3xl">
-            <Hosts hosts={hosts} images={data.images} />
+            <Hosts
+              hosts={hosts}
+              avatar={(h) =>
+                h.img ? (
+                  <Picture
+                    attrs={imageOrPlain(imageFor(data.images, "avatar", h.img), h.img, 48, 48)}
+                    alt=""
+                    className="h-12 w-12 shrink-0 rounded-full border border-border object-cover"
+                  />
+                ) : (
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-border bg-surface">
+                    <GMark className="h-6 w-auto" />
+                  </span>
+                )
+              }
+            />
             {track ? <SoundbiteClips track={track} clips={soundbites} /> : null}
-            {track && chapters.length ? <ChapterList chapters={chapters} track={track} /> : null}
+            {track && chapters.length ? <ChapterList track={track} /> : null}
 
             {/* Sources and Credits sits directly above the Transcript, both collapsed by default so they
                 read as a matched pair. */}
@@ -410,7 +361,17 @@ export function PostDetail({ data }: { data: DetailData }) {
                   <summary className="mb-3 cursor-pointer font-display text-xl font-semibold">
                     Transcript
                   </summary>
-                  <TranscriptPanel transcript={post.transcript} track={track} />
+                  <PlayerTranscript
+                    cues={parseVtt(post.transcript).map((cue) => {
+                      // A "Name:" prefix names the speaker where no <v Name> voice tag did.
+                      const parsed = parseCueText(cue.text);
+                      return { ...cue, ...parsed, speaker: cue.speaker ?? parsed.speaker };
+                    })}
+                    fallback={post.transcript}
+                    track={track}
+                    shareUrl={(t) => `${window.location.origin}/${post.slug}?t=${Math.floor(t)}`}
+                    attribution={(title, url) => `From "${title}" on Germomics: ${url}`}
+                  />
                 </details>
               </section>
             ) : null}
@@ -434,8 +395,7 @@ export function PostDetail({ data }: { data: DetailData }) {
         // Cover is the article LCP element. Load it eagerly with high priority; the fixed aspect
         // ratio reserves space so it doesn't shift layout (CLS).
         <Picture
-          src={post.coverImage}
-          image={imageFor(data.images, "cover", post.coverImage)}
+          attrs={imageOrPlain(imageFor(data.images, "cover", post.coverImage), post.coverImage)}
           alt={post.coverAlt ?? ""}
           priority
           className="mb-6 aspect-[2/1] w-full rounded-2xl border border-border object-cover"
@@ -465,7 +425,7 @@ export function PostDetail({ data }: { data: DetailData }) {
             <Link
               key={t}
               to={`/tag/${encodeURIComponent(t)}`}
-              className="rounded-full border border-border px-2 py-0.5 font-mono text-[11px] text-muted hover:border-brand hover:text-brand"
+              className="rounded-full border border-border px-2 py-0.5 font-mono text-[0.6875rem] text-muted hover:border-brand hover:text-brand"
             >
               {t}
             </Link>

@@ -4,24 +4,17 @@
 import type { Post } from "~/db/schema";
 import type { PlayerTrack } from "~/lib/types";
 
-export function slugifyGuest(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^\p{L}\p{N}]+/gu, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-/** Map a published episode to the minimal shape the player consumes. */
+/** Map a published episode to the track Capsomer's player plays: its page, its transcript and its artwork. */
 export function toPlayerTrack(p: Post): PlayerTrack {
   return {
     id: p.id,
-    slug: p.slug,
     title: p.title,
-    audioUrl: p.audioUrl ?? "",
-    durationSec: p.audioDuration ?? null,
-    artwork: p.episodeArtwork ?? p.coverImage ?? null,
-    episodeNumber: p.episodeNumber ?? null,
+    src: p.audioUrl ?? "",
+    duration: p.audioDuration ?? undefined,
+    artwork: p.episodeArtwork ?? p.coverImage ?? undefined,
     chapters: p.chapters ?? [],
+    album: p.episodeNumber ? `Episode ${p.episodeNumber}` : "Germomics",
+    href: `/${p.slug}`,
+    transcript: `/${p.slug}#transcript`,
   };
 }
