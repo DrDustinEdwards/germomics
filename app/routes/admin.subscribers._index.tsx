@@ -2,6 +2,7 @@
 // (admin.tsx middleware). The newsletter stores email + consent timestamp + unsubscribe token only.
 import { Mail, Download } from "lucide-react";
 import { desc } from "drizzle-orm";
+import { csvResponse, toCsv } from "capsomer/behavior/csv";
 import type { Route } from "./+types/admin.subscribers._index";
 import { getEnv } from "~/lib/context.server";
 import { getDb } from "~/db/index.server";
@@ -14,26 +15,18 @@ import { useSnippet } from "~/lib/content";
 const statusOf = (r: { confirmedAt: string | null; unsubscribedAt: string | null }) =>
   r.unsubscribedAt ? "unsubscribed" : r.confirmedAt ? "active" : "pending";
 
-function csvCell(v: unknown): string {
-  const s = String(v ?? "");
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const rows = await getDb(env).select().from(subscribers).orderBy(desc(subscribers.createdAt));
 
   if (new URL(request.url).searchParams.get("export") === "csv") {
-    const header = "email,consented_at,status,created_at";
-    const body = rows
-      .map((r) => [r.email, r.consentedAt ?? "", statusOf(r), r.createdAt].map(csvCell).join(","))
-      .join("\n");
-    return new Response(`${header}\n${body}\n`, {
-      headers: {
-        "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": 'attachment; filename="subscribers.csv"',
-      },
-    });
+    return csvResponse(
+      toCsv(
+        ["email", "consented_at", "status", "created_at"],
+        rows.map((r) => [r.email, r.consentedAt, statusOf(r), r.createdAt]),
+      ),
+      "subscribers.csv",
+    );
   }
 
   return {
