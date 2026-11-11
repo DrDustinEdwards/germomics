@@ -1,31 +1,22 @@
 // Carrel's site API, mounted by workers/app.ts at /api/carrel/v1, with its preview links at /preview/<token>. One key
 // (CARREL_SITE_KEY, a Worker secret) reaches only that prefix and nothing else on the site. The same object runs the
 // schedules Carrel set, from the one-minute cron (workers/app.ts).
-import { createSiteApi, indexNowHook, webmentionHook } from "@dustinedwards/site-api";
-import { d1SiteApiStore } from "@dustinedwards/site-api/store";
-import { schedulePurgeHook } from "@dustinedwards/site-runtime/edge-cache";
-import { submitIndexNow } from "@drdustinedwards/site-helpers/indexnow";
+import { standardSiteApi } from "@dustinedwards/site-api";
 import { INDEXNOW_KEY, SITE_ORIGIN } from "~/lib/site";
 import { createCarrelAdapter } from "./adapter.server";
 
 /** `stylesheets`: the site's own, for a preview drawn as the site draws a post (workers/app.ts passes them). */
 export function carrelApi(env: Env, stylesheets: () => Promise<string[]> = async () => []) {
   // The replay store (safe retries by change id), preview links, failed hooks' retries and the webmentions sent
-  // (drizzle/0018_site_api_store.sql).
-  const store = d1SiteApiStore(env.DB);
-  return createSiteApi({
+  // (drizzle/0018_site_api_store.sql). The standard hooks: a changed live page tells IndexNow and the pages it links
+  // to, whether a Carrel request or a schedule changed it, and a schedule (which has no request for the gateway to
+  // purge after) purges the stored pages.
+  return standardSiteApi({
     adapter: createCarrelAdapter(env, undefined, { stylesheets }),
     key: env.CARREL_SITE_KEY,
     limiter: env.CARREL_RATE_LIMIT,
-    store,
-    // A changed live page tells IndexNow and the pages it links to, whether a Carrel request or a schedule changed it:
-    // under ctx.waitUntil for a request (workers/app.ts passes ctx), inside the cron pass for a schedule. A schedule has
-    // no request for the gateway to purge after, so its change purges the stored pages here.
-    hooks: [
-      indexNowHook({ submit: submitIndexNow, origin: SITE_ORIGIN, key: INDEXNOW_KEY }),
-      schedulePurgeHook(),
-      webmentionHook({ store }),
-    ],
+    db: env.DB,
+    indexNow: { origin: SITE_ORIGIN, key: INDEXNOW_KEY },
   });
 }
 

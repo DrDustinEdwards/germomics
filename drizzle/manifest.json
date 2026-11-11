@@ -1,6 +1,6 @@
 {
   "note": "sha256 of each migration. devkit-migrations compares against this. Adding a migration means adding its hash in the same commit.",
-  "expand_only_after": "0021_search_fields.sql",
+  "expand_only_after": "0028_drop_ai_error_snippets.sql",
   "sha256": {
     "0000_content_and_fts.sql": "f101560703ef545539506518c43b33c3ddfb2b631dceaf44c048609a8834d6f1",
     "0001_auth_and_app.sql": "9459ec89950f659faa4f831ccc19fda6eedb9fd1c65d64b7c78297d15b32e1a5",
