@@ -13,6 +13,7 @@ import {
   HYDRATE_ON_INTENT_ID,
   STREAM_BUFFER,
 } from "../lib/hydration";
+import { trustedHtml } from "capsomer/behavior/trusted-html";
 import { resumeAt, storedRate, storedVolume } from "../lib/player-storage";
 
 const INTENT = "[data-play-intent]";
@@ -26,6 +27,30 @@ type HandoffWindow = Window & {
 };
 
 let started = false;
+
+type ScriptPolicy = { createScript(text: string): unknown };
+let scriptPolicy: ScriptPolicy | null | undefined;
+
+/**
+ * A held hydration script's text as TrustedScript, under the "germomics-hydrate" policy (its name is in the page's
+ * `trusted-types` list, security-headers.ts). The policy object stays in this module and is used only by `start`,
+ * on the text of React Router's own scripts that our server rendered into the page's <noscript>, never on anything
+ * a reader wrote. Without Trusted Types, or before the policy is allowed, the plain text.
+ */
+function trustedScript(text: string): string {
+  if (scriptPolicy === undefined) {
+    try {
+      const types = (
+        globalThis as { trustedTypes?: { createPolicy(n: string, r: object): ScriptPolicy } }
+      ).trustedTypes;
+      scriptPolicy =
+        types?.createPolicy("germomics-hydrate", { createScript: (s: string) => s }) ?? null;
+    } catch {
+      scriptPolicy = null;
+    }
+  }
+  return (scriptPolicy?.createScript(text) ?? text) as string;
+}
 let pending: { index: number; focused: boolean } | null = null;
 
 const deferred = () => document.getElementById(HYDRATE_ON_INTENT_ID) !== null;
@@ -64,7 +89,7 @@ function start(nonce: string) {
   started = true;
   forgetSavedScroll();
   const parsed = document.createElement("template");
-  parsed.innerHTML = holder.textContent ?? "";
+  parsed.innerHTML = trustedHtml(holder.textContent ?? "");
   for (const node of Array.from(parsed.content.children)) {
     if (node instanceof HTMLLinkElement) {
       const link = node.cloneNode() as HTMLLinkElement;
@@ -78,7 +103,7 @@ function start(nonce: string) {
     for (const { name, value } of Array.from(node.attributes))
       if (name !== "nonce") script.setAttribute(name, value);
     if (nonce) script.nonce = nonce;
-    script.textContent = node.textContent;
+    script.text = trustedScript(node.textContent ?? "");
     document.body.appendChild(script);
     // A classic inline script runs as it is added: after the context script, the stream it made is there to fill.
     if (!script.type) handOverStream();

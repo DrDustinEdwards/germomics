@@ -35,6 +35,7 @@ import { LinkPrefetch } from "capsomer/react/link";
 import { Footer } from "~/components/chrome/Footer";
 import { ErrorPage, errorTitle } from "capsomer/react/error-page";
 import errorPageCss from "./error-page.css?url";
+import { markup } from "capsomer/behavior/trusted-html";
 
 export const links: Route.LinksFunction = () => [
   ...iconLinks(),
@@ -146,6 +147,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="text-scale" content="scale" />
         {/* Brand chrome color: crystal violet in light, near-black violet in dark. */}
         <meta name="theme-color" content="#4F2D7F" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#120B1F" media="(prefers-color-scheme: dark)" />
@@ -155,14 +157,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script
           nonce={nonce}
           suppressHydrationWarning
-          dangerouslySetInnerHTML={{ __html: themeInitScript }}
+          dangerouslySetInnerHTML={markup(themeInitScript)}
         />
         {/* A deferred page keeps its streamed loader data here until it hydrates (lib/hydration.ts). */}
         {deferred ? (
           <script
             nonce={nonce}
             suppressHydrationWarning
-            dangerouslySetInnerHTML={{ __html: STREAM_BUFFER_SCRIPT }}
+            dangerouslySetInnerHTML={markup(STREAM_BUFFER_SCRIPT)}
           />
         ) : null}
         {/* Every page's own script: the menus, the theme button, the share buttons and hydrate-on-intent (app/site.ts). */}
