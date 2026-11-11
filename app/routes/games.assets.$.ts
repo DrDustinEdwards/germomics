@@ -3,17 +3,12 @@
 // Cloudflare service: reads go through env.GAME_ASSETS, not fetch().
 import type { Route } from "./+types/games.assets.$";
 import { getEnv } from "~/lib/context.server";
-import { getGameAsset } from "~/lib/r2.server";
+import { r2ObjectResponse } from "@dustinedwards/site-runtime/r2-object";
 
-export async function loader({ params, context }: Route.LoaderArgs) {
+export async function loader({ params, request, context }: Route.LoaderArgs) {
   const key = params["*"];
   if (!key) throw new Response("Not found", { status: 404 });
-  const object = await getGameAsset(getEnv(context), key);
-  if (!object) throw new Response("Not found", { status: 404 });
-
-  const headers = new Headers();
-  object.writeHttpMetadata(headers);
-  headers.set("etag", object.httpEtag);
-  headers.set("Cache-Control", "public, max-age=31536000, immutable");
-  return new Response(object.body, { headers });
+  return r2ObjectResponse(request, getEnv(context).GAME_ASSETS, key, {
+    cacheControl: "public, max-age=31536000, immutable",
+  });
 }
