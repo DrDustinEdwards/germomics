@@ -121,7 +121,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             <article className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm ring-1 ring-brand/10">
               <PlayTrackButton track={featuredTrack} queue={tracks} size="lg" />
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-muted">
+                <div className="flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
                   <span className="flex items-center gap-1 text-brand">
                     <Headphones size={12} aria-hidden /> Latest episode
                   </span>

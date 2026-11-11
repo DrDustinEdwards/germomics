@@ -18,6 +18,10 @@
 @import "capsomer/button.css";
 @import "capsomer/popover.css";
 @import "capsomer/dialog.css";
+/* The figure viewer (Capsomer's dialog as a lightbox), the copy and share buttons' bubble, and the reading bar. */
+@import "capsomer/lightbox.css";
+@import "capsomer/copy.css";
+@import "capsomer/reading-progress.css";
 /* The persistent player (dock, surface, transcript, chapters, key moments, hosts); its speed and volume settings are
    a menu and a field. */
 @import "capsomer/field.css";
@@ -350,4 +354,20 @@
   font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: -0.025em;
+}
+
+/* The figure viewer is dimmer than a dialog: 80% black, as it always was. */
+.cap-lightbox {
+  --scrim: rgb(0 0 0 / 0.8);
+}
+
+/* The copy bubble speaks in JetBrains Mono, like the pills that open it. */
+.cap-copy {
+  --ui: var(--font-mono);
+}
+
+/* The reading bar: 2px, brand to cyan, as before (Capsomer's default is 3px in one color). */
+.cap-reading-progress {
+  --reading-progress-size: 2px;
+  --reading-progress-color: linear-gradient(to right, var(--brand), var(--accent));
 }

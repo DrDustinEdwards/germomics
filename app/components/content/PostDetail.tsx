@@ -22,13 +22,7 @@ import { SoundbiteClips } from "./SoundbiteClips";
 import { CopyLink, ShareTimestamp } from "./CopyLink";
 import { AUTHOR } from "~/lib/about";
 import { CoverArt } from "./CoverArt";
-import {
-  ReadingProgress,
-  EpisodeToc,
-  Sources,
-  useHideBrokenFigures,
-  FigureLightbox,
-} from "./EpisodeExtras";
+import { EpisodeToc, Sources, useHideBrokenFigures, FigureLightbox } from "./EpisodeExtras";
 import { EpisodeContext } from "./EpisodeContext";
 import type { EpisodeContextView } from "~/lib/episode-context";
 import {
@@ -160,7 +154,7 @@ export function PostDetail({ data }: { data: DetailData }) {
               {g.role ? <p className="font-mono text-xs text-muted">{g.role}</p> : null}
               {g.bio ? <p className="mt-1 text-sm text-muted">{g.bio}</p> : null}
               {(g.links ?? []).length ? (
-                <div className="mt-1.5 flex flex-wrap gap-2 font-mono text-[11px]">
+                <div className="mt-1.5 flex flex-wrap gap-2 font-mono text-[0.6875rem]">
                   {(g.links ?? []).map((l) => (
                     <a key={l.url} href={l.url} className="text-accent hover:underline">
                       {l.label || "link"}
@@ -197,7 +191,7 @@ export function PostDetail({ data }: { data: DetailData }) {
             to={`/${prev.slug}`}
             className="group flex max-w-[48%] flex-col rounded-xl border border-border bg-card p-3 hover:border-brand"
           >
-            <span className="flex items-center gap-1 font-mono text-[11px] text-muted">
+            <span className="flex items-center gap-1 font-mono text-[0.6875rem] text-muted">
               <ArrowLeft size={12} aria-hidden /> Previous
             </span>
             <span className="mt-1 font-display text-sm text-ink group-hover:text-brand">
@@ -212,7 +206,7 @@ export function PostDetail({ data }: { data: DetailData }) {
             to={`/${next.slug}`}
             className="group flex max-w-[48%] flex-col rounded-xl border border-border bg-card p-3 text-right hover:border-brand"
           >
-            <span className="flex items-center justify-end gap-1 font-mono text-[11px] text-muted">
+            <span className="flex items-center justify-end gap-1 font-mono text-[0.6875rem] text-muted">
               Next <ArrowRight size={12} aria-hidden />
             </span>
             <span className="mt-1 font-display text-sm text-ink group-hover:text-brand">
@@ -244,8 +238,9 @@ export function PostDetail({ data }: { data: DetailData }) {
 
     return (
       <>
-        <ReadingProgress />
-        <article className="mx-auto max-w-5xl">
+        {/* Capsomer's reading bar: CSS only, filling through the article below (app.css sets its look). */}
+        <div className="cap-reading-progress" aria-hidden="true" />
+        <article data-cap-reading className="mx-auto max-w-5xl">
           {data.preview ? <PreviewBanner post={post} /> : null}
           <SectionTrail trail={postTrail(post)} />
 
@@ -430,7 +425,7 @@ export function PostDetail({ data }: { data: DetailData }) {
             <Link
               key={t}
               to={`/tag/${encodeURIComponent(t)}`}
-              className="rounded-full border border-border px-2 py-0.5 font-mono text-[11px] text-muted hover:border-brand hover:text-brand"
+              className="rounded-full border border-border px-2 py-0.5 font-mono text-[0.6875rem] text-muted hover:border-brand hover:text-brand"
             >
               {t}
             </Link>

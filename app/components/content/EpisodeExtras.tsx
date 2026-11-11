@@ -1,46 +1,12 @@
 // Supporting pieces for the redesigned episode page. All grouped here to keep the route lean; each is
-// small and client-side. Every motion (smooth scroll, auto-scroll, progress bar) is reduced-motion
-// aware. now-playing highlights use the cyan accent only.
-import { useEffect, useRef, useState } from "react";
-import { ExternalLink, X } from "lucide-react";
+// small and client-side. Every motion (smooth scroll, auto-scroll) is reduced-motion aware. now-playing
+// highlights use the cyan accent only. The reading bar is Capsomer's CSS-only reading progress (PostDetail).
+import { useEffect, useState } from "react";
+import { Dialog } from "capsomer/react/dialog";
+import { usePrefersReducedMotion } from "capsomer/react/hooks";
+import { ExternalLink } from "lucide-react";
 import type { Source } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
-
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const on = () => setReduced(mq.matches);
-    on();
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  return reduced;
-}
-
-// ── Reading progress bar ─────────────────────────────────────────────────────
-export function ReadingProgress() {
-  const [pct, setPct] = useState(0);
-  useEffect(() => {
-    const onScroll = () => {
-      const h = document.documentElement;
-      const max = h.scrollHeight - h.clientHeight;
-      setPct(max > 0 ? Math.min(100, Math.max(0, (h.scrollTop / max) * 100)) : 0);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, []);
-  return (
-    <div className="fixed inset-x-0 top-0 z-50 h-0.5" aria-hidden>
-      <div className="h-full bg-gradient-to-r from-brand to-accent" style={{ width: `${pct}%` }} />
-    </div>
-  );
-}
 
 // ── Sticky table of contents with scroll-spy ─────────────────────────────────
 export function EpisodeToc({ items }: { items: TocItem[] }) {
@@ -138,7 +104,7 @@ export function Sources({ sources }: { sources: Source[] }) {
         <ol className="space-y-2 text-sm">
           {sources.map((s, i) => (
             <li key={i} className="flex flex-wrap items-baseline gap-x-2 text-muted">
-              <span className="rounded bg-surface px-1.5 py-0.5 font-mono text-[11px] uppercase tracking-wide text-muted">
+              <span className="rounded bg-surface px-1.5 py-0.5 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
                 {SOURCE_KIND[s.type] ?? s.type}
               </span>
               {s.url ? (
@@ -155,7 +121,7 @@ export function Sources({ sources }: { sources: Source[] }) {
               )}
               {s.authors ? <span>{s.authors}</span> : null}
               {s.publisher ? <span>{s.publisher}</span> : null}
-              {s.license ? <span className="font-mono text-[11px]">{s.license}</span> : null}
+              {s.license ? <span className="font-mono text-[0.6875rem]">{s.license}</span> : null}
               {s.note ? <span className="italic">{s.note}</span> : null}
             </li>
           ))}
@@ -167,9 +133,7 @@ export function Sources({ sources }: { sources: Source[] }) {
 
 // ── Click-to-enlarge lightbox for body figures ───────────────────────────────
 // Enhances every <figure><img> in the rendered body into an accessible "view larger" trigger, then
-// opens the full-size image in a modal overlay. No new dependency. Focus moves into the dialog and is
-// trapped, Esc and a backdrop click close it, scroll is locked, and focus returns to the triggering
-// image on close. The fade is suppressed under prefers-reduced-motion (motion-safe only).
+// opens the full-size image in Capsomer's dialog. No new dependency.
 function largestSrc(img: HTMLImageElement): string {
   const srcset = img.getAttribute("srcset");
   if (srcset) {
@@ -195,10 +159,8 @@ export function FigureLightbox({
   bodyRef: React.RefObject<HTMLElement | null>;
   deps: unknown[];
 }) {
-  const [open, setOpen] = useState<{ src: string; alt: string } | null>(null);
-  const [shown, setShown] = useState(false);
-  const triggerRef = useRef<HTMLElement | null>(null);
-  const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+  // The image last opened, and whether it is open: the dialog stays mounted once opened, so it can close with its motion.
+  const [view, setView] = useState<{ src: string; alt: string; open: boolean } | null>(null);
 
   // Turn each figure image into a keyboard- and pointer-activatable "enlarge" trigger.
   useEffect(() => {
@@ -206,9 +168,10 @@ export function FigureLightbox({
     if (!root) return;
     const imgs = Array.from(root.querySelectorAll<HTMLImageElement>("figure img"));
     const openFrom = (img: HTMLImageElement) => {
-      // Focus goes back to what took it: the link around the picture, or the picture itself.
-      triggerRef.current = img.closest<HTMLElement>("a.image-link") ?? img;
-      setOpen({ src: largestSrc(img), alt: img.getAttribute("alt") || "" });
+      // Focus the trigger (the link around the picture, or the picture itself) first: a click does
+      // not focus a link in Safari, and the dialog hands focus back to whatever had it.
+      (img.closest<HTMLElement>("a.image-link") ?? img).focus();
+      setView({ src: largestSrc(img), alt: img.getAttribute("alt") || "", open: true });
     };
     const onClick = (e: Event) => openFrom(e.currentTarget as HTMLImageElement);
     const onKey = (e: KeyboardEvent) => {
@@ -251,60 +214,19 @@ export function FigureLightbox({
     // oxlint-disable-next-line react/exhaustive-deps -- the caller's deps name the body this watches
   }, deps);
 
-  // While open: lock scroll, focus the close button, trap Tab, Esc closes; restore focus on close.
-  useEffect(() => {
-    if (!open) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const raf = requestAnimationFrame(() => setShown(true));
-    closeBtnRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        setOpen(null);
-      } else if (e.key === "Tab") {
-        // The close button is the only focusable control inside, so keep focus on it.
-        e.preventDefault();
-        closeBtnRef.current?.focus();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => {
-      cancelAnimationFrame(raf);
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-      setShown(false);
-      triggerRef.current?.focus();
-    };
-  }, [open]);
-
-  if (!open) return null;
+  if (!view) return null;
+  // Capsomer's dialog as the lightbox (capsomer/lightbox.css): Esc, the back gesture and a tap on the dimmed backdrop
+  // close it, Tab stays inside, and focus returns to the figure that opened it.
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={open.alt || "Enlarged image"}
-      className={`fixed inset-0 z-[60] grid place-items-center bg-black/80 p-4 backdrop-blur-sm motion-safe:transition-opacity motion-safe:duration-150 ${
-        shown ? "opacity-100" : "opacity-0"
-      }`}
+    <Dialog
+      open={view.open}
+      onOpenChange={(open) => setView((v) => (v ? { ...v, open } : v))}
+      className="cap-lightbox"
+      aria-label={view.alt || "Enlarged image"}
+      closeLabel="Close enlarged image"
     >
-      {/* The backdrop: a click outside the image closes it (Esc does too, above). */}
-      <div aria-hidden="true" className="absolute inset-0" onClick={() => setOpen(null)} />
-      <button
-        ref={closeBtnRef}
-        type="button"
-        onClick={() => setOpen(null)}
-        aria-label="Close enlarged image"
-        className="tap-target absolute right-3 top-3 grid h-11 w-11 place-items-center rounded-full border border-white/30 bg-black/50 text-white hover:bg-black/70"
-      >
-        <X size={20} aria-hidden />
-      </button>
-      <img
-        src={open.src}
-        alt={open.alt}
-        className="relative max-h-[90vh] max-w-full rounded-lg border border-white/20 object-contain shadow-2xl"
-      />
-    </div>
+      <img src={view.src} alt={view.alt} />
+    </Dialog>
   );
 }
 

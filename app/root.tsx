@@ -8,7 +8,8 @@ import {
   useLocation,
   useMatches,
 } from "react-router";
-import { lazy, Suspense, useContext, useEffect, useSyncExternalStore } from "react";
+import { lazy, Suspense, useContext, useEffect } from "react";
+import { useHydrated } from "capsomer/react/hooks";
 import { iconLinks } from "@drdustinedwards/site-helpers/icons";
 
 import type { Route } from "./+types/root";
@@ -119,8 +120,6 @@ let clientDeferred: boolean | undefined;
  * (app/site/hydrate.ts). Once such a page has hydrated, ScrollRestoration mounts, so client-side navigations restore
  * and reset the scroll as on any other page.
  */
-const noSubscribe = () => () => {};
-
 // The dock, with its menus and its bottom sheet, loads only once an episode is loaded: no page needs it before then,
 // and the admin, which shares this module, never does.
 const PlayerDock = lazy(() =>
@@ -137,12 +136,8 @@ function Dock() {
 }
 
 function HydrationScripts({ deferred }: { deferred: boolean }) {
-  // False on the server and while hydrating, true once hydrated (React's server snapshot, then the client's).
-  const hydrated = useSyncExternalStore(
-    noSubscribe,
-    () => true,
-    () => false,
-  );
+  // False on the server and while hydrating, true once hydrated.
+  const hydrated = useHydrated();
   if (!deferred) {
     return (
       <>

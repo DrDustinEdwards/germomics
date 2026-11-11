@@ -99,7 +99,7 @@
     background: var(--color-bg);
     color: var(--color-ink);
     font-family: var(--font-serif);
-    font-size: 18px;
+    font-size: 1.125rem;
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
     transition:
@@ -133,10 +133,4 @@
       scroll-behavior: auto !important;
     }
   }
-}
-
-@utility tap-target {
-  /* WCAG 2.5.8, 24px minimum interactive target. */
-  min-width: 1.5rem;
-  min-height: 1.5rem;
 }
