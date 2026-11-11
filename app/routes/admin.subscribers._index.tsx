@@ -2,6 +2,7 @@
 // (admin.tsx middleware). The newsletter stores email + consent timestamp + unsubscribe token only.
 import { Mail, Download } from "lucide-react";
 import { desc } from "drizzle-orm";
+import { csvResponse, toCsv } from "@dustinedwards/site-runtime/csv";
 import type { Route } from "./+types/admin.subscribers._index";
 import { getEnv } from "~/lib/context.server";
 import { getDb } from "~/db/index.server";
@@ -9,7 +10,6 @@ import { subscribers } from "~/db/schema";
 import { formatDate } from "~/lib/format";
 import { EmptyState } from "~/components/admin/ui";
 import { useSnippet } from "~/lib/content";
-import { csvResponse, toCsv } from "@dustinedwards/site-runtime/csv";
 
 /** Pending until confirmed from the mailed link (double opt-in, app/lib/newsletter.server.ts); only active ones get mail. */
 const statusOf = (r: { confirmedAt: string | null; unsubscribedAt: string | null }) =>
@@ -20,11 +20,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const rows = await getDb(env).select().from(subscribers).orderBy(desc(subscribers.createdAt));
 
   if (new URL(request.url).searchParams.get("export") === "csv") {
-    const csv = toCsv(
-      ["email", "consented_at", "status", "created_at"],
-      rows.map((r) => [r.email, r.consentedAt ?? "", statusOf(r), r.createdAt]),
+    return csvResponse(
+      toCsv(
+        ["email", "consented_at", "status", "created_at"],
+        rows.map((r) => [r.email, r.consentedAt, statusOf(r), r.createdAt]),
+      ),
+      "subscribers.csv",
     );
-    return csvResponse(csv, "subscribers.csv");
   }
 
   return {

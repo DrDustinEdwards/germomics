@@ -130,7 +130,7 @@ const nightly = { cron: "17 3 * * *", scheduledTime: Date.now() } as ScheduledCo
 
 describe("the nightly jobs", () => {
   it("runs each before the invocation returns and records it for /health", async () => {
-    await worker.scheduled!(nightly, e);
+    await worker.scheduled!(nightly, e, ctx());
     expect(h.backup).toHaveBeenCalledWith(e);
     expect(h.audio).toHaveBeenCalledWith(e);
     const ok = await e.DB.prepare(
@@ -151,7 +151,7 @@ describe("the nightly jobs", () => {
       throw new Error("dump failed");
     });
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-    await expect(worker.scheduled!(nightly, e)).rejects.toThrow("cron jobs failed: backup");
+    await expect(worker.scheduled!(nightly, e, ctx())).rejects.toThrow("cron jobs failed: backup");
     expect(h.audio).toHaveBeenCalledWith(e);
     spy.mockRestore();
   });
