@@ -6,7 +6,7 @@ import { listSeasons } from "~/lib/posts.server";
 // The day each hub and static page of /sitemap.xml last changed. No row dates these pages (the episode list, the data
 // pages, the policies), so the daily page-dates job reads each as Markdown, the way a Markdown copy is made, with
 // Prelum's trackPageDates, and keeps the day its text last changed in one KV key. The sitemap reads it back.
-export const PAGE_DATES_KEY = "sitemap:page-dates";
+const PAGE_DATES_KEY = "sitemap:page-dates";
 
 export const STATIC_PATHS = [
   "",
@@ -26,7 +26,7 @@ export const STATIC_PATHS = [
 ];
 
 /** Every page of the sitemap that no post row dates, as the path the sitemap's loc has after the origin. */
-export async function datedPaths(env: Env): Promise<string[]> {
+async function datedPaths(env: Env): Promise<string[]> {
   const seasons = await listSeasons(env);
   return [...STATIC_PATHS.map((p) => `/${p}`), ...seasons.map((s) => `/season/${s}`)];
 }

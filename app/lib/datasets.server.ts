@@ -8,7 +8,7 @@
 import { SNIPPET_DEFAULTS } from "~/lib/content-defaults";
 import data from "~/lib/data/datasets.json";
 
-export type DataPoint = { lng: number; lat: number; label: string; value: number };
+type DataPoint = { lng: number; lat: number; label: string; value: number };
 /** Where numbers come from, shown with a link beside the chart, map or table that uses them. */
 export type Source = { label: string; url: string };
 /** One line over dated points; `label` is how each date reads in the table and hover details. */
