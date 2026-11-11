@@ -133,6 +133,19 @@ describe("people", () => {
     expect(await postsByPerson(e, "ada")).toEqual([]);
   });
 
+  it("links more people than one insert or one IN list can bind", async () => {
+    const ep = await createDraft(e, "episode");
+    const ids: number[] = [];
+    for (let i = 0; i < 120; i++) ids.push(await upsertPerson(e, { name: `Guest ${i}` }));
+    await setEpisodePeople(
+      e,
+      ep,
+      ids.map((personId, sort) => ({ personId, sort })),
+    );
+    expect(await getEpisodePeople(e, ep)).toHaveLength(120);
+    expect(await postsByPerson(e, "guest-0")).toHaveLength(1);
+  });
+
   it("skips a link whose person is gone", async () => {
     const ep = await createDraft(e, "episode");
     const ada = await upsertPerson(e, { name: "Ada" });
