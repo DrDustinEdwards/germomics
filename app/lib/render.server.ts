@@ -16,7 +16,8 @@
 import type * as Prelum from "@drdustinedwards/site-helpers/render/nomath";
 import { diagramPack } from "~/lib/diagram-pack";
 import { logEvent } from "@dustinedwards/site-runtime/log";
-import { and, eq, inArray, isNotNull, like, ne, sql } from "drizzle-orm";
+import { and, eq, isNotNull, like, ne, sql } from "drizzle-orm";
+import { inList } from "@dustinedwards/site-runtime/d1";
 import { getDb } from "~/db/index.server";
 import { contentBlocks, media, posts, type Post } from "~/db/schema";
 import { inlineBlogDiagrams, loadBlogDiagrams, type DiagramFiles } from "~/lib/blog-diagram.server";
@@ -57,7 +58,7 @@ export function libraryMedia(env: Env): MediaLookup {
             sha256: media.sha256,
           })
           .from(media)
-          .where(inArray(media.key, keys));
+          .where(inList(media.key, keys));
 }
 
 const escape = (s: string) => s.replace(/[.]/g, "\\.");

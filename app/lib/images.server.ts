@@ -9,7 +9,7 @@
 // unsized, is better than a guess (site-runtime's rule).
 import { FOCUS_METADATA, type StoredImage } from "@dustinedwards/site-runtime/image";
 import type { HeadImage } from "@drdustinedwards/site-helpers/head";
-import { inArray } from "drizzle-orm";
+import { inList } from "@dustinedwards/site-runtime/d1";
 import { getDb } from "~/db/index.server";
 import { media } from "~/db/schema";
 import { DEFAULT_CARD, SITE_ORIGIN } from "~/lib/site";
@@ -61,7 +61,7 @@ async function placeholders(
   const rows = await getDb(env)
     .select({ key: media.key, placeholder: media.placeholder, color: media.color })
     .from(media)
-    .where(inArray(media.key, keys));
+    .where(inList(media.key, keys));
   return new Map(rows.map((r) => [r.key, { placeholder: r.placeholder, color: r.color }]));
 }
 
