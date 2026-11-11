@@ -1,20 +1,19 @@
 // Hydrate on intent: a public page sends no React (lib/hydration.ts), but its play buttons need the player, whose one
 // <audio> element keeps playing while client-side navigation changes the page around it. So the first press of a play
-// button (data-play-intent, components/content/PlayButton.tsx) starts the audio at once, inside the press, then runs
+// button (data-play-intent, Capsomer's PlayTrackButton) starts the audio at once, inside the press, then runs
 // React Router's hydration scripts, which the page holds as text in a <noscript>, and is handed to the button once the
 // app is live: the player adopts the playing element and the queue is set exactly as it would have been, with the
 // focus where it was. A pointer resting on a play button, or the focus reaching one, starts the work early. From then
 // on the page is the app, as every page was before. A page that hydrates on load has no <noscript>, and this stays
 // out of its way.
 import {
-  AUDIO_STARTED_ATTRIBUTE,
   HYDRATED_ATTRIBUTE,
   HYDRATED_EVENT,
   HYDRATE_ON_INTENT_ID,
   STREAM_BUFFER,
 } from "../lib/hydration";
 import { trustedHtml } from "capsomer/behavior/trusted-html";
-import { resumeAt, storedRate, storedVolume } from "../lib/player-storage";
+import { AUDIO_SELECTOR, loadTrack, playerStorage, startTrack } from "capsomer/behavior/player";
 
 const INTENT = "[data-play-intent]";
 // React Router's sessionStorage key for its saved scroll positions (ScrollRestoration).
@@ -110,48 +109,14 @@ function start(nonce: string) {
   }
 }
 
-/**
- * Points the page's <audio> element (the one the player renders, which hydration adopts) at the button's episode,
- * resuming where the reader left off once its metadata is in, as the player would.
- */
-function load(audio: HTMLAudioElement, button: HTMLElement) {
-  const src = button.dataset.audioSrc;
-  if (!src) return;
-  const url = new URL(src, location.href).href;
-  if (audio.src === url) return;
-  // The element is preload="none" until a reader reaches for an episode; this is that moment.
-  audio.preload = "metadata";
-  audio.src = url;
-  const id = button.dataset.trackId;
-  audio.addEventListener(
-    "loadedmetadata",
-    () => {
-      const at = id ? resumeAt(id, audio.duration) : null;
-      if (at !== null) audio.currentTime = at;
-    },
-    { once: true },
-  );
-}
+// What the player remembers (rate, volume, mute, each episode's position), read the same way the player reads it, so a
+// press before React sounds and resumes as one after it.
+const storage = playerStorage("germomics-");
 
-/**
- * Plays the pressed episode inside the press itself, since Safari and iOS refuse a play() that comes later, after React
- * has loaded, with the remembered rate and volume. Pressing the same button again before React is live pauses it.
- * Returns whether the press still needs the app (false once it paused).
- */
-function playNow(button: HTMLElement): boolean {
-  const audio = document.querySelector("audio");
-  if (!audio || !button.dataset.audioSrc) return true;
-  if (audio.src === new URL(button.dataset.audioSrc, location.href).href && !audio.paused) {
-    audio.pause();
-    audio.removeAttribute(AUDIO_STARTED_ATTRIBUTE);
-    return false;
-  }
-  load(audio, button);
-  audio.playbackRate = storedRate() ?? 1;
-  audio.volume = storedVolume() ?? 1;
-  audio.setAttribute(AUDIO_STARTED_ATTRIBUTE, "");
-  audio.play().catch(() => audio.removeAttribute(AUDIO_STARTED_ATTRIBUTE));
-  return true;
+/** The pressed button's episode (PlayTrackButton's data-audio-src and data-track-id), as the <audio> element needs it. */
+function trackOf(button: HTMLElement): { id: string; src: string } | null {
+  const src = button.dataset.audioSrc;
+  return src ? { id: button.dataset.trackId ?? src, src } : null;
 }
 
 /**
@@ -162,8 +127,9 @@ function warm(event: Event, nonce: string) {
   if (hydrated() || !(event.target instanceof Element)) return;
   const button = event.target.closest<HTMLElement>(INTENT);
   if (!button) return;
-  const audio = document.querySelector("audio");
-  if (audio && audio.paused) load(audio, button);
+  const audio = document.querySelector<HTMLAudioElement>(AUDIO_SELECTOR);
+  const track = trackOf(button);
+  if (audio && track && audio.paused) loadTrack(audio, track, storage);
   start(nonce);
 }
 
@@ -177,12 +143,17 @@ export function enhanceHydrateOnIntent(nonce: string) {
       if (!button) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      pending = playNow(button)
-        ? {
-            index: Array.from(document.querySelectorAll(INTENT)).indexOf(button),
-            focused: document.activeElement === button,
-          }
-        : null;
+      // Played inside the press itself, since Safari and iOS refuse a play() that comes later, after React has loaded.
+      // Pressing the same playing episode again before React is live pauses it, and then the press needs no app.
+      const audio = document.querySelector<HTMLAudioElement>(AUDIO_SELECTOR);
+      const track = trackOf(button);
+      pending =
+        !audio || !track || startTrack(audio, track, storage)
+          ? {
+              index: Array.from(document.querySelectorAll(INTENT)).indexOf(button),
+              focused: document.activeElement === button,
+            }
+          : null;
       start(nonce);
     },
     true,

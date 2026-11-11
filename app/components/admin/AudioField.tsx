@@ -5,9 +5,9 @@ import { useState } from "react";
 import { FileAudio2, Link2, Loader2 } from "lucide-react";
 import { Tabs, Field, inputCx } from "./ui";
 import { UploadDropzone } from "./UploadDropzone";
-import { Waveform } from "./Waveform";
-import { computePeaks, probeDuration } from "~/lib/waveform-client";
-import { formatDuration } from "~/lib/format";
+import { decodePeaks, probeDuration } from "capsomer/behavior/player";
+import { WaveformPreview } from "capsomer/react/player";
+import { timecode } from "capsomer/behavior/time";
 
 export type AudioState = {
   audioUrl: string;
@@ -35,7 +35,7 @@ export function AudioField({
     if (quick) onChange({ audioDuration: quick });
     try {
       const buf = await file.arrayBuffer();
-      const result = await computePeaks(buf);
+      const result = await decodePeaks(buf);
       if (result) {
         onChange({ audioPeaks: result.peaks, audioDuration: Math.floor(result.duration) || quick });
       }
@@ -65,7 +65,7 @@ export function AudioField({
         <div className="space-y-2 rounded-xl border border-border bg-surface p-3">
           <p className="truncate font-mono text-[11px] text-muted">{value.audioUrl}</p>
           <div className="flex flex-wrap items-center gap-3 font-mono text-[11px] text-muted">
-            <span>dur {formatDuration(value.audioDuration)}</span>
+            <span>dur {timecode((value.audioDuration ?? 0) * 1000)}</span>
             <span>
               {value.audioByteSize ? `${(value.audioByteSize / 1e6).toFixed(1)} MB` : "size n/a"}
             </span>
@@ -76,7 +76,7 @@ export function AudioField({
               </span>
             ) : null}
           </div>
-          <Waveform peaks={value.audioPeaks ?? []} ariaLabel="Episode audio waveform" />
+          <WaveformPreview peaks={value.audioPeaks ?? []} label="Episode audio waveform" />
         </div>
       ) : null}
 

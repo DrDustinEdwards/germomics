@@ -76,6 +76,9 @@ describe("the mechanism diagrams", () => {
     expect(out).toContain("Saiki, Gelfand, Stoffel and colleagues, Science (1988)");
     expect(out).not.toContain("diagram-image");
     expect(out).not.toContain("/diagrams/germomics-52d7f101");
+    // A drawing stored inline at an earlier render is drawn as the site's file is now.
+    const stale = out.replace("<svg", '<svg data-old=""');
+    expect(inlineBlogDiagrams(stale, files())).toBe(out);
   });
 
   it("follows the asset redirect from a .html address to the drawing", async () => {
@@ -99,8 +102,18 @@ describe("the mechanism diagrams", () => {
     expect(drawings.has("650ac145")).toBe(false);
   });
 
-  it("leaves a stored figure alone when this site has no drawing for its key", () => {
-    const stored = `<p>Before.</p><figure class="diagram-figure"><img src="/diagrams/germomics-aaaaaaaa-light.svg" alt="x"><figcaption><p>Keep.</p></figcaption></figure><p>After.</p>`;
-    expect(inlineBlogDiagrams(stored, files())).toBe(stored);
+  it("leaves a stored figure alone when this site has no drawing for its key, held once in its diagram context", () => {
+    const figure = `<figure class="diagram-figure"><img src="/diagrams/germomics-aaaaaaaa-light.svg" alt="x"><figcaption><p>Keep.</p></figcaption></figure>`;
+    const stored = `<p>Before.</p>${figure}<p>After.</p>`;
+    const once = inlineBlogDiagrams(stored, files());
+    expect(once).toBe(
+      `<p>Before.</p><div data-context="prose" class="diagram-context">${figure}</div><p>After.</p>`,
+    );
+    expect(inlineBlogDiagrams(once, files())).toBe(once);
+    // A drawing written with its credit is held whole, the credit inside the context too.
+    const block = `<div class="blog-diagram-block"><figure class="blog-diagram">x</figure><p class="blog-diagram-credit">S</p></div>`;
+    const held = inlineBlogDiagrams(block, files());
+    expect(held).toBe(`<div data-context="prose" class="diagram-context">${block}</div>`);
+    expect(inlineBlogDiagrams(held, files())).toBe(held);
   });
 });

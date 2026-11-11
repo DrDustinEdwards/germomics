@@ -1,7 +1,7 @@
 import { Link } from "capsomer/react/link";
 import { Headphones, FileText } from "lucide-react";
-import { formatDate, formatDuration } from "~/lib/format";
-import { PlayButton } from "./PlayButton";
+import { formatDate, timecode } from "capsomer/behavior/time";
+import { PlayTrackButton } from "capsomer/react/player";
 import type { Post } from "~/db/schema";
 import type { PlayerTrack } from "~/lib/types";
 
@@ -22,7 +22,7 @@ export function PostCard({
   return (
     <article className="flex gap-4 rounded-xl border border-border bg-card p-4">
       {isEpisode && track ? (
-        <PlayButton track={track} queue={queue} />
+        <PlayTrackButton track={track} queue={queue} />
       ) : (
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-brand">
           <FileText size={18} aria-hidden />
@@ -37,7 +37,7 @@ export function PostCard({
           {isEpisode && post.episodeNumber ? <span>#{post.episodeNumber}</span> : null}
           {post.publishedAt ? <span>{formatDate(post.publishedAt)}</span> : null}
           {isEpisode && post.audioDuration ? (
-            <span className="tabular-nums">{formatDuration(post.audioDuration)}</span>
+            <span className="tabular-nums">{timecode(post.audioDuration * 1000)}</span>
           ) : null}
           {post.readingTime ? (
             <span className="tabular-nums">{post.readingTime} min read</span>

@@ -3,7 +3,7 @@ import { ExternalLink, Headphones, FileText, PencilLine } from "lucide-react";
 import type { Route } from "./+types/admin._index";
 import { getEnv } from "~/lib/context.server";
 import { listAllPosts } from "~/lib/admin.server";
-import { formatDate } from "~/lib/format";
+import { formatDate } from "capsomer/behavior/time";
 import { carrelEditUrl } from "~/lib/site";
 
 export async function loader({ context }: Route.LoaderArgs) {

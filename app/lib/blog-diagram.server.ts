@@ -73,26 +73,62 @@ export async function loadBlogDiagrams(env: Env): Promise<DiagramFiles> {
 const FIGURE = /<figure\b[^>]*\bclass="diagram-figure"[^>]*>[\s\S]*?<\/figure>/g;
 const LIGHT = /\/diagrams\/germomics-([0-9a-f]{8})-light\.svg/;
 
+const CONTEXT_OPEN = '<div data-context="prose" class="diagram-context">';
+// A drawing with its credit (a hand-written `.blog-diagram-block`) is held whole, so the credit is drawn as one too;
+// any other diagram figure on its own. Neither when it is already held, nor a figure inside a block.
+const UNWRAPPED =
+  /(?<!<div data-context="prose" class="diagram-context">)(?:<div class="blog-diagram-block">[\s\S]*?<\/figure>(?:\s*<p class="blog-diagram-credit">[\s\S]*?<\/p>)?\s*<\/div>|(?<!<div class="blog-diagram-block">\s*)<figure\b[^>]*\bclass="(?:blog-diagram|diagram-figure)"[^>]*>[\s\S]*?<\/figure>)/g;
+
 /**
- * Replace a known Mermaid figure with its inline drawing. The caption rendered from the essay
- * stays. A figure this site does not draw is left as it was.
+ * Holds each diagram in a reading context of its own, where Capsomer's prose blocks draw it (its --diagram-* tokens,
+ * a :::diagram's light and dark images), without making the whole essay one. Idempotent, so a stored render that
+ * already has it, or one saved before it, reads the same.
+ */
+export function inDiagramContext(html: string): string {
+  if (!html.includes("diagram")) return html;
+  return html.replace(UNWRAPPED, (figure) => `${CONTEXT_OPEN}${figure}</div>`);
+}
+
+/** A figure inlined at an earlier render: its key, from its title's id, and the drawing it was given then. */
+const INLINED =
+  /(<figure class="blog-diagram" role="img" aria-labelledby="bd-([0-9a-f]{8})-title"[^>]*>)<svg\b[\s\S]*?<\/svg>/g;
+
+/** The site's current drawing for a key, its title and description named for the figure's aria references. */
+function drawing(files: DiagramFiles, key: string): string | undefined {
+  const svg = /<svg\b[\s\S]*<\/svg>/.exec(files.get(key) ?? "")?.[0];
+  return svg
+    ?.replace("<title>", `<title id="bd-${key}-title">`)
+    .replace("<desc>", `<desc id="bd-${key}-desc">`);
+}
+
+/** Whether a stored render has a diagram figure that inlineBlogDiagrams draws from the site's files. */
+export function drawsDiagrams(html: string): boolean {
+  return html.includes("diagram-figure") || html.includes('aria-labelledby="bd-');
+}
+
+/**
+ * Replace a known Mermaid figure with its inline drawing, and a drawing inlined at an earlier render with the
+ * site's current one, so a stored essay always shows the drawing as it is now (its class names match the stylesheet).
+ * The caption rendered from the essay stays. A figure this site does not draw is left as it was. Either way it sits in
+ * its diagram context.
  */
 export function inlineBlogDiagrams(html: string, files: DiagramFiles): string {
-  if (!html.includes("diagram-figure")) return html;
-  return html.replace(FIGURE, (figure) => {
-    const key = LIGHT.exec(figure)?.[1];
-    const file = key ? files.get(key) : undefined;
-    const svg = file ? /<svg\b[\s\S]*<\/svg>/.exec(file)?.[0] : undefined;
-    if (!key || !svg) return figure;
-    const caption = /<figcaption\b[^>]*>[\s\S]*?<\/figcaption>/.exec(figure)?.[0] ?? "";
-    const titleId = `bd-${key}-title`;
-    const descId = `bd-${key}-desc`;
-    const named = svg
-      .replace("<title>", `<title id="${titleId}">`)
-      .replace("<desc>", `<desc id="${descId}">`);
-    return (
-      `<figure class="blog-diagram" role="img" aria-labelledby="${titleId}" aria-describedby="${descId}">` +
-      `${named}${caption}</figure>`
-    );
-  });
+  if (!drawsDiagrams(html)) return inDiagramContext(html);
+  return inDiagramContext(
+    html
+      .replace(FIGURE, (figure) => {
+        const key = LIGHT.exec(figure)?.[1];
+        const named = key ? drawing(files, key) : undefined;
+        if (!key || !named) return figure;
+        const caption = /<figcaption\b[^>]*>[\s\S]*?<\/figcaption>/.exec(figure)?.[0] ?? "";
+        return (
+          `<figure class="blog-diagram" role="img" aria-labelledby="bd-${key}-title" aria-describedby="bd-${key}-desc">` +
+          `${named}${caption}</figure>`
+        );
+      })
+      .replace(INLINED, (whole, open: string, key: string) => {
+        const named = drawing(files, key);
+        return named ? `${open}${named}` : whole;
+      }),
+  );
 }

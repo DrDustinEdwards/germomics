@@ -13,33 +13,38 @@ import type { GuestView, Host, PlayerTrack, SoundbiteView } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
 import { imageFor, type ImageSet } from "~/lib/images";
 import { Picture } from "./Picture";
+import { GMark } from "~/components/brand/GMark";
 import { wasUpdatedAfterPublish } from "~/lib/seo";
-import { formatDate, formatDuration } from "~/lib/format";
+import { formatDate, timecode } from "capsomer/behavior/time";
 import { BodyRenderer } from "./BodyRenderer";
 import { PostCard } from "./PostCard";
 import { SoundbiteClips } from "./SoundbiteClips";
-import { TranscriptPanel } from "./TranscriptPanel";
 import { CopyLink, ShareTimestamp } from "./CopyLink";
 import { AUTHOR } from "~/lib/about";
-import { EpisodePlayerSurface } from "./EpisodePlayerSurface";
 import { CoverArt } from "./CoverArt";
 import {
   ReadingProgress,
-  KeyMoments,
   EpisodeToc,
   Sources,
-  Hosts,
-  ChapterList,
   useHideBrokenFigures,
   FigureLightbox,
 } from "./EpisodeExtras";
 import { EpisodeContext } from "./EpisodeContext";
 import type { EpisodeContextView } from "~/lib/episode-context";
-import { usePlayer } from "~/components/player/player-context";
+import {
+  ChapterList,
+  Hosts,
+  KeyMoments,
+  PlayerSurface,
+  PlayerTranscript,
+  usePlayer,
+} from "capsomer/react/player";
+import { parseCueText, parseVtt } from "@drdustinedwards/site-helpers/vtt";
 import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 import { ExternalCue } from "~/components/ExternalCue";
 import { postTrail } from "~/lib/trails";
 import { SectionTrail } from "./SectionTrail";
+import "~/prose.css";
 
 export type DetailData = {
   post: Post;
@@ -263,7 +268,7 @@ export function PostDetail({ data }: { data: DetailData }) {
                 ) : null}
                 {post.audioDuration ? (
                   <span className="flex items-center gap-1 tabular-nums">
-                    <Clock size={12} aria-hidden /> {formatDuration(post.audioDuration)}
+                    <Clock size={12} aria-hidden /> {timecode(post.audioDuration * 1000)}
                   </span>
                 ) : null}
                 {wasUpdatedAfterPublish(post) ? (
@@ -291,7 +296,11 @@ export function PostDetail({ data }: { data: DetailData }) {
               directly below it (the hero no longer carries a second play button). */}
           {track ? (
             <div id="player" className="mt-8 scroll-mt-20">
-              <EpisodePlayerSurface track={track} peaks={post.audioPeaks ?? null} />
+              <PlayerSurface
+                track={track}
+                peaks={post.audioPeaks ?? null}
+                transcriptHref="#transcript"
+              />
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <ShareTimestamp slug={post.slug} />
                 <SaveToggle storageKey={SAVED_KEY} id={post.slug} />
@@ -300,7 +309,14 @@ export function PostDetail({ data }: { data: DetailData }) {
           ) : null}
 
           {/* In this episode */}
-          {track ? <KeyMoments moments={moments} track={track} /> : null}
+          {track ? (
+            <KeyMoments
+              track={track}
+              moments={moments}
+              heading="In this episode"
+              playerId="player"
+            />
+          ) : null}
 
           {/* TOC rail + article body */}
           <div className="mt-12 grid gap-8 lg:grid-cols-[15rem_1fr]">
@@ -320,9 +336,27 @@ export function PostDetail({ data }: { data: DetailData }) {
 
           {/* Everything below the body returns to a single readable measure. */}
           <div className="mx-auto max-w-3xl">
-            <Hosts hosts={hosts} images={data.images} />
+            <Hosts
+              hosts={hosts}
+              avatar={(h) =>
+                h.img ? (
+                  <Picture
+                    src={h.img}
+                    image={imageFor(data.images, "avatar", h.img)}
+                    alt=""
+                    width={48}
+                    height={48}
+                    className="h-12 w-12 shrink-0 rounded-full border border-border object-cover"
+                  />
+                ) : (
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-border bg-surface">
+                    <GMark className="h-6 w-auto" />
+                  </span>
+                )
+              }
+            />
             {track ? <SoundbiteClips track={track} clips={soundbites} /> : null}
-            {track && chapters.length ? <ChapterList chapters={chapters} track={track} /> : null}
+            {track && chapters.length ? <ChapterList track={track} /> : null}
 
             {/* Sources and Credits sits directly above the Transcript, both collapsed by default so they
                 read as a matched pair. */}
@@ -338,7 +372,17 @@ export function PostDetail({ data }: { data: DetailData }) {
                   <summary className="mb-3 cursor-pointer font-display text-xl font-semibold">
                     Transcript
                   </summary>
-                  <TranscriptPanel transcript={post.transcript} track={track} />
+                  <PlayerTranscript
+                    cues={parseVtt(post.transcript).map((cue) => {
+                      // A "Name:" prefix names the speaker where no <v Name> voice tag did.
+                      const parsed = parseCueText(cue.text);
+                      return { ...cue, ...parsed, speaker: cue.speaker ?? parsed.speaker };
+                    })}
+                    fallback={post.transcript}
+                    track={track}
+                    shareUrl={(t) => `${window.location.origin}/${post.slug}?t=${Math.floor(t)}`}
+                    attribution={(title, url) => `From "${title}" on Germomics: ${url}`}
+                  />
                 </details>
               </section>
             ) : null}

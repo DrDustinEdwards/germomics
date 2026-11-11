@@ -23,6 +23,19 @@
     "--primary": "same: the error page draws Capsomer's button and Empty in the site's own palette (app/error-page.css), as the /data charts do",
     "--primary-hover": "same: the error page draws Capsomer's button and Empty in the site's own palette (app/error-page.css), as the /data charts do",
     "--primary-line": "same: the error page draws Capsomer's button and Empty in the site's own palette (app/error-page.css), as the /data charts do",
-    "--primary-fg": "same: the error page draws Capsomer's button and Empty in the site's own palette (app/error-page.css), as the /data charts do"
+    "--primary-fg": "same: the error page draws Capsomer's button and Empty in the site's own palette (app/error-page.css), as the /data charts do",
+    "--mono": "same: Capsomer's header, player and prose on the public pages read the site's own palette and faces (app/site.css), as the /data charts do; the admin keeps site-germomics.css",
+    "--ground": "same: Capsomer's header, player and prose on the public pages read the site's own palette and faces (app/site.css), as the /data charts do; the admin keeps site-germomics.css",
+    "--raised": "same: Capsomer's header, player and prose on the public pages read the site's own palette and faces (app/site.css), as the /data charts do; the admin keeps site-germomics.css",
+    "--sunken": "same: Capsomer's header, player and prose on the public pages read the site's own palette and faces (app/site.css), as the /data charts do; the admin keeps site-germomics.css",
+    "--dim": "same: Capsomer's header, player and prose on the public pages read the site's own palette and faces (app/site.css), as the /data charts do; the admin keeps site-germomics.css",
+    "--accent-soft": "same: Capsomer's header, player and prose on the public pages read the site's own palette and faces (app/site.css), as the /data charts do; the admin keeps site-germomics.css",
+    "--accent-line": "same: Capsomer's header, player and prose on the public pages read the site's own palette and faces (app/site.css), as the /data charts do; the admin keeps site-germomics.css",
+    "--sel": "same: Capsomer's header, player and prose on the public pages read the site's own palette and faces (app/site.css), as the /data charts do; the admin keeps site-germomics.css",
+    "--on": "same: Capsomer's header, player and prose on the public pages read the site's own palette and faces (app/site.css), as the /data charts do; the admin keeps site-germomics.css",
+    "--on-hover": "same: Capsomer's header, player and prose on the public pages read the site's own palette and faces (app/site.css), as the /data charts do; the admin keeps site-germomics.css",
+    "--ring-width": "same: Capsomer's header, player and prose on the public pages read the site's own palette and faces (app/site.css), as the /data charts do; the admin keeps site-germomics.css",
+    "--link-hover-bg": "same: Capsomer's header, player and prose on the public pages read the site's own palette and faces (app/site.css), as the /data charts do; the admin keeps site-germomics.css",
+    "--header-h": "germomics' public header band is 60px with its 1px rule below, as it always was (app/site.css)"
   }
 }

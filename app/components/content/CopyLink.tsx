@@ -1,7 +1,7 @@
 import { useState, type ComponentType } from "react";
 import { Share2, Check } from "lucide-react";
-import { usePlayer } from "~/components/player/player-context";
-import { formatDuration } from "~/lib/format";
+import { usePlayer } from "capsomer/react/player";
+import { timecode } from "capsomer/behavior/time";
 
 // One share button: `share` offers the Web Share sheet where the device has one, else (or always,
 // without it) the link goes to the clipboard and the label reads "Copied" for a moment.
@@ -97,6 +97,6 @@ export function CopyLink({ slug }: { slug: string }) {
 // and seeks after the episode loads.
 export function ShareTimestamp({ slug }: { slug: string }) {
   const p = usePlayer();
-  const at = Math.floor(p.current?.slug === slug ? p.currentTime : 0);
-  return <ShareButton path={`/${slug}?t=${at}`} label={`Share at ${formatDuration(at)}`} />;
+  const at = Math.floor(p.current?.href === `/${slug}` ? p.currentTime : 0);
+  return <ShareButton path={`/${slug}?t=${at}`} label={`Share at ${timecode(at * 1000)}`} />;
 }
