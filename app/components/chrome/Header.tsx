@@ -102,7 +102,7 @@ export function Header() {
           <Link
             to="/search"
             aria-label="Search"
-            className="tap-target grid place-items-center rounded-full border border-border bg-surface p-2 text-muted hover:border-brand hover:text-ink"
+            className="cap-tap-target grid place-items-center rounded-full border border-border bg-surface p-2 text-muted hover:border-brand hover:text-ink"
           >
             <Search size={16} aria-hidden />
           </Link>
@@ -118,7 +118,7 @@ export function Header() {
           <Link
             to="/search"
             aria-label="Search"
-            className="tap-target grid place-items-center rounded-full border border-border bg-surface p-2 text-muted hover:border-brand hover:text-ink max-[374px]:p-1"
+            className="cap-tap-target grid place-items-center rounded-full border border-border bg-surface p-2 text-muted hover:border-brand hover:text-ink max-[374px]:p-1"
           >
             <Search size={16} aria-hidden />
           </Link>

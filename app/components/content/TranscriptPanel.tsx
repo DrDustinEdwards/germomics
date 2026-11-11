@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Search, Copy, Check, ArrowDownToLine, CircleAlert } from "lucide-react";
-import { copyText } from "~/lib/copy-status";
-import { useCopyFeedback } from "~/lib/use-copy-feedback";
+import { Search, Copy, Check, ArrowDownToLine } from "lucide-react";
+import { useCopy } from "capsomer/react/copy";
+import { usePrefersReducedMotion } from "capsomer/react/hooks";
 import { usePlayer, activeChapterIndex } from "~/components/player/player-context";
 import { formatDuration } from "~/lib/format";
 import { parseVtt, toParagraphs, parseCueText } from "~/lib/vtt";
@@ -58,7 +58,11 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
   const [nativeStart, setNativeStart] = useState<number | null>(null);
   const [following, setFollowing] = useState(true);
   const [query, setQuery] = useState("");
-  const { outcome, label: said, message, report } = useCopyFeedback();
+  // A copy with no selection fails with its own words: they say what to do, which "Copy failed" would not.
+  const { copy, state, message } = useCopy({
+    failed: "Copy failed. Select part of the transcript first.",
+  });
+  const reduced = usePrefersReducedMotion();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const programmaticScroll = useRef(false);
   const [panelVisible, setPanelVisible] = useState(false);
@@ -112,28 +116,28 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
   // Center the active cue WITHIN the transcript's own scroll box. Scrolls the container element only
   // (scrollBy on it), so the document/window is never moved; a no-op when the box can't scroll or the
   // cue is already centered. Reduced motion snaps instead of animating.
-  const centerCueInContainer = useCallback((start: number | null) => {
-    const container = containerRef.current;
-    if (start == null || !container) return;
-    const target = container.querySelector<HTMLElement>(`[data-cue="${start}"]`);
-    if (!target) return;
-    const reduce =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const cRect = container.getBoundingClientRect();
-    const tRect = target.getBoundingClientRect();
-    const delta = tRect.top - cRect.top - (container.clientHeight - tRect.height) / 2;
-    if (Math.abs(delta) < 2) return;
-    programmaticScroll.current = true;
-    container.scrollBy({ top: delta, behavior: reduce ? "auto" : "smooth" });
-    if (scrollFlagTimer.current) window.clearTimeout(scrollFlagTimer.current);
-    scrollFlagTimer.current = window.setTimeout(
-      () => {
-        programmaticScroll.current = false;
-      },
-      reduce ? 60 : 700,
-    );
-  }, []);
+  const centerCueInContainer = useCallback(
+    (start: number | null) => {
+      const container = containerRef.current;
+      if (start == null || !container) return;
+      const target = container.querySelector<HTMLElement>(`[data-cue="${start}"]`);
+      if (!target) return;
+      const cRect = container.getBoundingClientRect();
+      const tRect = target.getBoundingClientRect();
+      const delta = tRect.top - cRect.top - (container.clientHeight - tRect.height) / 2;
+      if (Math.abs(delta) < 2) return;
+      programmaticScroll.current = true;
+      container.scrollBy({ top: delta, behavior: reduced ? "auto" : "smooth" });
+      if (scrollFlagTimer.current) window.clearTimeout(scrollFlagTimer.current);
+      scrollFlagTimer.current = window.setTimeout(
+        () => {
+          programmaticScroll.current = false;
+        },
+        reduced ? 60 : 700,
+      );
+    },
+    [reduced],
+  );
 
   // Keep the active line in view, but ONLY inside the transcript box and ONLY while the panel is open
   // (rendered) and on screen. Pressing play with the transcript collapsed or off screen does nothing,
@@ -178,7 +182,7 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
     const sel = typeof window !== "undefined" ? window.getSelection() : null;
     let text = sel ? sel.toString().trim() : "";
     if (!text) {
-      report("failed", "Select part of the transcript first");
+      await copy("");
       return;
     }
     const words = text.split(/\s+/);
@@ -190,11 +194,7 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
     while (el && !el.getAttribute("data-cue")) el = el.parentElement;
     if (el) t = Math.floor(Number(el.getAttribute("data-cue")));
     const url = `${window.location.origin}/${track.slug}?t=${t}`;
-    report(
-      (await copyText(`${text}\n\nFrom "${track.title}" on Germomics: ${url}`))
-        ? "copied"
-        : "failed",
-    );
+    await copy(`${text}\n\nFrom "${track.title}" on Germomics: ${url}`);
   };
 
   // Fallback: unparseable VTT shows as plain text rather than nothing.
@@ -255,22 +255,24 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
             {matches} match{matches === 1 ? "" : "es"}
           </span>
         ) : null}
-        <button
-          type="button"
-          onClick={() => void copyQuote()}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 font-mono text-xs hover:border-accent hover:text-accent"
-        >
-          {outcome === "copied" ? (
-            <Check size={14} aria-hidden />
-          ) : outcome === "failed" ? (
-            <CircleAlert size={14} aria-hidden />
-          ) : (
-            <Copy size={14} aria-hidden />
-          )}
-          {outcome ? said : "Copy with link"}
-        </button>
-        <span role="status" className="sr-only">
-          {message}
+        <span className="cap-copy ml-auto">
+          <button
+            type="button"
+            data-state={state}
+            onClick={() => void copyQuote()}
+            className="cap-copy-button inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 font-mono text-xs hover:border-accent hover:text-accent [&_svg]:size-3.5"
+          >
+            <span className="cap-copy-icon">
+              <Copy size={14} aria-hidden />
+            </span>
+            <span className="cap-copy-done">
+              <Check size={14} aria-hidden />
+            </span>
+            Copy with link
+          </button>
+          <span className="cap-copy-tip" role="status">
+            {message}
+          </span>
         </span>
       </div>
 

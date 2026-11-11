@@ -7,6 +7,17 @@
 @import "capsomer/fallback-fonts.css";
 /* The visible trail of a page inside a section (components/content/SectionTrail.tsx), in the cap layer. */
 @import "capsomer/breadcrumb.css";
+/* The shared parts the page uses, each in germomics' own tokens (the blocks after the design system below):
+   the bottom sheet and the image viewer (dialog, lightbox, button for their Close), the copy bubble, the social
+   icons, stored-image placeholders, the reading bar, and the skip link and tap target (utilities). */
+@import "capsomer/button.css";
+@import "capsomer/dialog.css";
+@import "capsomer/lightbox.css";
+@import "capsomer/copy.css";
+@import "capsomer/icons.css";
+@import "capsomer/picture.css";
+@import "capsomer/reading-progress.css";
+@import "capsomer/utilities.css";
 
 /* ── germomics design system ───────────────────────────────────────────────
    Anchor #4F2D7F (crystal violet). Light + dark are both first-class, switched by
@@ -88,18 +99,6 @@
   color-scheme: light;
 }
 
-/* Every modal <dialog> (app/lib/modal-dialog.ts): a scroll in the dialog or on its backdrop never
-   scrolls the page behind it, without locking the page's own overflow (Modern Web Guidance "dialog"). */
-@layer base {
-  dialog:modal {
-    overscroll-behavior: contain;
-  }
-  dialog::backdrop {
-    overflow: hidden;
-    overscroll-behavior: contain;
-  }
-}
-
 @layer base {
   html {
     /* leave room for the sticky header (top) and docked player (bottom) when anchoring */
@@ -150,12 +149,6 @@
       scroll-behavior: auto !important;
     }
   }
-}
-
-@utility tap-target {
-  /* WCAG 2.5.8, 24px minimum interactive target. */
-  min-width: 1.5rem;
-  min-height: 1.5rem;
 }
 
 /* Readable long-form legal pages (privacy / terms) without pulling in a typography plugin. */
@@ -230,6 +223,93 @@
   --control: 2rem;
   /* The first level's text lines up with the page's edge; its hover background reaches into the gutter. */
   margin-inline-start: calc(-1 * var(--space-2));
+}
+
+/* Capsomer's dialog (the player's bottom sheet, the figure viewer) and the Close button inside it, in germomics' own
+   tokens, as the breadcrumb above: the custom properties inherit to the button. The sheet keeps its surface, its 1rem
+   top corners, its 0.875rem Space Grotesk title and its 44px Close; the viewer is dimmer (80% black) and its picture
+   keeps its 8px corners and its white Close on a dark disc. */
+.cap-dialog {
+  --ui: var(--font-display);
+  --text: var(--ink);
+  --raised: var(--surface);
+  --sunken: var(--surface);
+  --line: var(--border);
+  --line-strong: var(--muted);
+  --ring: var(--accent);
+  --ring-width: 2px;
+  --scrim: rgb(0 0 0 / 0.4);
+  --shadow-l: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --shadow-m: var(--shadow-l);
+  --radius-m: 8px;
+  --radius-l: 1rem;
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 8px;
+  --space-4: 12px;
+  --space-5: 16px;
+  --pad-card: 1rem;
+  --pad-x: 0.75rem;
+  --row-h: 2.75rem;
+  --control: 2.75rem;
+  --target: 1.5rem;
+  --fs-body: 0.875rem;
+  --fs-lead: 0.875rem;
+  --weight-heading: 600;
+  --dur-fast: 100ms;
+  --dur-base: 200ms;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  font-family: var(--font-display);
+}
+.cap-lightbox {
+  --scrim: rgb(0 0 0 / 0.8);
+  --raised: rgb(0 0 0 / 0.5);
+  --text: #fff;
+  --line: rgb(255 255 255 / 0.3);
+}
+
+/* Capsomer's copy bubble in germomics' tokens: ink on the page color, JetBrains Mono at the meta size. */
+.cap-copy {
+  --ui: var(--font-mono);
+  --text: var(--ink);
+  --surface: var(--bg);
+  --fs-detail: 0.6875rem;
+  --radius-s: 4px;
+  --target: 1.5rem;
+  --ok: var(--accent);
+  --z-tip: 60;
+  --dur-fast: 150ms;
+  --dur-base: 200ms;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Capsomer's skip link (utilities.css) in the brand color and the site's spacing, as the link was. */
+.cap-skip {
+  --primary: var(--brand);
+  --primary-fg: var(--on-brand);
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --radius-m: 4px;
+  --shadow-m: none;
+  --z-tip: 50;
+}
+
+/* The reading bar: 2px, brand to cyan, as before (Capsomer's default is 3px in one color). */
+.cap-reading-progress {
+  --reading-progress-size: 2px;
+  --reading-progress-color: linear-gradient(to right, var(--brand), var(--accent));
+  --z-sticky: 50;
+}
+
+/* Capsomer draws a hover arrow after a link inside a heading; germomics' headings link plainly, so it stays off. */
+:is(h1, h2, h3, h4) > a:not([class*="cap-"])::after {
+  content: none;
+}
+
+/* Capsomer's tap target reads --target; the site's is the WCAG 2.5.8 minimum. */
+:root {
+  --target: 1.5rem;
 }
 
 /* Inline mechanism figures use the page's color and font variables. A stored Mermaid

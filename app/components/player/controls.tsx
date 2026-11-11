@@ -125,7 +125,7 @@ function Popover({
         aria-controls={open ? panelId : undefined}
         aria-label={label}
         onClick={() => setOpen((o) => !o)}
-        className={`tap-target inline-grid h-11 min-w-11 place-items-center rounded-full border px-2 font-mono text-xs ${
+        className={`cap-tap-target inline-grid h-11 min-w-11 place-items-center rounded-full border px-2 font-mono text-xs ${
           active ? "border-accent text-accent" : "border-border bg-card text-ink hover:border-brand"
         }`}
       >
@@ -244,7 +244,7 @@ export function PlayPauseButton({
       type="button"
       onClick={onClick}
       aria-label={playing ? "Pause" : "Play"}
-      className={`tap-target grid ${dim} shrink-0 place-items-center rounded-full bg-brand text-on-brand hover:bg-brand-strong`}
+      className={`cap-tap-target grid ${dim} shrink-0 place-items-center rounded-full bg-brand text-on-brand hover:bg-brand-strong`}
     >
       {playing ? (
         <Pause size={ic} aria-hidden />
@@ -269,7 +269,7 @@ export function SkipButton({ delta, track }: { delta: number; track?: PlayerTrac
       type="button"
       onClick={onClick}
       aria-label={back ? `Rewind ${secs} seconds` : `Skip forward ${secs} seconds`}
-      className="tap-target grid h-11 w-11 place-items-center rounded-full border border-border bg-card text-ink hover:border-brand"
+      className="cap-tap-target grid h-11 w-11 place-items-center rounded-full border border-border bg-card text-ink hover:border-brand"
     >
       {back ? <RotateCcw size={18} aria-hidden /> : <RotateCw size={18} aria-hidden />}
     </button>
@@ -284,7 +284,7 @@ export function NextButton() {
       onClick={p.next}
       disabled={p.index >= p.queue.length - 1}
       aria-label="Next episode"
-      className="tap-target grid h-11 w-11 place-items-center rounded-full text-ink hover:text-accent disabled:opacity-40 disabled:hover:text-ink"
+      className="cap-tap-target grid h-11 w-11 place-items-center rounded-full text-ink hover:text-accent disabled:opacity-40 disabled:hover:text-ink"
     >
       <SkipForward size={18} aria-hidden />
     </button>
@@ -463,7 +463,7 @@ export function VolumeControl({ openUp, className }: { openUp?: boolean; classNa
               type="button"
               onClick={p.toggleMute}
               aria-label={p.muted ? "Unmute" : "Mute"}
-              className="tap-target grid h-11 w-11 shrink-0 place-items-center rounded hover:text-accent"
+              className="cap-tap-target grid h-11 w-11 shrink-0 place-items-center rounded hover:text-accent"
             >
               {muted ? <VolumeX size={18} aria-hidden /> : <Volume2 size={18} aria-hidden />}
             </button>
@@ -538,7 +538,7 @@ export function ChaptersControl({ openUp }: { openUp?: boolean }) {
 // the dock it navigates to the episode's transcript anchor.
 export function TranscriptToggle({ slug, samePage }: { slug: string; samePage?: boolean }) {
   const cls =
-    "tap-target inline-flex h-11 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-sm text-ink hover:border-brand";
+    "cap-tap-target inline-flex h-11 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-sm text-ink hover:border-brand";
   const inner = (
     <>
       <Captions size={16} aria-hidden /> Transcript

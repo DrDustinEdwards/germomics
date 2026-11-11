@@ -8,7 +8,8 @@ import {
   useLocation,
   useMatches,
 } from "react-router";
-import { useContext, useEffect, useSyncExternalStore } from "react";
+import { useContext, useEffect } from "react";
+import { useHydrated } from "capsomer/react/hooks";
 import { iconLinks } from "@drdustinedwards/site-helpers/icons";
 
 import type { Route } from "./+types/root";
@@ -113,15 +114,9 @@ let clientDeferred: boolean | undefined;
  * (app/site/hydrate.ts). Once such a page has hydrated, ScrollRestoration mounts, so client-side navigations restore
  * and reset the scroll as on any other page.
  */
-const noSubscribe = () => () => {};
-
 function HydrationScripts({ deferred }: { deferred: boolean }) {
-  // False on the server and while hydrating, true once hydrated (React's server snapshot, then the client's).
-  const hydrated = useSyncExternalStore(
-    noSubscribe,
-    () => true,
-    () => false,
-  );
+  // False on the server and while hydrating, true once hydrated.
+  const hydrated = useHydrated();
   if (!deferred) {
     return (
       <>
@@ -191,10 +186,7 @@ export default function App() {
   // queue survive every client-side navigation (CLAUDE.md §04 — uninterrupted playback).
   return (
     <PlayerProvider>
-      <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-brand focus:px-3 focus:py-2 focus:text-on-brand"
-      >
+      <a href="#main" className="cap-skip">
         Skip to content
       </a>
       <Header />

@@ -8,7 +8,8 @@
 // padding-bottom (app.css) so the footer always clears the fixed dock. Popovers open upward and the
 // sheet is a separate overlay, so neither changes the measured dock height.
 import { useEffect, useRef, useState } from "react";
-import { useModalDialog } from "~/lib/modal-dialog";
+import { Dialog, DialogBody, DialogHeader, DialogTitle } from "capsomer/react/dialog";
+import { useMedia } from "capsomer/react/hooks";
 import { Link } from "capsomer/react/link";
 import { ChevronUp, X, AlertCircle, Loader2, ListTree } from "lucide-react";
 import { usePlayer, activeChapterIndex } from "./player-context";
@@ -54,14 +55,9 @@ export function PlayerDock() {
     };
   }, [loaded]);
 
-  // Close the mobile sheet if the viewport grows to desktop (the inline popovers take over there).
-  useEffect(() => {
-    if (!sheetOpen) return;
-    const mq = window.matchMedia("(min-width: 768px)");
-    const onChange = () => mq.matches && setSheetOpen(false);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, [sheetOpen]);
+  // The mobile sheet closes if the viewport grows to desktop (the inline popovers take over there): its dialog is shut
+  // while the viewport is wide, and says so, which puts the state back to closed.
+  const desktop = useMedia("(min-width: 768px)");
 
   if (!p.current) return null;
 
@@ -144,9 +140,9 @@ export function PlayerDock() {
                 setSheetOpen(true);
               }}
               aria-haspopup="dialog"
-              aria-expanded={sheetOpen}
+              aria-expanded={sheetOpen && !desktop}
               aria-label="More player controls"
-              className={`tap-target grid h-11 w-11 place-items-center rounded-full md:hidden ${
+              className={`cap-tap-target grid h-11 w-11 place-items-center rounded-full md:hidden ${
                 p.sleep != null ? "text-accent" : "text-ink hover:text-accent"
               }`}
             >
@@ -158,86 +154,88 @@ export function PlayerDock() {
               type="button"
               onClick={p.dismiss}
               aria-label="Close player"
-              className="tap-target grid h-11 w-11 place-items-center rounded-full text-muted hover:text-ink"
+              className="cap-tap-target grid h-11 w-11 place-items-center rounded-full text-muted hover:text-ink"
             >
               <X size={18} aria-hidden />
             </button>
           </div>
         </div>
 
-        {sheetOpen ? <DockSheet onClose={() => setSheetOpen(false)} /> : null}
+        <DockSheet open={sheetOpen && !desktop} onOpenChange={setSheetOpen} />
       </div>
     </>
   );
 }
 
-// Mobile bottom sheet: a native modal <dialog> (useModalDialog) holding the secondary controls
-// (speed, sleep, chapters, transcript). Esc, the back gesture and a backdrop tap close it; the
-// browser keeps focus inside and returns it to the More button. The slide-up is motion-safe only.
-function DockSheet({ onClose }: { onClose: () => void }) {
+// Mobile bottom sheet: Capsomer's dialog as a bottom sheet (placement "bottom") holding the secondary controls (speed,
+// sleep, chapters, transcript). Esc, the back gesture, a backdrop tap and a drag down on its header close it; the
+// browser keeps focus inside and the dialog returns it to the More button. Its content is mounted while it is open.
+function DockSheet({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const p = usePlayer();
-  const ref = useModalDialog(onClose);
   const chapters = p.current?.chapters ?? [];
   const curChapIdx = activeChapterIndex(chapters, p.currentTime);
+  const close = () => onOpenChange(false);
 
   return (
-    <dialog
-      ref={ref}
-      closedby="any"
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      placement="bottom"
       aria-label="Player controls"
-      className="inset-x-0 bottom-0 top-auto m-0 max-h-[75dvh] w-full max-w-full space-y-4 overflow-y-auto rounded-t-2xl border-0 border-t border-border bg-surface p-4 text-ink backdrop:bg-black/40 motion-safe:transition-transform motion-safe:duration-200 motion-safe:starting:translate-y-full md:hidden"
-      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
+      closeLabel="Close player controls"
+      className="md:hidden"
     >
-      <div className="flex items-center justify-between">
-        <p className="font-display text-sm font-semibold">Player controls</p>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close player controls"
-          className="tap-target grid h-11 w-11 place-items-center rounded-full text-ink hover:text-accent"
-        >
-          <X size={20} aria-hidden />
-        </button>
-      </div>
+      <DialogHeader>
+        <DialogTitle>Player controls</DialogTitle>
+      </DialogHeader>
+      {open ? (
+        <DialogBody className="space-y-4">
+          <SpeedMenuContent />
+          <SleepMenuContent />
 
-      <SpeedMenuContent />
-      <SleepMenuContent />
+          {chapters.length > 0 ? (
+            <div>
+              <p className="flex items-center gap-1 px-2 pb-1 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
+                <ListTree size={14} aria-hidden /> Chapters
+              </p>
+              <ul className="grid max-h-48 gap-0.5 overflow-y-auto">
+                {chapters.map((c, i) => (
+                  <li key={i}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        p.seek(c.start);
+                        close();
+                      }}
+                      aria-current={i === curChapIdx ? "true" : undefined}
+                      className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm hover:bg-card ${
+                        i === curChapIdx ? "text-accent" : "text-ink"
+                      }`}
+                    >
+                      <span className="font-mono text-xs tabular-nums text-accent">
+                        {formatDuration(c.start)}
+                      </span>
+                      <span className="truncate">{c.title}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
-      {chapters.length > 0 ? (
-        <div>
-          <p className="flex items-center gap-1 px-2 pb-1 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
-            <ListTree size={14} aria-hidden /> Chapters
-          </p>
-          <ul className="grid max-h-48 gap-0.5 overflow-y-auto">
-            {chapters.map((c, i) => (
-              <li key={i}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    p.seek(c.start);
-                    onClose();
-                  }}
-                  aria-current={i === curChapIdx ? "true" : undefined}
-                  className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm hover:bg-card ${
-                    i === curChapIdx ? "text-accent" : "text-ink"
-                  }`}
-                >
-                  <span className="font-mono text-xs tabular-nums text-accent">
-                    {formatDuration(c.start)}
-                  </span>
-                  <span className="truncate">{c.title}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+          {p.current ? (
+            <div className="px-2">
+              <TranscriptToggle slug={p.current.slug} />
+            </div>
+          ) : null}
+        </DialogBody>
       ) : null}
-
-      {p.current ? (
-        <div className="px-2">
-          <TranscriptToggle slug={p.current.slug} />
-        </div>
-      ) : null}
-    </dialog>
+    </Dialog>
   );
 }

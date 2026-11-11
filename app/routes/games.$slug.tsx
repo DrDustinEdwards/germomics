@@ -8,7 +8,7 @@ import type { Route } from "./+types/games.$slug";
 import { getEnv } from "~/lib/context.server";
 import { getGame } from "~/lib/games.server";
 import { getLeaderboard, submitScore } from "~/lib/scores.server";
-import { ClientOnly } from "~/components/util/ClientOnly";
+import { ClientOnly } from "capsomer/react/hooks";
 import { useSnippet } from "~/lib/content";
 import { PUBLIC_FORM, readForm } from "~/lib/body.server";
 

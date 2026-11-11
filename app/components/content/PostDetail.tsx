@@ -2,7 +2,8 @@
 // Episodes keep their existing experience (player, chapters, transcript, guests); articles get an
 // editorial layout (cover, byline + reading time, table of contents, share, prev/next, related).
 // Body is rendered once via BodyRenderer for both kinds.
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef } from "react";
+import { useRemembered } from "capsomer/react/hooks";
 import { useSearchParams } from "react-router";
 import {
   Calendar,
@@ -18,8 +19,8 @@ import { Link } from "capsomer/react/link";
 import type { Post } from "~/db/schema";
 import type { GuestView, Host, PlayerTrack, SoundbiteView } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
-import { imageFor, type ImageSet } from "~/lib/images";
-import { Picture } from "./Picture";
+import { imageFor, imageOrPlain, type ImageSet } from "~/lib/images";
+import { Picture } from "capsomer/react/picture";
 import { wasUpdatedAfterPublish } from "~/lib/seo";
 import { formatDate, formatDuration } from "~/lib/format";
 import { BodyRenderer } from "./BodyRenderer";
@@ -31,7 +32,6 @@ import { AUTHOR } from "~/lib/about";
 import { EpisodePlayerSurface } from "./EpisodePlayerSurface";
 import { CoverArt } from "./CoverArt";
 import {
-  ReadingProgress,
   KeyMoments,
   EpisodeToc,
   Sources,
@@ -69,54 +69,30 @@ export type DetailData = {
   context: EpisodeContextView | null;
 };
 
-// Lightweight "save for later": a slug set in localStorage, no server. Toggles aria-pressed. Read as an external
-// store, so the server and hydration render "Save" and the stored state follows (another tab's change too).
+// Lightweight "save for later": a slug set in localStorage, no server. Toggles aria-pressed. Read through Capsomer's
+// useRemembered, so the server and hydration render "Save" and the stored state follows (another tab's change too).
 const SAVED_KEY = "germomics-saved";
-const savedListeners = new Set<() => void>();
-function subscribeSaved(onChange: () => void) {
-  savedListeners.add(onChange);
-  window.addEventListener("storage", onChange);
-  return () => {
-    savedListeners.delete(onChange);
-    window.removeEventListener("storage", onChange);
-  };
-}
-function savedList(): string {
+function parseSaved(raw: string | null): string[] {
   try {
-    return localStorage.getItem(SAVED_KEY) || "[]";
+    const list: unknown = JSON.parse(raw ?? "[]");
+    return Array.isArray(list) ? list.filter((s): s is string => typeof s === "string") : [];
   } catch {
-    return "[]";
-  }
-}
-function isSaved(raw: string, slug: string): boolean {
-  try {
-    return (JSON.parse(raw) as string[]).includes(slug);
-  } catch {
-    return false;
+    return [];
   }
 }
 
 function SaveButton({ slug }: { slug: string }) {
-  const saved = isSaved(
-    useSyncExternalStore(subscribeSaved, savedList, () => "[]"),
-    slug,
-  );
-  const toggle = () => {
-    try {
-      const list: string[] = JSON.parse(savedList());
-      const next = list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug];
-      localStorage.setItem(SAVED_KEY, JSON.stringify(next));
-    } catch {
-      /* ignore */
-    }
-    for (const onChange of savedListeners) onChange();
-  };
+  const [raw, remember] = useRemembered(SAVED_KEY);
+  const list = parseSaved(raw);
+  const saved = list.includes(slug);
+  const toggle = () =>
+    remember(JSON.stringify(saved ? list.filter((s) => s !== slug) : [...list, slug]));
   return (
     <button
       type="button"
       onClick={toggle}
       aria-pressed={saved}
-      className="tap-target inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 font-mono text-xs text-ink hover:border-brand"
+      className="cap-tap-target inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 font-mono text-xs text-ink hover:border-brand"
     >
       {saved ? (
         <BookmarkCheck size={14} aria-hidden className="text-accent" />
@@ -212,11 +188,8 @@ export function PostDetail({ data }: { data: DetailData }) {
           <div key={g.slug} className="flex gap-3 rounded-xl border border-border bg-card p-4">
             {g.photo ? (
               <Picture
-                src={g.photo}
-                image={imageFor(data.images, "avatar", g.photo)}
+                attrs={imageOrPlain(imageFor(data.images, "avatar", g.photo), g.photo, 48, 48)}
                 alt={g.photoAlt ?? g.name}
-                width={48}
-                height={48}
                 className="h-12 w-12 shrink-0 rounded-full border border-border object-cover"
               />
             ) : null}
@@ -314,8 +287,9 @@ export function PostDetail({ data }: { data: DetailData }) {
 
     return (
       <>
-        <ReadingProgress />
-        <article className="mx-auto max-w-5xl">
+        {/* Capsomer's reading bar: CSS only, filling through the article below (app.css sets its look). */}
+        <div className="cap-reading-progress" aria-hidden="true" />
+        <article data-cap-reading className="mx-auto max-w-5xl">
           {data.preview ? <PreviewBanner post={post} /> : null}
           <SectionTrail trail={postTrail(post)} />
 
@@ -434,8 +408,7 @@ export function PostDetail({ data }: { data: DetailData }) {
         // Cover is the article LCP element. Load it eagerly with high priority; the fixed aspect
         // ratio reserves space so it doesn't shift layout (CLS).
         <Picture
-          src={post.coverImage}
-          image={imageFor(data.images, "cover", post.coverImage)}
+          attrs={imageOrPlain(imageFor(data.images, "cover", post.coverImage), post.coverImage)}
           alt={post.coverAlt ?? ""}
           priority
           className="mb-6 aspect-[2/1] w-full rounded-2xl border border-border object-cover"

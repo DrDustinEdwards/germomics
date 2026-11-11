@@ -50,6 +50,29 @@ export function imageFor(
   return src ? set?.[imageKey(use, src)] : undefined;
 }
 
+/**
+ * What a picture shows: the attributes the loader made, or for an image it could not size the plain <img> at its stored
+ * size (no sources), so the page never waits on a size it does not have.
+ */
+export function imageOrPlain(
+  image: ImageAttributes | undefined,
+  src: string,
+  width?: number,
+  height?: number,
+): ImageAttributes {
+  return (
+    image ?? {
+      src,
+      srcset: undefined,
+      sizes: undefined,
+      sources: [],
+      width,
+      height,
+      background: undefined,
+    }
+  );
+}
+
 /** The prefixes a stored image address starts with: /media, relative or on this origin. */
 const IMAGE_PREFIXES = ["/media/", `${SITE_ORIGIN}/media/`];
 

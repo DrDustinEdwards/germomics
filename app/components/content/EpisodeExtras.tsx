@@ -2,57 +2,22 @@
 // small and client-side. Every motion (smooth scroll, auto-scroll, progress bar) is reduced-motion
 // aware. now-playing highlights use the cyan accent only.
 import { useEffect, useState } from "react";
-import { useModalDialog } from "~/lib/modal-dialog";
-import { ChevronRight, ExternalLink, X } from "lucide-react";
+import { Dialog } from "capsomer/react/dialog";
+import { usePrefersReducedMotion } from "capsomer/react/hooks";
+import { ChevronRight, ExternalLink } from "lucide-react";
 import type { KeyMoment, Source, Host, Chapter } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
 import type { PlayerTrack } from "~/lib/types";
 import { usePlayer } from "~/components/player/player-context";
 import { GMark } from "~/components/brand/GMark";
-import { imageFor, type ImageSet } from "~/lib/images";
-import { Picture } from "./Picture";
-
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const on = () => setReduced(mq.matches);
-    on();
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  return reduced;
-}
+import { imageFor, imageOrPlain, type ImageSet } from "~/lib/images";
+import { Picture } from "capsomer/react/picture";
 
 function fmt(s: number): string {
   if (!Number.isFinite(s) || s < 0) s = 0;
   const m = Math.floor(s / 60);
   const sec = Math.floor(s % 60);
   return `${m}:${sec.toString().padStart(2, "0")}`;
-}
-
-// ── Reading progress bar ─────────────────────────────────────────────────────
-export function ReadingProgress() {
-  const [pct, setPct] = useState(0);
-  useEffect(() => {
-    const onScroll = () => {
-      const h = document.documentElement;
-      const max = h.scrollHeight - h.clientHeight;
-      setPct(max > 0 ? Math.min(100, Math.max(0, (h.scrollTop / max) * 100)) : 0);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, []);
-  return (
-    <div className="fixed inset-x-0 top-0 z-50 h-0.5" aria-hidden>
-      <div className="h-full bg-gradient-to-r from-brand to-accent" style={{ width: `${pct}%` }} />
-    </div>
-  );
 }
 
 // ── "In this episode" key moments ────────────────────────────────────────────
@@ -256,11 +221,8 @@ export function Hosts({ hosts, images }: { hosts: Host[]; images?: ImageSet }) {
           >
             {h.img ? (
               <Picture
-                src={h.img}
-                image={imageFor(images, "avatar", h.img)}
+                attrs={imageOrPlain(imageFor(images, "avatar", h.img), h.img, 48, 48)}
                 alt={h.name}
-                width={48}
-                height={48}
                 className="h-12 w-12 shrink-0 rounded-full border border-border object-cover"
               />
             ) : (
@@ -326,7 +288,7 @@ export function ChapterList({ chapters, track }: { chapters: Chapter[]; track: P
 
 // ── Click-to-enlarge lightbox for body figures ───────────────────────────────
 // Enhances every <figure><img> in the rendered body into an accessible "view larger" trigger, then
-// opens the full-size image in a native modal dialog (Lightbox, below). No new dependency.
+// opens the full-size image in Capsomer's dialog. No new dependency.
 function largestSrc(img: HTMLImageElement): string {
   const srcset = img.getAttribute("srcset");
   if (srcset) {
@@ -352,7 +314,8 @@ export function FigureLightbox({
   bodyRef: React.RefObject<HTMLElement | null>;
   deps: unknown[];
 }) {
-  const [open, setOpen] = useState<{ src: string; alt: string } | null>(null);
+  // The image last opened, and whether it is open: the dialog stays mounted once opened, so it can close with its motion.
+  const [view, setView] = useState<{ src: string; alt: string; open: boolean } | null>(null);
 
   // Turn each figure image into a keyboard- and pointer-activatable "enlarge" trigger.
   useEffect(() => {
@@ -363,7 +326,7 @@ export function FigureLightbox({
       // Focus the trigger (the link around the picture, or the picture itself) first: a click does
       // not focus a link in Safari, and the dialog hands focus back to whatever had it.
       (img.closest<HTMLElement>("a.image-link") ?? img).focus();
-      setOpen({ src: largestSrc(img), alt: img.getAttribute("alt") || "" });
+      setView({ src: largestSrc(img), alt: img.getAttribute("alt") || "", open: true });
     };
     const onClick = (e: Event) => openFrom(e.currentTarget as HTMLImageElement);
     const onKey = (e: KeyboardEvent) => {
@@ -406,45 +369,19 @@ export function FigureLightbox({
     // oxlint-disable-next-line react/exhaustive-deps -- the caller's deps name the body this watches
   }, deps);
 
-  if (!open) return null;
-  return <Lightbox image={open} onClose={() => setOpen(null)} />;
-}
-
-// The enlarged image: a native modal <dialog> the size of the image (useModalDialog), so Esc, the
-// back gesture and a tap on the dimmed backdrop close it, Tab stays on its one control, and focus
-// returns to the figure that opened it. The fade in is motion-safe only.
-function Lightbox({
-  image,
-  onClose,
-}: {
-  image: { src: string; alt: string };
-  onClose: () => void;
-}) {
-  const ref = useModalDialog(onClose);
+  if (!view) return null;
+  // Capsomer's dialog as the lightbox (capsomer/lightbox.css): Esc, the back gesture and a tap on the dimmed backdrop
+  // close it, Tab stays inside, and focus returns to the figure that opened it.
   return (
-    <dialog
-      ref={ref}
-      closedby="any"
-      aria-label={image.alt || "Enlarged image"}
-      className="m-auto max-h-[90dvh] max-w-[calc(100%-2rem)] overflow-visible bg-transparent p-0 backdrop:bg-black/80 backdrop:backdrop-blur-sm motion-safe:transition-opacity motion-safe:duration-150 motion-safe:starting:opacity-0"
+    <Dialog
+      open={view.open}
+      onOpenChange={(open) => setView((v) => (v ? { ...v, open } : v))}
+      className="cap-lightbox"
+      aria-label={view.alt || "Enlarged image"}
+      closeLabel="Close enlarged image"
     >
-      <img
-        src={image.src}
-        alt={image.alt}
-        className="block max-h-[90dvh] max-w-full rounded-lg border border-white/20 object-contain shadow-2xl"
-      />
-      {/* Fixed to the screen's corner, not the image's; the dialog has no transform, so the
-          viewport is its containing block. */}
-      <button
-        type="button"
-        autoFocus
-        onClick={onClose}
-        aria-label="Close enlarged image"
-        className="tap-target fixed right-3 top-3 grid h-11 w-11 place-items-center rounded-full border border-white/30 bg-black/50 text-white hover:bg-black/70"
-      >
-        <X size={20} aria-hidden />
-      </button>
-    </dialog>
+      <img src={view.src} alt={view.alt} />
+    </Dialog>
   );
 }
 

@@ -11,7 +11,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       type="button"
       data-theme-toggle
       aria-label="Switch to light theme"
-      className={`tap-target grid place-items-center rounded-full border border-border bg-surface p-2 text-ink hover:border-brand ${className}`}
+      className={`cap-tap-target grid place-items-center rounded-full border border-border bg-surface p-2 text-ink hover:border-brand ${className}`}
     >
       <Sun size={16} aria-hidden className="theme-icon-sun" />
       <Moon size={16} aria-hidden className="theme-icon-moon" />

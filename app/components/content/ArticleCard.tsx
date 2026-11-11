@@ -3,7 +3,8 @@ import { Calendar } from "lucide-react";
 import { formatDate } from "~/lib/format";
 import type { Post } from "~/db/schema";
 import type { ImageAttributes } from "~/lib/images";
-import { Picture } from "./Picture";
+import { Picture } from "capsomer/react/picture";
+import { imageOrPlain } from "~/lib/images";
 
 // Editorial card for the writing index: cover image, title, excerpt, date, reading time, tags. The title is an h2, right
 // under the index's h1.
@@ -13,8 +14,7 @@ export function ArticleCard({ post, image }: { post: Post; image?: ImageAttribut
       <Link to={`/${post.slug}`} className="block">
         {post.coverImage ? (
           <Picture
-            src={post.coverImage}
-            image={image}
+            attrs={imageOrPlain(image, post.coverImage)}
             alt={post.coverAlt ?? ""}
             className="aspect-[2/1] w-full border-b border-border object-cover"
           />
