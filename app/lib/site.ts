@@ -20,10 +20,6 @@ export const DEFAULT_CARD = shareCard(
 /** The site's IndexNow key, public by the protocol's design: served as /<key>.txt and sent with each changed page. */
 export const INDEXNOW_KEY = "e181c18855ea5175390b4e1124cc23fd";
 
-/** The vulnerability contact /.well-known/security.txt lists, and the date it is next confirmed by (the family check warns first). */
-export const SECURITY_CONTACT = "security@dustinedwards.info";
-export const SECURITY_TXT_EXPIRES = "2027-09-28T00:00:00Z";
-
 /**
  * The paths never fetched ahead of a click, beyond the family's NEVER_PREFETCH (/admin, /api and the rest): /unsubscribe
  * and /subscribe/confirm, per-reader token pages reached from email whose actions unsubscribe and subscribe, the tokenized draft previews, and the feeds.

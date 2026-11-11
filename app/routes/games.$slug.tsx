@@ -5,8 +5,9 @@ import { pageHead } from "~/lib/seo";
 import { sectionPageTrail } from "~/lib/trails";
 import { SectionTrail } from "~/components/content/SectionTrail";
 import type { Route } from "./+types/games.$slug";
-import { getEnv } from "~/lib/context.server";
-import { getGame } from "~/lib/games.server";
+import { cloudflareContext, getEnv } from "~/lib/context.server";
+import { clientIp } from "@dustinedwards/site-runtime/http";
+import { gameCacheTag, getGame } from "~/lib/games.server";
 import { getLeaderboard, submitScore } from "~/lib/scores.server";
 import { ClientOnly } from "~/components/util/ClientOnly";
 import { useSnippet } from "~/lib/content";
@@ -43,13 +44,20 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 export async function action({ params, request, context }: Route.ActionArgs) {
   const env = getEnv(context);
   const form = await readForm(request, PUBLIC_FORM);
-  const ip = request.headers.get("CF-Connecting-IP") ?? "anon";
-  return submitScore(env, {
+  const result = await submitScore(env, {
     gameSlug: params.slug,
     name: form.get("name"),
     score: form.get("score"),
-    ip,
+    ip: clientIp(request),
   });
+  // A score changes this game's leaderboard only, so only its stored page is purged.
+  if (result.ok) {
+    const { ctx } = context.get(cloudflareContext);
+    ctx.waitUntil(
+      ctx.exports.Renderer.purgePages(`score /games/${params.slug}`, [gameCacheTag(params.slug)]),
+    );
+  }
+  return result;
 }
 
 export default function GamePage({ loaderData }: Route.ComponentProps) {

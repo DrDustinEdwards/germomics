@@ -19,9 +19,18 @@ const e = {
 };
 type Args = { request: Request; params?: Record<string, string>; env?: Env };
 
+// The stored pages a write purges, by tag (ctx.exports.Renderer, the Worker's own entrypoint).
+const purged: string[][] = [];
+const ctx = {
+  waitUntil() {},
+  exports: {
+    Renderer: { purgePages: async (_why: string, tags: string[]) => void purged.push(tags) },
+  },
+} as unknown as ExecutionContext;
+
 function args({ request, params = {}, env: over = e }: Args) {
   const context = new RouterContextProvider();
-  context.set(cloudflareContext, { env: over, ctx: {} as ExecutionContext });
+  context.set(cloudflareContext, { env: over, ctx });
   return { request, params, context } as never;
 }
 const post = (
@@ -268,6 +277,8 @@ describe("game score submission", () => {
     expect((await e.DB.prepare("SELECT game_slug, name, score FROM scores").all()).results).toEqual(
       [{ game_slug: "phage-defense", name: "Ada", score: 10 }],
     );
+    // A score purges that game's stored page only.
+    expect(purged.at(-1)).toEqual(["game-phage-defense"]);
     expect(await submit({ "CF-Connecting-IP": "198.51.100.3" }, "no-such-game")).toEqual({
       ok: false,
       error: "Unknown game.",
