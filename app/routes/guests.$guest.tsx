@@ -6,8 +6,8 @@ import { postsByGuest, toPlayerTrack } from "~/lib/posts.server";
 import { getPersonBySlug, postsByPerson } from "~/lib/people.server";
 import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
-import { Picture } from "~/components/content/Picture";
-import { imageFor } from "~/lib/images";
+import { Picture } from "capsomer/react/picture";
+import { imageFor, imageOrPlain } from "~/lib/images";
 import { imageSet, shareImage } from "~/lib/images.server";
 
 export function meta({ loaderData, location }: Route.MetaArgs) {
@@ -66,8 +66,7 @@ export default function GuestPage({ loaderData }: Route.ComponentProps) {
       <div className="mb-6 mt-2 flex items-start gap-4">
         {photo ? (
           <Picture
-            src={photo}
-            image={imageFor(images, "portrait", photo)}
+            attrs={imageOrPlain(imageFor(images, "portrait", photo), photo)}
             alt={photoAlt ?? name}
             className="h-16 w-16 rounded-full border border-border object-cover"
           />

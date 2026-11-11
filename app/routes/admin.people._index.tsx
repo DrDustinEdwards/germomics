@@ -107,7 +107,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-display font-medium text-ink">{p.name}</p>
                     {p.role ? (
-                      <p className="truncate font-mono text-[11px] text-muted">{p.role}</p>
+                      <p className="truncate font-mono text-[0.6875rem] text-muted">{p.role}</p>
                     ) : null}
                   </div>
                   <button

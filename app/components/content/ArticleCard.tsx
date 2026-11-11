@@ -3,7 +3,8 @@ import { Calendar } from "lucide-react";
 import { formatDate } from "capsomer/behavior/time";
 import type { Post } from "~/db/schema";
 import type { ImageAttributes } from "~/lib/images";
-import { Picture } from "./Picture";
+import { Picture } from "capsomer/react/picture";
+import { imageOrPlain } from "~/lib/images";
 
 // Editorial card for the writing index: cover image, title, excerpt, date, reading time, tags. The title is an h2, right
 // under the index's h1.
@@ -13,14 +14,13 @@ export function ArticleCard({ post, image }: { post: Post; image?: ImageAttribut
       <Link to={`/${post.slug}`} className="block">
         {post.coverImage ? (
           <Picture
-            src={post.coverImage}
-            image={image}
+            attrs={imageOrPlain(image, post.coverImage)}
             alt={post.coverAlt ?? ""}
             className="aspect-[2/1] w-full border-b border-border object-cover"
           />
         ) : null}
         <div className="p-4">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-wide text-muted">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
             {post.publishedAt ? (
               <span className="flex items-center gap-1">
                 <Calendar size={11} aria-hidden /> {formatDate(post.publishedAt)}
@@ -42,7 +42,7 @@ export function ArticleCard({ post, image }: { post: Post; image?: ImageAttribut
             <Link
               key={t}
               to={`/tag/${encodeURIComponent(t)}`}
-              className="rounded-full border border-border px-2 py-0.5 font-mono text-[11px] text-muted hover:border-brand hover:text-brand"
+              className="rounded-full border border-border px-2 py-0.5 font-mono text-[0.6875rem] text-muted hover:border-brand hover:text-brand"
             >
               {t}
             </Link>

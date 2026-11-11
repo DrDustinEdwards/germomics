@@ -33,7 +33,7 @@ export default function GamesHub({ loaderData }: Route.ComponentProps) {
             to={`/games/${g.slug}`}
             className="rounded-xl border border-border bg-card p-5 transition hover:border-brand"
           >
-            <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-accent">
+            <div className="flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wide text-accent">
               <Gamepad2 size={13} aria-hidden /> arcade
             </div>
             <h2 className="mt-1 font-display text-lg font-medium text-ink">{g.title}</h2>
