@@ -226,7 +226,8 @@ export async function storedBody(env: Env, row: Stored): Promise<{ html: string;
       meta: row.bodyMeta ?? EMPTY_META,
     },
     {
-      render: () => renderMarkdown(row.body, libraryMedia(env), { lcpAbove: lcpAboveBody(row), env }),
+      render: () =>
+        renderMarkdown(row.body, libraryMedia(env), { lcpAbove: lcpAboveBody(row), env }),
       current: async (html) =>
         drawsDiagrams(html)
           ? inlineBlogDiagrams(html, await loadBlogDiagrams(env))
@@ -289,7 +290,12 @@ async function rerenderRows(
   return { done: p.done + b.done, failed: p.failed + b.failed };
 }
 
-const postColumns = { id: posts.id, body: posts.body, kind: posts.kind, coverImage: posts.coverImage };
+const postColumns = {
+  id: posts.id,
+  body: posts.body,
+  kind: posts.kind,
+  coverImage: posts.coverImage,
+};
 const pageColumns = { key: contentBlocks.key, value: contentBlocks.value };
 
 /**
