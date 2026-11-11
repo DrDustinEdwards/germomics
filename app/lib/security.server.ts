@@ -11,6 +11,7 @@ import {
   mustStop,
 } from "@dustinedwards/site-runtime/rate-limit";
 import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runtime/log";
+import { kvCounter } from "@dustinedwards/site-runtime/ai-caps";
 import { loadSettings, settingNum } from "~/lib/content.server";
 
 // Per-IP fixed 60-second windows, counted exactly by the RATE_LIMITER Durable Object (the WAF
@@ -64,22 +65,18 @@ export async function enforceRateLimit(env: Env, request: Request): Promise<Resp
 // cannot be drained by a stuck button. Tunable live via the ai.daily_cap setting.
 const AI_DAILY_CAP_DEFAULT = 100;
 
-async function aiCap(env: Env): Promise<number> {
-  return settingNum(await loadSettings(env), "ai.daily_cap", AI_DAILY_CAP_DEFAULT);
-}
-
-function capKey(): string {
-  return `ai:cap:${new Date().toISOString().slice(0, 10)}`; // per UTC day
-}
+/** Today's AI generations against the cap, a count per UTC day in KV (site-runtime's ./ai-caps kvCounter). */
+const aiCounter = (env: Env) =>
+  kvCounter(env.APP_KV, "ai:cap:", async () =>
+    settingNum(await loadSettings(env), "ai.daily_cap", AI_DAILY_CAP_DEFAULT),
+  );
 
 /** True if today's AI generations are at/over the cap (check before generating). */
-export async function aiCostCapExceeded(env: Env): Promise<boolean> {
-  return (Number(await env.APP_KV.get(capKey())) || 0) >= (await aiCap(env));
+export function aiCostCapExceeded(env: Env): Promise<boolean> {
+  return aiCounter(env).exceeded();
 }
 
 /** Record one successful AI generation against today's cap. */
-export async function recordAiUse(env: Env): Promise<void> {
-  const key = capKey();
-  const used = Number(await env.APP_KV.get(key)) || 0;
-  await env.APP_KV.put(key, String(used + 1), { expirationTtl: 60 * 60 * 36 }); // ~1.5 days
+export function recordAiUse(env: Env): Promise<void> {
+  return aiCounter(env).record();
 }
