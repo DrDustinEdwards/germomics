@@ -2,7 +2,8 @@
   "copies": {
     "app/lib/rss.server.ts": "the podcast feed: iTunes and Podcasting 2.0 tags, OP3 enclosures and permanent episode guids, which Prelum's blog feeds do not write; the writing feed is Prelum's rssDocument",
     "scripts/feed-path-test.mjs": "a check of the live podcast feed's path and tags before a cutover; it reads a feed, it does not build one",
-    "public/_headers": "not by hand: site-runtime-headers writes it on every build from the registry entry the Worker's set comes from (buildSecurityHeaders({ site: germomics })); committed so the /assets/* cache rule can be read"
+    "public/_headers": "not by hand: site-runtime-headers writes it on every build from the registry entry the Worker's set comes from (buildSecurityHeaders({ site: germomics })); committed so the /assets/* cache rule can be read",
+    "app/components/player/player-context.tsx": "the persistent player's provider, tied to /site.js's pre-React audio start (app/site/hydrate.ts, AUDIO_STARTED_ATTRIBUTE) and its own storage keys; moving it to Capsomer's PlayerProvider is its own change with browser tests of start, resume and handoff, since the audio player is the site's highest-risk accessibility component (CLAUDE.md rule 3)"
   },
   "spelling": {
     "skip": [
