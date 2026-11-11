@@ -51,6 +51,7 @@ import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 import { ExternalCue } from "~/components/ExternalCue";
 import { postTrail } from "~/lib/trails";
 import { SectionTrail } from "./SectionTrail";
+import "~/prose.css";
 
 export type DetailData = {
   post: Post;

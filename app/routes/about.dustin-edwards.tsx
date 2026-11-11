@@ -13,6 +13,7 @@ import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { AUTHOR } from "~/lib/about";
 import { sectionPageTrail } from "~/lib/trails";
 import { SectionTrail } from "~/components/content/SectionTrail";
+import "~/prose.css";
 
 const authorTrail = sectionPageTrail(
   { name: "About", path: "/about" },

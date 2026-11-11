@@ -1,5 +1,5 @@
 /* The public pages' own parts, loaded by their layout (routes/_site.tsx), so the admin never downloads them: the
-   header, the persistent player and the parts its settings use, and the reading contexts. The layer order repeats app.css's, so
+   header, the persistent player and the parts its settings use. The reading contexts are prose.css. The layer order repeats app.css's, so
    whichever stylesheet arrives first, the order is the same. */
 @layer cap-tokens, theme, base, cap, components, utilities;
 /* Capsomer's scale and palette first of all (cap-tokens), so a name both define (--radius-xl, --ease-out) keeps
@@ -19,8 +19,6 @@
 @import "capsomer/field.css";
 @import "capsomer/menu.css";
 @import "capsomer/player.css";
-/* Reading contexts: the legal pages and the essays' diagrams. */
-@import "capsomer/prose-blocks.css";
 
 /* The player keeps the site's faces: titles in Space Grotesk, times and the status line in JetBrains Mono. */
 :is(
@@ -40,79 +38,123 @@
 }
 /* The lists under the player keep the page's rhythm: a section's room above, the body's size for a title. */
 .cap-player-list {
-  margin-block-start: 3rem;
+  position: relative;
+  margin-block-start: 2.5rem;
   --fs-body: 1.125rem;
   --fs-h3: 1.25rem;
 }
-
-/* Reading contexts (Capsomer's prose blocks): the legal and about pages, and each diagram in an essay
-   (lib/blog-diagram.server.ts holds it in one). Faces stay the page's own; the legal pages keep their compact rhythm. */
-[data-context="prose"] {
-  --prose: var(--font-serif);
-  --fs-prose: 18px;
-  --prose-heading-face: var(--font-display);
-  --prose-heading-ink: var(--ink);
-  --prose-heading-weight: 600;
-  --prose-h2-size: 1.25rem;
-  --prose-heading-space: 2rem;
-  --prose-flow: 0.75rem;
-  --link-decoration: underline;
+.cap-player-list-heading {
+  margin-block-end: 0.75rem;
+  line-height: 1.75rem;
 }
-
-/* The mechanism figures in germomics' palette: violet nodes, cyan for the second tone, labels in Space Grotesk. */
-.blog-diagram {
-  --diagram-face: var(--font-display);
-  --diagram-stroke: 1.5px;
-  --diagram-label-weight: 600;
-  --diagram-neutral: var(--surface);
-  --diagram-neutral-line: var(--brand);
-  --diagram-accent: color-mix(in srgb, var(--brand) 16%, var(--card));
-  --diagram-accent-line: var(--brand);
-  --diagram-success: color-mix(in srgb, var(--accent) 14%, var(--card));
-  --diagram-success-line: var(--accent);
-  --diagram-warning: color-mix(in srgb, var(--brand-strong) 18%, var(--card));
-  --diagram-warning-line: var(--brand-strong);
-  --diagram-info: var(--surface);
-  --diagram-info-line: var(--accent);
-  --diagram-ink: var(--ink);
-  --diagram-ink-muted: var(--muted);
-  --diagram-arrow: var(--muted);
-  --diagram-rule: var(--border);
-  --diagram-ground: var(--card);
+/* Key moments: two to a row from 640px, compact cards with the label at the small size. */
+.cap-player-moments {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
-/* A drawing sits flush in its block, as it always has: the body's figure spacing (Tailwind's, in the utilities layer)
-   stops at the diagram; a drawing with its credit keeps its 2.5rem below, and the credit is the body's serif at
-   0.75rem. */
-.diagram-context .blog-diagram {
-  margin-block: 0;
+.cap-player-moment {
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
 }
-/* The context ends its own flow at its last child, so the room under a drawing with its credit is the context's. */
-.diagram-context:has(> .blog-diagram-block) {
-  margin-block-end: 2.5rem;
+/* What a moment press did is announced, not shown, as it always was. */
+.cap-player-said {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  min-block-size: 0;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
-.diagram-context .blog-diagram-credit {
-  --ui: var(--font-serif);
-  --fs-label: 0.75rem;
+.cap-player-moment-label {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
 }
-.diagram-context .diagram-title {
-  --diagram-title-face: var(--font-display);
-  --diagram-title-size: 1.125rem;
-  --diagram-title-align: center;
+/* Chapters: tight rows, the time in the mono face at the meta size. */
+.cap-player-chapters {
+  gap: 0.25rem;
+}
+.cap-player-chapter {
+  gap: 0.75rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: 0.25rem;
+}
+.cap-player-at {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+/* The surface's rows sit where the site's always did: the waveform's note 4px under it, the seek row 31px tall. */
+.cap-player-wave {
+  row-gap: 0.25rem;
+}
+.cap-player-surface .cap-player-scrubber {
+  min-block-size: 1.9375rem;
+}
+/* The seek and volume tracks are light, as the site's were; the played part fills violet. */
+.cap-player-surface .cap-range,
+.cap-player-dock .cap-range,
+.cap-player-sheet .cap-range {
+  --line-strong: var(--border);
+}
+.cap-player-wave-note {
+  margin-block-start: 0;
+  font-size: 0.625rem;
+  line-height: 1.7;
+}
+.cap-player-para-chapter {
+  margin-block-end: 0.25rem;
+  line-height: 1.25rem;
 }
 
 /* A listing's play button wears the cyan of the site's now-playing states, as it always has. */
 .cap-player-btn[data-play-intent] {
+  --cap-player-btn: 2.5rem;
+  --cap-player-btn-lg: 3rem;
+  --primary-line: transparent;
   --primary: var(--accent);
   --primary-hover: color-mix(in srgb, var(--accent) 85%, var(--ink));
   --primary-fg: var(--bg);
+}
+/* Every play and pause glyph is drawn in outline, as the site's always were. Capsomer's triangle fills less of its
+   box than the site's did, so a play glyph's box is a fifth larger to draw the same triangle: 15px tall in the dock,
+   16.5px on an episode's player, 13.5px in a listing. */
+.cap-player-btn[data-part="play"] > svg path {
+  fill: none;
+  stroke: currentColor;
+}
+.cap-player-btn[data-part="play"][aria-label^="Play"] > svg {
+  inline-size: 24px;
+  block-size: 24px;
+}
+.cap-player-btn[data-part="play"][data-size="lg"][aria-label^="Play"] > svg {
+  inline-size: 26px;
+  block-size: 26px;
+}
+.cap-player-btn[data-play-intent] > svg {
+  inline-size: 18px;
+  block-size: 18px;
+}
+.cap-player-btn[data-play-intent][aria-label^="Play"] > svg {
+  inline-size: 22px;
+  block-size: 22px;
+}
+/* A key moment's time is violet in its own 36px column, as it was; a chapter's stays cyan. */
+.cap-player-moment .cap-player-at {
+  min-inline-size: 2.25rem;
+  color: var(--brand);
 }
 
 /* Capsomer's components in germomics' own look: the family's roles named from the palette above, on every public
    page (not the admin, whose shell keeps Capsomer's own on [data-cap-theme]). Unlayered, so the palette's light and
    dark both reach them. Faces: Space Grotesk for the interface, JetBrains Mono for times and figures. */
 :root:not(:has([data-cap-theme])) {
-  /* The header's band, 60px as it always was. */
-  --header-h: 3.75rem;
+  /* The header's band, 60px and its 1px rule below, as it always was. */
+  --header-h: calc(3.75rem + 1px);
   --ui: var(--font-display);
   --mono: var(--font-mono);
   --ground: var(--bg);
@@ -147,6 +189,8 @@
   --accent-hover: var(--ink);
   --accent-soft: var(--surface);
   --target: 1.5rem;
+  --space-2: 0.5rem;
+  --space-4: 1rem;
   --line-strong: var(--muted);
   --raised: var(--surface);
   --sunken: var(--surface);
@@ -192,7 +236,28 @@
   }
 }
 .cap-site-header:not([data-cap-theme] .cap-site-header) .cap-site-header-cta {
+  padding-inline: 12px;
   border-radius: 999px;
+}
+.cap-site-header:not([data-cap-theme] .cap-site-header) .cap-site-header-chev {
+  inline-size: 14px;
+  block-size: 14px;
+}
+/* The theme button is in ink, the other icons muted, as they were. Capsomer's sun and moon fill less of their box
+   than the site's did; 18px draws them at the same size. */
+.cap-site-header:not([data-cap-theme] .cap-site-header) .cap-site-header-theme {
+  color: var(--ink);
+}
+.cap-site-header:not([data-cap-theme] .cap-site-header) .cap-site-header-theme .cap-theme-icon {
+  inline-size: 18px;
+  block-size: 18px;
+}
+/* The phone's bare menu button reaches 4px past the column, so its glyph lines up with the page's edge. */
+@media (max-width: 767.98px) {
+  .cap-site-header:not([data-cap-theme] .cap-site-header) .cap-site-header-menu {
+    margin-inline-end: -4px;
+    color: var(--muted);
+  }
 }
 .germomics-logo {
   font-family: var(--font-display);

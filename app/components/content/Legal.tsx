@@ -3,6 +3,7 @@
 // review status is impossible to miss.
 import { Info } from "lucide-react";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
+import "~/prose.css";
 
 // Bump this whenever the legal copy changes.
 const LEGAL_LAST_UPDATED = "June 22, 2026";

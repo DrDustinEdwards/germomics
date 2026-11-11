@@ -7,6 +7,7 @@ import {
 } from "@drdustinedwards/site-helpers/accessibility";
 import { pageHead } from "~/lib/seo";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
+import "~/prose.css";
 
 const statement = accessibilityStatement({
   siteName: "Germomics",

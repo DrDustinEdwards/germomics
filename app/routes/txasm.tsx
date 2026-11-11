@@ -8,6 +8,7 @@ import { getEnv } from "~/lib/context.server";
 import { loadPage, isPreviewing } from "~/lib/content.server";
 import { pageHead } from "~/lib/seo";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
+import "~/prose.css";
 
 const TITLE = "Texas Branch of the American Society for Microbiology";
 

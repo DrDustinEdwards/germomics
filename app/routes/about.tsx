@@ -12,6 +12,7 @@ import { jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { buildOrganizationLd, pageHead } from "~/lib/seo";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { AUTHOR } from "~/lib/about";
+import "~/prose.css";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "About Germomics" }];

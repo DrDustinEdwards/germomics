@@ -32,27 +32,6 @@ export function parseVtt(vtt: string): Cue[] {
   return cues;
 }
 
-/** Group caption-style cues into readable paragraphs while keeping per-cue timing. */
-export function toParagraphs(cues: Cue[]): Cue[][] {
-  const paras: Cue[][] = [];
-  let cur: Cue[] = [];
-  let words = 0;
-  for (let i = 0; i < cues.length; i++) {
-    const c = cues[i];
-    cur.push(c);
-    words += c.text.split(/\s+/).length;
-    const endsSentence = /[.!?]["'”’)\]]?$/.test(c.text);
-    const gapAfter = cues[i + 1] ? cues[i + 1].start - c.end : 0;
-    if ((endsSentence && words >= 45) || gapAfter > 2.5) {
-      paras.push(cur);
-      cur = [];
-      words = 0;
-    }
-  }
-  if (cur.length) paras.push(cur);
-  return paras;
-}
-
 /** Convert SRT to WebVTT (comma → dot timestamps, add header, drop numeric counters). */
 export function srtToVtt(srt: string): string {
   const body = srt
