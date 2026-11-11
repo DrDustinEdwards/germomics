@@ -24,8 +24,8 @@ import {
   HYDRATED_EVENT,
   HYDRATE_ON_INTENT_ID,
   STREAM_BUFFER_SCRIPT,
-  routeHydrates,
 } from "~/lib/hydration";
+import { routeHydrates } from "@dustinedwards/site-runtime/deferred-scripts";
 import { PRELOADS } from "~/lib/preloads";
 import { socialLinks } from "~/lib/seo";
 import { NO_PREFETCH } from "~/lib/site";

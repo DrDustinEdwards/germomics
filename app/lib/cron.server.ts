@@ -8,9 +8,9 @@
 // left on an older render (render.server.ts), the audio and image files beside the backup, and the 404 counts pruned
 // to 90 days. Their timeouts add up to 15 minutes, a scheduled invocation's wall-clock limit; the file passes stop
 // themselves a minute before theirs (FILES_BUDGET_MS) and go on from there the next night.
-import type { CronJob } from "@dustinedwards/site-runtime/cron";
+import { backupJob, DAILY_MINUTES, type CronJob } from "@dustinedwards/site-runtime/cron";
 import { logEvent } from "@dustinedwards/site-runtime/log";
-import { pruneNotFound } from "@dustinedwards/site-runtime/not-found";
+import { pruneNotFoundJob } from "@dustinedwards/site-runtime/not-found";
 import {
   runAudioBackup,
   runBackup,
@@ -26,7 +26,6 @@ const SCHEDULES_CRON = "* * * * *";
 const NIGHTLY_CRON = "17 3 * * *";
 
 const MINUTE = 60_000;
-const DAY = 1440;
 
 export function cronJobs(env: Env, scheduledTime: Date): Record<string, CronJob[]> {
   return {
@@ -56,47 +55,27 @@ export function cronJobs(env: Env, scheduledTime: Date): Record<string, CronJob[
       },
     ],
     [NIGHTLY_CRON]: [
-      {
-        name: "backup",
-        backup: true,
-        everyMinutes: DAY,
-        timeoutMs: 4 * MINUTE,
-        run: () => runBackup(env),
-      },
-      {
+      backupJob(() => runBackup(env), { timeoutMs: 4 * MINUTE }),
+      backupJob(() => runAudioBackup(env), {
         name: "audio-backup",
-        backup: true,
-        everyMinutes: DAY,
         timeoutMs: 4 * MINUTE,
-        run: () => runAudioBackup(env),
-      },
-      {
+      }),
+      backupJob(() => runImagesBackup(env), {
         name: "images-backup",
-        backup: true,
-        everyMinutes: DAY,
         timeoutMs: 4 * MINUTE,
-        run: () => runImagesBackup(env),
-      },
-      {
+      }),
+      backupJob(() => runGameAssetsBackup(env), {
         name: "game-assets-backup",
-        backup: true,
-        everyMinutes: DAY,
         timeoutMs: 4 * MINUTE,
-        run: () => runGameAssetsBackup(env),
-      },
+      }),
       // The day each hub and static page last changed, for /sitemap.xml's lastmod (app/lib/page-dates.server.ts).
       {
         name: "page-dates",
-        everyMinutes: DAY,
+        everyMinutes: DAILY_MINUTES,
         timeoutMs: 2 * MINUTE,
         run: () => runPageDates(env),
       },
-      {
-        name: "prune-404",
-        everyMinutes: DAY,
-        timeoutMs: MINUTE,
-        run: () => pruneNotFound(env.DB, { days: 90 }),
-      },
+      pruneNotFoundJob(env.DB, { days: 90 }),
     ],
   };
 }

@@ -3,19 +3,11 @@
 // editorial layout (cover, byline + reading time, table of contents, share, prev/next, related).
 // Body is rendered once via BodyRenderer for both kinds.
 import { useEffect, useRef } from "react";
-import { useRemembered } from "capsomer/react/hooks";
 import { useSearchParams } from "react-router";
-import {
-  Calendar,
-  Clock,
-  ArrowLeft,
-  ArrowRight,
-  FileText,
-  Rss,
-  Bookmark,
-  BookmarkCheck,
-} from "lucide-react";
+import { Calendar, Clock, ArrowLeft, ArrowRight, FileText, Rss } from "lucide-react";
 import { Link } from "capsomer/react/link";
+import { SaveToggle } from "capsomer/react/save-toggle";
+import { SubscribeLinks } from "capsomer/react/subscribe-links";
 import type { Post } from "~/db/schema";
 import type { GuestView, Host, PlayerTrack, SoundbiteView } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
@@ -69,82 +61,41 @@ export type DetailData = {
   context: EpisodeContextView | null;
 };
 
-// Lightweight "save for later": a slug set in localStorage, no server. Toggles aria-pressed. Read through Capsomer's
-// useRemembered, so the server and hydration render "Save" and the stored state follows (another tab's change too).
+// "Save for later" is Capsomer's SaveToggle: a slug list in localStorage under germomics-saved, no server.
 const SAVED_KEY = "germomics-saved";
-function parseSaved(raw: string | null): string[] {
-  try {
-    const list: unknown = JSON.parse(raw ?? "[]");
-    return Array.isArray(list) ? list.filter((s): s is string => typeof s === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
-function SaveButton({ slug }: { slug: string }) {
-  const [raw, remember] = useRemembered(SAVED_KEY);
-  const list = parseSaved(raw);
-  const saved = list.includes(slug);
-  const toggle = () =>
-    remember(JSON.stringify(saved ? list.filter((s) => s !== slug) : [...list, slug]));
-  return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-pressed={saved}
-      className="cap-tap-target inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 font-mono text-xs text-ink hover:border-brand"
-    >
-      {saved ? (
-        <BookmarkCheck size={14} aria-hidden className="text-accent" />
-      ) : (
-        <Bookmark size={14} aria-hidden />
-      )}
-      {saved ? "Saved" : "Save"}
-    </button>
-  );
-}
 
 // Compact in-page listen row: the five primary apps + RSS, links out (the footer carries the rest).
+// Capsomer's SubscribeLinks; the away cue is the site's own ExternalCue.
 function SubscribeRow({ links }: { links: Record<string, string> }) {
   const primary = PRIMARY_KEYS.filter((k) => links[k]);
   if (!primary.length) return null;
   return (
-    <section
-      aria-labelledby="listen"
-      className="mt-12 rounded-2xl border border-border bg-surface p-5"
-    >
-      <h2 id="listen" className="mb-3 font-display text-lg font-semibold">
-        Listen and subscribe
-      </h2>
-      <div className="flex flex-wrap gap-2">
-        {primary.map((k) => {
+    <SubscribeLinks
+      headingId="listen"
+      links={[
+        ...primary.map((k) => {
           const d = SUBSCRIBE_DESTINATIONS[k];
           const Icon = d.icon;
-          return (
-            <a
-              key={k}
-              href={links[k]}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-accent hover:text-accent"
-            >
-              <Icon size={14} aria-hidden /> {d.label}
-              <ExternalCue />
-            </a>
-          );
-        })}
-        <a
-          href="/feed/podcast/"
-          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-accent hover:text-accent"
-        >
-          <Rss size={14} aria-hidden /> RSS
-        </a>
-        <Link
-          to="/subscribe"
-          className="inline-flex items-center rounded-full px-3 py-1.5 text-sm text-muted hover:text-ink"
-        >
-          More ways to listen →
+          return {
+            href: links[k]!,
+            icon: <Icon size={14} aria-hidden />,
+            label: (
+              <>
+                {d.label}
+                <ExternalCue />
+              </>
+            ),
+          };
+        }),
+        { href: "/feed/podcast/", icon: <Rss size={14} aria-hidden />, label: "RSS" },
+      ]}
+      more={{ href: "/subscribe", label: "More ways to listen →" }}
+      renderLink={({ href, className, children }) => (
+        <Link to={href} className={className}>
+          {children}
         </Link>
-      </div>
-    </section>
+      )}
+    />
   );
 }
 
@@ -340,7 +291,7 @@ export function PostDetail({ data }: { data: DetailData }) {
               <EpisodePlayerSurface track={track} peaks={post.audioPeaks ?? null} />
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <ShareTimestamp slug={post.slug} />
-                <SaveButton slug={post.slug} />
+                <SaveToggle storageKey={SAVED_KEY} id={post.slug} />
               </div>
             </div>
           ) : null}
