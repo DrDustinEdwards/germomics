@@ -72,15 +72,15 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 const icon = (Icon: typeof LayoutDashboard) => <Icon className="cap-admin-icon" aria-hidden />;
 
-// The admin's pages, grouped as the menu shows them. `match` decides which entry is current.
-const ENTRIES: Array<AdminEntry & { match: (path: string) => boolean }> = [
+// The admin's pages, grouped as the menu shows them. The shell marks the entry the address is in
+// (`pathname`); `match` adds the prefixes that also count.
+const ENTRIES: AdminEntry[] = [
   {
     id: "dashboard",
     label: "Dashboard",
     href: "/admin",
     group: "Overview",
     icon: icon(LayoutDashboard),
-    match: (p) => p === "/admin",
   },
   {
     id: "episodes",
@@ -88,7 +88,6 @@ const ENTRIES: Array<AdminEntry & { match: (path: string) => boolean }> = [
     href: "/admin/episodes",
     group: "Content",
     icon: icon(FileAudio),
-    match: (p) => p.startsWith("/admin/episodes"),
   },
   {
     id: "people",
@@ -96,7 +95,6 @@ const ENTRIES: Array<AdminEntry & { match: (path: string) => boolean }> = [
     href: "/admin/people",
     group: "Content",
     icon: icon(Users),
-    match: (p) => p.startsWith("/admin/people"),
   },
   {
     id: "soundbites",
@@ -104,7 +102,6 @@ const ENTRIES: Array<AdminEntry & { match: (path: string) => boolean }> = [
     href: "/admin/soundbites",
     group: "Content",
     icon: icon(Scissors),
-    match: (p) => p.startsWith("/admin/soundbites"),
   },
   {
     id: "subscribers",
@@ -112,7 +109,6 @@ const ENTRIES: Array<AdminEntry & { match: (path: string) => boolean }> = [
     href: "/admin/subscribers",
     group: "Audience",
     icon: icon(Mail),
-    match: (p) => p.startsWith("/admin/subscribers"),
   },
   {
     id: "settings",
@@ -120,7 +116,7 @@ const ENTRIES: Array<AdminEntry & { match: (path: string) => boolean }> = [
     href: "/admin/settings",
     group: "Site",
     icon: icon(Settings),
-    match: (p) => p.startsWith("/admin/settings") || p.startsWith("/admin/content"),
+    match: ["/admin/settings", "/admin/content"],
   },
 ];
 
@@ -153,7 +149,6 @@ const THEME_BOOT = `(function(s){try{var t=localStorage.getItem("germomics-theme
 export default function AdminLayout({ loaderData }: Route.ComponentProps) {
   const { pathname } = useLocation();
   const theme = useCapTheme();
-  const nav = ENTRIES.map(({ match, ...entry }) => ({ ...entry, current: match(pathname) }));
   const email = loaderData.email;
 
   return (
@@ -169,7 +164,8 @@ export default function AdminLayout({ loaderData }: Route.ComponentProps) {
         apps={[
           { id: "germomics", label: "Germomics admin", href: "/admin", mono: "G", current: true },
         ]}
-        nav={nav}
+        nav={ENTRIES}
+        pathname={pathname}
         renderLink={({ href, children, ...rest }) => (
           <Link to={href} {...rest}>
             {children}
