@@ -6,7 +6,7 @@ import { listEpisodes, listPosts, toPlayerTrack } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
 import { snippet, setting, settingAddress } from "~/lib/content.server";
 import { formatDate, formatDuration } from "~/lib/format";
-import { jsonLd, website } from "@drdustinedwards/site-helpers/schema";
+import { jsonLd, sameAs, website } from "@drdustinedwards/site-helpers/schema";
 import { buildOrganizationLd, buildPodcastSeriesLd, pageHead, socialSameAs } from "~/lib/seo";
 import { SITE_ORIGIN } from "~/lib/site";
 import { SNIPPET_DEFAULTS } from "~/lib/content-defaults";
@@ -24,7 +24,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
     description: loaderData?.homeDescription ?? SNIPPET_DEFAULTS["snippet:meta.home_description"],
   });
   if (!loaderData?.show) return head;
-  const { show, address, profiles } = loaderData;
+  const { show, address, sameAs: profiles } = loaderData;
   return [
     ...head,
     jsonLd(buildOrganizationLd(show, { address, sameAs: profiles })),
@@ -51,14 +51,15 @@ export async function loader({ context }: Route.LoaderArgs) {
   const tracks = episodes.map(toPlayerTrack);
   // Org/PodcastSeries sameAs = the real socials (settings social.*) + the podcast-directory
   // subscribe_links (show_config), so it stays DB-driven and never duplicates a show_config fact.
-  const profiles = [
+  // Prelum's sameAs keeps each absolute http(s) URL once.
+  const profiles = sameAs([
     ...socialSameAs({
       facebook: setting(settings, "social.facebook"),
       twitter: setting(settings, "social.twitter"),
       instagram: setting(settings, "social.instagram"),
     }),
     ...Object.values(show.subscribeLinks ?? {}),
-  ];
+  ]);
   // Listing loaders already return card-only rows (no body/transcript/peaks), so the payload stays
   // light and free of long-form migrated content (the only place em dashes legitimately live).
   return {
@@ -67,7 +68,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     tracks,
     show,
     address: settingAddress(settings),
-    profiles,
+    sameAs: profiles,
     homeTitle: snippet(snippets, "snippet:meta.home_title"),
     homeDescription: snippet(snippets, "snippet:meta.home_description"),
   };
@@ -120,7 +121,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             <article className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm ring-1 ring-brand/10">
               <PlayButton track={featuredTrack} queue={tracks} size="lg" />
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
+                <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-muted">
                   <span className="flex items-center gap-1 text-brand">
                     <Headphones size={12} aria-hidden /> Latest episode
                   </span>
