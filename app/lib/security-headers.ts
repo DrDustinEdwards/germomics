@@ -62,9 +62,9 @@ export const security = pageSecurity({
         }
       : site;
   },
-  // The Trusted Types policies a page may create: the network's (site-runtime TRUSTED_TYPES_NAMES) and the one that
-  // runs the held hydration scripts on a press of play (app/site/hydrate.ts).
-  staged: { trustedTypes: [...TRUSTED_TYPES_NAMES, "germomics-hydrate"], denyUnlisted: true },
+  // The Trusted Types policies a page may create: the network's (site-runtime TRUSTED_TYPES_NAMES) and no other.
+  // Hydrate on intent needs none: React Router's boot waits as JSON and loads with import() (site-runtime ./deferred-scripts).
+  staged: { trustedTypes: [...TRUSTED_TYPES_NAMES], denyUnlisted: true },
 });
 
 /**
