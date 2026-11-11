@@ -38,7 +38,7 @@ export function HostsEditor({
           {hosts.map((h, i) => (
             <li key={i} className="rounded-xl border border-border bg-card p-2.5">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[11px] text-muted">#{i + 1}</span>
+                <span className="font-mono text-[0.6875rem] text-muted">#{i + 1}</span>
                 <input
                   aria-label={`Host ${i + 1} name`}
                   placeholder="Name (required)"

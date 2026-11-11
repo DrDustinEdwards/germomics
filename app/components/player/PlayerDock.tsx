@@ -8,6 +8,7 @@
 // padding-bottom (app.css) so the footer always clears the fixed dock. Popovers open upward and the
 // sheet is a separate overlay, so neither changes the measured dock height.
 import { useEffect, useRef, useState } from "react";
+import { useModalDialog } from "~/lib/modal-dialog";
 import { Link } from "capsomer/react/link";
 import { ChevronUp, X, AlertCircle, Loader2, ListTree } from "lucide-react";
 import { usePlayer, activeChapterIndex } from "./player-context";
@@ -31,7 +32,6 @@ export function PlayerDock() {
   const p = usePlayer();
   const [sheetOpen, setSheetOpen] = useState(false);
   const dockRef = useRef<HTMLDivElement | null>(null);
-  const moreRef = useRef<HTMLButtonElement | null>(null);
 
   // Measure the dock's real height into --player-h (0 when nothing is loaded).
   const loaded = p.current;
@@ -104,7 +104,7 @@ export function PlayerDock() {
               >
                 {p.current.title}
               </Link>
-              <div className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wide text-accent">
+              <div className="flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wide text-accent">
                 {p.errored ? (
                   <span className="flex items-center gap-1 text-brand">
                     <AlertCircle size={12} aria-hidden /> Error
@@ -137,9 +137,12 @@ export function PlayerDock() {
 
             {/* Mobile: a single More button opens the bottom sheet. */}
             <button
-              ref={moreRef}
               type="button"
-              onClick={() => setSheetOpen(true)}
+              onClick={(e) => {
+                // Safari does not focus a clicked button; the sheet hands focus back to it.
+                e.currentTarget.focus();
+                setSheetOpen(true);
+              }}
               aria-haspopup="dialog"
               aria-expanded={sheetOpen}
               aria-label="More player controls"
@@ -162,134 +165,79 @@ export function PlayerDock() {
           </div>
         </div>
 
-        {sheetOpen ? <DockSheet onClose={() => setSheetOpen(false)} returnFocus={moreRef} /> : null}
+        {sheetOpen ? <DockSheet onClose={() => setSheetOpen(false)} /> : null}
       </div>
     </>
   );
 }
 
-// Mobile bottom sheet: a focus-trapped modal holding the secondary controls (speed, sleep, chapters,
-// transcript). Esc and a backdrop tap close it; focus moves in on open and returns to the trigger on
-// close. The slide-up is motion-safe only.
-function DockSheet({
-  onClose,
-  returnFocus,
-}: {
-  onClose: () => void;
-  returnFocus: React.RefObject<HTMLButtonElement | null>;
-}) {
+// Mobile bottom sheet: a native modal <dialog> (useModalDialog) holding the secondary controls
+// (speed, sleep, chapters, transcript). Esc, the back gesture and a backdrop tap close it; the
+// browser keeps focus inside and returns it to the More button. The slide-up is motion-safe only.
+function DockSheet({ onClose }: { onClose: () => void }) {
   const p = usePlayer();
-  const panelRef = useRef<HTMLDivElement | null>(null);
+  const ref = useModalDialog(onClose);
   const chapters = p.current?.chapters ?? [];
   const curChapIdx = activeChapterIndex(chapters, p.currentTime);
 
-  useEffect(() => {
-    const panel = panelRef.current;
-    const focusables = () =>
-      Array.from(
-        panel?.querySelectorAll<HTMLElement>(
-          'button,[href],input,[tabindex]:not([tabindex="-1"])',
-        ) ?? [],
-      );
-    focusables()[0]?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-      if (e.key === "Tab") {
-        const els = focusables();
-        if (!els.length) return;
-        const first = els[0];
-        const last = els[els.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    };
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", onKey);
-    const trigger = returnFocus.current;
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-      trigger?.focus();
-    };
-  }, [onClose, returnFocus]);
-
   return (
-    <div
-      role="presentation"
-      className="fixed inset-0 z-40 bg-black/40 md:hidden"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+    <dialog
+      ref={ref}
+      closedby="any"
+      aria-label="Player controls"
+      className="inset-x-0 bottom-0 top-auto m-0 max-h-[75dvh] w-full max-w-full space-y-4 overflow-y-auto rounded-t-2xl border-0 border-t border-border bg-surface p-4 text-ink backdrop:bg-black/40 motion-safe:transition-transform motion-safe:duration-200 motion-safe:starting:translate-y-full md:hidden"
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
     >
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Player controls"
-        className="absolute inset-x-0 bottom-0 max-h-[75vh] space-y-4 overflow-y-auto rounded-t-2xl border-t border-border bg-surface p-4 motion-safe:transition-transform"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
-      >
-        <div className="flex items-center justify-between">
-          <p className="font-display text-sm font-semibold">Player controls</p>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close player controls"
-            className="tap-target grid h-11 w-11 place-items-center rounded-full text-ink hover:text-accent"
-          >
-            <X size={20} aria-hidden />
-          </button>
-        </div>
-
-        <SpeedMenuContent />
-        <SleepMenuContent />
-
-        {chapters.length > 0 ? (
-          <div>
-            <p className="flex items-center gap-1 px-2 pb-1 font-mono text-[11px] uppercase tracking-wide text-muted">
-              <ListTree size={14} aria-hidden /> Chapters
-            </p>
-            <ul className="grid max-h-48 gap-0.5 overflow-y-auto">
-              {chapters.map((c, i) => (
-                <li key={i}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      p.seek(c.start);
-                      onClose();
-                    }}
-                    aria-current={i === curChapIdx ? "true" : undefined}
-                    className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm hover:bg-card ${
-                      i === curChapIdx ? "text-accent" : "text-ink"
-                    }`}
-                  >
-                    <span className="font-mono text-xs tabular-nums text-accent">
-                      {formatDuration(c.start)}
-                    </span>
-                    <span className="truncate">{c.title}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-
-        {p.current ? (
-          <div className="px-2">
-            <TranscriptToggle slug={p.current.slug} />
-          </div>
-        ) : null}
+      <div className="flex items-center justify-between">
+        <p className="font-display text-sm font-semibold">Player controls</p>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close player controls"
+          className="tap-target grid h-11 w-11 place-items-center rounded-full text-ink hover:text-accent"
+        >
+          <X size={20} aria-hidden />
+        </button>
       </div>
-    </div>
+
+      <SpeedMenuContent />
+      <SleepMenuContent />
+
+      {chapters.length > 0 ? (
+        <div>
+          <p className="flex items-center gap-1 px-2 pb-1 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
+            <ListTree size={14} aria-hidden /> Chapters
+          </p>
+          <ul className="grid max-h-48 gap-0.5 overflow-y-auto">
+            {chapters.map((c, i) => (
+              <li key={i}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    p.seek(c.start);
+                    onClose();
+                  }}
+                  aria-current={i === curChapIdx ? "true" : undefined}
+                  className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm hover:bg-card ${
+                    i === curChapIdx ? "text-accent" : "text-ink"
+                  }`}
+                >
+                  <span className="font-mono text-xs tabular-nums text-accent">
+                    {formatDuration(c.start)}
+                  </span>
+                  <span className="truncate">{c.title}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {p.current ? (
+        <div className="px-2">
+          <TranscriptToggle slug={p.current.slug} />
+        </div>
+      ) : null}
+    </dialog>
   );
 }

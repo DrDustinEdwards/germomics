@@ -108,7 +108,7 @@ export default function EpisodeWaveform({
         })}
         {hover ? (
           <span
-            className="pointer-events-none absolute -top-7 z-10 -translate-x-1/2 rounded bg-ink px-1.5 py-0.5 font-mono text-[11px] text-bg"
+            className="pointer-events-none absolute -top-7 z-10 -translate-x-1/2 rounded bg-ink px-1.5 py-0.5 font-mono text-[0.6875rem] text-bg"
             style={{ left: hover.x }}
           >
             {fmt(hover.frac * durationSec)}
@@ -116,7 +116,7 @@ export default function EpisodeWaveform({
         ) : null}
       </div>
       {synthetic ? (
-        <p className="mt-1 font-mono text-[10px] uppercase tracking-wide text-muted/70">
+        <p className="mt-1 font-mono text-[0.625rem] uppercase tracking-wide text-muted/70">
           Waveform preview
         </p>
       ) : null}

@@ -29,7 +29,7 @@ export function PostCard({
         </span>
       )}
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-x-2 font-mono text-[11px] uppercase tracking-wide text-muted">
+        <div className="flex flex-wrap items-center gap-x-2 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
           <span className="flex items-center gap-1 text-brand">
             {isEpisode ? <Headphones size={12} aria-hidden /> : <FileText size={12} aria-hidden />}
             {isEpisode ? "Episode" : "Article"}
@@ -55,7 +55,7 @@ export function PostCard({
               <Link
                 key={t}
                 to={`/tag/${encodeURIComponent(t)}`}
-                className="rounded-full border border-border px-2 py-0.5 font-mono text-[11px] text-muted hover:border-brand hover:text-brand"
+                className="rounded-full border border-border px-2 py-0.5 font-mono text-[0.6875rem] text-muted hover:border-brand hover:text-brand"
               >
                 {t}
               </Link>

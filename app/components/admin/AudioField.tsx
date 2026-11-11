@@ -63,8 +63,8 @@ export function AudioField({
 
       {value.audioUrl ? (
         <div className="space-y-2 rounded-xl border border-border bg-surface p-3">
-          <p className="truncate font-mono text-[11px] text-muted">{value.audioUrl}</p>
-          <div className="flex flex-wrap items-center gap-3 font-mono text-[11px] text-muted">
+          <p className="truncate font-mono text-[0.6875rem] text-muted">{value.audioUrl}</p>
+          <div className="flex flex-wrap items-center gap-3 font-mono text-[0.6875rem] text-muted">
             <span>dur {formatDuration(value.audioDuration)}</span>
             <span>
               {value.audioByteSize ? `${(value.audioByteSize / 1e6).toFixed(1)} MB` : "size n/a"}

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Search, Copy, Check, ArrowDownToLine } from "lucide-react";
+import { Search, Copy, Check, ArrowDownToLine, CircleAlert } from "lucide-react";
+import { copyText } from "~/lib/copy-status";
+import { useCopyFeedback } from "~/lib/use-copy-feedback";
 import { usePlayer, activeChapterIndex } from "~/components/player/player-context";
 import { formatDuration } from "~/lib/format";
 import { parseVtt, toParagraphs, parseCueText } from "~/lib/vtt";
@@ -56,7 +58,7 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
   const [nativeStart, setNativeStart] = useState<number | null>(null);
   const [following, setFollowing] = useState(true);
   const [query, setQuery] = useState("");
-  const [copied, setCopied] = useState(false);
+  const { outcome, label: said, message, report } = useCopyFeedback();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const programmaticScroll = useRef(false);
   const [panelVisible, setPanelVisible] = useState(false);
@@ -175,7 +177,10 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
   const copyQuote = async () => {
     const sel = typeof window !== "undefined" ? window.getSelection() : null;
     let text = sel ? sel.toString().trim() : "";
-    if (!text) return;
+    if (!text) {
+      report("failed", "Select part of the transcript first");
+      return;
+    }
     const words = text.split(/\s+/);
     if (words.length > 200) text = words.slice(0, 200).join(" ") + "…";
     // Timestamp = the cue the selection starts in, else the current playhead.
@@ -185,13 +190,11 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
     while (el && !el.getAttribute("data-cue")) el = el.parentElement;
     if (el) t = Math.floor(Number(el.getAttribute("data-cue")));
     const url = `${window.location.origin}/${track.slug}?t=${t}`;
-    try {
-      await navigator.clipboard.writeText(`${text}\n\nFrom "${track.title}" on Germomics: ${url}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch {
-      /* clipboard blocked */
-    }
+    report(
+      (await copyText(`${text}\n\nFrom "${track.title}" on Germomics: ${url}`))
+        ? "copied"
+        : "failed",
+    );
   };
 
   // Fallback: unparseable VTT shows as plain text rather than nothing.
@@ -257,9 +260,18 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
           onClick={() => void copyQuote()}
           className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 font-mono text-xs hover:border-accent hover:text-accent"
         >
-          {copied ? <Check size={14} aria-hidden /> : <Copy size={14} aria-hidden />}
-          {copied ? "Copied" : "Copy with link"}
+          {outcome === "copied" ? (
+            <Check size={14} aria-hidden />
+          ) : outcome === "failed" ? (
+            <CircleAlert size={14} aria-hidden />
+          ) : (
+            <Copy size={14} aria-hidden />
+          )}
+          {outcome ? said : "Copy with link"}
         </button>
+        <span role="status" className="sr-only">
+          {message}
+        </span>
       </div>
 
       <div
@@ -278,7 +290,7 @@ export function TranscriptPanel({ transcript, track }: { transcript: string; tra
                 </p>
               ) : null}
               {showSpeaker ? (
-                <p className="font-mono text-[11px] uppercase tracking-wide text-accent">
+                <p className="font-mono text-[0.6875rem] uppercase tracking-wide text-accent">
                   {speaker}
                 </p>
               ) : null}

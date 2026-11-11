@@ -20,7 +20,7 @@ export function ArticleCard({ post, image }: { post: Post; image?: ImageAttribut
           />
         ) : null}
         <div className="p-4">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-wide text-muted">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
             {post.publishedAt ? (
               <span className="flex items-center gap-1">
                 <Calendar size={11} aria-hidden /> {formatDate(post.publishedAt)}
@@ -42,7 +42,7 @@ export function ArticleCard({ post, image }: { post: Post; image?: ImageAttribut
             <Link
               key={t}
               to={`/tag/${encodeURIComponent(t)}`}
-              className="rounded-full border border-border px-2 py-0.5 font-mono text-[11px] text-muted hover:border-brand hover:text-brand"
+              className="rounded-full border border-border px-2 py-0.5 font-mono text-[0.6875rem] text-muted hover:border-brand hover:text-brand"
             >
               {t}
             </Link>

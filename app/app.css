@@ -88,6 +88,18 @@
   color-scheme: light;
 }
 
+/* Every modal <dialog> (app/lib/modal-dialog.ts): a scroll in the dialog or on its backdrop never
+   scrolls the page behind it, without locking the page's own overflow (Modern Web Guidance "dialog"). */
+@layer base {
+  dialog:modal {
+    overscroll-behavior: contain;
+  }
+  dialog::backdrop {
+    overflow: hidden;
+    overscroll-behavior: contain;
+  }
+}
+
 @layer base {
   html {
     /* leave room for the sticky header (top) and docked player (bottom) when anchoring */
@@ -102,7 +114,7 @@
     background: var(--color-bg);
     color: var(--color-ink);
     font-family: var(--font-serif);
-    font-size: 18px;
+    font-size: 1.125rem;
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
     transition:
@@ -340,13 +352,13 @@
 .blog-diagram .label-primary {
   fill: var(--ink);
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 .blog-diagram .label-secondary {
   fill: var(--muted);
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 0.6875rem;
 }
 .blog-diagram .connector {
   fill: none;

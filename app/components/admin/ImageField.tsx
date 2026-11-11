@@ -47,7 +47,7 @@ export function ImageField({
             className="h-20 w-20 shrink-0 rounded-lg border border-border object-cover"
           />
           <div className="min-w-0 flex-1">
-            <p className="truncate font-mono text-[11px] text-muted">{url}</p>
+            <p className="truncate font-mono text-[0.6875rem] text-muted">{url}</p>
             <Button
               variant="danger"
               type="button"

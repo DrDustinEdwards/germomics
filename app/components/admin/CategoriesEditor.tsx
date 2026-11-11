@@ -37,7 +37,7 @@ export function CategoriesEditor({
         const subs = APPLE_CATEGORIES[slot.category] ?? [];
         return (
           <div key={i} className="flex items-center gap-2">
-            <span className="w-5 font-mono text-[11px] text-muted">{i + 1}.</span>
+            <span className="w-5 font-mono text-[0.6875rem] text-muted">{i + 1}.</span>
             <select
               aria-label={`Category ${i + 1}`}
               value={slot.category}
@@ -68,7 +68,7 @@ export function CategoriesEditor({
           </div>
         );
       })}
-      <p className="text-[11px] text-muted">
+      <p className="text-[0.6875rem] text-muted">
         Apple allows up to 3 categories; the first is primary.
       </p>
     </div>

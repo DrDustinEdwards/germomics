@@ -317,7 +317,7 @@ export function Scrubber({ track, ticks = false }: { track?: PlayerTrack; ticks?
   };
   return (
     <div className="flex items-center gap-2">
-      <span className="w-12 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted">
+      <span className="w-12 shrink-0 text-right font-mono text-[0.6875rem] tabular-nums text-muted">
         {formatDuration(pos)}
       </span>
       <div className="relative flex-1">
@@ -346,7 +346,7 @@ export function Scrubber({ track, ticks = false }: { track?: PlayerTrack; ticks?
             />
           ))}
       </div>
-      <span className="w-12 shrink-0 font-mono text-[11px] tabular-nums text-muted">
+      <span className="w-12 shrink-0 font-mono text-[0.6875rem] tabular-nums text-muted">
         {formatDuration(dur)}
       </span>
     </div>
@@ -358,7 +358,9 @@ export function SpeedMenuContent({ onSelect }: { onSelect?: () => void }) {
   const p = usePlayer();
   return (
     <div>
-      <p className="px-2 pb-1 font-mono text-[11px] uppercase tracking-wide text-muted">Speed</p>
+      <p className="px-2 pb-1 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
+        Speed
+      </p>
       <RadioMenu
         ariaLabel="Playback speed"
         options={SPEEDS.map((s) => ({ value: s, label: formatRate(s) }))}
@@ -408,7 +410,7 @@ export function SleepMenuContent({ onSelect }: { onSelect?: () => void }) {
   const p = usePlayer();
   return (
     <div>
-      <p className="px-2 pb-1 font-mono text-[11px] uppercase tracking-wide text-muted">
+      <p className="px-2 pb-1 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
         Sleep timer
       </p>
       <RadioMenu

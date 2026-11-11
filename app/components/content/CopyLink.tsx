@@ -1,10 +1,13 @@
-import { useState, type ComponentType } from "react";
-import { Share2, Check } from "lucide-react";
+import type { ComponentType } from "react";
+import { Check, CircleAlert, Share2 } from "lucide-react";
+import { COPY_MESSAGE, shareOrCopy } from "~/lib/copy-status";
+import { useCopyFeedback } from "~/lib/use-copy-feedback";
 import { usePlayer } from "~/components/player/player-context";
 import { formatDuration } from "~/lib/format";
 
 // One share button: `share` offers the Web Share sheet where the device has one, else (or always,
-// without it) the link goes to the clipboard and the label reads "Copied" for a moment.
+// without it) the link goes to the clipboard. The button reads "Copied" or "Copy failed" for a
+// moment, and the status region beside it says so (app/lib/copy-status.ts).
 function ShareButton({
   path,
   label,
@@ -14,39 +17,41 @@ function ShareButton({
   label: string;
   share?: boolean;
 }) {
-  const [copied, setCopied] = useState(false);
+  const { outcome, label: said, message, report } = useCopyFeedback();
 
   const copy = async () => {
-    const url = `${window.location.origin}${path}`;
-    try {
-      if (share && navigator.share) {
-        await navigator.share({ url });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch {
-      /* dismissed / blocked */
-    }
+    const result = await shareOrCopy(`${window.location.origin}${path}`, share);
+    if (result === "copied" || result === "failed") report(result);
   };
 
   return (
-    <button
-      type="button"
-      onClick={() => void copy()}
-      className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 font-mono text-xs hover:border-accent hover:text-accent"
-    >
-      {copied ? <Check size={14} aria-hidden /> : <Share2 size={14} aria-hidden />}
-      {copied ? "Copied" : label}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={() => void copy()}
+        className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 font-mono text-xs hover:border-accent hover:text-accent"
+      >
+        {outcome === "copied" ? (
+          <Check size={14} aria-hidden />
+        ) : outcome === "failed" ? (
+          <CircleAlert size={14} aria-hidden />
+        ) : (
+          <Share2 size={14} aria-hidden />
+        )}
+        {outcome ? said : label}
+      </button>
+      <span role="status" className="sr-only">
+        {message}
+      </span>
+    </>
   );
 }
 
 /**
  * A button that copies a link to this site, or with `share` offers the Web Share sheet where the device has one. The
- * markup only, so a page that sends no React has it: /site.js does the copying and shows "Copied" for a moment
- * (app/site/share.ts). Both states are rendered and the script swaps which is hidden.
+ * markup only, so a page that sends no React has it: /site.js does the copying and shows "Copied" or "Copy failed" for
+ * a moment (app/site/share.ts). Every state is rendered and the script swaps which is hidden; the status region after
+ * the button carries the same words for a screen reader.
  */
 export function CopyButton({
   path,
@@ -62,21 +67,28 @@ export function CopyButton({
   className: string;
 }) {
   return (
-    <button
-      type="button"
-      data-copy={path}
-      data-share={share ? "" : undefined}
-      className={className}
-    >
-      <span className="contents" data-copy-idle>
-        <Icon size={14} aria-hidden />
-        {label}
-      </span>
-      <span className="contents" data-copy-done hidden>
-        <Check size={14} aria-hidden />
-        Copied
-      </span>
-    </button>
+    <>
+      <button
+        type="button"
+        data-copy={path}
+        data-share={share ? "" : undefined}
+        className={className}
+      >
+        <span className="contents" data-copy-idle>
+          <Icon size={14} aria-hidden />
+          {label}
+        </span>
+        <span className="contents" data-copy-done hidden>
+          <Check size={14} aria-hidden />
+          {COPY_MESSAGE.copied}
+        </span>
+        <span className="contents" data-copy-failed hidden>
+          <CircleAlert size={14} aria-hidden />
+          {COPY_MESSAGE.failed}
+        </span>
+      </button>
+      <span role="status" className="sr-only" data-copy-status />
+    </>
   );
 }
 

@@ -70,7 +70,7 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
                     <p className="truncate font-display font-medium text-ink">
                       {c.title || "(untitled clip)"}
                     </p>
-                    <p className="truncate font-mono text-[11px] text-muted">
+                    <p className="truncate font-mono text-[0.6875rem] text-muted">
                       {titleById.get(c.postId) ?? `post ${c.postId}`} ·{" "}
                       {formatDuration(c.startSeconds)} for {c.durationSeconds}s
                     </p>
