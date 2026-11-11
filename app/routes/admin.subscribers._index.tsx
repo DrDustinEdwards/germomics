@@ -9,28 +9,25 @@ import { subscribers } from "~/db/schema";
 import { formatDate } from "~/lib/format";
 import { EmptyState } from "~/components/admin/ui";
 import { useSnippet } from "~/lib/content";
+import { CSV_CONTENT_TYPE, toCsv } from "@dustinedwards/site-runtime/csv";
 
 /** Pending until confirmed from the mailed link (double opt-in, app/lib/newsletter.server.ts); only active ones get mail. */
 const statusOf = (r: { confirmedAt: string | null; unsubscribedAt: string | null }) =>
   r.unsubscribedAt ? "unsubscribed" : r.confirmedAt ? "active" : "pending";
-
-function csvCell(v: unknown): string {
-  const s = String(v ?? "");
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const rows = await getDb(env).select().from(subscribers).orderBy(desc(subscribers.createdAt));
 
   if (new URL(request.url).searchParams.get("export") === "csv") {
-    const header = "email,consented_at,status,created_at";
-    const body = rows
-      .map((r) => [r.email, r.consentedAt ?? "", statusOf(r), r.createdAt].map(csvCell).join(","))
-      .join("\n");
-    return new Response(`${header}\n${body}\n`, {
+    // site-runtime's one writer: RFC 4180, and a cell a spreadsheet would read as a formula opens as text.
+    const csv = toCsv(
+      ["email", "consented_at", "status", "created_at"],
+      rows.map((r) => [r.email, r.consentedAt, statusOf(r), r.createdAt]),
+    );
+    return new Response(csv, {
       headers: {
-        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Type": CSV_CONTENT_TYPE,
         "Content-Disposition": 'attachment; filename="subscribers.csv"',
       },
     });

@@ -2,13 +2,16 @@ import {
   Links,
   Meta,
   Outlet,
-  Scripts,
-  ScrollRestoration,
   UNSAFE_FrameworkContext,
   useLocation,
   useMatches,
 } from "react-router";
-import { useContext, useEffect, useSyncExternalStore } from "react";
+import { useContext } from "react";
+import {
+  HydrationScripts,
+  StreamBuffer,
+  routeHydrates,
+} from "@dustinedwards/site-runtime/deferred-scripts";
 import { iconLinks } from "@drdustinedwards/site-helpers/icons";
 
 import type { Route } from "./+types/root";
@@ -18,13 +21,6 @@ import { loadSettings, loadSnippets, setting } from "~/lib/content.server";
 import { getShowConfig } from "~/lib/show.server";
 import { listSeasons } from "~/lib/posts.server";
 import { themeInitScript } from "~/lib/theme";
-import {
-  HYDRATED_ATTRIBUTE,
-  HYDRATED_EVENT,
-  HYDRATE_ON_INTENT_ID,
-  STREAM_BUFFER_SCRIPT,
-  routeHydrates,
-} from "~/lib/hydration";
 import { PRELOADS } from "~/lib/preloads";
 import { socialLinks } from "~/lib/seo";
 import { NO_PREFETCH } from "~/lib/site";
@@ -102,41 +98,9 @@ export async function loader({ context }: Route.LoaderArgs) {
 }
 
 const isServer = typeof document === "undefined";
-// In the browser the page hydrates once, so whether it was deferred is fixed then and holds for every client-side
-// navigation after it: the hydration scripts below stay one tree, never remounted.
+// Whether this page defers its React until a reader presses play (lib/hydration.ts). In the browser the page hydrates
+// once, so it is fixed then and holds for every client-side navigation after it: the boot stays one tree, never remounted.
 let clientDeferred: boolean | undefined;
-
-/**
- * React Router's hydration scripts. A route that hydrates on load gets them as usual. Any other page gets them inside
- * a <noscript>, which a browser running script keeps as inert text (React renders a <link> there in place rather than
- * hoisting it to the head), so the page downloads no React; /site.js runs them when a reader presses play
- * (app/site/hydrate.ts). Once such a page has hydrated, ScrollRestoration mounts, so client-side navigations restore
- * and reset the scroll as on any other page.
- */
-const noSubscribe = () => () => {};
-
-function HydrationScripts({ deferred }: { deferred: boolean }) {
-  // False on the server and while hydrating, true once hydrated (React's server snapshot, then the client's).
-  const hydrated = useSyncExternalStore(
-    noSubscribe,
-    () => true,
-    () => false,
-  );
-  if (!deferred) {
-    return (
-      <>
-        <ScrollRestoration />
-        <Scripts />
-      </>
-    );
-  }
-  return (
-    <>
-      <noscript id={HYDRATE_ON_INTENT_ID}>{isServer ? <Scripts /> : null}</noscript>
-      {hydrated ? <ScrollRestoration /> : null}
-    </>
-  );
-}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const nonce = useContext(UNSAFE_FrameworkContext)?.nonce;
@@ -160,14 +124,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           dangerouslySetInnerHTML={markup(themeInitScript)}
         />
         {/* A deferred page keeps its streamed loader data here until it hydrates (lib/hydration.ts). */}
-        {deferred ? (
-          <script
-            nonce={nonce}
-            suppressHydrationWarning
-            dangerouslySetInnerHTML={markup(STREAM_BUFFER_SCRIPT)}
-          />
-        ) : null}
-        {/* Every page's own script: the menus, the theme button, the share buttons and hydrate-on-intent (app/site.ts). */}
+        <StreamBuffer deferred={deferred} />
+        {/* Every page's own script: the menus, the theme button, the share buttons and hydrate on intent (app/site.ts). */}
         <script src="/site.js" defer nonce={nonce} suppressHydrationWarning />
       </head>
       <body>
@@ -179,11 +137,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  // Tells /site.js the app is live, so a press that started the hydration can be handed to its button.
-  useEffect(() => {
-    document.documentElement.setAttribute(HYDRATED_ATTRIBUTE, "");
-    document.dispatchEvent(new Event(HYDRATED_EVENT));
-  }, []);
   // The admin brings its own shell (AdminShell), so it gets none of the public site's chrome.
   const isAdmin = useLocation().pathname.startsWith("/admin");
   if (isAdmin) return <Outlet />;

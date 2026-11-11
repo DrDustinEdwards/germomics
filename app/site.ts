@@ -4,7 +4,7 @@
 // behaves the same everywhere. Each part listens on the document, so a page React draws later is covered as well.
 import { startPage } from "@dustinedwards/site-runtime/page-client";
 import { startIslands } from "@dustinedwards/devkit/islands";
-import { enhanceHydrateOnIntent } from "./site/hydrate";
+import { enhancePlayIntent } from "./site/hydrate";
 import { enhanceMenus } from "./site/menus";
 import { enhanceSearch } from "./site/search";
 import { enhanceShare } from "./site/share";
@@ -16,7 +16,7 @@ enhanceTheme();
 enhanceMenus();
 enhanceShare();
 enhanceSearch();
-// The nonce of this script, for the hydration scripts it may add: the page's CSP trusts inline scripts by nonce.
-enhanceHydrateOnIntent((document.currentScript as HTMLScriptElement | null)?.nonce ?? "");
+// A page that sends no React hydrates when a reader reaches for a play button (site-runtime's hydrate on intent).
+enhancePlayIntent();
 // A part of a page that needs its own script (app/islands/, such as the /data charts) loads it only on that page.
 startIslands();
