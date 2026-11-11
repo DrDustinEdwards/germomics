@@ -11,8 +11,8 @@ import { SubscribeLinks } from "capsomer/react/subscribe-links";
 import type { Post } from "~/db/schema";
 import type { GuestView, Host, PlayerTrack, SoundbiteView } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
-import { imageFor, type ImageSet } from "~/lib/images";
-import { Picture } from "./Picture";
+import { imageFor, imageOrPlain, type ImageSet } from "~/lib/images";
+import { Picture } from "capsomer/react/picture";
 import { GMark } from "~/components/brand/GMark";
 import { wasUpdatedAfterPublish } from "~/lib/seo";
 import { formatDate, timecode } from "capsomer/behavior/time";
@@ -145,11 +145,8 @@ export function PostDetail({ data }: { data: DetailData }) {
           <div key={g.slug} className="flex gap-3 rounded-xl border border-border bg-card p-4">
             {g.photo ? (
               <Picture
-                src={g.photo}
-                image={imageFor(data.images, "avatar", g.photo)}
+                attrs={imageOrPlain(imageFor(data.images, "avatar", g.photo), g.photo, 48, 48)}
                 alt={g.photoAlt ?? g.name}
-                width={48}
-                height={48}
                 className="h-12 w-12 shrink-0 rounded-full border border-border object-cover"
               />
             ) : null}
@@ -341,11 +338,8 @@ export function PostDetail({ data }: { data: DetailData }) {
               avatar={(h) =>
                 h.img ? (
                   <Picture
-                    src={h.img}
-                    image={imageFor(data.images, "avatar", h.img)}
+                    attrs={imageOrPlain(imageFor(data.images, "avatar", h.img), h.img, 48, 48)}
                     alt=""
-                    width={48}
-                    height={48}
                     className="h-12 w-12 shrink-0 rounded-full border border-border object-cover"
                   />
                 ) : (
@@ -406,8 +400,7 @@ export function PostDetail({ data }: { data: DetailData }) {
         // Cover is the article LCP element. Load it eagerly with high priority; the fixed aspect
         // ratio reserves space so it doesn't shift layout (CLS).
         <Picture
-          src={post.coverImage}
-          image={imageFor(data.images, "cover", post.coverImage)}
+          attrs={imageOrPlain(imageFor(data.images, "cover", post.coverImage), post.coverImage)}
           alt={post.coverAlt ?? ""}
           priority
           className="mb-6 aspect-[2/1] w-full rounded-2xl border border-border object-cover"
