@@ -6,7 +6,7 @@ import { listEpisodes, listPosts, toPlayerTrack } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
 import { snippet, setting, settingAddress } from "~/lib/content.server";
 import { formatDate, timecode } from "capsomer/behavior/time";
-import { jsonLd, website } from "@drdustinedwards/site-helpers/schema";
+import { jsonLd, sameAs, website } from "@drdustinedwards/site-helpers/schema";
 import { buildOrganizationLd, buildPodcastSeriesLd, pageHead, socialSameAs } from "~/lib/seo";
 import { SITE_ORIGIN } from "~/lib/site";
 import { SNIPPET_DEFAULTS } from "~/lib/content-defaults";
@@ -24,11 +24,11 @@ export function meta({ loaderData }: Route.MetaArgs) {
     description: loaderData?.homeDescription ?? SNIPPET_DEFAULTS["snippet:meta.home_description"],
   });
   if (!loaderData?.show) return head;
-  const { show, address, sameAs } = loaderData;
+  const { show, address, sameAs: profiles } = loaderData;
   return [
     ...head,
-    jsonLd(buildOrganizationLd(show, { address, sameAs })),
-    jsonLd(buildPodcastSeriesLd(show, { address, sameAs })),
+    jsonLd(buildOrganizationLd(show, { address, sameAs: profiles })),
+    jsonLd(buildPodcastSeriesLd(show, { address, sameAs: profiles })),
     jsonLd(
       website({
         origin: SITE_ORIGIN,
@@ -51,14 +51,15 @@ export async function loader({ context }: Route.LoaderArgs) {
   const tracks = episodes.map(toPlayerTrack);
   // Org/PodcastSeries sameAs = the real socials (settings social.*) + the podcast-directory
   // subscribe_links (show_config), so it stays DB-driven and never duplicates a show_config fact.
-  const sameAs = [
+  // Prelum's sameAs keeps each absolute http(s) URL once.
+  const profiles = sameAs([
     ...socialSameAs({
       facebook: setting(settings, "social.facebook"),
       twitter: setting(settings, "social.twitter"),
       instagram: setting(settings, "social.instagram"),
     }),
     ...Object.values(show.subscribeLinks ?? {}),
-  ];
+  ]);
   // Listing loaders already return card-only rows (no body/transcript/peaks), so the payload stays
   // light and free of long-form migrated content (the only place em dashes legitimately live).
   return {
@@ -67,7 +68,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     tracks,
     show,
     address: settingAddress(settings),
-    sameAs,
+    sameAs: profiles,
     homeTitle: snippet(snippets, "snippet:meta.home_title"),
     homeDescription: snippet(snippets, "snippet:meta.home_description"),
   };
