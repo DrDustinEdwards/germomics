@@ -2,7 +2,7 @@
 // series the /data page already publishes (app/lib/episode-context.server.ts, Enarratio). Mechanism
 // figures are Prelum :::diagram blocks in the essay, and this file does not describe them.
 
-export type Citation = { label: string; href: string };
+type Citation = { label: string; href: string };
 
 export type DataPreviewSpec = {
   id: string;
