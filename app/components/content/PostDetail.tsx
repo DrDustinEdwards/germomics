@@ -11,34 +11,40 @@ import { SubscribeLinks } from "capsomer/react/subscribe-links";
 import type { Post } from "~/db/schema";
 import type { GuestView, Host, PlayerTrack, SoundbiteView } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
-import { imageFor, imageOrPlain, type ImageSet } from "~/lib/images";
-import { Picture } from "capsomer/react/picture";
+import { imageFor, type ImageSet } from "~/lib/images";
+import { Picture } from "./Picture";
+import { GMark } from "~/components/brand/GMark";
 import { wasUpdatedAfterPublish } from "~/lib/seo";
-import { formatDate, formatDuration } from "~/lib/format";
+import { formatDate, timecode } from "capsomer/behavior/time";
 import { BodyRenderer } from "./BodyRenderer";
 import { PostCard } from "./PostCard";
 import { SoundbiteClips } from "./SoundbiteClips";
-import { TranscriptPanel } from "./TranscriptPanel";
 import { CopyLink, ShareTimestamp } from "./CopyLink";
 import { AUTHOR } from "~/lib/about";
-import { EpisodePlayerSurface } from "./EpisodePlayerSurface";
 import { CoverArt } from "./CoverArt";
 import {
-  KeyMoments,
+  ReadingProgress,
   EpisodeToc,
   Sources,
-  Hosts,
-  ChapterList,
   useHideBrokenFigures,
   FigureLightbox,
 } from "./EpisodeExtras";
 import { EpisodeContext } from "./EpisodeContext";
 import type { EpisodeContextView } from "~/lib/episode-context";
-import { usePlayer } from "~/components/player/player-context";
+import {
+  ChapterList,
+  Hosts,
+  KeyMoments,
+  PlayerSurface,
+  PlayerTranscript,
+  usePlayer,
+} from "capsomer/react/player";
+import { parseCueText, parseVtt } from "@drdustinedwards/site-helpers/vtt";
 import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 import { ExternalCue } from "~/components/ExternalCue";
 import { postTrail } from "~/lib/trails";
 import { SectionTrail } from "./SectionTrail";
+import "~/prose.css";
 
 export type DetailData = {
   post: Post;
@@ -139,8 +145,11 @@ export function PostDetail({ data }: { data: DetailData }) {
           <div key={g.slug} className="flex gap-3 rounded-xl border border-border bg-card p-4">
             {g.photo ? (
               <Picture
-                attrs={imageOrPlain(imageFor(data.images, "avatar", g.photo), g.photo, 48, 48)}
+                src={g.photo}
+                image={imageFor(data.images, "avatar", g.photo)}
                 alt={g.photoAlt ?? g.name}
+                width={48}
+                height={48}
                 className="h-12 w-12 shrink-0 rounded-full border border-border object-cover"
               />
             ) : null}
@@ -154,7 +163,7 @@ export function PostDetail({ data }: { data: DetailData }) {
               {g.role ? <p className="font-mono text-xs text-muted">{g.role}</p> : null}
               {g.bio ? <p className="mt-1 text-sm text-muted">{g.bio}</p> : null}
               {(g.links ?? []).length ? (
-                <div className="mt-1.5 flex flex-wrap gap-2 font-mono text-[0.6875rem]">
+                <div className="mt-1.5 flex flex-wrap gap-2 font-mono text-[11px]">
                   {(g.links ?? []).map((l) => (
                     <a key={l.url} href={l.url} className="text-accent hover:underline">
                       {l.label || "link"}
@@ -191,7 +200,7 @@ export function PostDetail({ data }: { data: DetailData }) {
             to={`/${prev.slug}`}
             className="group flex max-w-[48%] flex-col rounded-xl border border-border bg-card p-3 hover:border-brand"
           >
-            <span className="flex items-center gap-1 font-mono text-[0.6875rem] text-muted">
+            <span className="flex items-center gap-1 font-mono text-[11px] text-muted">
               <ArrowLeft size={12} aria-hidden /> Previous
             </span>
             <span className="mt-1 font-display text-sm text-ink group-hover:text-brand">
@@ -206,7 +215,7 @@ export function PostDetail({ data }: { data: DetailData }) {
             to={`/${next.slug}`}
             className="group flex max-w-[48%] flex-col rounded-xl border border-border bg-card p-3 text-right hover:border-brand"
           >
-            <span className="flex items-center justify-end gap-1 font-mono text-[0.6875rem] text-muted">
+            <span className="flex items-center justify-end gap-1 font-mono text-[11px] text-muted">
               Next <ArrowRight size={12} aria-hidden />
             </span>
             <span className="mt-1 font-display text-sm text-ink group-hover:text-brand">
@@ -238,9 +247,8 @@ export function PostDetail({ data }: { data: DetailData }) {
 
     return (
       <>
-        {/* Capsomer's reading bar: CSS only, filling through the article below (app.css sets its look). */}
-        <div className="cap-reading-progress" aria-hidden="true" />
-        <article data-cap-reading className="mx-auto max-w-5xl">
+        <ReadingProgress />
+        <article className="mx-auto max-w-5xl">
           {data.preview ? <PreviewBanner post={post} /> : null}
           <SectionTrail trail={postTrail(post)} />
 
@@ -260,7 +268,7 @@ export function PostDetail({ data }: { data: DetailData }) {
                 ) : null}
                 {post.audioDuration ? (
                   <span className="flex items-center gap-1 tabular-nums">
-                    <Clock size={12} aria-hidden /> {formatDuration(post.audioDuration)}
+                    <Clock size={12} aria-hidden /> {timecode(post.audioDuration * 1000)}
                   </span>
                 ) : null}
                 {wasUpdatedAfterPublish(post) ? (
@@ -288,7 +296,11 @@ export function PostDetail({ data }: { data: DetailData }) {
               directly below it (the hero no longer carries a second play button). */}
           {track ? (
             <div id="player" className="mt-8 scroll-mt-20">
-              <EpisodePlayerSurface track={track} peaks={post.audioPeaks ?? null} />
+              <PlayerSurface
+                track={track}
+                peaks={post.audioPeaks ?? null}
+                transcriptHref="#transcript"
+              />
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <ShareTimestamp slug={post.slug} />
                 <SaveToggle storageKey={SAVED_KEY} id={post.slug} />
@@ -297,7 +309,14 @@ export function PostDetail({ data }: { data: DetailData }) {
           ) : null}
 
           {/* In this episode */}
-          {track ? <KeyMoments moments={moments} track={track} /> : null}
+          {track ? (
+            <KeyMoments
+              track={track}
+              moments={moments}
+              heading="In this episode"
+              playerId="player"
+            />
+          ) : null}
 
           {/* TOC rail + article body */}
           <div className="mt-12 grid gap-8 lg:grid-cols-[15rem_1fr]">
@@ -317,9 +336,27 @@ export function PostDetail({ data }: { data: DetailData }) {
 
           {/* Everything below the body returns to a single readable measure. */}
           <div className="mx-auto max-w-3xl">
-            <Hosts hosts={hosts} images={data.images} />
+            <Hosts
+              hosts={hosts}
+              avatar={(h) =>
+                h.img ? (
+                  <Picture
+                    src={h.img}
+                    image={imageFor(data.images, "avatar", h.img)}
+                    alt=""
+                    width={48}
+                    height={48}
+                    className="h-12 w-12 shrink-0 rounded-full border border-border object-cover"
+                  />
+                ) : (
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-border bg-surface">
+                    <GMark className="h-6 w-auto" />
+                  </span>
+                )
+              }
+            />
             {track ? <SoundbiteClips track={track} clips={soundbites} /> : null}
-            {track && chapters.length ? <ChapterList chapters={chapters} track={track} /> : null}
+            {track && chapters.length ? <ChapterList track={track} /> : null}
 
             {/* Sources and Credits sits directly above the Transcript, both collapsed by default so they
                 read as a matched pair. */}
@@ -335,7 +372,17 @@ export function PostDetail({ data }: { data: DetailData }) {
                   <summary className="mb-3 cursor-pointer font-display text-xl font-semibold">
                     Transcript
                   </summary>
-                  <TranscriptPanel transcript={post.transcript} track={track} />
+                  <PlayerTranscript
+                    cues={parseVtt(post.transcript).map((cue) => {
+                      // A "Name:" prefix names the speaker where no <v Name> voice tag did.
+                      const parsed = parseCueText(cue.text);
+                      return { ...cue, ...parsed, speaker: cue.speaker ?? parsed.speaker };
+                    })}
+                    fallback={post.transcript}
+                    track={track}
+                    shareUrl={(t) => `${window.location.origin}/${post.slug}?t=${Math.floor(t)}`}
+                    attribution={(title, url) => `From "${title}" on Germomics: ${url}`}
+                  />
                 </details>
               </section>
             ) : null}
@@ -359,7 +406,8 @@ export function PostDetail({ data }: { data: DetailData }) {
         // Cover is the article LCP element. Load it eagerly with high priority; the fixed aspect
         // ratio reserves space so it doesn't shift layout (CLS).
         <Picture
-          attrs={imageOrPlain(imageFor(data.images, "cover", post.coverImage), post.coverImage)}
+          src={post.coverImage}
+          image={imageFor(data.images, "cover", post.coverImage)}
           alt={post.coverAlt ?? ""}
           priority
           className="mb-6 aspect-[2/1] w-full rounded-2xl border border-border object-cover"
@@ -389,7 +437,7 @@ export function PostDetail({ data }: { data: DetailData }) {
             <Link
               key={t}
               to={`/tag/${encodeURIComponent(t)}`}
-              className="rounded-full border border-border px-2 py-0.5 font-mono text-[0.6875rem] text-muted hover:border-brand hover:text-brand"
+              className="rounded-full border border-border px-2 py-0.5 font-mono text-[11px] text-muted hover:border-brand hover:text-brand"
             >
               {t}
             </Link>

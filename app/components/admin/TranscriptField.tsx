@@ -5,7 +5,7 @@ import { useMemo, useRef, useState } from "react";
 import { Captions, ClipboardPaste, FileUp } from "lucide-react";
 import { Tabs, inputCx } from "./ui";
 import { isVtt, parseVtt, srtToVtt } from "@drdustinedwards/site-helpers/vtt";
-import { formatDuration } from "~/lib/format";
+import { timecode } from "capsomer/behavior/time";
 
 export function TranscriptField({
   value,
@@ -21,7 +21,8 @@ export function TranscriptField({
 
   async function readFile(file: File) {
     const text = await file.text();
-    const isSrt = file.name.toLowerCase().endsWith(".srt") || (!isVtt(text) && /-->/.test(text));
+    const isSrt =
+      file.name.toLowerCase().endsWith(".srt") || (!isVtt(text.trimStart()) && /-->/.test(text));
     const vtt = isSrt ? srtToVtt(text) : text;
     onChange(vtt);
     setNote(isSrt ? "Converted SRT → VTT." : "Loaded VTT.");
@@ -82,15 +83,15 @@ export function TranscriptField({
       {value ? (
         cues.length ? (
           <div className="rounded-xl border border-border bg-surface p-3">
-            <p className="mb-2 font-mono text-[0.6875rem] text-muted">
+            <p className="mb-2 font-mono text-[11px] text-muted">
               Parsed {cues.length} cues ·{" "}
-              {formatDuration(Math.round(cues[cues.length - 1]?.end ?? 0))}
+              {timecode(Math.round(cues[cues.length - 1]?.end ?? 0) * 1000)}
             </p>
             <ul className="space-y-1 text-xs text-ink">
               {cues.slice(0, 4).map((c, i) => (
                 <li key={i} className="flex gap-2">
-                  <span className="font-mono text-[0.6875rem] text-accent">
-                    {formatDuration(Math.floor(c.start))}
+                  <span className="font-mono text-[11px] text-accent">
+                    {timecode(Math.floor(c.start) * 1000)}
                   </span>
                   <span className="line-clamp-1">{c.text}</span>
                 </li>

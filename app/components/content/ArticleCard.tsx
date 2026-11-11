@@ -1,6 +1,6 @@
 import { Link } from "capsomer/react/link";
 import { Calendar } from "lucide-react";
-import { formatDate } from "~/lib/format";
+import { formatDate } from "capsomer/behavior/time";
 import type { Post } from "~/db/schema";
 import type { ImageAttributes } from "~/lib/images";
 import { Picture } from "capsomer/react/picture";
