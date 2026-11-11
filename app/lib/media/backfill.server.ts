@@ -6,7 +6,7 @@
 import { sha256Hex } from "@dustinedwards/site-runtime/encoding";
 import { FOCUS_METADATA, focusOf } from "@dustinedwards/site-runtime/image";
 import { logEvent } from "@dustinedwards/site-runtime/log";
-import { inArray } from "drizzle-orm";
+import { inList } from "@dustinedwards/site-runtime/d1";
 import { getDb } from "~/db/index.server";
 import { mediaCaptions } from "~/db/schema";
 import { insertMediaRow, mediaRows } from "./store.server";
@@ -69,7 +69,7 @@ export async function backfillMedia(
               .select()
               .from(mediaCaptions)
               .where(
-                inArray(
+                inList(
                   mediaCaptions.mediaKey,
                   waiting.map((o) => o.key),
                 ),

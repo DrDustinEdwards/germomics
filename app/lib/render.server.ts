@@ -16,7 +16,8 @@
 import type * as Prelum from "@drdustinedwards/site-helpers/render/nomath";
 import { diagramPack } from "~/lib/diagram-pack";
 import { logEvent } from "@dustinedwards/site-runtime/log";
-import { and, eq, inArray, isNotNull, like, ne, sql } from "drizzle-orm";
+import { and, eq, isNotNull, like, ne, sql } from "drizzle-orm";
+import { inList } from "@dustinedwards/site-runtime/d1";
 import { getDb } from "~/db/index.server";
 import { contentBlocks, media, posts, type Post } from "~/db/schema";
 import {
@@ -31,7 +32,7 @@ import { SITE_ORIGIN } from "~/lib/site";
 import type { BodyMeta } from "~/lib/types";
 
 /** Prelum's RENDER_VERSION, kept here so a read can compare without loading the pipeline. */
-export const RENDER_VERSION = "24";
+export const RENDER_VERSION = "25";
 // A Prelum upgrade that moves its version fails the typecheck here until this constant moves with it.
 RENDER_VERSION satisfies typeof Prelum.RENDER_VERSION;
 
@@ -63,7 +64,7 @@ export function libraryMedia(env: Env): MediaLookup {
             sha256: media.sha256,
           })
           .from(media)
-          .where(inArray(media.key, keys));
+          .where(inList(media.key, keys));
 }
 
 const escape = (s: string) => s.replace(/[.]/g, "\\.");

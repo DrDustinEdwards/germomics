@@ -4,7 +4,8 @@
 // standard ones (MEDIA_LIBRARY_SQL): sha256 may be null, tags are drizzle's JSON mode, `updated_at` is set on every
 // write, a revision's copy is `backup_key`, and keys stored before Carrel that are not a MediaId are not library files.
 // It only maps columns; every rule is site-api's mediaLibrary (app/lib/carrel/media.server.ts).
-import { and, desc, eq, gt, inArray, lte, max, or, sql } from "drizzle-orm";
+import { and, desc, eq, gt, lte, max, or, sql } from "drizzle-orm";
+import { inList } from "@dustinedwards/site-runtime/d1";
 import {
   MediaId,
   type MediaLibraryStore,
@@ -236,7 +237,7 @@ export function mediaStore(env: Env): MediaLibraryStore {
 
 export async function mediaRows(env: Env, keys: string[]): Promise<MediaRow[]> {
   if (keys.length === 0) return [];
-  return getDb(env).select().from(media).where(inArray(media.key, keys));
+  return getDb(env).select().from(media).where(inList(media.key, keys));
 }
 
 export async function insertMediaRow(

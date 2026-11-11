@@ -1,7 +1,8 @@
 // People = reusable guest entities (§E). Admin CRUD + episode↔person links, plus a resolver
 // that turns an episode into GuestView[] for the public page — preferring the linked people,
 // falling back to the legacy `guests` JSON column so the 10 migrated episodes keep working.
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
+import { inList, chunked, rowsPerInsert } from "@dustinedwards/site-runtime/d1";
 import { getDb } from "~/db/index.server";
 import { people, episodePeople, posts, type Person, type Post } from "~/db/schema";
 import { slugifyGuest } from "~/lib/posts";
@@ -73,23 +74,25 @@ export async function deletePerson(env: Env, id: number): Promise<void> {
 
 export type EpisodePersonInput = { personId: number; role?: string | null; sort: number };
 
-/** Replace the full set of people links for an episode (transactional-ish: delete then insert). */
+/** Replace the full set of people links for an episode (one batch: delete, then insert). */
 export async function setEpisodePeople(
   env: Env,
   postId: number,
   items: EpisodePersonInput[],
 ): Promise<void> {
   const db = getDb(env);
-  await db.delete(episodePeople).where(eq(episodePeople.postId, postId));
-  if (!items.length) return;
-  await db.insert(episodePeople).values(
-    items.map((it) => ({
-      postId,
-      personId: it.personId,
-      role: it.role?.trim() || null,
-      sort: it.sort,
-    })),
-  );
+  const rows = items.map((it) => ({
+    postId,
+    personId: it.personId,
+    role: it.role?.trim() || null,
+    sort: it.sort,
+  }));
+  // One batch (a D1 transaction), so a failure keeps the old links. A row binds 4 columns, and
+  // D1 allows 100 bound parameters in a statement.
+  await db.batch([
+    db.delete(episodePeople).where(eq(episodePeople.postId, postId)),
+    ...chunked(rows, rowsPerInsert(4)).map((part) => db.insert(episodePeople).values(part)),
+  ]);
 }
 
 /** Linked people for an episode, joined to the person record, ordered for display. */
@@ -105,7 +108,7 @@ export async function getEpisodePeople(
     .orderBy(asc(episodePeople.sort));
   if (!links.length) return [];
   const ids = links.map((l) => l.personId);
-  const rows = await db.select().from(people).where(inArray(people.id, ids));
+  const rows = await db.select().from(people).where(inList(people.id, ids));
   const byId = new Map(rows.map((p) => [p.id, p]));
   return links
     .map((l) => {
@@ -160,7 +163,7 @@ export async function postsByPerson(env: Env, personSlug: string): Promise<Post[
     .where(
       and(
         eq(posts.kind, "episode"),
-        inArray(
+        inList(
           posts.id,
           links.map((l) => l.postId),
         ),
