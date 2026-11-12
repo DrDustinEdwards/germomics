@@ -1,6 +1,7 @@
 // The podcast feed. SACRED PATH: served at exactly /feed/podcast/ (with the trailing slash),
 // the same URL every directory already polls — no redirect to/from a non-slash variant.
 // Resource route: a loader returning a raw XML Response, no component.
+import { FEED_CONTENT_TYPES } from "@drdustinedwards/site-helpers/feeds";
 import { SITE_ORIGIN } from "~/lib/site";
 import type { Route } from "./+types/feed.podcast";
 import type { GuestView } from "~/lib/types";
@@ -25,9 +26,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     episodes.map(async (e) => guestsByEpisode.set(e.id, await getEpisodeGuests(env, e))),
   );
   const xml = buildPodcastFeed(show, episodes, SITE_ORIGIN, guestsByEpisode, clips);
-  return new Response(xml, {
-    headers: {
-      "Content-Type": "application/rss+xml; charset=utf-8",
-    },
-  });
+  // No Cache-Control: the Worker stores the feed at the edge under the pages tag, so a publish purges it (workers/app.ts
+  // publicPages). Prelum's feedResponse would send its own hour and the feed would no longer be stored or purged.
+  return new Response(xml, { headers: { "Content-Type": FEED_CONTENT_TYPES.rss } });
 }

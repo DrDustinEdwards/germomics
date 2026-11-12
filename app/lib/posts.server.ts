@@ -287,14 +287,16 @@ export async function searchPosts(env: Env, rawQuery: string): Promise<Post[]> {
   return asCards(found.sort((a, b) => order.get(a.id)! - order.get(b.id)!));
 }
 
-// FTS5 has its own query syntax. Punctuation becomes a space, then every word is a quoted
-// literal (Prelum's toMatchExpression), all ANDed, the last one also matching as a prefix.
-// Site search over pages (content.server) builds its MATCH here too.
+// FTS5 has its own query syntax. Anything but a letter, digit or combining mark separates words, then every word is a
+// quoted literal (Prelum's toMatchExpression), all ANDed, the last one also matching as a prefix. A mark stays with its
+// letter, so "İstanbul" (lowercased to i and a dot) is one word, as the tokenizer reads it. Site search over pages
+// (content.server) builds its MATCH here too. Not Prelum's searchWords: its NFKD fold splits Hangul into jamo and folds
+// ễ, ﬁ and ² where the posts_fts tokenizer (unicode61, remove_diacritics 1) does not, so those queries would find
+// nothing; unicode61 folds é and å itself.
 export function toFtsMatch(raw: string): string | null {
   const terms = raw
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .split(/\s+/)
+    .split(/[^\p{L}\p{N}\p{M}]+/u)
     .filter(Boolean);
   return toMatchExpression({ terms }, true);
 }
