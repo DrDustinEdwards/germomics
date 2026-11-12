@@ -1,3 +1,4 @@
+import { isEmail } from "@dustinedwards/site-runtime/email";
 import { Form } from "react-router";
 import { Link } from "capsomer/react/link";
 import { Rss, Check, Copy, Mail, Smartphone } from "lucide-react";
@@ -27,8 +28,6 @@ export async function loader({ context }: Route.LoaderArgs) {
   return { subscribeLinks: show.subscribeLinks ?? {} };
 }
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 export async function action({ request, context }: Route.ActionArgs) {
   const form = await readForm(request, PUBLIC_FORM);
   const email = String(form.get("email") ?? "")
@@ -36,7 +35,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     .toLowerCase();
   const consent = form.get("consent");
 
-  if (!EMAIL_RE.test(email) || email.length > 254) {
+  if (!isEmail(email)) {
     return { ok: false as const, error: "Please enter a valid email address." };
   }
   // Explicit, unambiguous consent is required (GDPR). No pre-ticked box, no implied opt-in.
