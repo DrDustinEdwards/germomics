@@ -4,7 +4,7 @@
 // a verified Access token of a service token, and 404 to everything else. The list is ADMIN_EMAIL and CO_OWNER_EMAILS, the ones the admin
 // layout checks (adminEmails reads them), so GitHub holds no copy of it.
 import type { Route } from "./+types/admin.access-drift";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { adminEmails } from "@dustinedwards/site-runtime/access";
 import { adminListResponse } from "@dustinedwards/site-runtime/access-drift";
 

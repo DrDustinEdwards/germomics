@@ -1,6 +1,6 @@
 import { htmlToText } from "@drdustinedwards/site-helpers/text";
 import type { Route } from "./+types/$slug";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import {
   getPostBySlug,
   listPosts,

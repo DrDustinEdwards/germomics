@@ -2,7 +2,7 @@
 // feed. Path: /:slug/transcript.vtt — resource route. The stored value is raw WebVTT (verbatim
 // from the source), so it is served as text/vtt with no transformation.
 import type { Route } from "./+types/transcript";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getPostBySlug, renamedPostRedirect } from "~/lib/posts.server";
 
 export async function loader({ params, context }: Route.LoaderArgs) {

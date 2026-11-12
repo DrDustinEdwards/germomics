@@ -4,7 +4,8 @@
 // shows admin drafts.
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/contact";
-import { getEnv, getSettings } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
+import { getSettings } from "~/lib/context.server";
 import { loadFilledPage, setting } from "~/lib/content.server";
 import { SITE_ADDRESS_LINE } from "~/lib/site";
 import { BodyRenderer } from "~/components/content/BodyRenderer";

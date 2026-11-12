@@ -3,7 +3,7 @@
 // and excludes transcripts (avoids the duplicate-content trap).
 import { SITE_ORIGIN } from "~/lib/site";
 import type { Route } from "./+types/llms-full";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { listFullPosts } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
 import { buildLlmsFullTxt } from "~/lib/discovery.server";

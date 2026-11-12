@@ -3,7 +3,7 @@
 import { rssDocument } from "@drdustinedwards/site-helpers/feeds";
 import { SITE_ORIGIN } from "~/lib/site";
 import type { Route } from "./+types/feed.site";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { listFullPosts } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
 

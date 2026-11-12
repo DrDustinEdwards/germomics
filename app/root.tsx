@@ -14,7 +14,8 @@ import { iconLinks } from "@drdustinedwards/site-helpers/icons";
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { getEnv, getSnippets, getSettings, once, siteContentContext } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
+import { getSnippets, getSettings, once, siteContentContext } from "~/lib/context.server";
 import { loadSettings, loadSnippets, setting } from "~/lib/content.server";
 import { getShowConfig } from "~/lib/show.server";
 import { listSeasons } from "~/lib/posts.server";
