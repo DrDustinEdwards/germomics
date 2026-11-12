@@ -20,7 +20,7 @@
     "db:migrate:prod": "wrangler d1 migrations apply germomics --remote",
     "postinstall": "devkit-bootstrap",
     "check:postinstall": "devkit-bootstrap --check",
-    "nobloat": "react-router typegen && devkit-no-bloat --warn-only",
+    "nobloat": "react-router typegen && devkit-no-bloat",
     "nobloat:weight": "devkit-route-weight",
     "report:mutation": "devkit-mutation-report --protected \"auth|access|security|sanitiz|xss|csp|session|admin|login|jwt|backup|restore|token|secret|permission|regression|fix|bug\" --json docs/research/kill-matrix.json",
     "nobloat:baseline": "react-router typegen && devkit-no-bloat --write-baseline && npm run build && devkit-route-weight --write-baseline"
@@ -37,7 +37,6 @@
     "hast-util-from-html": "2.0.3",
     "hast-util-to-mdast": "10.1.2",
     "hast-util-to-string": "3.0.1",
-    "isbot": "5.2.2",
     "lucide-react": "1.65.0",
     "mdast-util-gfm": "3.1.0",
     "mdast-util-to-markdown": "2.2.0",
@@ -60,7 +59,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.67.0",
     "@cloudflare/vitest-plugin": "1.6.0",
-    "@dustinedwards/devkit": "github:DrDustinEdwards/devkit#v0.27.0",
+    "@dustinedwards/devkit": "github:DrDustinEdwards/devkit#v0.37.1",
     "@react-router/dev": "8.5.1",
     "@tailwindcss/vite": "4.3.3",
     "@types/node": "22.20.5",

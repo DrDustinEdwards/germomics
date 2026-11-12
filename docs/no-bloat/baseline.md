@@ -15,7 +15,7 @@ phases, in Capsomer's order.
 
 ```sh
 npm ci
-npm run nobloat           # react-router typegen, then devkit-no-bloat --warn-only (Knip, and jscpd with .jscpd.json)
+npm run nobloat           # react-router typegen, then devkit-no-bloat (Knip, jscpd with .jscpd.json, shared copies)
 npm run build
 npm run nobloat:weight    # devkit-route-weight: build/client's manifest against .route-weight.json
 npm run nobloat:baseline  # rewrites .no-bloat.json's baseline and .route-weight.json
@@ -158,9 +158,9 @@ dependencies and no missing packages.
 ## CI
 
 The `verify` job in .github/workflows/ci.yml runs Knip, jscpd and the page-weight report after
-its gate steps, each `continue-on-error`, and devkit-no-bloat --warn-only always exits 0. A number above
+its gate steps. devkit-no-bloat fails the job on any count off the baseline, and a lower count fails until the baseline is lowered in the same change. A number above
 the baseline (any Knip count, the jscpd clone count, or a route more than 512 bytes gzip
-over its baseline in .route-weight.json; the Worker bundle is `.worker-size.json`'s) becomes a warning annotation and a line in the job summary. Measured
+over its baseline in .route-weight.json; the Worker bundle is `.worker-size.json`'s) fails the job, and each count is a line in the job summary. Measured
 locally, the three add about 8 seconds (Knip 6.7 s including typegen, jscpd 0.4 s, page weight
 0.3 s), well under a minute of Actions time per run, because they reuse the job's install and
 build.
