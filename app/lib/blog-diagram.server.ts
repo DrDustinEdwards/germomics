@@ -4,6 +4,8 @@
 // wrangler.jsonc. The files are still served to browsers without that binding, and then
 // env.ASSETS is missing, so the swap leaves the Mermaid image in place.
 
+import { fnv1a32 } from "@dustinedwards/site-runtime/encoding";
+
 const FILES: Record<string, string> = {
   "52d7f101": "/blog-diagrams/on-the-right-taq.html",
   "650ac145": "/blog-diagrams/confessions-of-a-cholera-girl.html",
@@ -22,13 +24,7 @@ export type DiagramAssets = {
 /** Prelum's diagram key: FNV-1a of template version 1 and the normalized Mermaid source. */
 export function diagramKey(source: string): string {
   const normalized = source.replace(/\r\n/g, "\n").replace(/\s+$/, "").replace(/^\n+/, "");
-  const input = `1\n${normalized}`;
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < input.length; i += 1) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193) >>> 0;
-  }
-  return hash.toString(16).padStart(8, "0");
+  return fnv1a32(`1\n${normalized}`);
 }
 
 const ASSET_ORIGIN = "https://assets.local";

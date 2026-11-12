@@ -6,6 +6,7 @@
 // It only maps columns; every rule is site-api's mediaLibrary (app/lib/carrel/media.server.ts).
 import { and, desc, eq, gt, lte, max, or, sql } from "drizzle-orm";
 import { inList } from "@dustinedwards/site-runtime/d1";
+import { parseSqlTime } from "@dustinedwards/site-runtime/time";
 import {
   MediaId,
   type MediaLibraryStore,
@@ -21,8 +22,8 @@ const isLibraryKey = (key: string) => MediaId.safeParse(key).success;
 
 /** D1's "YYYY-MM-DD HH:MM:SS" (UTC) or an ISO time, as an ISO time; anything else as it is. */
 function iso(value: string): string {
-  const at = Date.parse(value.replace(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$/, "$1T$2Z"));
-  return Number.isNaN(at) ? value : new Date(at).toISOString();
+  const at = parseSqlTime(value);
+  return at === null ? value : new Date(at).toISOString();
 }
 
 function recordOf(row: MediaRow): MediaRecord {
