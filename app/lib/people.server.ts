@@ -5,7 +5,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { inList, chunked, rowsPerInsert } from "@dustinedwards/site-runtime/d1";
 import { getDb } from "~/db/index.server";
 import { people, episodePeople, posts, type Person, type Post } from "~/db/schema";
-import { slugify } from "@drdustinedwards/site-helpers/slug";
+import { slugify, uniqueSlug as uniqueSlugFor } from "@drdustinedwards/site-helpers/slug";
 import type { GuestView, PersonLink } from "~/lib/types";
 
 export async function listPeople(env: Env): Promise<Person[]> {
@@ -17,21 +17,19 @@ export async function getPerson(env: Env, id: number): Promise<Person | null> {
   return rows[0] ?? null;
 }
 
-async function uniqueSlug(env: Env, name: string, excludeId?: number): Promise<string> {
-  const base = slugify(name) || "person";
+function uniqueSlug(env: Env, name: string, excludeId?: number): Promise<string> {
   const db = getDb(env);
-  let slug = base;
-  for (let i = 2; i < 50; i++) {
-    const rows = await db
-      .select({ id: people.id })
-      .from(people)
-      .where(eq(people.slug, slug))
-      .limit(1);
-    const taken = rows[0] && rows[0].id !== excludeId;
-    if (!taken) return slug;
-    slug = `${base}-${i}`;
-  }
-  return `${base}-${Date.now()}`;
+  return uniqueSlugFor(name, {
+    fallback: "person",
+    taken: async (slug) => {
+      const rows = await db
+        .select({ id: people.id })
+        .from(people)
+        .where(eq(people.slug, slug))
+        .limit(1);
+      return Boolean(rows[0] && rows[0].id !== excludeId);
+    },
+  });
 }
 
 export type PersonInput = {
