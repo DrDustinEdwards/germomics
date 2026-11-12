@@ -60,7 +60,8 @@ export async function mediaPlaces(
   const add = (type: string, id: string, title: string, named: Array<[string, unknown]>) => {
     const fields = new Map<string, string[]>();
     for (const [field, value] of named) {
-      for (const key of keysAtAddresses(json(value), MEDIA_ADDRESS)) fields.set(key, [...(fields.get(key) ?? []), field]);
+      for (const key of keysAtAddresses(json(value), MEDIA_ADDRESS))
+        fields.set(key, [...(fields.get(key) ?? []), field]);
     }
     if (fields.size === 0) return;
     places.push({ type, id, title, detail: "", keys: new Set(fields.keys()), fields });
