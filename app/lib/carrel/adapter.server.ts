@@ -36,6 +36,7 @@
 // cron deletes one trashed 30 days.
 import { and, eq, isNotNull, lte } from "drizzle-orm";
 import { inList } from "@dustinedwards/site-runtime/d1";
+import { parseSqlTime } from "@dustinedwards/site-runtime/time";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
@@ -115,10 +116,8 @@ type Change = {
 
 // SQLite's datetime('now') is "YYYY-MM-DD HH:MM:SS" in UTC; the contract wants ISO with an offset.
 const iso = (v: string | null | undefined): string | null => {
-  if (!v) return null;
-  const withT = v.includes("T") ? v : `${v.replace(" ", "T")}Z`;
-  const d = new Date(withT);
-  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+  const at = parseSqlTime(v);
+  return at === null ? null : new Date(at).toISOString();
 };
 
 const nowIso = () => new Date().toISOString();

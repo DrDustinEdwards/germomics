@@ -16,8 +16,8 @@
 import type * as Prelum from "@drdustinedwards/site-helpers/render/nomath";
 import { diagramPack } from "~/lib/diagram-pack";
 import { logEvent } from "@dustinedwards/site-runtime/log";
-import { and, eq, isNotNull, like, ne, sql } from "drizzle-orm";
-import { inList } from "@dustinedwards/site-runtime/d1";
+import { and, eq, isNotNull, ne } from "drizzle-orm";
+import { inList, likeContains } from "@dustinedwards/site-runtime/d1";
 import { rerenderEach, storedRender } from "@drdustinedwards/site-helpers/stored-render";
 import { getDb } from "~/db/index.server";
 import { contentBlocks, media, posts, type Post } from "~/db/schema";
@@ -306,9 +306,7 @@ const pageColumns = { key: contentBlocks.key, value: contentBlocks.value };
  */
 export async function rerenderUsing(env: Env, key: string): Promise<number> {
   const db = getDb(env);
-  const pattern = `%${key.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
-  const names = (col: typeof posts.body | typeof contentBlocks.value) =>
-    sql`${like(col, pattern)} ESCAPE '\\'`;
+  const names = (col: typeof posts.body | typeof contentBlocks.value) => likeContains(col, key);
   const [postRows, pageRows] = await Promise.all([
     db
       .select(postColumns)

@@ -18,11 +18,12 @@ import { getEnv } from "~/lib/context.server";
 import { accessAdmin } from "@dustinedwards/site-runtime/access";
 import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runtime/log";
 import { isolationVerdict, refuseCrossSite } from "@dustinedwards/site-runtime/origin";
+import { UNCACHED } from "@dustinedwards/site-runtime/edge-cache";
 import { effectiveTheme, toggleTheme, type ThemeChoice } from "capsomer/behavior/theme-switch";
 import { THEME_KEY } from "~/lib/theme";
 import { markup } from "capsomer/behavior/trusted-html";
 
-const PRIVATE = { "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex, nofollow" };
+const PRIVATE = { "Cache-Control": UNCACHED, "X-Robots-Tag": "noindex, nofollow" };
 
 // The admin is an app: it and every page under it hydrate on load (lib/hydration.ts).
 export const handle = { hydrate: true };
