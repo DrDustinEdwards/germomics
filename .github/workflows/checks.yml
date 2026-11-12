@@ -38,7 +38,7 @@ jobs:
     uses: DrDustinEdwards/devkit/.github/workflows/pr.yml@be764c572506cf64f434eb7ad026c9389440e7cd # v0.33.0
     with:
       review: true
-      # ci.yml's verify job reports Knip and jscpd warn-only (npm run nobloat), beside the page weight gate.
+      # ci.yml's verify job runs the no-bloat ratchet (npm run nobloat), beside the page weight gate.
       no-bloat: false
       # .worker-size.json for the site's build. No secret: a dry run never talks to the account.
       workers: >-

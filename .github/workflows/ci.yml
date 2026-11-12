@@ -86,15 +86,14 @@ jobs:
       - name: Migrations are expand-only
         run: npm run --silent check:migrations
 
-      # NO-BLOAT REPORTS (capsid/decisions.md "no bloat, as a standing plan", 2026-10-01).
-      # Knip and jscpd stay warn-only: devkit-no-bloat --warn-only reports against .no-bloat.json's baseline and
-      # always exits 0. Page weight is a gate (area 7, D5: every React app fails CI over its route budget):
-      # devkit-route-weight fails the job when a route passes .route-weight.json's budget_bytes or grows past its
-      # baseline. `!cancelled()` keeps both reporting when an earlier step failed. Together they add about 10
-      # seconds: they reuse this job's install and build rather than a job of their own.
-      - name: Knip and jscpd (warn-only)
+      # NO-BLOAT RATCHET (capsid/decisions.md "no bloat, as a standing plan", 2026-10-01).
+      # devkit-no-bloat fails the job when a Knip, jscpd or shared-copies count is off .no-bloat.json's baseline.
+      # Page weight is a gate too (area 7, D5: every React app fails CI over its route budget): devkit-route-weight
+      # fails the job when a route passes .route-weight.json's budget_bytes or grows past its baseline.
+      # `!cancelled()` keeps both reporting when an earlier step failed. Together they add about 10 seconds: they
+      # reuse this job's install and build rather than a job of their own.
+      - name: Knip and jscpd
         if: ${{ !cancelled() }}
-        continue-on-error: true
         run: npm run --silent nobloat
 
       - name: Page weight
