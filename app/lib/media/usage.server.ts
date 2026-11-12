@@ -6,8 +6,8 @@
 // copy. The key is read out of each address found, query and fragment cut.
 import { getDb } from "~/db/index.server";
 import { contentBlocks, people, posts, scheduledUpdates, settings, showConfig } from "~/db/schema";
-import { imageKeyOf } from "~/lib/images";
-import { DEFAULT_ARTWORK, SITE_ORIGIN } from "~/lib/site";
+import { keyOfAddress, keysAtAddresses } from "@dustinedwards/site-runtime/image";
+import { DEFAULT_ARTWORK, MEDIA_ADDRESS } from "~/lib/site";
 
 export type MediaPlace = {
   type: string;
@@ -16,25 +16,6 @@ export type MediaPlace = {
   detail: string;
   keys: Set<string>;
 };
-
-const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
-const PATH = "([^\\s\"'<>()\\\\?#]+)";
-const ADDRESS = new RegExp(`(?:^|[\\s"'(=,])(?:${escape(SITE_ORIGIN)})?/media/${PATH}`, "g");
-
-/** The BLOG_IMAGES keys a text names by address. */
-function keysIn(text: string | null | undefined): Set<string> {
-  const keys = new Set<string>();
-  if (!text) return keys;
-  for (const m of text.matchAll(ADDRESS)) {
-    const raw = (m[1] ?? "").replace(/[.,;:]+$/, "");
-    try {
-      keys.add(decodeURIComponent(raw));
-    } catch {
-      keys.add(raw);
-    }
-  }
-  return keys;
-}
 
 const json = (v: unknown) => (v == null ? "" : typeof v === "string" ? v : JSON.stringify(v));
 
@@ -79,7 +60,7 @@ export async function mediaPlaces(
   const add = (type: string, id: string, title: string, named: Array<[string, unknown]>) => {
     const fields = new Map<string, string[]>();
     for (const [field, value] of named) {
-      for (const key of keysIn(json(value))) fields.set(key, [...(fields.get(key) ?? []), field]);
+      for (const key of keysAtAddresses(json(value), MEDIA_ADDRESS)) fields.set(key, [...(fields.get(key) ?? []), field]);
     }
     if (fields.size === 0) return;
     places.push({ type, id, title, detail: "", keys: new Set(fields.keys()), fields });
@@ -107,7 +88,7 @@ export async function mediaPlaces(
   for (const b of blocks) add("content", b.key, b.title ?? b.key, [["text", b.value]]);
   for (const s of sets) add("setting", s.key, s.label ?? s.key, [["value", s.value]]);
   // The show artwork until show_config names one (app/lib/site.ts).
-  const art = imageKeyOf(DEFAULT_ARTWORK);
+  const art = keyOfAddress(DEFAULT_ARTWORK, MEDIA_ADDRESS);
   if (art)
     places.push({
       type: "code",
