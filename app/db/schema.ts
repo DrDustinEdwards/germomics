@@ -432,17 +432,19 @@ export const mediaCaptions = sqliteTable("media_captions", {
     .default(sql`(datetime('now'))`),
 });
 
-// 0015: the media library (site-api v0.13.1): one row per image in BLOG_IMAGES, its byte history and a change log
-// (filled by triggers in the migration). Read and written through app/lib/media/store.server.ts.
+// The media library: site-api's standard tables (MEDIA_LIBRARY_SQL, drizzle/0029), one row per image in BLOG_IMAGES,
+// its byte history and a change log (filled by triggers in the migration). Carrel's library writes them through
+// site-api's d1MediaStore; the pages and the admin editor's upload read and add rows through app/lib/media/store.server.ts.
 export const media = sqliteTable(
   "media",
   {
     key: text("key").primaryKey(),
     filename: text("filename"),
     contentType: text("content_type").notNull(),
-    bytes: integer("bytes").notNull().default(0),
+    bytes: integer("bytes").notNull(),
     width: integer("width"),
     height: integer("height"),
+    sha256: text("sha256").notNull(),
     alt: text("alt").notNull().default(""),
     caption: text("caption").notNull().default(""),
     tags: text("tags", { mode: "json" })
@@ -455,18 +457,14 @@ export const media = sqliteTable(
     sourceUrl: text("source_url"),
     licenseExpires: text("license_expires"),
     takenAt: text("taken_at"),
-    sha256: text("sha256"),
-    // prepareUpload's blurred data: URI and #rrggbb (0016); null for files stored before, or one the binding cannot read.
-    placeholder: text("placeholder"),
-    color: text("color"),
+    uploadedAt: text("uploaded_at").notNull(),
     trashedAt: text("trashed_at"),
     rev: integer("rev").notNull().default(0),
-    uploadedAt: text("uploaded_at").notNull(),
-    updatedAt: text("updated_at")
-      .notNull()
-      .default(sql`(datetime('now'))`),
+    // prepareUpload's blurred data: URI and #rrggbb; null for files stored before, or one the binding cannot read.
+    placeholder: text("placeholder"),
+    color: text("color"),
   },
-  (t) => ({ shaIdx: index("media_sha256_idx").on(t.sha256) }),
+  (t) => ({ shaIdx: index("media_sha256").on(t.sha256) }),
 );
 
 export const mediaRevisions = sqliteTable(
@@ -478,29 +476,19 @@ export const mediaRevisions = sqliteTable(
     bytes: integer("bytes").notNull(),
     width: integer("width"),
     height: integer("height"),
-    reason: text("reason", {
-      enum: ["upload", "import", "replace", "transform", "resize", "revert"],
-    }).notNull(),
-    sha256: text("sha256"),
-    backupKey: text("backup_key"),
+    reason: text("reason").notNull(),
+    sha256: text("sha256").notNull(),
+    copyKey: text("copy_key"),
   },
-  (t) => ({ keyIdx: index("media_revisions_key_idx").on(t.mediaKey, t.id) }),
+  (t) => ({ keyIdx: index("media_revisions_key").on(t.mediaKey, t.id) }),
 );
 
-export const mediaChanges = sqliteTable(
-  "media_changes",
-  {
-    seq: integer("seq").primaryKey({ autoIncrement: true }),
-    mediaKey: text("media_key").notNull(),
-    at: text("at")
-      .notNull()
-      .default(sql`(datetime('now'))`),
-  },
-  (t) => ({ keyIdx: index("media_changes_key_idx").on(t.mediaKey, t.seq) }),
-);
+export const mediaChanges = sqliteTable("media_changes", {
+  seq: integer("seq").primaryKey({ autoIncrement: true }),
+  mediaKey: text("media_key").notNull(),
+});
 
 export type MediaRow = typeof media.$inferSelect;
-export type MediaRevisionRow = typeof mediaRevisions.$inferSelect;
 
 // site-runtime's operations tables (drizzle/0017_ops.sql), written and read only through ./cron and ./not-found; here so
 // the schema test holds them in step with the migration.

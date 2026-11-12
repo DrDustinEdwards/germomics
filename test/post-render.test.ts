@@ -39,7 +39,7 @@ beforeEach(async () => {
   await e.DB.exec("DELETE FROM posts; DELETE FROM media;");
   for (const key of [PHOTO, LEAD]) {
     await e.DB.prepare(
-      "INSERT INTO media (key, content_type, width, height, uploaded_at) VALUES (?, 'image/webp', 795, 597, '2026-01-01')",
+      "INSERT INTO media (key, content_type, bytes, sha256, width, height, uploaded_at) VALUES (?, 'image/webp', 1, '', 795, 597, '2026-01-01')",
     )
       .bind(key)
       .run();
