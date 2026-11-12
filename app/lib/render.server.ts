@@ -15,6 +15,7 @@
 // Prelum is imported on first use, so the public routes that only read stored HTML never load the pipeline.
 import type * as Prelum from "@drdustinedwards/site-helpers/render/nomath";
 import { diagramPack } from "~/lib/diagram-pack";
+import { keyOfAddress, keysAtAddresses } from "@dustinedwards/site-runtime/image";
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { and, eq, isNotNull, ne } from "drizzle-orm";
 import { inList, likeContains } from "@dustinedwards/site-runtime/d1";
@@ -28,8 +29,8 @@ import {
   loadBlogDiagrams,
   type DiagramFiles,
 } from "~/lib/blog-diagram.server";
-import { imageKeyOf, images, mediaPath, type ImageUseName } from "~/lib/images";
-import { SITE_ORIGIN } from "~/lib/site";
+import { images, mediaPath, type ImageUseName } from "~/lib/images";
+import { MEDIA_ADDRESS } from "~/lib/site";
 import type { BodyMeta } from "~/lib/types";
 
 /** Prelum's RENDER_VERSION, kept here so a read can compare without loading the pipeline. */
@@ -68,9 +69,6 @@ export function libraryMedia(env: Env): MediaLookup {
           .where(inList(media.key, keys));
 }
 
-const escape = (s: string) => s.replace(/[.]/g, "\\.");
-/** A stored image address in Markdown: /media/<key>, relative or on this origin. */
-const IMAGE_URL = new RegExp(`(?:${escape(SITE_ORIGIN)})?/media/[^\\s"'()<>\\]]+`, "g");
 const FIGURE_LINE = /^:::figure\{(.*)\}\s*$/gm;
 
 /** The srcs of the figures written `width=wide`: the lead illustration, sized for 520px. */
@@ -112,17 +110,11 @@ export async function renderMarkdown(
   }: { lcpAbove?: boolean; env?: Env; diagrams?: DiagramFiles } = {},
 ): Promise<Rendered> {
   const { render } = await import("@drdustinedwards/site-helpers/render/nomath");
-  const keys = [
-    ...new Set(
-      [...body.matchAll(IMAGE_URL)]
-        .map(([url]) => imageKeyOf(url))
-        .filter((k): k is string => k !== null),
-    ),
-  ];
+  const keys = [...keysAtAddresses(body, MEDIA_ADDRESS)];
   const rows = new Map((await lookup(keys)).map((row) => [row.key, row]));
   const wide = wideSources(body);
   const attributesOf = (src: string) => {
-    const key = imageKeyOf(src);
+    const key = keyOfAddress(src, MEDIA_ADDRESS);
     const row = key ? rows.get(key) : undefined;
     if (!row) return null;
     const use: ImageUseName = wide.has(src) ? "leadFigure" : "figure";
@@ -153,13 +145,13 @@ export async function renderMarkdown(
       packs: [diagramPack()],
       priority: { taken: lcpAbove },
       media: {
-        keyOf: imageKeyOf,
+        keyOf: (src) => keyOfAddress(src, MEDIA_ADDRESS),
         imageProps(src) {
           const attrs = attributesOf(src);
           if (!attrs?.srcset) return null;
           // The link around a picture opens the original at /media, versioned like its sizes so it is never a stale
           // copy (the lightbox shows it instead when script runs).
-          const row = rows.get(imageKeyOf(src) ?? "");
+          const row = rows.get(keyOfAddress(src, MEDIA_ADDRESS) ?? "");
           const href = row ? images.url(mediaPath(row.key), { version: row.sha256 }) : src;
           return {
             srcSet: attrs.srcset,

@@ -9,6 +9,8 @@ import { shareCard } from "@drdustinedwards/site-helpers/head";
  */
 export const SITE_HOST = "germomics.com";
 export const SITE_ORIGIN = `https://${SITE_HOST}`;
+/** Where a stored image address lives, for site-runtime's keyOfAddress and keysAtAddresses: /media/<key> on this origin. */
+export const MEDIA_ADDRESS = { origins: [SITE_ORIGIN] };
 export const MEDIA_ORIGIN = "https://media.germomics.com";
 /** The show's square cover art: its artwork in the feed until show_config sets one. */
 export const DEFAULT_ARTWORK = `${SITE_ORIGIN}/media/brand/germomics-artwork-1400.jpg`;
