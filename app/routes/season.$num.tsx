@@ -1,7 +1,7 @@
 // /season/:num - a real, crawlable per-season episode list (the 301 target for the old /season-1/).
 // SSR; episodes ascending by episode number; its trail runs through Episodes.
 import type { Route } from "./+types/season.$num";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { episodesInSeason, toPlayerTrack } from "~/lib/posts.server";
 import { pageHead } from "~/lib/seo";
 import { seasonTrail } from "~/lib/trails";

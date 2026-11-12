@@ -2,7 +2,7 @@
 // binding. Path: /games/assets/* — Phaser scenes load from here. No HTTP to a
 // Cloudflare service: reads go through env.GAME_ASSETS, not fetch().
 import type { Route } from "./+types/games.assets.$";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { r2ObjectResponse } from "@dustinedwards/site-runtime/r2-object";
 
 export async function loader({ params, request, context }: Route.LoaderArgs) {

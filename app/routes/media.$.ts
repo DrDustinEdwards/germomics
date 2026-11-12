@@ -3,7 +3,7 @@
 // dustinedwards.info. Only the widths and crops in app/lib/images.ts are served; anything else is a 400, never a
 // billed transform.
 import type { Route } from "./+types/media.$";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { IMMUTABLE_CACHE } from "@dustinedwards/site-runtime/image";
 import { images } from "~/lib/images";
 

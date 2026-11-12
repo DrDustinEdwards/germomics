@@ -5,7 +5,7 @@ import { htmlToText } from "@drdustinedwards/site-helpers/text";
 import { Link } from "capsomer/react/link";
 import { ExternalLink } from "lucide-react";
 import type { Route } from "./+types/about.dustin-edwards";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { loadPage, isPreviewing } from "~/lib/content.server";
 import { jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { buildPersonLd, pageHead } from "~/lib/seo";

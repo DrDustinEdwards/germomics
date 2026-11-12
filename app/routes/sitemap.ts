@@ -2,7 +2,7 @@
 // listPosts) plus the key static pages. Resource route returning raw XML.
 import { SITE_ORIGIN } from "~/lib/site";
 import type { Route } from "./+types/sitemap";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { listPostImages, listPosts, listSeasons } from "~/lib/posts.server";
 import { isoDay } from "@drdustinedwards/site-helpers/xml";
 import { sitemapDocument } from "@drdustinedwards/site-helpers/sitemap";

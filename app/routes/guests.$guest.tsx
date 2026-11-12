@@ -1,6 +1,6 @@
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/guests.$guest";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { slugify } from "@drdustinedwards/site-helpers/slug";
 import { postsByGuest, toPlayerTrack } from "~/lib/posts.server";
 import { getPersonBySlug, postsByPerson } from "~/lib/people.server";
