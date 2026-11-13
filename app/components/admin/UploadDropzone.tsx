@@ -1,7 +1,7 @@
 // Drag-drop / click upload target → POSTs to /admin/upload (gated) and reports progress via
 // XHR (fetch can't surface upload progress). Reused by the image, audio and transcript fields.
 import { useId, useRef, useState } from "react";
-import { UploadCloud, Loader2 } from "lucide-react";
+import { Icon } from "capsomer/react/icons";
 
 export type UploadResult = {
   ok: boolean;
@@ -91,9 +91,9 @@ export function UploadDropzone({
           }`}
         >
           {busy ? (
-            <Loader2 className="animate-spin text-accent" size={22} aria-hidden />
+            <Icon name="spinner" className="size-[22px] animate-spin text-accent" />
           ) : (
-            <UploadCloud className="text-brand" size={22} aria-hidden />
+            <Icon name="cloud-upload" className="size-[22px] text-brand" />
           )}
           <span className="font-display text-sm text-ink">{label}</span>
           <span className="text-xs text-muted">Drag &amp; drop or click to choose</span>

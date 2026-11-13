@@ -2,7 +2,7 @@
 // gate. Clips render a public clip player on the episode page and emit <podcast:soundbite> in the
 // feed. Drizzle via soundbites.server.
 import { useFetcher } from "react-router";
-import { Scissors, Trash2 } from "lucide-react";
+import { Icon } from "capsomer/react/icons";
 import type { Route } from "./+types/admin.soundbites._index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { listEpisodes } from "~/lib/posts.server";
@@ -56,7 +56,7 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
   return (
     <div>
       <h1 className="flex items-center gap-2 font-display text-2xl font-semibold">
-        <Scissors size={22} aria-hidden /> Soundbites
+        <Icon name="cut" className="size-[22px]" /> Soundbites
       </h1>
       <p className="mt-1 text-sm text-muted">
         Short clips of an episode. They power the episode clip player and the feed soundbite tags.
@@ -94,7 +94,7 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
                       aria-label="Delete soundbite"
                       className="grid h-7 w-7 place-items-center rounded text-muted hover:text-brand"
                     >
-                      <Trash2 size={14} aria-hidden />
+                      <Icon name="trash" className="size-3.5" />
                     </button>
                   </del.Form>
                 </li>

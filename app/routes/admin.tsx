@@ -10,7 +10,7 @@
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { Link } from "capsomer/react/link";
-import { LayoutDashboard, FileAudio, Users, Settings, Mail, Scissors } from "lucide-react";
+import { Icon, type IconName } from "capsomer/react/icons";
 import { AdminShell, type AdminEntry } from "capsomer/react/admin-shell";
 import "~/admin.css";
 import type { Route } from "./+types/admin";
@@ -71,7 +71,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return { email: session?.email ?? "" };
 }
 
-const icon = (Icon: typeof LayoutDashboard) => <Icon className="cap-admin-icon" aria-hidden />;
+const icon = (name: IconName) => <Icon name={name} className="cap-admin-icon" />;
 
 // The admin's pages, grouped as the menu shows them. The shell marks the entry the address is in
 // (`pathname`); `match` adds the prefixes that also count.
@@ -81,42 +81,42 @@ const ENTRIES: AdminEntry[] = [
     label: "Dashboard",
     href: "/admin",
     group: "Overview",
-    icon: icon(LayoutDashboard),
+    icon: icon("overview"),
   },
   {
     id: "episodes",
     label: "Episode audio",
     href: "/admin/episodes",
     group: "Content",
-    icon: icon(FileAudio),
+    icon: icon("file-audio"),
   },
   {
     id: "people",
     label: "People",
     href: "/admin/people",
     group: "Content",
-    icon: icon(Users),
+    icon: icon("people"),
   },
   {
     id: "soundbites",
     label: "Soundbites",
     href: "/admin/soundbites",
     group: "Content",
-    icon: icon(Scissors),
+    icon: icon("cut"),
   },
   {
     id: "subscribers",
     label: "Subscribers",
     href: "/admin/subscribers",
     group: "Audience",
-    icon: icon(Mail),
+    icon: icon("mail"),
   },
   {
     id: "settings",
     label: "Settings",
     href: "/admin/settings",
     group: "Site",
-    icon: icon(Settings),
+    icon: icon("settings"),
     match: ["/admin/settings", "/admin/content"],
   },
 ];

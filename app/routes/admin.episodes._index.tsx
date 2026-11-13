@@ -4,7 +4,7 @@
 // with its audio, as a draft Carrel then writes and puts live.
 import { Form, redirect } from "react-router";
 import { Link } from "capsomer/react/link";
-import { ExternalLink, Headphones, Plus } from "lucide-react";
+import { Icon } from "capsomer/react/icons";
 import type { Route } from "./+types/admin.episodes._index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { createDraft, listAllPosts } from "~/lib/admin.server";
@@ -41,7 +41,7 @@ export default function AdminEpisodes({ loaderData }: Route.ComponentProps) {
         <h1 className="font-display text-2xl font-semibold">Episode audio</h1>
         <Form method="post">
           <Button type="submit" variant="primary">
-            <Plus size={14} aria-hidden /> New episode
+            <Icon name="add" className="size-3.5" /> New episode
           </Button>
         </Form>
       </div>
@@ -55,7 +55,7 @@ export default function AdminEpisodes({ loaderData }: Route.ComponentProps) {
           {loaderData.episodes.map((p) => (
             <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
               <Link to={`/admin/episodes/${p.id}`} className="flex min-w-0 items-center gap-2">
-                <Headphones size={14} className="shrink-0 text-brand" aria-hidden />
+                <Icon name="headphones" className="size-3.5 shrink-0 text-brand" />
                 <span className="truncate font-display font-medium text-ink">{p.title}</span>
               </Link>
               <span className="flex shrink-0 items-center gap-2">
@@ -69,7 +69,7 @@ export default function AdminEpisodes({ loaderData }: Route.ComponentProps) {
                   aria-label={`Write ${p.title} in Carrel`}
                   className="grid h-8 w-8 place-items-center rounded text-muted hover:text-ink"
                 >
-                  <ExternalLink size={14} aria-hidden />
+                  <Icon name="external" className="size-3.5" />
                 </a>
               </span>
             </li>

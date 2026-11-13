@@ -2,7 +2,7 @@
 // (app/lib/carrel/source.ts), so a person is added here first.
 import { useState } from "react";
 import { useFetcher } from "react-router";
-import { Trash2, Users } from "lucide-react";
+import { Icon } from "capsomer/react/icons";
 import type { Route } from "./+types/admin.people._index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { listPeople, upsertPerson, deletePerson } from "~/lib/people.server";
@@ -85,7 +85,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
   return (
     <div>
       <h1 className="flex items-center gap-2 font-display text-2xl font-semibold">
-        <Users size={22} aria-hidden /> People
+        <Icon name="people" className="size-[22px]" /> People
       </h1>
       <p className="mt-1 text-sm text-muted">
         Reusable guests. Link them to episodes from the editor.
@@ -108,7 +108,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                     />
                   ) : (
                     <span className="grid h-10 w-10 place-items-center rounded-full bg-surface text-brand">
-                      <Users size={16} aria-hidden />
+                      <Icon name="people" className="size-4" />
                     </span>
                   )}
                   <div className="min-w-0 flex-1">
@@ -139,7 +139,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                       aria-label={`Delete ${p.name}`}
                       className="grid h-7 w-7 place-items-center rounded text-muted hover:text-brand"
                     >
-                      <Trash2 size={14} aria-hidden />
+                      <Icon name="trash" className="size-3.5" />
                     </button>
                   </del.Form>
                 </li>
