@@ -21,23 +21,19 @@ export function loader() {
 export default function GamesHub({ loaderData }: Route.ComponentProps) {
   return (
     <div>
-      <h1 className="font-display text-3xl font-semibold">Games</h1>
-      <p className="mt-2 max-w-2xl text-muted">
+      <h1 className="gm-page-title">Games</h1>
+      <p className="gm-index-lede">
         Small arcade games that tie into the microbiology. Each loads its engine only when you open
         it.
       </p>
-      <div className="mt-8 grid gap-3 sm:grid-cols-2">
+      <div className="gm-index-grid">
         {loaderData.games.map((g) => (
-          <Link
-            key={g.slug}
-            to={`/games/${g.slug}`}
-            className="rounded-xl border border-border bg-card p-5 transition hover:border-brand"
-          >
-            <div className="flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wide text-accent">
+          <Link key={g.slug} to={`/games/${g.slug}`} className="gm-index-card">
+            <div className="gm-index-kind">
               <Gamepad2 size={13} aria-hidden /> arcade
             </div>
-            <h2 className="mt-1 font-display text-lg font-medium text-ink">{g.title}</h2>
-            <p className="mt-1 text-sm text-muted">{g.tagline}</p>
+            <h2 className="gm-index-card-title">{g.title}</h2>
+            <p className="gm-index-card-text">{g.tagline}</p>
           </Link>
         ))}
       </div>

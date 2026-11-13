@@ -354,11 +354,22 @@
   .gm-prev,
   .gm-next,
   .gm-toc,
-  .gm-chapters-mobile {
+  .gm-chapters-mobile,
+  .gm-index-card {
     border-radius: 0.75rem;
     border-style: solid;
     border-width: 1px;
     border-color: var(--line);
+  }
+  /* The cards whose border turns on hover. */
+  .gm-article-card,
+  .gm-index-card {
+    transition-property:
+      color, background-color, border-color, outline-color, text-decoration-color, fill, stroke,
+      opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter,
+      backdrop-filter, display, content-visibility, overlay, pointer-events;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
   }
   .gm-post-card {
     column-gap: 1rem;
@@ -455,13 +466,6 @@
     border-width: 1px;
     border-color: var(--line);
     background-color: var(--raised);
-    transition-property:
-      color, background-color, border-color, outline-color, text-decoration-color, fill, stroke,
-      --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, opacity, box-shadow, transform,
-      translate, scale, rotate, filter, -webkit-backdrop-filter, backdrop-filter, display,
-      content-visibility, overlay, pointer-events;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
   }
   @media (hover: hover) {
     .gm-article-card:hover {
@@ -1016,12 +1020,6 @@
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    line-height: 1rem;
-    letter-spacing: 0.025em;
-    color: var(--accent-text);
-    text-transform: uppercase;
   }
   .gm-article-tags {
     margin-top: 0.75rem;
@@ -1310,5 +1308,255 @@
     to {
       transform: translate3d(var(--dx, 0), var(--dy, 0), 0) scale(var(--s, 1));
     }
+  }
+  /* The index and list pages: writing, episodes, a season, a tag, archive, search, games, data, txasm, contact and accessibility. */
+  .gm-page-title,
+  .gm-list-title,
+  .gm-archive-title {
+    font-family: var(--font-display);
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+    font-weight: 600;
+  }
+  .gm-list-title {
+    margin-bottom: 1.5rem;
+  }
+  .gm-page-title-lg,
+  .gm-txasm-title {
+    font-family: var(--font-display);
+    font-size: 2.25rem;
+    line-height: 1.25;
+    font-weight: 600;
+  }
+  .gm-txasm-title {
+    margin-top: 0.75rem;
+  }
+  .gm-page-header {
+    margin-bottom: 2rem;
+  }
+  .gm-muted,
+  .gm-page-lede,
+  .gm-index-lede,
+  .gm-search-empty,
+  .gm-index-card-text {
+    color: var(--dim);
+  }
+  .gm-page-lede,
+  .gm-index-card-text,
+  .gm-index-card-title {
+    margin-top: 0.25rem;
+  }
+  .gm-index-lede {
+    margin-top: 0.5rem;
+    max-width: 42rem;
+  }
+  .gm-search-empty {
+    margin-top: 1.5rem;
+  }
+  .gm-list,
+  .gm-search-list,
+  .gm-index-grid {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .gm-search-list,
+  .gm-search-hits,
+  .gm-txasm-body,
+  .gm-search-form,
+  .gm-search-count {
+    margin-top: 1rem;
+  }
+  .gm-index-grid {
+    margin-top: 2rem;
+  }
+  .gm-article-grid {
+    display: grid;
+    gap: 1.25rem;
+  }
+  @media (width >= 40rem) {
+    .gm-article-grid,
+    .gm-index-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .gm-narrow,
+  .gm-search {
+    margin-inline: auto;
+    max-width: 42rem;
+  }
+  .gm-search {
+    max-width: 48rem;
+  }
+  .gm-article-eyebrow,
+  .gm-tag-eyebrow,
+  .gm-season-title,
+  .gm-season-heading,
+  .gm-index-kind {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    letter-spacing: 0.025em;
+    color: var(--accent-text);
+    text-transform: uppercase;
+  }
+  .gm-season-title,
+  .gm-season-heading {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+  }
+  .gm-season-title {
+    margin-bottom: 1.5rem;
+  }
+  .gm-season-heading,
+  .gm-episodes-heading,
+  .gm-archive-title,
+  .gm-archive-count,
+  .gm-archive-hits {
+    margin-bottom: 1rem;
+  }
+  .gm-season-section,
+  .gm-episodes-section {
+    margin-bottom: 2.5rem;
+  }
+  .gm-season-section {
+    scroll-margin-top: 6rem;
+  }
+  .gm-episodes-heading {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+  }
+  .gm-index-card {
+    background-color: var(--raised);
+    padding: 1.25rem;
+  }
+  @media (hover: hover) {
+    .gm-index-card:hover {
+      border-color: var(--primary);
+    }
+  }
+  .gm-index-kind {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.6875rem;
+    line-height: inherit;
+  }
+  .gm-index-card-title {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .gm-index-card-text {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  /* The search box (search) and the archive's filter field: a rounded field with a bare input. */
+  .gm-search-form,
+  .gm-archive-field,
+  .gm-archive-form,
+  .gm-archive-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .gm-search-form,
+  .gm-archive-field {
+    background-color: var(--raised);
+    padding-inline: 1rem;
+    padding-block: 0.5rem;
+    border-radius: calc(infinity * 1px);
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--line);
+  }
+  .gm-archive-field {
+    padding-inline: 0.75rem;
+    padding-block: 0.375rem;
+  }
+  .gm-archive-field:focus-within {
+    outline-style: solid;
+    outline-width: 2px;
+    outline-offset: 2px;
+    outline-color: var(--accent-text);
+  }
+  .gm-search-input,
+  .gm-archive-input {
+    width: 100%;
+    background-color: transparent;
+    outline-style: none;
+  }
+  .gm-archive-input {
+    width: 10rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  .gm-search-count,
+  .gm-archive-count {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--dim);
+  }
+  /* The brand pill buttons: search's Go and the txasm link. */
+  .gm-search-go,
+  .gm-txasm-button,
+  .gm-archive-tab {
+    border-radius: calc(infinity * 1px);
+    padding-inline: 0.75rem;
+    padding-block: 0.25rem;
+    font-family: var(--font-display);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  .gm-search-go,
+  .gm-txasm-button,
+  .gm-archive-tab-on {
+    background-color: var(--primary);
+    color: var(--primary-fg);
+  }
+  @media (hover: hover) {
+    .gm-search-go:hover,
+    .gm-txasm-button:hover {
+      background-color: var(--primary-hover);
+    }
+  }
+  .gm-txasm-button {
+    margin-top: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-inline: 1.25rem;
+    padding-block: 0.625rem;
+    font-weight: 500;
+  }
+  .gm-archive-tab {
+    padding-block: 0.375rem;
+  }
+  .gm-archive-tab-off {
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--line);
+    color: var(--dim);
+  }
+  @media (hover: hover) {
+    .gm-archive-tab-off:hover {
+      color: var(--text);
+    }
+  }
+  .gm-archive-bar {
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  .gm-archive-tabs {
+    display: flex;
+    gap: 0.25rem;
   }
 }

@@ -31,14 +31,14 @@ export async function loader({ context }: Route.LoaderArgs) {
 export default function Writing({ loaderData }: Route.ComponentProps) {
   return (
     <div>
-      <header className="mb-8">
-        <h1 className="font-display text-3xl font-semibold">Writing</h1>
-        <p className="mt-1 text-muted">Essays and notes on microbiology and history.</p>
+      <header className="gm-page-header">
+        <h1 className="gm-page-title">Writing</h1>
+        <p className="gm-page-lede">Essays and notes on microbiology and history.</p>
       </header>
       {loaderData.articles.length === 0 ? (
-        <p className="text-muted">No articles yet.</p>
+        <p className="gm-muted">No articles yet.</p>
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="gm-article-grid">
           {loaderData.articles.map((post) => (
             <ArticleCard
               key={post.id}

@@ -28,13 +28,13 @@ export default function TagPage({ loaderData }: Route.ComponentProps) {
   return (
     <div>
       <QueueSeeder tracks={tracks} />
-      <p className="font-mono text-xs uppercase tracking-wide text-accent">Tag</p>
-      <h1 className="mb-6 font-display text-3xl font-semibold">#{tag}</h1>
-      <div className="grid gap-3">
+      <p className="gm-tag-eyebrow">Tag</p>
+      <h1 className="gm-list-title">#{tag}</h1>
+      <div className="gm-list">
         {items.map((post) => (
           <PostCard key={post.id} post={post} queue={tracks} />
         ))}
-        {items.length === 0 ? <p className="text-muted">No posts tagged “{tag}”.</p> : null}
+        {items.length === 0 ? <p className="gm-muted">No posts tagged “{tag}”.</p> : null}
       </div>
     </div>
   );
