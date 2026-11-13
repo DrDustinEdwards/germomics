@@ -9,7 +9,9 @@ import type { Route } from "./+types/admin.episodes._index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { createDraft, listAllPosts } from "~/lib/admin.server";
 import { carrelEditUrl } from "~/lib/site";
-import { Badge, Button, EmptyState } from "~/components/admin/ui";
+import { Button } from "capsomer/react/button";
+import { Pill } from "capsomer/react/status";
+import { Empty } from "capsomer/react/empty";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const all = await listAllPosts(getEnv(context));
@@ -38,7 +40,7 @@ export default function AdminEpisodes({ loaderData }: Route.ComponentProps) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-semibold">Episode audio</h1>
         <Form method="post">
-          <Button variant="primary">
+          <Button type="submit" variant="primary">
             <Plus size={14} aria-hidden /> New episode
           </Button>
         </Form>
@@ -57,11 +59,11 @@ export default function AdminEpisodes({ loaderData }: Route.ComponentProps) {
                 <span className="truncate font-display font-medium text-ink">{p.title}</span>
               </Link>
               <span className="flex shrink-0 items-center gap-2">
-                <Badge tone={p.audio ? "accent" : "amber"}>{p.audio ? "audio" : "no audio"}</Badge>
-                <Badge tone={p.transcript ? "accent" : "amber"}>
+                <Pill tone={p.audio ? "ok" : "warn"}>{p.audio ? "audio" : "no audio"}</Pill>
+                <Pill tone={p.transcript ? "ok" : "warn"}>
                   {p.transcript ? "transcript" : "no transcript"}
-                </Badge>
-                <Badge tone={p.status === "published" ? "accent" : "muted"}>{p.status}</Badge>
+                </Pill>
+                <Pill tone={p.status === "published" ? "ok" : "muted"}>{p.status}</Pill>
                 <a
                   href={carrelEditUrl(p.slug)}
                   aria-label={`Write ${p.title} in Carrel`}
@@ -73,7 +75,9 @@ export default function AdminEpisodes({ loaderData }: Route.ComponentProps) {
             </li>
           ))}
         </ul>
-        {loaderData.episodes.length === 0 ? <EmptyState>No episodes yet.</EmptyState> : null}
+        {loaderData.episodes.length === 0 ? (
+          <Empty kind="nothing-yet">No episodes yet.</Empty>
+        ) : null}
       </div>
     </div>
   );

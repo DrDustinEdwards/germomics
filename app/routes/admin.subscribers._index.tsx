@@ -8,7 +8,7 @@ import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getDb } from "~/db/index.server";
 import { subscribers } from "~/db/schema";
 import { formatDate } from "capsomer/behavior/time";
-import { EmptyState } from "~/components/admin/ui";
+import { Empty } from "capsomer/react/empty";
 import { useSnippet } from "~/lib/content";
 
 /** Pending until confirmed from the mailed link (double opt-in, app/lib/newsletter.server.ts); only active ones get mail. */
@@ -62,7 +62,7 @@ export default function SubscribersAdmin({ loaderData }: Route.ComponentProps) {
 
       {rows.length === 0 ? (
         <div className="mt-6">
-          <EmptyState>{emptySubscribers}</EmptyState>
+          <Empty kind="nothing-yet">{emptySubscribers}</Empty>
         </div>
       ) : (
         <div className="mt-6 overflow-hidden rounded-xl border border-border bg-card">

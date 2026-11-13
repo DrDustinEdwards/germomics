@@ -2,8 +2,8 @@
 // converted to VTT on import; the value is stored as VTT (keeping the VTT-native rendering). A
 // parsed preview shows cue count + the first lines so the author can confirm it parsed.
 import { useMemo, useRef, useState } from "react";
-import { Captions, ClipboardPaste, FileUp } from "lucide-react";
-import { Tabs, inputCx } from "./ui";
+import { Captions, FileUp } from "lucide-react";
+import { Segmented } from "capsomer/react/segmented";
 import { isVtt, parseVtt, srtToVtt } from "@drdustinedwards/site-helpers/vtt";
 import { timecode } from "capsomer/behavior/time";
 
@@ -35,13 +35,20 @@ export function TranscriptField({
         <span className="flex items-center gap-1.5 font-display text-sm font-medium text-ink">
           <Captions size={14} aria-hidden /> Transcript
         </span>
-        <Tabs
-          label="Transcript input method"
+        <Segmented
+          legend="Transcript input method"
           value={tab}
           onChange={setTab}
-          tabs={[
-            { value: "upload", label: "Upload", icon: <FileUp size={13} aria-hidden /> },
-            { value: "paste", label: "Paste", icon: <ClipboardPaste size={13} aria-hidden /> },
+          hideLegend
+          options={[
+            {
+              value: "upload",
+              label: "Upload",
+            },
+            {
+              value: "paste",
+              label: "Paste",
+            },
           ]}
         />
       </div>
@@ -73,7 +80,7 @@ export function TranscriptField({
           rows={8}
           spellCheck={false}
           placeholder="WEBVTT&#10;&#10;00:00:00.000 --> 00:00:02.000&#10;Welcome…"
-          className={`${inputCx} font-mono text-xs`}
+          className="cap-input font-mono text-xs"
           onChange={(e) => onChange(e.target.value)}
         />
       )}

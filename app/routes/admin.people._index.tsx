@@ -2,11 +2,14 @@
 // (app/lib/carrel/source.ts), so a person is added here first.
 import { useState } from "react";
 import { useFetcher } from "react-router";
-import { UserPlus, Trash2, Users } from "lucide-react";
+import { Trash2, Users } from "lucide-react";
 import type { Route } from "./+types/admin.people._index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { listPeople, upsertPerson, deletePerson } from "~/lib/people.server";
-import { Card, Field, Button, inputCx, EmptyState } from "~/components/admin/ui";
+import { Panel } from "capsomer/react/panel";
+import { Field } from "capsomer/react/field";
+import { Button } from "capsomer/react/button";
+import { Empty } from "capsomer/react/empty";
 import { ImageField } from "~/components/admin/ImageField";
 import { useSnippet } from "~/lib/content";
 import type { Person, PersonLink } from "~/db/schema";
@@ -93,7 +96,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
         {/* List */}
         <div>
           {loaderData.people.length === 0 ? (
-            <EmptyState>{emptyPeople}</EmptyState>
+            <Empty kind="nothing-yet">{emptyPeople}</Empty>
           ) : (
             <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
               {loaderData.people.map((p) => (
@@ -148,9 +151,8 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
 
         {/* Editor */}
         <aside>
-          <Card
+          <Panel
             title={editing ? "Edit person" : "New person"}
-            icon={editing ? undefined : <UserPlus size={15} aria-hidden />}
             actions={
               editing ? (
                 <button
@@ -169,37 +171,37 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
               <input type="hidden" name="photoAlt" value={draft.photoAlt} />
 
               <Field label="Name" required>
-                {({ id }) => (
+                {(control) => (
                   <input
-                    id={id}
+                    {...control}
                     name="name"
                     value={draft.name}
                     onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
-                    className={inputCx}
+                    className="cap-input"
                     required
                   />
                 )}
               </Field>
               <Field label="Role / title">
-                {({ id }) => (
+                {(control) => (
                   <input
-                    id={id}
+                    {...control}
                     name="role"
                     value={draft.role}
                     onChange={(e) => setDraft((d) => ({ ...d, role: e.target.value }))}
-                    className={inputCx}
+                    className="cap-input"
                   />
                 )}
               </Field>
               <Field label="Bio">
-                {({ id }) => (
+                {(control) => (
                   <textarea
-                    id={id}
+                    {...control}
                     name="bio"
                     value={draft.bio}
                     rows={3}
                     onChange={(e) => setDraft((d) => ({ ...d, bio: e.target.value }))}
-                    className={inputCx}
+                    className="cap-input"
                   />
                 )}
               </Field>
@@ -242,7 +244,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
 
               <input type="hidden" name="intent" value="upsert" />
               <div className="flex items-center gap-3">
-                <Button type="submit" variant="primary" disabled={save.state !== "idle"}>
+                <Button type="submit" variant="primary" pending={save.state !== "idle"}>
                   {editing ? "Save" : "Create"}
                 </Button>
                 {save.data?.ok ? (
@@ -250,7 +252,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                 ) : null}
               </div>
             </save.Form>
-          </Card>
+          </Panel>
         </aside>
       </div>
     </div>

@@ -2,7 +2,7 @@
 // show_config and maps to <podcast:person> in the feed. Capsomer's sortable list draws the rows, their reordering
 // (drag, the grip's keys, Move up and down, Alt and an arrow from a field) and Add and Remove.
 import { SortableList, useRows } from "capsomer/react/sortable-list";
-import { inputCx, EmptyState } from "./ui";
+import { Empty } from "capsomer/react/empty";
 import type { Host } from "~/db/schema";
 
 export function HostsEditor({
@@ -28,7 +28,7 @@ export function HostsEditor({
       onRemove={rows.onRemove}
       onAdd={() => onChange([...hosts, { name: "" }])}
       addLabel="Add host"
-      empty={<EmptyState>No hosts yet.</EmptyState>}
+      empty={<Empty kind="nothing-yet">No hosts yet.</Empty>}
       renderItem={({ value: h, index: i }) => (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
@@ -37,14 +37,14 @@ export function HostsEditor({
               placeholder="Name (required)"
               value={h.name}
               onChange={(e) => update(i, { name: e.target.value })}
-              className={`${inputCx} flex-1`}
+              className="cap-input flex-1"
             />
             <input
               aria-label={`Host ${i + 1} role`}
               placeholder="Role"
               value={h.role ?? ""}
               onChange={(e) => update(i, { role: e.target.value || undefined })}
-              className={`${inputCx} w-40`}
+              className="cap-input w-40"
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -53,14 +53,14 @@ export function HostsEditor({
               placeholder="Image URL"
               value={h.img ?? ""}
               onChange={(e) => update(i, { img: e.target.value || undefined })}
-              className={`${inputCx} text-xs`}
+              className="cap-input text-xs"
             />
             <input
               aria-label={`Host ${i + 1} link (optional)`}
               placeholder="Link URL"
               value={h.href ?? ""}
               onChange={(e) => update(i, { href: e.target.value || undefined })}
-              className={`${inputCx} text-xs`}
+              className="cap-input text-xs"
             />
           </div>
         </div>

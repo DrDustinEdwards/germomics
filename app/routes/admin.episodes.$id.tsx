@@ -14,7 +14,8 @@ import { snapshotVersion, updatePost } from "~/lib/admin.server";
 import { carrelEditUrl } from "~/lib/site";
 import { AudioField, type AudioState } from "~/components/admin/AudioField";
 import { TranscriptField } from "~/components/admin/TranscriptField";
-import { Button, Card } from "~/components/admin/ui";
+import { Panel } from "capsomer/react/panel";
+import { Button } from "capsomer/react/button";
 import { readForm } from "@dustinedwards/site-runtime/body";
 import { ADMIN_FORM } from "~/lib/body.server";
 
@@ -101,7 +102,7 @@ export default function EpisodeAudio({ loaderData }: Route.ComponentProps) {
           >
             <ExternalLink size={14} aria-hidden /> Write in Carrel
           </a>
-          <Button type="button" disabled={fetcher.state !== "idle"} onClick={save}>
+          <Button variant="primary" type="button" pending={fetcher.state !== "idle"} onClick={save}>
             <Save size={14} aria-hidden /> Save
           </Button>
         </div>
@@ -111,16 +112,16 @@ export default function EpisodeAudio({ loaderData }: Route.ComponentProps) {
           {result.ok ? result.message : result.error}
         </p>
       ) : null}
-      <Card>
+      <Panel>
         <AudioField
           postId={loaderData.id}
           value={audio}
           onChange={(patch) => setAudio((a) => ({ ...a, ...patch }))}
         />
-      </Card>
-      <Card>
+      </Panel>
+      <Panel>
         <TranscriptField value={transcript} onChange={setTranscript} />
-      </Card>
+      </Panel>
     </div>
   );
 }

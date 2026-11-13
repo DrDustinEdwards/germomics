@@ -8,6 +8,11 @@
 @import "capsomer/theme-switch.css";
 @import "capsomer/admin-shell.css";
 @import "capsomer/button.css";
+@import "capsomer/panel.css";
+@import "capsomer/field.css";
+@import "capsomer/select.css";
+@import "capsomer/status.css";
+@import "capsomer/empty.css";
 @import "capsomer/dialog.css";
 @import "capsomer/segmented.css";
 @import "capsomer/popover.css";

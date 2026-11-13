@@ -2,8 +2,9 @@
 // MIME + waveform peaks) OR "URL / Paste" (external enclosure). Byte size is the server-trusted
 // value returned by R2; duration + peaks are computed in the browser from the decoded file.
 import { useState } from "react";
-import { FileAudio2, Link2, Loader2 } from "lucide-react";
-import { Tabs, Field, inputCx } from "./ui";
+import { Loader2 } from "lucide-react";
+import { Field } from "capsomer/react/field";
+import { Segmented } from "capsomer/react/segmented";
 import { UploadDropzone } from "./UploadDropzone";
 import { decodePeaks, probeDuration } from "capsomer/behavior/player";
 import { WaveformPreview } from "capsomer/react/player";
@@ -50,13 +51,20 @@ export function AudioField({
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
         <span className="font-display text-sm font-medium text-ink">Audio</span>
-        <Tabs
-          label="Audio input method"
+        <Segmented
+          legend="Audio input method"
           value={tab}
           onChange={setTab}
-          tabs={[
-            { value: "upload", label: "Upload", icon: <FileAudio2 size={13} aria-hidden /> },
-            { value: "url", label: "URL", icon: <Link2 size={13} aria-hidden /> },
+          hideLegend
+          options={[
+            {
+              value: "upload",
+              label: "Upload",
+            },
+            {
+              value: "url",
+              label: "URL",
+            },
           ]}
         />
       </div>
@@ -97,26 +105,26 @@ export function AudioField({
         />
       ) : (
         <div className="space-y-3">
-          <Field label="Audio URL" hint="External enclosure URL (e.g. an existing host).">
-            {({ id }) => (
+          <Field label="Audio URL" help="External enclosure URL (e.g. an existing host).">
+            {(control) => (
               <input
-                id={id}
+                {...control}
                 type="url"
                 value={value.audioUrl}
                 placeholder="https://media.germomics.com/…mp3"
-                className={inputCx}
+                className="cap-input"
                 onChange={(e) => onChange({ audioUrl: e.target.value })}
               />
             )}
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Duration (seconds)">
-              {({ id }) => (
+              {(control) => (
                 <input
-                  id={id}
+                  {...control}
                   type="number"
                   value={value.audioDuration ?? ""}
-                  className={inputCx}
+                  className="cap-input"
                   onChange={(e) =>
                     onChange({ audioDuration: e.target.value ? Number(e.target.value) : null })
                   }
@@ -124,12 +132,12 @@ export function AudioField({
               )}
             </Field>
             <Field label="Byte size">
-              {({ id }) => (
+              {(control) => (
                 <input
-                  id={id}
+                  {...control}
                   type="number"
                   value={value.audioByteSize ?? ""}
-                  className={inputCx}
+                  className="cap-input"
                   onChange={(e) =>
                     onChange({ audioByteSize: e.target.value ? Number(e.target.value) : null })
                   }
