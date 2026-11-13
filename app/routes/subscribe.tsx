@@ -1,7 +1,9 @@
 import { isEmail } from "@dustinedwards/site-runtime/email";
 import { Form } from "react-router";
 import { Link } from "capsomer/react/link";
-import { Check } from "lucide-react";
+import { NewsletterSignup } from "capsomer/react/newsletter-signup";
+// The sign-up builds on field.css and button.css, which the public layout already loads (site.css).
+import "capsomer/newsletter-signup.css";
 import { CopyButton } from "~/components/content/CopyLink";
 import { ExternalCue } from "~/components/ExternalCue";
 import { pageHead } from "~/lib/seo";
@@ -132,57 +134,18 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
         </div>
       </section>
 
-      {/* Newsletter */}
-      <section className="gm-callout">
-        <h2 className="gm-sub-title">Newsletter</h2>
-        {actionData?.ok ? (
-          <p role="status" className="gm-sub-done">
-            <Check size={16} aria-hidden /> Almost done: check your inbox for a link to confirm your
-            subscription.
-          </p>
-        ) : (
-          <Form method="post" className="gm-sub-form">
-            <div className="gm-sub-row">
-              <label htmlFor="email" className="cap-sr-only">
-                Email address
-              </label>
-              <input
-                id="email"
-                type="email"
-                name="email"
-                required
-                autoComplete="email"
-                placeholder="you@example.com"
-                className="gm-sub-input"
-              />
-              <button type="submit" className="gm-sub-button">
-                Subscribe
-              </button>
-            </div>
-            <div className="gm-sub-consent">
-              <input
-                id="consent"
-                type="checkbox"
-                name="consent"
-                required
-                className="gm-sub-check"
-              />
-              <label htmlFor="consent" className="gm-sub-consent-text">
-                I agree to receive the Germomics newsletter by email and accept the{" "}
-                <Link to="/privacy" className="gm-sub-consent-link">
-                  privacy policy
-                </Link>
-                . You can unsubscribe anytime via the link in every email.
-              </label>
-            </div>
-          </Form>
-        )}
-        {actionData?.ok === false ? (
-          <p role="alert" className="gm-form-note">
-            {actionData.error}
-          </p>
-        ) : null}
-      </section>
+      {/* Newsletter: Capsomer's sign-up; the action above sends the confirmation link (double opt-in). */}
+      <NewsletterSignup
+        state={actionData}
+        consent={
+          <>
+            I agree to receive the Germomics newsletter by email and accept the{" "}
+            <Link to="/privacy">privacy policy</Link>. You can unsubscribe anytime via the link in
+            every email.
+          </>
+        }
+        renderForm={({ children, ...props }) => <Form {...props}>{children}</Form>}
+      />
     </div>
   );
 }

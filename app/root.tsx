@@ -30,6 +30,7 @@ import { LinkPrefetch } from "capsomer/react/link";
 import { ErrorPage, errorTitle } from "capsomer/react/error-page";
 import errorPageCss from "./error-page.css?url";
 import { markup } from "capsomer/behavior/trusted-html";
+import { documentAttrs } from "capsomer/behavior/document";
 
 export const links: Route.LinksFunction = () => [
   ...iconLinks(),
@@ -102,7 +103,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // The public pages take germomics' palette from Capsomer's site entry; the admin keeps Capsomer's own look.
   const site = useLocation().pathname.startsWith("/admin") ? undefined : "germomics";
   return (
-    <html lang="en" data-cap-site={site}>
+    <html lang="en" {...documentAttrs({ site })}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

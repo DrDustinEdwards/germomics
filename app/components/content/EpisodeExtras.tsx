@@ -4,7 +4,8 @@
 import { useEffect, useState } from "react";
 import { Dialog } from "capsomer/react/dialog";
 import { usePrefersReducedMotion } from "capsomer/react/hooks";
-import { ExternalLink } from "lucide-react";
+import { SourcesList } from "capsomer/react/sources-list";
+import "capsomer/sources-list.css";
 import type { Source } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
 
@@ -75,15 +76,6 @@ export function EpisodeToc({ items }: { items: TocItem[] }) {
 }
 
 // ── Sources / references ─────────────────────────────────────────────────────
-const SOURCE_KIND: Record<string, string> = {
-  credit: "Credit",
-  music: "Music",
-  image: "Image",
-  article: "Article",
-  book: "Book",
-  web: "Web",
-};
-
 export function Sources({ sources }: { sources: Source[] }) {
   if (!sources.length) return null;
   return (
@@ -91,29 +83,10 @@ export function Sources({ sources }: { sources: Source[] }) {
       {/* Collapsed by default to match the Transcript section directly below it; the two read as a
           matched pair. The full content (including the legally-required CC BY music attribution and the
           image credits) stays server-rendered inside <details> so it's present in view-source while
-          collapsed, not lazy-mounted on open. */}
+          collapsed, not lazy-mounted on open. The list is Capsomer's sources list. */}
       <details>
         <summary className="gm-post-summary">Sources and Credits</summary>
-        <ol className="gm-sources-list">
-          {sources.map((s, i) => (
-            <li key={i} className="gm-source">
-              <span className="gm-source-kind">{SOURCE_KIND[s.type] ?? s.type}</span>
-              {s.url ? (
-                <a href={s.url} className="gm-source-link">
-                  {s.title}
-                  <ExternalLink size={12} aria-hidden />
-                  <span className="cap-sr-only"> (another site)</span>
-                </a>
-              ) : (
-                <span className="gm-source-title">{s.title}</span>
-              )}
-              {s.authors ? <span>{s.authors}</span> : null}
-              {s.publisher ? <span>{s.publisher}</span> : null}
-              {s.license ? <span className="gm-source-license">{s.license}</span> : null}
-              {s.note ? <span className="gm-source-note">{s.note}</span> : null}
-            </li>
-          ))}
-        </ol>
+        <SourcesList sources={sources} markAway />
       </details>
     </section>
   );

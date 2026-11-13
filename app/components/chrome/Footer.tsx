@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { useRouteLoaderData } from "react-router";
 import { Link } from "capsomer/react/link";
-import { Icon, iconLock, iconRss, markFacebook, markInstagram, markX } from "capsomer/react/icons";
+import {
+  Icon,
+  iconLock,
+  iconRss,
+  markFacebook,
+  markInstagram,
+  markLinkedin,
+  markX,
+} from "capsomer/react/icons";
 import { Wordmark } from "../brand/Wordmark";
 import { ExternalCue } from "../ExternalCue";
 import { useSnippet } from "~/lib/content";
@@ -17,6 +25,7 @@ import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 const SOCIAL_MARKS: Record<string, { d: string; fill: boolean }> = {
   facebook: markFacebook,
   instagram: markInstagram,
+  linkedin: markLinkedin,
   x: markX,
 };
 

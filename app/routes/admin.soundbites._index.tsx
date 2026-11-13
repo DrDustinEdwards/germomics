@@ -2,7 +2,6 @@
 // gate. Clips render a public clip player on the episode page and emit <podcast:soundbite> in the
 // feed. Drizzle via soundbites.server.
 import { useFetcher } from "react-router";
-import { DeleteForm } from "~/components/admin/DeleteForm";
 import { Icon, iconCut } from "capsomer/react/icons";
 import type { Route } from "./+types/admin.soundbites._index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
@@ -16,6 +15,7 @@ import { Empty } from "capsomer/react/empty";
 import { useSnippet } from "~/lib/content";
 import { readForm } from "@dustinedwards/site-runtime/body";
 import { ADMIN_FORM } from "~/lib/body.server";
+import { DeleteRowForm } from "~/components/admin/DeleteRowForm";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
@@ -46,6 +46,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
   const { episodes, clips } = loaderData;
   const save = useFetcher<{ ok: boolean; message?: string }>();
+  const del = useFetcher();
   const emptySoundbites = useSnippet(
     "snippet:empty.soundbites",
     "No soundbites yet. Create one on the right.",
@@ -78,7 +79,8 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
                       {timecode(c.startSeconds * 1000)} for {c.durationSeconds}s
                     </p>
                   </div>
-                  <DeleteForm
+                  <DeleteRowForm
+                    fetcher={del}
                     id={c.id}
                     label="Delete soundbite"
                     title="Delete this soundbite?"

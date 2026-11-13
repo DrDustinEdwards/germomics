@@ -1,6 +1,6 @@
 import { lazy, useState } from "react";
 import { useFetcher } from "react-router";
-import { Trophy } from "lucide-react";
+import { Icon, iconTrophy } from "capsomer/react/icons";
 import { pageHead } from "~/lib/seo";
 import { sectionPageTrail } from "~/lib/trails";
 import { SectionTrail } from "~/components/content/SectionTrail";
@@ -10,6 +10,8 @@ import { clientIp } from "@dustinedwards/site-runtime/http";
 import { gameCacheTag, getGame } from "~/lib/games.server";
 import { getLeaderboard, submitScore } from "~/lib/scores.server";
 import { ClientOnly } from "capsomer/react/hooks";
+import { Leaderboard } from "capsomer/react/leaderboard";
+import "capsomer/leaderboard.css";
 import { useSnippet } from "~/lib/content";
 import { readForm } from "@dustinedwards/site-runtime/body";
 import { PUBLIC_FORM } from "~/lib/body.server";
@@ -108,23 +110,9 @@ export default function GamePage({ loaderData }: Route.ComponentProps) {
 
       <section className="gm-game-scores">
         <h2 className="gm-game-scores-title">
-          <Trophy size={18} className="gm-brand" aria-hidden /> Leaderboard
+          <Icon d={iconTrophy} className="gm-brand" /> Leaderboard
         </h2>
-        {leaderboard.length ? (
-          <ol className="gm-scores">
-            {leaderboard.map((s, i) => (
-              <li key={s.id} className="gm-score">
-                <span className="gm-score-who">
-                  <span className="gm-meta-text">{i + 1}</span>
-                  <span className="gm-score-name">{s.name}</span>
-                </span>
-                <span className="gm-score-value">{s.score}</span>
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <p className="gm-muted">{emptyScores}</p>
-        )}
+        <Leaderboard entries={leaderboard} empty={emptyScores} format={(score) => String(score)} />
       </section>
     </div>
   );

@@ -179,6 +179,7 @@
   --control: 2rem;
   /* The first level's text lines up with the page's edge; its hover background reaches into the gutter. */
   margin-inline-start: calc(-1 * var(--space-2));
+  margin-block-end: 1rem;
 }
 
 /* Capsomer's save toggle and subscribe links in germomics' own tokens, as the breadcrumb: the
@@ -222,18 +223,22 @@
     block-size: 14px;
   }
 }
-.cap-subscribe {
-  --pad-card: 1.25rem;
+/* The listen-and-subscribe card and the newsletter sign-up (below) are the site's sunken cards. */
+.cap-subscribe,
+.cap-newsletter {
   --radius-l: 1rem;
   --display: var(--font-display);
   --fs-h3: 1.125rem;
   --weight-heading: 600;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
+}
+.cap-subscribe {
+  background: var(--sunken);
+  --pad-card: 1.25rem;
   --fs-label: 0.875rem;
   --link-weight: 400;
   margin-block-start: 3rem;
-  background: var(--sunken);
   & .cap-subscribe-more {
     padding-inline: 0.75rem;
   }
@@ -257,6 +262,82 @@
       inline-size: 12px;
       block-size: 12px;
     }
+  }
+}
+
+/* Capsomer's newsletter sign-up, leaderboard and sources list in germomics' own tokens, as the subscribe card: the
+   sign-up keeps the old callout (the sunken card, Space Grotesk heading, the field in the body face on the card color,
+   the violet button), the leaderboard the old card (white rows, names in Space Grotesk), the sources their small type. */
+.cap-newsletter {
+  --cap-newsletter-bg: var(--sunken);
+  --pad-card: 1.5rem;
+  --muted: var(--dim);
+  --fs-detail: 0.875rem;
+  --radius-control: 0.5rem;
+  --ring: var(--accent-text);
+  margin-block-start: 2.5rem;
+  & .cap-newsletter-title {
+    line-height: 1.75rem;
+  }
+  & .cap-input {
+    --surface: var(--raised);
+    --cap-input-edge: var(--line);
+    --ui: var(--font-serif);
+    --fs-body: 1.125rem;
+    padding: 0.5rem 0.75rem;
+    line-height: 1.7;
+  }
+  & .cap-btn {
+    --ui: var(--font-display);
+    --cap-btn-fs: 0.875rem;
+    --cap-btn-h: 2.25rem;
+    --pad-x: 1rem;
+    border-width: 0;
+    font-weight: 500;
+  }
+  & .cap-newsletter-consent {
+    --surface: var(--raised);
+    gap: 0.5rem;
+    align-items: flex-start;
+    color: var(--dim);
+    line-height: 1.25rem;
+    & a {
+      color: var(--accent-text);
+      text-decoration-line: underline;
+      text-underline-offset: 2px;
+    }
+  }
+}
+.cap-leaderboard {
+  --surface: var(--raised);
+  --radius-l: 0.75rem;
+  --row-h: 0;
+  --pad-x: 1rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --fs-detail: 0.75rem;
+  --muted: var(--dim);
+  --mono: var(--font-mono);
+  --cap-leaderboard-name-face: var(--font-display);
+  & .cap-leaderboard-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+}
+.cap-sources {
+  --space-1: 0;
+  --space-2: 0.5rem;
+  --fs-detail: 0.875rem;
+  --fs-label: 0.6875rem;
+  --muted: var(--dim);
+  --mono: var(--font-mono);
+  --radius-s: 0.25rem;
+  line-height: var(--text-sm--line-height);
+  --cap-source-kind-pad: 0.125rem 0.375rem;
+  & .cap-source-kind {
+    letter-spacing: 0.025em;
+  }
+  & a.cap-source-title {
+    font-weight: 400;
   }
 }
 
@@ -539,6 +620,7 @@
   }
   .gm-clips-title,
   .gm-game-scores-title {
+    --icon-size: 1.125rem;
     margin-bottom: 0.75rem;
     display: flex;
     align-items: center;
@@ -1125,52 +1207,6 @@
       display: block;
     }
   }
-  :where(.gm-sources-list > :not(:last-child)) {
-    margin-block: 0 0.5rem;
-  }
-  .gm-sources-list {
-    font-size: 0.875rem;
-    line-height: var(--text-sm--line-height);
-  }
-  .gm-source {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    column-gap: 0.5rem;
-    color: var(--dim);
-  }
-  .gm-source-kind {
-    border-radius: 0.25rem;
-    background-color: var(--sunken);
-    padding-inline: 0.375rem;
-    padding-block: 0.125rem;
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    letter-spacing: 0.025em;
-    color: var(--dim);
-    text-transform: uppercase;
-  }
-  .gm-source-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    color: var(--accent-text);
-  }
-  @media (hover: hover) {
-    .gm-source-link:hover {
-      text-decoration-line: underline;
-    }
-  }
-  .gm-source-title {
-    color: var(--text);
-  }
-  .gm-source-license {
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-  }
-  .gm-source-note {
-    font-style: italic;
-  }
   .gm-toc-sub {
     padding-left: 1rem;
   }
@@ -1235,73 +1271,9 @@
     width: 0.875rem;
     height: 0.875rem;
   }
-  /* The home hero's equalizer, the episode waveform's row and bars; hidden on phones. */
-  .gm-equalizer {
-    display: none;
-    height: 4rem;
-    width: 11rem;
-    align-items: center;
-    gap: 1px;
-  }
-  @media (width >= 40rem) {
-    .gm-equalizer {
-      display: flex;
-      width: 13rem;
-    }
-  }
-  .gm-equalizer-bar {
-    position: relative;
-    flex: 1;
-    border-radius: 0.25rem;
-    background-color: var(--accent-text);
-  }
-  /* The equalizer's bars and the hero's blobs are animated by inline styles (HeroEqualizer.tsx, HeroBackground.tsx),
-     which only !important outranks: under reduced motion they hold still, at their resting row and place. */
-  @media (prefers-reduced-motion: reduce) {
-    .gm-equalizer-bar,
-    .gm-hero-blob {
-      animation: none !important;
-    }
-  }
-  @keyframes germomics-eq {
-    from {
-      transform: scaleY(0.3);
-    }
-    to {
-      transform: scaleY(1);
-    }
-  }
-  /* The hero blobs' group opacity is a theme value, set on the root the way Capsomer sets its own (tokens/color.css):
-     dimmer in dark, by the toggle or by the system. */
-  :root {
-    --gm-blob-opacity: 0.6;
-  }
-  :root[data-theme="dark"] {
-    --gm-blob-opacity: 0.35;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --gm-blob-opacity: 0.35;
-    }
-  }
-  /* The home hero's drifting blobs: dimmer in dark. Each blob sets --dx, --dy and --s for the one drift. */
-  .gm-hero-blobs {
-    pointer-events: none;
-    position: absolute;
-    overflow-x: clip;
-    opacity: var(--gm-blob-opacity);
-  }
-  .gm-hero-blob {
-    position: absolute;
-    filter: blur(64px);
-  }
-  @keyframes germomics-drift {
-    from {
-      transform: translate3d(0, 0, 0) scale(1);
-    }
-    to {
-      transform: translate3d(var(--dx, 0), var(--dy, 0), 0) scale(var(--s, 1));
-    }
+  /* The home hero's blobs and equalizer: three blobs in the brand color, the fourth blob and the bars in the accent text color. */
+  .gm-hero .cap-ambient {
+    --cap-ambient-2: var(--accent-text);
   }
   /* The index and list pages: writing, episodes, a season, a tag, archive, search, games, data, txasm, contact and accessibility. */
   .gm-page-title,
@@ -1623,7 +1595,6 @@
     margin-top: 1.5rem;
   }
   .gm-notice-button,
-  .gm-sub-button,
   .gm-game-button {
     border-radius: 0.5rem;
     background-color: var(--primary);
@@ -1645,7 +1616,6 @@
   }
   @media (hover: hover) {
     .gm-notice-button:hover,
-    .gm-sub-button:hover,
     .gm-game-button:hover {
       background-color: var(--primary-hover);
     }
@@ -1940,6 +1910,7 @@
     flex: 1;
   }
   .gm-latest-kind {
+    --icon-size: 0.75rem;
     display: flex;
     align-items: center;
     gap: 0.25rem;
@@ -2015,24 +1986,6 @@
     flex-wrap: wrap;
     gap: 0.5rem;
   }
-  .gm-sub-done {
-    margin-top: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--accent-text);
-  }
-  .gm-sub-row {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  @media (width >= 40rem) {
-    .gm-sub-row {
-      flex-direction: row;
-    }
-  }
-  .gm-sub-input,
   .gm-game-input {
     border-radius: 0.5rem;
     border-style: solid;
@@ -2043,41 +1996,15 @@
     padding-block: 0.5rem;
     outline-style: none;
   }
-  .gm-sub-input {
-    flex: 1;
-  }
   .gm-game-input {
     padding-block: 0.375rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
   }
-  .gm-sub-input:focus-visible,
   .gm-game-input:focus-visible {
     border-color: var(--accent-text);
   }
 
-  .gm-sub-consent {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-  .gm-sub-check {
-    margin-top: 0.25rem;
-    height: 1rem;
-    width: 1rem;
-    flex-shrink: 0;
-    accent-color: var(--primary);
-  }
-  .gm-sub-consent-text {
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    color: var(--dim);
-  }
-  .gm-sub-consent-link {
-    color: var(--accent-text);
-    text-decoration-line: underline;
-    text-underline-offset: 2px;
-  }
   .gm-form-note {
     margin-top: 0.5rem;
     font-size: 0.875rem;
@@ -2127,49 +2054,8 @@
   .gm-game-scores {
     margin-top: 2rem;
   }
-  :where(.gm-scores > :not(:last-child)) {
-    border-top-style: solid;
-    border-bottom-style: solid;
-    border-top-width: 0;
-    border-bottom-width: 1px;
-    border-color: var(--line);
-  }
-  .gm-scores {
-    border-radius: 0.75rem;
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--line);
-    background-color: var(--raised);
-  }
-  .gm-score {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-inline: 1rem;
-    padding-block: 0.5rem;
-  }
-  .gm-score-who {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  .gm-score-name {
-    font-family: var(--font-display);
-  }
-  .gm-score-value {
-    font-family: var(--font-mono);
-    color: var(--accent-text);
-    font-variant-numeric: tabular-nums;
-  }
-
   :where(.gm-home > :not(:last-child)) {
     margin-block: 0 3rem;
-  }
-  .gm-sub-form {
-    margin-top: 0.75rem;
-  }
-  :where(.gm-sub-form > :not(:last-child)) {
-    margin-block: 0 0.75rem;
   }
   @keyframes gm-pulse {
     50% {

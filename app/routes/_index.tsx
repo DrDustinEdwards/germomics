@@ -1,5 +1,5 @@
 import { Link } from "capsomer/react/link";
-import { Headphones } from "lucide-react";
+import { Icon, iconHeadphones } from "capsomer/react/icons";
 import type { Route } from "./+types/_index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getSettings, getSnippets } from "~/lib/context.server";
@@ -14,8 +14,11 @@ import { SNIPPET_DEFAULTS } from "~/lib/content-defaults";
 import { PostCard } from "~/components/content/PostCard";
 import { PlayTrackButton } from "capsomer/react/player";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
-import { HeroEqualizer } from "~/components/content/HeroEqualizer";
-import { HeroBackground } from "~/components/content/HeroBackground";
+import { Ambient } from "capsomer/react/ambient";
+// The hero's blobs load with the home page alone, in the cap layer.
+import "capsomer/ambient-base.css";
+import "capsomer/ambient-blobs.css";
+import "capsomer/ambient-equalizer.css";
 import { CoverArt } from "~/components/content/CoverArt";
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -85,11 +88,11 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
       {/* Split hero: words on the left, the show cover (with the equalizer docked beneath it as a
           soundwave shelf) in the right ~40%, over a soft drifting brand backdrop. The backdrop
-          full-bleeds the page width and fades out at the bottom (see HeroBackground); the section
+          full-bleeds the page width and fades out at the bottom (Capsomer's ambient blobs); the section
           stays relative as its positioning context but no longer clips, so the wash is not boxed.
           Columns stack on mobile (words first, then the cover). */}
       <section className="gm-hero">
-        <HeroBackground />
+        <Ambient variant="blobs" />
         <div className="gm-hero-text">
           <h1 className="gm-hero-title">
             A mix of <span className="gm-brand">microbiology</span> and{" "}
@@ -105,7 +108,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           <div className="gm-hero-cover">
             <CoverArt alt="Germomics cover art" className="gm-cover-ringed" />
           </div>
-          <HeroEqualizer />
+          <Ambient variant="equalizer" hideOnPhone />
         </div>
       </section>
 
@@ -124,7 +127,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               <div className="gm-latest-text">
                 <div className="gm-latest-meta">
                   <span className="gm-latest-kind">
-                    <Headphones size={12} aria-hidden /> Latest episode
+                    <Icon d={iconHeadphones} /> Latest episode
                   </span>
                   {featured.publishedAt ? <span>{formatDate(featured.publishedAt)}</span> : null}
                   {featured.audioDuration ? (

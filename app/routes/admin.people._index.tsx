@@ -2,7 +2,6 @@
 // (app/lib/carrel/source.ts), so a person is added here first.
 import { useState } from "react";
 import { useFetcher } from "react-router";
-import { DeleteForm } from "~/components/admin/DeleteForm";
 import { Icon, iconPeople } from "capsomer/react/icons";
 import type { Route } from "./+types/admin.people._index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
@@ -16,6 +15,7 @@ import { useSnippet } from "~/lib/content";
 import type { Person, PersonLink } from "~/db/schema";
 import { readForm } from "@dustinedwards/site-runtime/body";
 import { ADMIN_FORM } from "~/lib/body.server";
+import { DeleteRowForm } from "~/components/admin/DeleteRowForm";
 import { TextField } from "capsomer/react/field";
 import { RepeaterField } from "capsomer/react/repeater-field";
 import "capsomer/repeater-field.css";
@@ -65,6 +65,7 @@ const blank = {
 
 export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
   const save = useFetcher<{ ok: boolean; message?: string }>();
+  const del = useFetcher();
   const [draft, setDraft] = useState(blank);
   const editing = draft.id !== 0;
   const emptyPeople = useSnippet("snippet:empty.people", "No people yet. Create one on the right.");
@@ -123,7 +124,8 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                   >
                     edit
                   </button>
-                  <DeleteForm
+                  <DeleteRowForm
+                    fetcher={del}
                     id={p.id}
                     label={`Delete ${p.name}`}
                     title={`Delete ${p.name}?`}
