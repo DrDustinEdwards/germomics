@@ -355,6 +355,7 @@
   .gm-next,
   .gm-toc,
   .gm-chapters-mobile,
+  .gm-game-frame,
   .gm-index-card,
   .gm-about-card,
   .gm-data-map,
@@ -2160,5 +2161,183 @@
     50% {
       opacity: 0.5;
     }
+  }
+  /* The page frame: main, the footer, the header's mark, a game's frame and the outbound-link cue. */
+  .gm-main {
+    margin-inline: auto;
+    min-height: 60vh;
+    max-width: 64rem;
+    padding-inline: 1rem;
+    padding-top: 1.5rem;
+    padding-bottom: 3rem;
+  }
+  .gm-footer {
+    border-top-style: solid;
+    border-top-width: 1px;
+    border-color: var(--line);
+    background-color: var(--sunken);
+  }
+  .gm-footer-grid {
+    margin-inline: auto;
+    display: grid;
+    max-width: 64rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 0.75rem;
+    row-gap: 2rem;
+    padding-inline: 1rem;
+    padding-block: 3rem;
+  }
+  @media (width >= 40rem) {
+    .gm-footer-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 2rem;
+    }
+  }
+  @media (width >= 64rem) {
+    .gm-footer-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .gm-footer-brand {
+    grid-column: span 3 / span 3;
+  }
+  @media (width < 40rem) {
+    .gm-footer-brand {
+      order: 9999;
+    }
+  }
+  @media (width >= 40rem) {
+    .gm-footer-brand {
+      grid-column: span 2 / span 2;
+    }
+  }
+  @media (width >= 64rem) {
+    .gm-footer-brand {
+      grid-column: span 1 / span 1;
+    }
+  }
+  .gm-footer-home {
+    display: inline-flex;
+  }
+  .gm-footer-wordmark {
+    height: 5rem;
+    width: auto;
+  }
+  .gm-footer-tagline {
+    margin-top: 0.75rem;
+    max-width: 20rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.625;
+    color: var(--dim);
+  }
+  .gm-footer-socials {
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .gm-footer-social {
+    display: grid;
+    height: 2.25rem;
+    width: 2.25rem;
+    place-items: center;
+    border-radius: calc(infinity * 1px);
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--line);
+    color: var(--dim);
+  }
+  @media (hover: hover) {
+    .gm-footer-social:hover {
+      border-color: var(--accent-text);
+      color: var(--accent-text);
+    }
+  }
+  .gm-footer-social-icon {
+    --icon-size: 1rem;
+  }
+  .gm-footer-title {
+    font-family: var(--font-display);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .gm-footer-list {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  :where(.gm-footer-list > :not(:last-child)) {
+    margin-block: 0 0.5rem;
+  }
+  @media (width < 40rem) {
+    :where(.gm-footer-list > :not(:last-child)) {
+      margin-block: 0;
+    }
+  }
+  .gm-footer-link-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  /* Below sm the three lists go 3-up; each link gets a 44px tappable row there. */
+  @media (width < 40rem) {
+    .gm-footer-tap {
+      display: flex;
+      min-height: 2.75rem;
+      align-items: center;
+    }
+  }
+  .gm-footer-base {
+    border-top-style: solid;
+    border-top-width: 1px;
+    border-color: var(--line);
+  }
+  .gm-footer-base-row {
+    margin-inline: auto;
+    display: flex;
+    max-width: 64rem;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 0.75rem;
+    row-gap: 0.25rem;
+    padding-inline: 1rem;
+    padding-block: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--dim);
+  }
+  .gm-footer-top {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .gm-footer-link,
+  .gm-footer-top {
+    color: var(--dim);
+  }
+  @media (hover: hover) {
+    .gm-footer-link:hover,
+    .gm-footer-top:hover {
+      color: var(--text);
+    }
+  }
+  .gm-header-mark {
+    height: 1.25rem;
+    width: auto;
+  }
+  .gm-game-frame {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 800px;
+    overflow: hidden;
+  }
+  .gm-external-cue {
+    flex-shrink: 0;
+    color: color-mix(in oklab, var(--dim) 70%, transparent);
   }
 }

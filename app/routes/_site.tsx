@@ -46,7 +46,7 @@ export default function Site() {
     >
       {/* The header carries the skip link. It runs as React only on a page that hydrates on load. */}
       <Header hydrate={!pageDeferred(hydrates)} />
-      <main id="main" className="mx-auto min-h-[60vh] max-w-5xl px-4 pb-12 pt-6">
+      <main id="main" className="gm-main">
         <Outlet />
       </main>
       <Footer />
