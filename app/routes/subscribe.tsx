@@ -141,11 +141,7 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
             every email.
           </>
         }
-        renderForm={({ className, children, "aria-labelledby": labelledBy }) => (
-          <Form method="post" className={className} aria-labelledby={labelledBy}>
-            {children}
-          </Form>
-        )}
+        renderForm={({ children, ...props }) => <Form {...props}>{children}</Form>}
       />
     </div>
   );

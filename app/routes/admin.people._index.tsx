@@ -2,7 +2,7 @@
 // (app/lib/carrel/source.ts), so a person is added here first.
 import { useState } from "react";
 import { useFetcher } from "react-router";
-import { Icon } from "capsomer/react/icons";
+import { Icon, iconPeople } from "capsomer/react/icons";
 import type { Route } from "./+types/admin.people._index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { listPeople, upsertPerson, deletePerson } from "~/lib/people.server";
@@ -15,7 +15,7 @@ import { useSnippet } from "~/lib/content";
 import type { Person, PersonLink } from "~/db/schema";
 import { readForm } from "@dustinedwards/site-runtime/body";
 import { ADMIN_FORM } from "~/lib/body.server";
-import { confirmSubmit } from "capsomer/behavior/confirm-dialog";
+import { DeleteRowForm } from "~/components/admin/DeleteRowForm";
 import { TextField } from "capsomer/react/field";
 import { RepeaterField } from "capsomer/react/repeater-field";
 import "capsomer/repeater-field.css";
@@ -85,7 +85,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
   return (
     <div>
       <h1 className="flex items-center gap-2 font-display text-2xl font-semibold">
-        <Icon name="people" className="size-[22px]" /> People
+        <Icon d={iconPeople} className="size-[22px]" /> People
       </h1>
       <p className="mt-1 text-sm text-muted">
         Reusable guests. Link them to episodes from the editor.
@@ -108,7 +108,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                     />
                   ) : (
                     <span className="grid h-10 w-10 place-items-center rounded-full bg-surface text-brand">
-                      <Icon name="people" className="size-4" />
+                      <Icon d={iconPeople} className="size-4" />
                     </span>
                   )}
                   <div className="min-w-0 flex-1">
@@ -124,24 +124,13 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                   >
                     edit
                   </button>
-                  <del.Form
-                    method="post"
-                    onSubmit={(e) =>
-                      confirmSubmit(e, {
-                        title: `Delete ${p.name}?`,
-                        action: "Delete person",
-                      })
-                    }
-                  >
-                    <input type="hidden" name="intent" value="delete" />
-                    <input type="hidden" name="id" value={p.id} />
-                    <button
-                      aria-label={`Delete ${p.name}`}
-                      className="grid h-7 w-7 place-items-center rounded text-muted hover:text-brand"
-                    >
-                      <Icon name="trash" className="size-3.5" />
-                    </button>
-                  </del.Form>
+                  <DeleteRowForm
+                    fetcher={del}
+                    id={p.id}
+                    label={`Delete ${p.name}`}
+                    title={`Delete ${p.name}?`}
+                    action="Delete person"
+                  />
                 </li>
               ))}
             </ul>

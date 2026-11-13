@@ -230,9 +230,9 @@
   --weight-heading: 600;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
-  background: var(--sunken);
 }
 .cap-subscribe {
+  background: var(--sunken);
   --pad-card: 1.25rem;
   --fs-label: 0.875rem;
   --link-weight: 400;
@@ -267,6 +267,7 @@
    sign-up keeps the old callout (the sunken card, Space Grotesk heading, the field in the body face on the card color,
    the violet button), the leaderboard the old card (white rows, names in Space Grotesk), the sources their small type. */
 .cap-newsletter {
+  --cap-newsletter-bg: var(--sunken);
   --pad-card: 1.5rem;
   --muted: var(--dim);
   --fs-detail: 0.875rem;
@@ -315,12 +316,9 @@
   --fs-detail: 0.75rem;
   --muted: var(--dim);
   --mono: var(--font-mono);
-  --figures: var(--font-mono);
+  --cap-leaderboard-name-face: var(--font-display);
   & .cap-leaderboard-row {
     grid-template-columns: auto minmax(0, 1fr) auto;
-  }
-  & .cap-leaderboard-name {
-    font-family: var(--font-display);
   }
 }
 .cap-sources {
@@ -332,8 +330,8 @@
   --mono: var(--font-mono);
   --radius-s: 0.25rem;
   line-height: var(--text-sm--line-height);
+  --cap-source-kind-pad: 0.125rem 0.375rem;
   & .cap-source-kind {
-    padding: 0.125rem 0.375rem;
     letter-spacing: 0.025em;
   }
   & a.cap-source-title {
@@ -1267,36 +1265,8 @@
     width: 0.875rem;
     height: 0.875rem;
   }
-  /* The home hero's equalizer, the episode waveform's row and bars; hidden on phones. */
-  .gm-equalizer {
-    display: none;
-    height: 4rem;
-    width: 11rem;
-    align-items: center;
-    gap: 1px;
-  }
-  @media (width >= 40rem) {
-    .gm-equalizer {
-      display: flex;
-      width: 13rem;
-    }
-  }
-  .gm-equalizer-bar {
-    position: relative;
-    flex: 1;
-    border-radius: 0.25rem;
-    background-color: var(--accent-text);
-  }
-  @keyframes germomics-eq {
-    from {
-      transform: scaleY(0.3);
-    }
-    to {
-      transform: scaleY(1);
-    }
-  }
-  /* The home hero's blobs: three in the brand color and the fourth in the accent text color. */
-  .gm-hero > .cap-ambient {
+  /* The home hero's blobs and equalizer: three blobs in the brand color, the fourth blob and the bars in the accent text color. */
+  .gm-hero .cap-ambient {
     --cap-ambient-2: var(--accent-text);
   }
   /* The index and list pages: writing, episodes, a season, a tag, archive, search, games, data, txasm, contact and accessibility. */

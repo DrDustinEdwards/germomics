@@ -14,10 +14,11 @@ import { SNIPPET_DEFAULTS } from "~/lib/content-defaults";
 import { PostCard } from "~/components/content/PostCard";
 import { PlayTrackButton } from "capsomer/react/player";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
-import { HeroEqualizer } from "~/components/content/HeroEqualizer";
 import { Ambient } from "capsomer/react/ambient";
 // The hero's blobs load with the home page alone, in the cap layer.
-import "capsomer/ambient.css";
+import "capsomer/ambient-base.css";
+import "capsomer/ambient-blobs.css";
+import "capsomer/ambient-equalizer.css";
 import { CoverArt } from "~/components/content/CoverArt";
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -107,7 +108,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           <div className="gm-hero-cover">
             <CoverArt alt="Germomics cover art" className="gm-cover-ringed" />
           </div>
-          <HeroEqualizer />
+          <Ambient variant="equalizer" hideOnPhone />
         </div>
       </section>
 

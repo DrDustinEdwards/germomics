@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { useFetcher } from "react-router";
 import { Link } from "capsomer/react/link";
-import { Icon } from "capsomer/react/icons";
+import { Icon, iconExternal, iconSave } from "capsomer/react/icons";
 import type { Route } from "./+types/admin.episodes.$id";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getPostById } from "~/lib/posts.server";
@@ -100,10 +100,10 @@ export default function EpisodeAudio({ loaderData }: Route.ComponentProps) {
             href={carrelEditUrl(loaderData.slug)}
             className="inline-flex items-center gap-1.5 font-display text-sm text-muted hover:text-ink"
           >
-            <Icon name="external" className="size-3.5" /> Write in Carrel
+            <Icon d={iconExternal} className="size-3.5" /> Write in Carrel
           </a>
           <Button variant="primary" type="button" pending={fetcher.state !== "idle"} onClick={save}>
-            <Icon name="save" className="size-3.5" /> Save
+            <Icon d={iconSave} className="size-3.5" /> Save
           </Button>
         </div>
       </div>

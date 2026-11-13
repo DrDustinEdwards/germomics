@@ -86,7 +86,7 @@ export function Sources({ sources }: { sources: Source[] }) {
           collapsed, not lazy-mounted on open. The list is Capsomer's sources list. */}
       <details>
         <summary className="gm-post-summary">Sources and Credits</summary>
-        <SourcesList sources={sources} />
+        <SourcesList sources={sources} markAway />
       </details>
     </section>
   );

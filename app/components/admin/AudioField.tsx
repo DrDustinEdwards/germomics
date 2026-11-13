@@ -2,7 +2,7 @@
 // MIME + waveform peaks) OR "URL / Paste" (external enclosure). Byte size is the server-trusted
 // value returned by R2; duration + peaks are computed in the browser from the decoded file.
 import { useState } from "react";
-import { Icon } from "capsomer/react/icons";
+import { Icon, iconSpinner } from "capsomer/react/icons";
 import { Field } from "capsomer/react/field";
 import { Segmented } from "capsomer/react/segmented";
 import { UploadDropzone } from "./UploadDropzone";
@@ -80,7 +80,7 @@ export function AudioField({
             <span>{value.audioMimeType ?? "audio/mpeg"}</span>
             {analyzing ? (
               <span className="flex items-center gap-1 text-accent">
-                <Icon name="spinner" className="size-3 animate-spin" /> analyzing…
+                <Icon d={iconSpinner} className="size-3 animate-spin" /> analyzing…
               </span>
             ) : null}
           </div>

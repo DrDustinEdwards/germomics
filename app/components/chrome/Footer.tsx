@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useRouteLoaderData } from "react-router";
 import { Rss, Lock } from "lucide-react";
 import { Link } from "capsomer/react/link";
-import { Icon, SOCIAL, type SocialName } from "capsomer/react/icons";
+import { Icon, markFacebook, markInstagram, markLinkedin, markX } from "capsomer/react/icons";
 import { Wordmark } from "../brand/Wordmark";
 import { ExternalCue } from "../ExternalCue";
 import { useSnippet } from "~/lib/content";
@@ -13,6 +13,13 @@ import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 // mobile. Tagline + nav labels come from content snippets; socials + podcast directories come from
 // the root loader (settings social.* + show_config.subscribe_links), so footer and schema agree.
 // Reuses Dustin's brand Wordmark. This consumes snippet:footer.tagline.
+
+const SOCIAL: Record<string, { d: string; fill: boolean }> = {
+  facebook: markFacebook,
+  instagram: markInstagram,
+  linkedin: markLinkedin,
+  x: markX,
+};
 
 type RootData = {
   socials?: { platform: string; label: string; url: string }[];
@@ -63,8 +70,8 @@ export function Footer() {
               {socials.map((s) => (
                 <li key={s.platform}>
                   <a href={s.url} rel="me" aria-label={s.label} className="gm-footer-social">
-                    {s.platform in SOCIAL ? (
-                      <Icon name={s.platform as SocialName} className="gm-footer-social-icon" />
+                    {SOCIAL[s.platform] ? (
+                      <Icon {...SOCIAL[s.platform]} className="gm-footer-social-icon" />
                     ) : null}
                   </a>
                 </li>
