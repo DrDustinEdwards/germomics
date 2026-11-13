@@ -223,6 +223,22 @@
     block-size: 14px;
   }
 }
+/* An episode's data preview (Capsomer's DataPreview): a raised card in the site's display face, its line in the brand
+   ink. */
+.cap-data-preview {
+  --surface: var(--raised);
+  --display: var(--font-display);
+  --fs-lead: 1.125rem;
+  --weight-heading: 600;
+  --fs-body: 0.875rem;
+  --fs-detail: 0.75rem;
+  --enarratio-series-1: var(--primary);
+}
+@media (forced-colors: active) {
+  .cap-data-preview {
+    --enarratio-series-1: CanvasText;
+  }
+}
 /* The listen-and-subscribe card and the newsletter sign-up (below) are the site's sunken cards. */
 .cap-subscribe,
 .cap-newsletter {
@@ -425,14 +441,13 @@
 }
 
 /* germomics' own parts on the public pages, named in place of Tailwind utilities (the move off Tailwind): the post and
-   article cards, the tag pills, the soundbite clips, the search and archive page hits, the legal pages' notes and the
-   episode context figure. In the site layer, after Tailwind's, so they win over Capsomer's parts as the utilities did. */
+   article cards, the tag pills, the soundbite clips, the search and archive page hits, and the legal pages' notes.
+   In the site layer, after Tailwind's, so they win over Capsomer's parts as the utilities did. */
 @layer site {
   /* The bordered panel: cards, clips, guests, the contents rail and the prev/next links. */
   .gm-post-card,
   .gm-clip,
   .gm-page-hits,
-  .gm-context,
   .gm-guest,
   .gm-prev,
   .gm-next,
@@ -748,60 +763,6 @@
     font-size: 2.25rem;
     line-height: 1.25;
     font-weight: 600;
-  }
-  .gm-context {
-    background-color: var(--raised);
-    padding: 1rem;
-  }
-  .gm-context-title {
-    font-family: var(--font-display);
-    font-size: 1.125rem;
-    line-height: 1.375;
-    font-weight: 600;
-    color: var(--text);
-  }
-  .gm-context-chart {
-    margin-top: 0.75rem;
-    --enarratio-series-1: var(--primary);
-  }
-  @media (forced-colors: active) {
-    .gm-context-chart {
-      --enarratio-series-1: CanvasText;
-    }
-  }
-  .gm-context-chart svg {
-    display: block;
-    height: auto;
-    width: 100%;
-  }
-  .gm-context-summary {
-    margin-top: 0.75rem;
-    font-size: 0.875rem;
-    line-height: 1.625;
-    color: var(--text);
-  }
-  .gm-context-more {
-    margin-top: 0.75rem;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-  }
-  .gm-context-link {
-    font-family: var(--font-display);
-    color: var(--accent-text);
-    text-decoration-line: underline;
-    text-underline-offset: 2px;
-  }
-  .gm-context-source {
-    margin-top: 0.5rem;
-    font-family: var(--font-display);
-    font-size: 0.75rem;
-    line-height: 1.625;
-    color: var(--dim);
-  }
-  .gm-context-source-link {
-    color: var(--accent-text);
-    text-decoration-line: underline;
-    text-underline-offset: 2px;
   }
   .gm-context-wrap {
     margin-bottom: 2.5rem;

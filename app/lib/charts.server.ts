@@ -1,7 +1,7 @@
 // The /data charts, drawn on the server by Enarratio in Capsomer's chart frame (nothing reaches the shared client
 // chunk, hard rule 4). Their look is capsomer/enarratio.css with germomics' tokens mapped in (app/charts.css); the
 // charts island (app/islands/charts.ts) enhances them and swaps in the narrow drawing on a phone.
-import { frameHtml, NARROW_WIDTH, narrowRedraw } from "capsomer/behavior/chart-frame";
+import { frameHtml, narrowRedraw } from "capsomer/behavior/chart-frame";
 import { type LineChartOptions, lineChart } from "enarratio/lite/line";
 import { type DotMapOptions, dotMap, type GeoFeatureCollection } from "enarratio/map";
 import type { DataMap } from "~/lib/datasets.server";
@@ -15,13 +15,6 @@ function drawingOf(html: string): string {
   if (start === -1 || end === -1)
     throw new Error("timelineChart: no drawing in Enarratio's output");
   return html.slice(start, end + "</svg></div>".length);
-}
-
-/** A drawing's viewBox size. */
-function viewBox(markup: string): { width: number; height: number } {
-  const box = /<svg\b[^>]*?\sviewBox="[\d.-]+ [\d.-]+ ([\d.]+) ([\d.]+)"/.exec(markup);
-  if (!box) throw new Error("charts: no viewBox in Enarratio's drawing");
-  return { width: Number(box[1]), height: Number(box[2]) };
 }
 
 export function timelineChart(slug: string, t: Timeline): string {
@@ -91,12 +84,9 @@ export function dataMap(slug: string, m: DataMap): string {
     alt: m.alt,
   } satisfies DotMapOptions<(typeof m.points)[number]>;
   // A map keeps its shape, so its phone drawing is far shorter than the wide one shows at 30rem (about 340 against 615
-  // px). The wide map carries the phone drawing's height, and under 30rem it scales into the column at that height
-  // (app/charts.css) until the phone drawing replaces it, so the swap does not move the page (D5).
-  const narrow = drawingOf(dotMap({ ...options, width: NARROW_WIDTH }));
-  const wide = dotMap(options).replace(
-    /(<div class="enarratio-frame enarratio-frame-wide"[^>]*>\s*<svg\b)/,
-    `$1 style="--narrow-height: ${viewBox(narrow).height}px"`,
-  );
-  return frameHtml(wide, { redraw: { narrow } });
+  // px): Capsomer's keepShape draws it at its own height and scales the wide map to its proportions until the swap, so
+  // the swap does not move the page (D5).
+  const wide = dotMap(options);
+  const redraw = narrowRedraw(wide, (width) => drawingOf(dotMap({ ...options, width })), { keepShape: true });
+  return frameHtml(wide, { redraw, keepShape: true });
 }
