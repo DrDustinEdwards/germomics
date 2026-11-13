@@ -18,6 +18,7 @@ import { wasUpdatedAfterPublish } from "~/lib/seo";
 import { formatDate, timecode } from "capsomer/behavior/time";
 import { BodyRenderer } from "./BodyRenderer";
 import { PostCard } from "./PostCard";
+import { TagLinks } from "./ArticleCard";
 import { SoundbiteClips } from "./SoundbiteClips";
 import { CopyLink, ShareTimestamp } from "./CopyLink";
 import { AUTHOR } from "~/lib/about";
@@ -132,31 +133,28 @@ export function PostDetail({ data }: { data: DetailData }) {
   }, []);
 
   const GuestList = guests.length ? (
-    <section className="mt-10">
-      <h2 className="mb-3 font-display text-xl font-semibold">Guests</h2>
-      <div className="grid gap-4 sm:grid-cols-2">
+    <section className="gm-guests">
+      <h2 className="gm-post-section-title">Guests</h2>
+      <div className="gm-guests-grid">
         {guests.map((g) => (
-          <div key={g.slug} className="flex gap-3 rounded-xl border border-border bg-card p-4">
+          <div key={g.slug} className="gm-guest">
             {g.photo ? (
               <Picture
                 attrs={imageOrPlain(imageFor(data.images, "avatar", g.photo), g.photo, 48, 48)}
                 alt={g.photoAlt ?? g.name}
-                className="h-12 w-12 shrink-0 rounded-full border border-border object-cover"
+                className="gm-avatar"
               />
             ) : null}
-            <div className="min-w-0">
-              <Link
-                to={`/guests/${g.slug}`}
-                className="font-display font-medium text-ink hover:text-brand"
-              >
+            <div className="gm-guest-text">
+              <Link to={`/guests/${g.slug}`} className="gm-guest-name">
                 {g.name}
               </Link>
-              {g.role ? <p className="font-mono text-xs text-muted">{g.role}</p> : null}
-              {g.bio ? <p className="mt-1 text-sm text-muted">{g.bio}</p> : null}
+              {g.role ? <p className="gm-guest-role">{g.role}</p> : null}
+              {g.bio ? <p className="gm-guest-bio">{g.bio}</p> : null}
               {(g.links ?? []).length ? (
-                <div className="mt-1.5 flex flex-wrap gap-2 font-mono text-[0.6875rem]">
+                <div className="gm-guest-links">
                   {(g.links ?? []).map((l) => (
-                    <a key={l.url} href={l.url} className="text-accent hover:underline">
+                    <a key={l.url} href={l.url} className="gm-guest-link">
                       {l.label || "link"}
                     </a>
                   ))}
@@ -172,9 +170,9 @@ export function PostDetail({ data }: { data: DetailData }) {
   // A related episode plays from its card, as in the listings; the queue is the related episodes.
   const relatedTracks = related.filter((r) => r.kind === "episode").map(toPlayerTrack);
   const Related = related.length ? (
-    <section className="mt-12">
-      <h2 className="mb-3 font-display text-xl font-semibold">Related</h2>
-      <div className="grid gap-3">
+    <section className="gm-related">
+      <h2 className="gm-post-section-title">Related</h2>
+      <div className="gm-related-list">
         {related.map((r) => (
           <PostCard key={r.id} post={r} queue={relatedTracks} />
         ))}
@@ -184,36 +182,23 @@ export function PostDetail({ data }: { data: DetailData }) {
 
   const PrevNext =
     prev || next ? (
-      <nav
-        className="mt-10 flex items-stretch justify-between gap-3 border-t border-border pt-6"
-        aria-label="More posts"
-      >
+      <nav className="gm-prev-next" aria-label="More posts">
         {prev ? (
-          <Link
-            to={`/${prev.slug}`}
-            className="group flex max-w-[48%] flex-col rounded-xl border border-border bg-card p-3 hover:border-brand"
-          >
-            <span className="flex items-center gap-1 font-mono text-[0.6875rem] text-muted">
+          <Link to={`/${prev.slug}`} className="group gm-prev">
+            <span className="gm-prev-next-label">
               <ArrowLeft size={12} aria-hidden /> Previous
             </span>
-            <span className="mt-1 font-display text-sm text-ink group-hover:text-brand">
-              {prev.title}
-            </span>
+            <span className="gm-prev-next-title">{prev.title}</span>
           </Link>
         ) : (
           <span />
         )}
         {next ? (
-          <Link
-            to={`/${next.slug}`}
-            className="group flex max-w-[48%] flex-col rounded-xl border border-border bg-card p-3 text-right hover:border-brand"
-          >
-            <span className="flex items-center justify-end gap-1 font-mono text-[0.6875rem] text-muted">
+          <Link to={`/${next.slug}`} className="group gm-next">
+            <span className="gm-next-label">
               Next <ArrowRight size={12} aria-hidden />
             </span>
-            <span className="mt-1 font-display text-sm text-ink group-hover:text-brand">
-              {next.title}
-            </span>
+            <span className="gm-prev-next-title">{next.title}</span>
           </Link>
         ) : (
           <span />
@@ -242,40 +227,34 @@ export function PostDetail({ data }: { data: DetailData }) {
       <>
         {/* Capsomer's reading bar: CSS only, filling through the article below (app.css sets its look). */}
         <div className="cap-reading-progress" aria-hidden="true" />
-        <article data-cap-reading className="mx-auto max-w-5xl">
+        <article data-cap-reading className="gm-episode">
           {data.preview ? <PreviewBanner post={post} /> : null}
           <SectionTrail trail={postTrail(post)} />
 
           {/* Hero */}
-          <header className="grid gap-6 sm:grid-cols-[1fr_12rem] sm:items-start lg:grid-cols-[1fr_14rem]">
+          <header className="gm-episode-hero">
             <div>
-              <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent">{eyebrow}</p>
-              <h1 className="mt-2 font-display text-4xl font-semibold leading-tight">
-                {post.title}
-              </h1>
-              <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-muted">
+              <p className="gm-eyebrow">{eyebrow}</p>
+              <h1 className="gm-post-title">{post.title}</h1>
+              <p className="gm-post-meta">
                 {post.publishedAt ? (
-                  <span className="flex items-center gap-1">
+                  <span className="gm-post-meta-item">
                     <Calendar size={12} aria-hidden />{" "}
                     <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
                   </span>
                 ) : null}
                 {post.audioDuration ? (
-                  <span className="flex items-center gap-1 tabular-nums">
+                  <span className="gm-post-meta-time">
                     <Clock size={12} aria-hidden /> {timecode(post.audioDuration * 1000)}
                   </span>
                 ) : null}
                 {wasUpdatedAfterPublish(post) ? (
-                  <span className="text-accent">Updated {formatDate(post.updatedAt)}</span>
+                  <span className="gm-post-updated">Updated {formatDate(post.updatedAt)}</span>
                 ) : null}
               </p>
-              {post.excerpt ? (
-                <p className="mt-4 max-w-2xl font-serif text-lg leading-relaxed text-muted">
-                  {post.excerpt}
-                </p>
-              ) : null}
+              {post.excerpt ? <p className="gm-episode-excerpt">{post.excerpt}</p> : null}
             </div>
-            <div className="order-first w-40 sm:order-none sm:w-auto">
+            <div className="gm-episode-cover">
               <CoverArt
                 src={cover}
                 image={imageFor(data.images, "artwork", cover)}
@@ -289,13 +268,13 @@ export function PostDetail({ data }: { data: DetailData }) {
           {/* Player surface: the one play affordance lives on the waveform; Share and Save sit
               directly below it (the hero no longer carries a second play button). */}
           {track ? (
-            <div id="player" className="mt-8 scroll-mt-20">
+            <div id="player" className="gm-episode-player">
               <PlayerSurface
                 track={track}
                 peaks={post.audioPeaks ?? null}
                 transcriptHref="#transcript"
               />
-              <div className="mt-3 flex flex-wrap items-center gap-2">
+              <div className="gm-episode-actions">
                 <ShareTimestamp slug={post.slug} />
                 <SaveToggle storageKey={SAVED_KEY} id={post.slug} />
               </div>
@@ -313,11 +292,11 @@ export function PostDetail({ data }: { data: DetailData }) {
           ) : null}
 
           {/* TOC rail + article body */}
-          <div className="mt-12 grid gap-8 lg:grid-cols-[15rem_1fr]">
-            <div className="lg:order-1">
+          <div className="gm-episode-columns">
+            <div className="gm-episode-rail">
               <EpisodeToc items={toc} />
             </div>
-            <div className="min-w-0 lg:order-2">
+            <div className="gm-episode-main">
               {data.context ? <EpisodeContext context={data.context} /> : null}
               {post.bodyHtml ? (
                 <div ref={bodyRef}>
@@ -329,7 +308,7 @@ export function PostDetail({ data }: { data: DetailData }) {
           </div>
 
           {/* Everything below the body returns to a single readable measure. */}
-          <div className="mx-auto max-w-3xl">
+          <div className="gm-article">
             <Hosts
               hosts={hosts}
               avatar={(h) =>
@@ -337,11 +316,11 @@ export function PostDetail({ data }: { data: DetailData }) {
                   <Picture
                     attrs={imageOrPlain(imageFor(data.images, "avatar", h.img), h.img, 48, 48)}
                     alt=""
-                    className="h-12 w-12 shrink-0 rounded-full border border-border object-cover"
+                    className="gm-avatar"
                   />
                 ) : (
-                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-border bg-surface">
-                    <GMark className="h-6 w-auto" />
+                  <span className="gm-avatar-mark">
+                    <GMark className="gm-avatar-mark-logo" />
                   </span>
                 )
               }
@@ -354,15 +333,13 @@ export function PostDetail({ data }: { data: DetailData }) {
             <Sources sources={sources} />
 
             {post.transcript && track ? (
-              <section id="transcript" className="mt-12 scroll-mt-20">
+              <section id="transcript" className="gm-post-transcript">
                 {/* Collapsed by default so the page opens shorter; the reader expands it. The content is
                     still server-rendered inside <details> (present in the SSR HTML for SEO/GEO), not
                     lazy-fetched on expand. The read-along only scrolls inside its own box and only while
                     open and on screen (see TranscriptPanel), so a collapsed transcript never moves the page. */}
                 <details>
-                  <summary className="mb-3 cursor-pointer font-display text-xl font-semibold">
-                    Transcript
-                  </summary>
+                  <summary className="gm-post-summary">Transcript</summary>
                   <PlayerTranscript
                     cues={parseVtt(post.transcript).map((cue) => {
                       // A "Name:" prefix names the speaker where no <v Name> voice tag did.
@@ -390,7 +367,7 @@ export function PostDetail({ data }: { data: DetailData }) {
 
   // ── Article layout (editorial) ───────────────────────────────────────────
   return (
-    <article className="mx-auto max-w-3xl">
+    <article className="gm-article">
       {data.preview ? <PreviewBanner post={post} /> : null}
       <SectionTrail trail={postTrail(post)} />
       {post.coverImage ? (
@@ -400,51 +377,36 @@ export function PostDetail({ data }: { data: DetailData }) {
           attrs={imageOrPlain(imageFor(data.images, "cover", post.coverImage), post.coverImage)}
           alt={post.coverAlt ?? ""}
           priority
-          className="mb-6 aspect-[2/1] w-full rounded-2xl border border-border object-cover"
+          className="gm-article-image"
         />
       ) : null}
-      <p className="flex items-center gap-1 font-mono text-xs uppercase tracking-wide text-accent">
+      <p className="gm-article-eyebrow">
         <FileText size={12} aria-hidden /> Article
       </p>
-      <h1 className="mt-2 font-display text-4xl font-semibold leading-tight">{post.title}</h1>
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-muted">
+      <h1 className="gm-post-title">{post.title}</h1>
+      <div className="gm-post-meta">
         <span>{AUTHOR.byline}</span>
         {post.publishedAt ? (
-          <span className="flex items-center gap-1">
+          <span className="gm-post-meta-item">
             <Calendar size={12} aria-hidden /> {formatDate(post.publishedAt)}
           </span>
         ) : null}
         {wasUpdatedAfterPublish(post) ? (
-          <span className="text-accent">Updated {formatDate(post.updatedAt)}</span>
+          <span className="gm-post-updated">Updated {formatDate(post.updatedAt)}</span>
         ) : null}
-        <span className="flex items-center gap-1">
+        <span className="gm-post-meta-item">
           <Clock size={12} aria-hidden /> {readingMinutes} min read
         </span>
       </div>
-      {(post.tags ?? []).length ? (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {(post.tags ?? []).map((t) => (
-            <Link
-              key={t}
-              to={`/tag/${encodeURIComponent(t)}`}
-              className="rounded-full border border-border px-2 py-0.5 font-mono text-[0.6875rem] text-muted hover:border-brand hover:text-brand"
-            >
-              {t}
-            </Link>
-          ))}
-        </div>
-      ) : null}
+      <TagLinks tags={post.tags ?? []} className="gm-article-tags" />
 
       {toc.length >= 3 ? (
-        <nav
-          aria-label="Table of contents"
-          className="mt-6 rounded-xl border border-border bg-surface p-4"
-        >
-          <p className="mb-2 font-display text-sm font-semibold">On this page</p>
-          <ol className="space-y-1 text-sm">
+        <nav aria-label="Table of contents" className="gm-toc">
+          <p className="gm-rail-title">On this page</p>
+          <ol className="gm-toc-list">
             {toc.map((t) => (
-              <li key={t.id} className={t.level === 3 ? "pl-4" : ""}>
-                <a href={`#${t.id}`} className="text-muted hover:text-accent">
+              <li key={t.id} className={t.level === 3 ? "gm-toc-sub" : undefined}>
+                <a href={`#${t.id}`} className="gm-toc-link">
                   {t.text}
                 </a>
               </li>
@@ -454,12 +416,12 @@ export function PostDetail({ data }: { data: DetailData }) {
       ) : null}
 
       {post.bodyHtml ? (
-        <div className="mt-8">
+        <div className="gm-article-body">
           <BodyRenderer html={post.bodyHtml} />
         </div>
       ) : null}
 
-      <div className="mt-8 flex items-center gap-3">
+      <div className="gm-article-share">
         <CopyLink slug={post.slug} />
       </div>
 
@@ -472,9 +434,9 @@ export function PostDetail({ data }: { data: DetailData }) {
 
 function PreviewBanner({ post }: { post: Post }) {
   return (
-    <div className="mb-6 flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-sm text-amber-700 dark:text-amber-300">
-      <span className="font-display font-semibold">Preview</span>
-      <span className="text-muted">
+    <div className="gm-preview-banner">
+      <span className="gm-preview-banner-title">Preview</span>
+      <span className="gm-preview-banner-text">
         : this is the unpublished “{post.status}” version, visible only via this link.
       </span>
     </div>

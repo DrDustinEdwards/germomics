@@ -32,15 +32,21 @@ export function ArticleCard({ post, image }: { post: Post; image?: ImageAttribut
           {post.excerpt ? <p className="gm-article-card-excerpt">{post.excerpt}</p> : null}
         </div>
       </Link>
-      {(post.tags ?? []).length ? (
-        <div className="gm-article-card-tags">
-          {(post.tags ?? []).slice(0, 4).map((t) => (
-            <Link key={t} to={`/tag/${encodeURIComponent(t)}`} className="gm-tag">
-              {t}
-            </Link>
-          ))}
-        </div>
-      ) : null}
+      <TagLinks tags={(post.tags ?? []).slice(0, 4)} className="gm-article-card-tags" />
     </article>
+  );
+}
+
+// A post's tags as pills linking to each tag's page; nothing when it has none. Used by the card and the post page.
+export function TagLinks({ tags, className }: { tags: string[]; className: string }) {
+  if (!tags.length) return null;
+  return (
+    <div className={className}>
+      {tags.map((t) => (
+        <Link key={t} to={`/tag/${encodeURIComponent(t)}`} className="gm-tag">
+          {t}
+        </Link>
+      ))}
+    </div>
   );
 }
