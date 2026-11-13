@@ -37,7 +37,8 @@ function declaredDefault(col: { default?: unknown }): string | null {
       .map((c) => (c.value ?? []).join(""))
       .join("")
       .replace(/^\((.*)\)$/, "$1");
-  return JSON.stringify(d);
+  // A JSON-mode column's default (site-api's media.tags, `[]`) is stored as a quoted literal, '[]'.
+  return `'${JSON.stringify(d)}'`;
 }
 
 type Pragma = {
