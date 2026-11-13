@@ -39,7 +39,6 @@ import { ExternalCue } from "~/components/ExternalCue";
 import { postTrail } from "~/lib/trails";
 import { toPlayerTrack } from "~/lib/posts";
 import { SectionTrail } from "./SectionTrail";
-import "~/prose.css";
 
 export type DetailData = {
   post: Post;

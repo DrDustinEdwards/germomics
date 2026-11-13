@@ -9,7 +9,6 @@ import { getSettings } from "~/lib/context.server";
 import { loadFilledPage, setting } from "~/lib/content.server";
 import { SITE_ADDRESS_LINE } from "~/lib/site";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
-import "~/prose.css";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   return pageHead({

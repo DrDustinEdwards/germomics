@@ -1,7 +1,7 @@
 /* The public pages' own parts, loaded by their layout (routes/_site.tsx), so the admin never downloads them: the
    header, the persistent player and the parts its settings use. The reading contexts are prose.css. The layer order repeats app.css's, so
    whichever stylesheet arrives first, the order is the same. */
-@layer cap-tokens, theme, base, cap, components, utilities;
+@layer cap-tokens, theme, base, cap, components, utilities, site;
 /* Capsomer's scale and palette first of all (cap-tokens), so a name both define (--radius-xl, --ease-out) keeps
    Tailwind's value on germomics' own classes, and germomics' palette (app.css, unlayered) wins over both. */
 @import "capsomer/tokens.css" layer(cap-tokens);

@@ -1,7 +1,7 @@
 /* Capsomer's layers sit above Tailwind's base and below its components and utilities: its element rules win in the admin shell, and Tailwind classes on page content still win over Capsomer.
    Capsomer's scale and palette (cap-tokens) come first of all, so a name both define (--radius-xl, --ease-out) keeps
    Tailwind's value on germomics' own classes. germomics' palette is Capsomer's germomics site entry (site.css). */
-@layer cap-tokens, theme, base, cap, components, utilities;
+@layer cap-tokens, theme, base, cap, components, utilities, site;
 /* Capsomer's parts (the header, the player, the reading contexts) and their tokens load with the public pages alone,
    from site.css (routes/_site.tsx); the admin brings its own (admin.css). */
 @import "tailwindcss" source(".");
