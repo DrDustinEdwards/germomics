@@ -637,11 +637,7 @@
     font-size: 0.875rem;
     line-height: 1.25rem;
     color: oklch(47.3% 0.137 46.201);
-  }
-  @media (prefers-color-scheme: dark) {
-    .gm-legal-draft {
-      color: oklch(92.4% 0.12 95.746);
-    }
+    color: light-dark(oklch(47.3% 0.137 46.201), oklch(92.4% 0.12 95.746));
   }
   .gm-legal-draft-title {
     margin-top: 0.75rem;
@@ -1083,11 +1079,7 @@
     font-size: 0.875rem;
     line-height: 1.25rem;
     color: oklch(55.5% 0.163 48.998);
-  }
-  @media (prefers-color-scheme: dark) {
-    .gm-preview-banner {
-      color: oklch(87.9% 0.169 91.605);
-    }
+    color: light-dark(oklch(55.5% 0.163 48.998), oklch(87.9% 0.169 91.605));
   }
   .gm-preview-banner-title {
     font-family: var(--font-display);
@@ -1266,20 +1258,25 @@
       transform: scaleY(1);
     }
   }
+  /* The hero blobs' group opacity is a theme value, set on the root the way Capsomer sets its own (tokens/color.css):
+     dimmer in dark, by the toggle or by the system. */
+  :root {
+    --gm-blob-opacity: 0.6;
+  }
+  :root[data-theme="dark"] {
+    --gm-blob-opacity: 0.35;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --gm-blob-opacity: 0.35;
+    }
+  }
   /* The home hero's drifting blobs: dimmer in dark. Each blob sets --dx, --dy and --s for the one drift. */
   .gm-hero-blobs {
     pointer-events: none;
     position: absolute;
     overflow-x: clip;
-    opacity: 0.6;
-  }
-  :root[data-theme="dark"] .gm-hero-blobs {
-    opacity: 0.35;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .gm-hero-blobs {
-      opacity: 0.35;
-    }
+    opacity: var(--gm-blob-opacity);
   }
   .gm-hero-blob {
     position: absolute;
