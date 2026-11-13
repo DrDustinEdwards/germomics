@@ -87,6 +87,8 @@ export function dataMap(slug: string, m: DataMap): string {
   // px): Capsomer's keepShape draws it at its own height and scales the wide map to its proportions until the swap, so
   // the swap does not move the page (D5).
   const wide = dotMap(options);
-  const redraw = narrowRedraw(wide, (width) => drawingOf(dotMap({ ...options, width })), { keepShape: true });
+  const redraw = narrowRedraw(wide, (width) => drawingOf(dotMap({ ...options, width })), {
+    keepShape: true,
+  });
   return frameHtml(wide, { redraw, keepShape: true });
 }
