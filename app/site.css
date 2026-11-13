@@ -17,7 +17,7 @@
 @import "capsomer/card.css";
 /* The site header and its theme button, and the parts it shares with the player's settings. */
 @import "capsomer/utilities.css";
-@import "capsomer/site-header.css";
+@import "capsomer/site-header-frame.css";
 @import "capsomer/theme-switch.css";
 @import "capsomer/button.css";
 @import "capsomer/popover.css";
@@ -95,11 +95,11 @@
 }
 .cap-player-chapter {
   gap: 0.75rem;
-  padding: 0.375rem 0.5rem;
+  padding: var(--space-2-5) 0.5rem;
   border-radius: 0.25rem;
 }
 .cap-player-at {
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
 }
 /* The surface's rows sit where the site's always did: the waveform's note 4px under it, the seek row 31px tall. */
@@ -117,7 +117,7 @@
 }
 .cap-player-wave-note {
   margin-block-start: 0;
-  font-size: 0.625rem;
+  font-size: var(--fs-tiny);
   line-height: 1.7;
 }
 .cap-player-para-chapter {
@@ -179,7 +179,7 @@
   --control: 2rem;
   /* The first level's text lines up with the page's edge; its hover background reaches into the gutter. */
   margin-inline-start: calc(-1 * var(--space-2));
-  margin-block-end: 1rem;
+  margin-block-end: var(--space-5);
 }
 
 /* Capsomer's save toggle and subscribe links in germomics' own tokens, as the breadcrumb: the
@@ -205,9 +205,9 @@
   --ui: var(--font-mono);
   --fs-label: 0.75rem;
   --muted: var(--text);
-  gap: 0.375rem;
+  gap: var(--space-2-5);
   padding: 0.5rem 0.75rem;
-  font-weight: 400;
+  font-weight: var(--weight-regular);
   &:is(:hover, [data-force="hover"]) {
     border-color: var(--primary);
     color: var(--text);
@@ -253,8 +253,8 @@
   background: var(--sunken);
   --pad-card: 1.25rem;
   --fs-label: 0.875rem;
-  --link-weight: 400;
-  margin-block-start: 3rem;
+  --link-weight: var(--weight-regular);
+  margin-block-start: var(--space-8);
   & .cap-subscribe-more {
     padding-inline: 0.75rem;
   }
@@ -263,9 +263,9 @@
     --muted: var(--accent-text);
     font-family: inherit;
     line-height: 1.25rem;
-    gap: 0.375rem;
-    padding: 0.375rem 0.75rem;
-    font-weight: 400;
+    gap: var(--space-2-5);
+    padding: var(--space-2-5) 0.75rem;
+    font-weight: var(--weight-regular);
     &:is(:hover, [data-force="hover"]) {
       border-color: var(--accent-text);
       color: var(--accent-text);
@@ -286,7 +286,7 @@
    the violet button), the leaderboard the old card (white rows, names in Space Grotesk), the sources their small type. */
 .cap-newsletter {
   --cap-newsletter-bg: var(--sunken);
-  --pad-card: 1.5rem;
+  --pad-card: var(--space-6);
   --muted: var(--dim);
   --fs-detail: 0.875rem;
   --radius-control: 0.5rem;
@@ -307,9 +307,9 @@
     --ui: var(--font-display);
     --cap-btn-fs: 0.875rem;
     --cap-btn-h: 2.25rem;
-    --pad-x: 1rem;
+    --pad-x: var(--space-5);
     border-width: 0;
-    font-weight: 500;
+    font-weight: var(--weight-medium);
   }
   & .cap-newsletter-consent {
     --surface: var(--raised);
@@ -328,7 +328,7 @@
   --surface: var(--raised);
   --radius-l: 0.75rem;
   --row-h: 0;
-  --pad-x: 1rem;
+  --pad-x: var(--space-5);
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --fs-detail: 0.75rem;
@@ -348,12 +348,12 @@
   --mono: var(--font-mono);
   --radius-s: 0.25rem;
   line-height: var(--text-sm--line-height);
-  --cap-source-kind-pad: 0.125rem 0.375rem;
+  --cap-source-kind-pad: 0.125rem var(--space-2-5);
   & .cap-source-kind {
     letter-spacing: 0.025em;
   }
   & a.cap-source-title {
-    font-weight: 400;
+    font-weight: var(--weight-regular);
   }
 }
 
@@ -419,8 +419,8 @@
 }
 .germomics-logo {
   font-family: var(--font-display);
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: var(--title-4);
+  font-weight: var(--weight-semibold);
   letter-spacing: -0.025em;
 }
 
@@ -459,9 +459,7 @@
   .gm-data-map,
   .gm-data-chart {
     border-radius: 0.75rem;
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
   }
   /* The cards whose border turns on hover, fading only where motion is welcome. */
   @media (prefers-reduced-motion: no-preference) {
@@ -476,10 +474,10 @@
     }
   }
   .gm-post-card {
-    column-gap: 1rem;
+    column-gap: var(--space-5);
     row-gap: 0px;
     background-color: var(--raised);
-    padding: 1rem;
+    padding: var(--space-5);
     color: var(--text);
   }
   .gm-post-card-icon {
@@ -492,17 +490,20 @@
     background-color: var(--sunken);
     color: var(--primary);
   }
+  .gm-post-card-meta,
+  .gm-page-hits-label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.025em;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
   .gm-post-card-meta {
     margin-top: 0px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     column-gap: 0.5rem;
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    letter-spacing: 0.025em;
-    color: var(--dim);
-    text-transform: uppercase;
   }
   .gm-post-card-kind {
     display: flex;
@@ -518,7 +519,7 @@
     font-family: var(--font-display);
     font-size: 1.125rem;
     line-height: 1.75rem;
-    font-weight: 500;
+    font-weight: var(--weight-medium);
     text-wrap: wrap;
   }
   .gm-post-card-link {
@@ -543,14 +544,12 @@
   .gm-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.375rem;
+    gap: var(--space-2-5);
   }
   .gm-tag {
     display: block;
     border-radius: calc(infinity * 1px);
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     padding-inline: 0.5rem;
     padding-block: 0.125rem;
     font-family: var(--font-mono);
@@ -566,9 +565,7 @@
   .gm-article-card {
     overflow: hidden;
     border-radius: 1rem;
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     background-color: var(--raised);
   }
   @media (hover: hover) {
@@ -580,12 +577,12 @@
     aspect-ratio: 2/1;
     width: 100%;
     border-bottom-style: solid;
-    border-bottom-width: 1px;
+    border-bottom-width: var(--line-w);
     border-color: var(--line);
     object-fit: cover;
   }
   .gm-article-card-body {
-    padding: 1rem;
+    padding: var(--space-5);
   }
   .gm-article-card-meta {
     display: flex;
@@ -605,11 +602,11 @@
     gap: 0.25rem;
   }
   .gm-article-card-title {
-    margin-top: 0.375rem;
+    margin-top: var(--space-2-5);
     font-family: var(--font-display);
-    font-size: 1.25rem;
+    font-size: var(--title-4);
     line-height: 1.75rem;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
     color: var(--text);
   }
   @media (hover: hover) {
@@ -618,7 +615,7 @@
     }
   }
   .gm-article-card-excerpt {
-    margin-top: 0.375rem;
+    margin-top: var(--space-2-5);
     font-size: 0.875rem;
     line-height: 1.25rem;
     color: var(--dim);
@@ -626,12 +623,22 @@
   .gm-article-card-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.375rem;
-    padding-inline: 1rem;
-    padding-bottom: 1rem;
+    gap: var(--space-2-5);
+    padding-inline: var(--space-5);
+    padding-bottom: var(--space-5);
   }
   .gm-clips {
     margin-top: 2.5rem;
+  }
+  .gm-clips-title,
+  .gm-game-scores-title,
+  .gm-post-section-title,
+  .gm-post-summary,
+  .gm-episodes-heading {
+    font-family: var(--font-display);
+    font-size: var(--title-4);
+    line-height: 1.75rem;
+    font-weight: var(--weight-semibold);
   }
   .gm-clips-title,
   .gm-game-scores-title {
@@ -640,10 +647,6 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-family: var(--font-display);
-    font-size: 1.25rem;
-    line-height: 1.75rem;
-    font-weight: 600;
   }
   .gm-clips-list {
     display: grid;
@@ -694,20 +697,15 @@
   }
   .gm-page-hits {
     background-color: var(--sunken);
-    padding: 1rem;
+    padding: var(--space-5);
   }
   .gm-page-hits-label {
     margin-bottom: 0.5rem;
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    letter-spacing: 0.025em;
-    color: var(--dim);
-    text-transform: uppercase;
   }
   .gm-page-hits-list {
     display: flex;
     flex-wrap: wrap;
-    column-gap: 1rem;
+    column-gap: var(--space-5);
     row-gap: 0.25rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
@@ -723,18 +721,18 @@
   .gm-legal-updated {
     margin-top: 0.5rem;
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: var(--fs-small);
     line-height: 1rem;
     color: var(--dim);
   }
   .gm-legal-draft {
-    margin-block: 1.5rem;
+    margin-block: var(--space-6);
     border-radius: 0.75rem;
-    border-width: 1px;
+    border-width: var(--line-w);
     border-style: dashed;
     border-color: color-mix(in oklab, oklch(76.9% 0.188 70.08) 50%, transparent);
     background-color: color-mix(in oklab, oklch(76.9% 0.188 70.08) 10%, transparent);
-    padding: 1rem;
+    padding: var(--space-5);
     font-size: 0.875rem;
     line-height: 1.25rem;
     color: oklch(47.3% 0.137 46.201);
@@ -747,7 +745,7 @@
     align-items: center;
     gap: 0.5rem;
     font-family: var(--font-display);
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
   }
   .gm-legal-draft-text {
     margin-top: 0.25rem;
@@ -757,12 +755,6 @@
   .gm-legal {
     margin-inline: auto;
     max-width: 42rem;
-  }
-  .gm-legal-title {
-    font-family: var(--font-display);
-    font-size: 2.25rem;
-    line-height: 1.25;
-    font-weight: 600;
   }
   .gm-context-wrap {
     margin-bottom: 2.5rem;
@@ -775,14 +767,10 @@
   }
   .gm-post-section-title {
     margin-bottom: 0.75rem;
-    font-family: var(--font-display);
-    font-size: 1.25rem;
-    line-height: 1.75rem;
-    font-weight: 600;
   }
   .gm-guests-grid {
     display: grid;
-    gap: 1rem;
+    gap: var(--space-5);
   }
   @media (width >= 40rem) {
     .gm-guests-grid {
@@ -793,16 +781,14 @@
     display: flex;
     gap: 0.75rem;
     background-color: var(--raised);
-    padding: 1rem;
+    padding: var(--space-5);
   }
   .gm-avatar {
     height: 3rem;
     width: 3rem;
     flex-shrink: 0;
     border-radius: calc(infinity * 1px);
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     object-fit: cover;
   }
   .gm-guest-text {
@@ -810,7 +796,7 @@
   }
   .gm-guest-name {
     font-family: var(--font-display);
-    font-weight: 500;
+    font-weight: var(--weight-medium);
     color: var(--text);
   }
   @media (hover: hover) {
@@ -820,7 +806,7 @@
   }
   .gm-meta-text {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: var(--fs-small);
     line-height: 1rem;
     color: var(--dim);
   }
@@ -831,7 +817,7 @@
     color: var(--dim);
   }
   .gm-guest-links {
-    margin-top: 0.375rem;
+    margin-top: var(--space-2-5);
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
@@ -847,7 +833,7 @@
     }
   }
   .gm-related {
-    margin-top: 3rem;
+    margin-top: var(--space-8);
   }
   .gm-related-list {
     display: grid;
@@ -860,9 +846,9 @@
     justify-content: space-between;
     gap: 0.75rem;
     border-top-style: solid;
-    border-top-width: 1px;
+    border-top-width: var(--line-w);
     border-color: var(--line);
-    padding-top: 1.5rem;
+    padding-top: var(--space-6);
   }
   .gm-prev,
   .gm-next {
@@ -917,7 +903,7 @@
   }
   .gm-episode-hero {
     display: grid;
-    gap: 1.5rem;
+    gap: var(--space-6);
   }
   @media (width >= 40rem) {
     .gm-episode-hero {
@@ -932,7 +918,7 @@
   }
   .gm-eyebrow {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: var(--fs-small);
     line-height: 1rem;
     letter-spacing: 0.18em;
     color: var(--accent-text);
@@ -941,19 +927,19 @@
   .gm-post-title {
     margin-top: 0.5rem;
     font-family: var(--font-display);
-    font-size: 2.25rem;
+    font-size: var(--title-1);
     line-height: 1.25;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
   }
   .gm-post-meta {
     margin-top: 0.75rem;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    column-gap: 1rem;
+    column-gap: var(--space-5);
     row-gap: 0.25rem;
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: var(--fs-small);
     line-height: 1rem;
     color: var(--dim);
   }
@@ -972,7 +958,7 @@
     color: var(--accent-text);
   }
   .gm-episode-excerpt {
-    margin-top: 1rem;
+    margin-top: var(--space-5);
     max-width: 42rem;
     font-family: var(--font-serif);
     font-size: 1.125rem;
@@ -990,7 +976,7 @@
     }
   }
   .gm-episode-player {
-    margin-top: 2rem;
+    margin-top: var(--space-7);
     scroll-margin-top: 5rem;
   }
   .gm-episode-actions {
@@ -1001,9 +987,9 @@
     gap: 0.5rem;
   }
   .gm-episode-columns {
-    margin-top: 3rem;
+    margin-top: var(--space-8);
     display: grid;
-    gap: 2rem;
+    gap: var(--space-7);
   }
   @media (width >= 64rem) {
     .gm-episode-columns {
@@ -1034,9 +1020,7 @@
     flex-shrink: 0;
     place-items: center;
     border-radius: calc(infinity * 1px);
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     background-color: var(--sunken);
   }
   .gm-avatar-mark-logo {
@@ -1044,25 +1028,19 @@
     width: auto;
   }
   .gm-post-transcript {
-    margin-top: 3rem;
+    margin-top: var(--space-8);
     scroll-margin-top: 5rem;
   }
   .gm-post-summary {
     margin-bottom: 0.75rem;
     cursor: pointer;
-    font-family: var(--font-display);
-    font-size: 1.25rem;
-    line-height: 1.75rem;
-    font-weight: 600;
   }
   .gm-article-image {
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
     aspect-ratio: 2/1;
     width: 100%;
     border-radius: 1rem;
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     object-fit: cover;
   }
   .gm-article-eyebrow {
@@ -1074,19 +1052,21 @@
     margin-top: 0.75rem;
     display: flex;
     flex-wrap: wrap;
-    gap: 0.375rem;
+    gap: var(--space-2-5);
   }
   .gm-toc {
-    margin-top: 1.5rem;
+    margin-top: var(--space-6);
     background-color: var(--sunken);
-    padding: 1rem;
+    padding: var(--space-5);
   }
-  .gm-rail-title {
+  .gm-rail-title,
+  .gm-bio-section-title,
+  .gm-data-section-title {
     margin-bottom: 0.5rem;
     font-family: var(--font-display);
     font-size: 0.875rem;
     line-height: 1.25rem;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
   }
   :where(.gm-toc-list > :not(:last-child)) {
     margin-block: 0 0.25rem;
@@ -1104,26 +1084,26 @@
     }
   }
   .gm-article-body {
-    margin-top: 2rem;
+    margin-top: var(--space-7);
   }
   .gm-article-share {
-    margin-top: 2rem;
+    margin-top: var(--space-7);
     display: flex;
     align-items: center;
     gap: 0.75rem;
   }
   .gm-preview-banner {
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
     display: flex;
     align-items: center;
     gap: 0.5rem;
     border-radius: 0.75rem;
     border-style: solid;
-    border-width: 1px;
+    border-width: var(--line-w);
     border-color: color-mix(in oklab, oklch(76.9% 0.188 70.08) 40%, transparent);
     background-color: color-mix(in oklab, oklch(76.9% 0.188 70.08) 10%, transparent);
-    padding-inline: 1rem;
-    padding-block: 0.625rem;
+    padding-inline: var(--space-5);
+    padding-block: var(--space-3-5);
     font-size: 0.875rem;
     line-height: 1.25rem;
     color: oklch(55.5% 0.163 48.998);
@@ -1131,13 +1111,13 @@
   }
   .gm-preview-banner-title {
     font-family: var(--font-display);
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
   }
   .gm-preview-banner-text {
     color: var(--dim);
   }
   .gm-chapters-mobile {
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
     background-color: var(--sunken);
     padding: 0.75rem;
   }
@@ -1151,7 +1131,7 @@
     font-family: var(--font-display);
     font-size: 0.875rem;
     line-height: 1.25rem;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
   }
   .gm-chapters-mobile-list {
     margin-top: 0.5rem;
@@ -1169,7 +1149,7 @@
     }
   }
   .gm-toc-sub {
-    padding-left: 1rem;
+    padding-left: var(--space-5);
   }
   .gm-chapters-sub {
     padding-left: 0.75rem;
@@ -1188,7 +1168,7 @@
   }
   .gm-chapter-link[aria-current="true"] {
     background-color: var(--sunken);
-    font-weight: 500;
+    font-weight: var(--weight-medium);
     color: var(--primary);
   }
 
@@ -1218,13 +1198,11 @@
     width: 100%;
   }
   .gm-cover-bordered {
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
   }
   .gm-cover-ringed {
     box-shadow:
-      0 0 0 1px var(--line),
+      0 0 0 var(--line-w) var(--line),
       0 10px 15px -3px rgb(0 0 0 / 0.1),
       0 4px 6px -4px rgb(0 0 0 / 0.1);
   }
@@ -1239,27 +1217,29 @@
   /* The index and list pages: writing, episodes, a season, a tag, archive, search, games, data, txasm, contact and accessibility. */
   .gm-page-title,
   .gm-list-title,
-  .gm-archive-title {
+  .gm-archive-title,
+  .gm-detail-title {
     font-family: var(--font-display);
-    font-size: 1.875rem;
+    font-size: var(--title-2);
     line-height: 2.25rem;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
   }
   .gm-list-title {
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
   }
+  .gm-legal-title,
   .gm-page-title-lg,
   .gm-eyebrow-title {
     font-family: var(--font-display);
-    font-size: 2.25rem;
+    font-size: var(--title-1);
     line-height: 1.25;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
   }
   .gm-eyebrow-title {
     margin-top: 0.75rem;
   }
   .gm-page-header {
-    margin-bottom: 2rem;
+    margin-bottom: var(--space-7);
   }
   .gm-muted,
   .gm-page-lede,
@@ -1278,7 +1258,7 @@
     max-width: 42rem;
   }
   .gm-search-empty {
-    margin-top: 1.5rem;
+    margin-top: var(--space-6);
   }
   .gm-list,
   .gm-search-list,
@@ -1291,10 +1271,10 @@
   .gm-page-body,
   .gm-search-form,
   .gm-search-count {
-    margin-top: 1rem;
+    margin-top: var(--space-5);
   }
   .gm-index-grid {
-    margin-top: 2rem;
+    margin-top: var(--space-7);
   }
   .gm-article-grid {
     display: grid;
@@ -1321,7 +1301,7 @@
   .gm-season-heading,
   .gm-index-kind {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: var(--fs-small);
     line-height: 1rem;
     letter-spacing: 0.025em;
     color: var(--accent-text);
@@ -1331,18 +1311,18 @@
   .gm-season-heading {
     font-size: 0.875rem;
     line-height: 1.25rem;
-    font-weight: 500;
+    font-weight: var(--weight-medium);
     letter-spacing: 0.18em;
   }
   .gm-season-title {
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
   }
   .gm-season-heading,
   .gm-episodes-heading,
   .gm-archive-title,
   .gm-archive-count,
   .gm-archive-hits {
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-5);
   }
   .gm-season-section,
   .gm-episodes-section {
@@ -1350,12 +1330,6 @@
   }
   .gm-season-section {
     scroll-margin-top: 6rem;
-  }
-  .gm-episodes-heading {
-    font-family: var(--font-display);
-    font-size: 1.25rem;
-    line-height: 1.75rem;
-    font-weight: 600;
   }
   .gm-index-card {
     background-color: var(--raised);
@@ -1382,7 +1356,7 @@
     font-family: var(--font-display);
     font-size: 1.125rem;
     line-height: 1.75rem;
-    font-weight: 500;
+    font-weight: var(--weight-medium);
     color: var(--text);
   }
   .gm-index-card-text {
@@ -1401,21 +1375,19 @@
   .gm-search-form,
   .gm-archive-field {
     background-color: var(--raised);
-    padding-inline: 1rem;
+    padding-inline: var(--space-5);
     padding-block: 0.5rem;
     border-radius: calc(infinity * 1px);
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
   }
   .gm-archive-field {
     padding-inline: 0.75rem;
-    padding-block: 0.375rem;
+    padding-block: var(--space-2-5);
   }
   .gm-archive-field:focus-within {
     outline-style: solid;
-    outline-width: 2px;
-    outline-offset: 2px;
+    outline-width: var(--focus-width);
+    outline-offset: var(--focus-offset);
     outline-color: var(--accent-text);
   }
   .gm-search-input,
@@ -1432,7 +1404,7 @@
   .gm-search-count,
   .gm-archive-count {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: var(--fs-small);
     line-height: 1rem;
     color: var(--dim);
   }
@@ -1460,21 +1432,19 @@
     }
   }
   .gm-txasm-button {
-    margin-top: 1.5rem;
+    margin-top: var(--space-6);
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     padding-inline: 1.25rem;
-    padding-block: 0.625rem;
-    font-weight: 500;
+    padding-block: var(--space-3-5);
+    font-weight: var(--weight-medium);
   }
   .gm-archive-tab {
-    padding-block: 0.375rem;
+    padding-block: var(--space-2-5);
   }
   .gm-archive-tab-off {
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     color: var(--dim);
   }
   @media (hover: hover) {
@@ -1483,7 +1453,7 @@
     }
   }
   .gm-archive-bar {
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 0.75rem;
@@ -1495,18 +1465,16 @@
   /* A guest's page, the newsletter confirm and unsubscribe notices, the about pages and a data page. */
   .gm-guest-head {
     margin-top: 0.5rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
     display: flex;
     align-items: flex-start;
-    gap: 1rem;
+    gap: var(--space-5);
   }
   .gm-guest-photo {
     height: 4rem;
     width: 4rem;
     border-radius: calc(infinity * 1px);
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     object-fit: cover;
   }
   .gm-guest-page-links,
@@ -1521,14 +1489,14 @@
   }
   .gm-guest-page-links {
     margin-top: 0.5rem;
-    font-size: 0.75rem;
+    font-size: var(--fs-small);
     line-height: 1rem;
   }
   .gm-notice-links {
-    margin-top: 1.5rem;
+    margin-top: var(--space-6);
     flex-wrap: nowrap;
     justify-content: center;
-    gap: 1rem;
+    gap: var(--space-5);
   }
   .gm-ink {
     color: var(--text);
@@ -1536,15 +1504,10 @@
   .gm-notice {
     margin-inline: auto;
     max-width: 28rem;
-    padding-block: 4rem;
+    padding-block: var(--space-9);
     text-align: center;
   }
-  .gm-notice-title {
-    font-family: var(--font-display);
-    font-size: 1.5rem;
-    line-height: 2rem;
-    font-weight: 600;
-  }
+  .gm-notice-title,
   .gm-notice-text {
     margin-top: 0.75rem;
     color: var(--dim);
@@ -1553,18 +1516,18 @@
   .gm-bio-body,
   .gm-data-chart,
   .gm-data-note {
-    margin-top: 1.5rem;
+    margin-top: var(--space-6);
   }
   .gm-notice-button,
   .gm-game-button {
     border-radius: 0.5rem;
     background-color: var(--primary);
-    padding-inline: 1rem;
+    padding-inline: var(--space-5);
     padding-block: 0.5rem;
     font-family: var(--font-display);
     font-size: 0.875rem;
     line-height: 1.25rem;
-    font-weight: 500;
+    font-weight: var(--weight-medium);
     color: var(--primary-fg);
   }
   .gm-notice-button {
@@ -1572,7 +1535,7 @@
   }
   .gm-game-button {
     padding-inline: 0.75rem;
-    padding-block: 0.375rem;
+    padding-block: var(--space-2-5);
     color: #fff;
   }
   @media (hover: hover) {
@@ -1608,15 +1571,7 @@
   .gm-bio-section,
   .gm-data-map,
   .gm-data-section {
-    margin-top: 2rem;
-  }
-  .gm-bio-section-title,
-  .gm-data-section-title {
-    margin-bottom: 0.5rem;
-    font-family: var(--font-display);
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    font-weight: 600;
+    margin-top: var(--space-7);
   }
   .gm-data-section-title {
     font-size: 1.125rem;
@@ -1631,11 +1586,9 @@
     align-items: center;
     gap: 0.25rem;
     border-radius: calc(infinity * 1px);
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     padding-inline: 0.75rem;
-    padding-block: 0.375rem;
+    padding-block: var(--space-2-5);
   }
   @media (hover: hover) {
     .gm-pill:hover,
@@ -1647,23 +1600,23 @@
     }
   }
   .gm-pill {
-    gap: 0.375rem;
+    gap: var(--space-2-5);
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: var(--fs-small);
     line-height: 1rem;
   }
   .gm-chip {
-    gap: 0.375rem;
+    gap: var(--space-2-5);
     font-family: var(--font-mono);
     font-size: 0.875rem;
     line-height: 1.25rem;
   }
 
   .gm-about-more {
-    margin-top: 1rem;
+    margin-top: var(--space-5);
     gap: 0.5rem;
     background-color: var(--raised);
-    padding-inline: 1rem;
+    padding-inline: var(--space-5);
     padding-block: 0.5rem;
     font-family: var(--font-mono);
     font-size: 0.875rem;
@@ -1672,11 +1625,9 @@
   .gm-callout {
     margin-top: 2.5rem;
     border-radius: 1rem;
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     background-color: var(--sunken);
-    padding: 1.5rem;
+    padding: var(--space-6);
   }
   .gm-about-host-title,
   .gm-about-card-title {
@@ -1684,12 +1635,12 @@
     align-items: center;
     gap: 0.5rem;
     font-family: var(--font-display);
-    font-weight: 500;
+    font-weight: var(--weight-medium);
   }
   .gm-about-host-title {
     font-size: 1.125rem;
     line-height: 1.75rem;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
   }
   .gm-about-host-text {
     margin-top: 0.5rem;
@@ -1711,7 +1662,7 @@
     height: 100%;
     flex-direction: column;
     background-color: var(--raised);
-    padding: 1rem;
+    padding: var(--space-5);
   }
   @media (hover: hover) {
     .gm-about-card:hover {
@@ -1721,7 +1672,7 @@
   .gm-data-source {
     margin-top: 0.5rem;
     font-family: var(--font-display);
-    font-size: 0.75rem;
+    font-size: var(--fs-small);
     line-height: 1rem;
     color: var(--dim);
   }
@@ -1734,7 +1685,7 @@
   .gm-data-th,
   .gm-data-td {
     border-bottom-style: solid;
-    border-bottom-width: 1px;
+    border-bottom-width: var(--line-w);
     border-color: var(--line);
     padding-block: 0.5rem;
     padding-right: 0.75rem;
@@ -1751,10 +1702,6 @@
   }
   .gm-detail-title {
     margin-top: 0.5rem;
-    font-family: var(--font-display);
-    font-size: 1.875rem;
-    line-height: 2.25rem;
-    font-weight: 600;
   }
   .gm-data-map,
   .gm-data-chart {
@@ -1769,8 +1716,8 @@
   .gm-hero {
     position: relative;
     display: grid;
-    gap: 2rem;
-    padding-top: 1.5rem;
+    gap: var(--space-7);
+    padding-top: var(--space-6);
   }
   @media (width >= 64rem) {
     .gm-hero {
@@ -1791,7 +1738,7 @@
     font-family: var(--font-display);
     font-size: 3rem;
     line-height: 1.05;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
   }
   @media (width >= 40rem) {
     .gm-hero-title {
@@ -1829,20 +1776,20 @@
     }
   }
   .gm-home-head {
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-5);
     display: flex;
     align-items: baseline;
     justify-content: space-between;
   }
   .gm-home-title {
     font-family: var(--font-display);
-    font-size: 1.5rem;
+    font-size: var(--title-3);
     line-height: 2rem;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
   }
   .gm-home-more {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: var(--fs-small);
     line-height: 1rem;
     color: var(--accent-text);
   }
@@ -1854,15 +1801,13 @@
   .gm-latest {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: var(--space-5);
     border-radius: 1rem;
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     background-color: var(--raised);
     padding: 1.25rem;
     box-shadow:
-      0 0 0 1px color-mix(in oklab, var(--primary) 10%, transparent),
+      0 0 0 var(--line-w) color-mix(in oklab, var(--primary) 10%, transparent),
       0 1px 3px 0 rgb(0 0 0 / 0.1),
       0 1px 2px -1px rgb(0 0 0 / 0.1);
   }
@@ -1871,7 +1816,7 @@
     flex: 1;
   }
   .gm-latest-kind {
-    --icon-size: 0.75rem;
+    --icon-size: var(--fs-small);
     display: flex;
     align-items: center;
     gap: 0.25rem;
@@ -1880,9 +1825,9 @@
   .gm-latest-title {
     margin-top: 0.25rem;
     font-family: var(--font-display);
-    font-size: 1.25rem;
+    font-size: var(--title-4);
     line-height: 1.75rem;
-    font-weight: 500;
+    font-weight: var(--weight-medium);
   }
   .gm-latest-link {
     color: var(--text);
@@ -1897,13 +1842,13 @@
     color: var(--dim);
   }
   .gm-sub-section {
-    margin-top: 2rem;
+    margin-top: var(--space-7);
   }
   .gm-sub-title {
     font-family: var(--font-display);
     font-size: 1.125rem;
     line-height: 1.75rem;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
   }
   .gm-sub-apps {
     margin-top: 0.75rem;
@@ -1920,15 +1865,13 @@
     align-items: center;
     gap: 0.75rem;
     border-radius: 0.75rem;
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     background-color: var(--raised);
     padding: 0.75rem;
     font-family: var(--font-display);
     font-size: 0.875rem;
     line-height: 1.25rem;
-    font-weight: 500;
+    font-weight: var(--weight-medium);
   }
   @media (hover: hover) {
     .gm-sub-app:hover {
@@ -1939,7 +1882,7 @@
   .gm-sub-app-name {
     display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
+    gap: var(--space-2-5);
   }
   .gm-sub-chips {
     margin-top: 0.75rem;
@@ -1949,16 +1892,14 @@
   }
   .gm-game-input {
     border-radius: 0.5rem;
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     background-color: var(--raised);
     padding-inline: 0.75rem;
     padding-block: 0.5rem;
     outline-style: none;
   }
   .gm-game-input {
-    padding-block: 0.375rem;
+    padding-block: var(--space-2-5);
     font-size: 0.875rem;
     line-height: 1.25rem;
   }
@@ -1973,7 +1914,7 @@
     color: var(--accent-text);
   }
   .gm-game-stage {
-    margin-top: 1.5rem;
+    margin-top: var(--space-6);
   }
   .gm-game-skeleton {
     margin-inline: auto;
@@ -1985,20 +1926,18 @@
   }
   @media (prefers-reduced-motion: no-preference) {
     .gm-game-skeleton {
-      animation: gm-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      animation: gm-pulse var(--dur-flow) cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
   }
   .gm-game-save {
-    margin-top: 1rem;
+    margin-top: var(--space-5);
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     border-radius: 0.75rem;
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     background-color: var(--sunken);
-    padding: 1rem;
+    padding: var(--space-5);
   }
   @media (width >= 40rem) {
     .gm-game-save {
@@ -2013,14 +1952,14 @@
   }
 
   .gm-game-scores {
-    margin-top: 2rem;
+    margin-top: var(--space-7);
   }
   :where(.gm-home > :not(:last-child)) {
-    margin-block: 0 3rem;
+    margin-block: 0 var(--space-8);
   }
   @keyframes gm-pulse {
     50% {
-      opacity: 0.5;
+      opacity: var(--opacity-half);
     }
   }
   /* The page frame: main, the footer, the header's mark, a game's frame and the outbound-link cue. */
@@ -2028,13 +1967,13 @@
     margin-inline: auto;
     min-height: 60vh;
     max-width: 64rem;
-    padding-inline: 1rem;
-    padding-top: 1.5rem;
-    padding-bottom: 3rem;
+    padding-inline: var(--space-5);
+    padding-top: var(--space-6);
+    padding-bottom: var(--space-8);
   }
   .gm-footer {
     border-top-style: solid;
-    border-top-width: 1px;
+    border-top-width: var(--line-w);
     border-color: var(--line);
     background-color: var(--sunken);
   }
@@ -2044,14 +1983,14 @@
     max-width: 64rem;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     column-gap: 0.75rem;
-    row-gap: 2rem;
-    padding-inline: 1rem;
-    padding-block: 3rem;
+    row-gap: var(--space-7);
+    padding-inline: var(--space-5);
+    padding-block: var(--space-8);
   }
   @media (width >= 40rem) {
     .gm-footer-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      column-gap: 2rem;
+      column-gap: var(--space-7);
     }
   }
   @media (width >= 64rem) {
@@ -2088,12 +2027,12 @@
     margin-top: 0.75rem;
     max-width: 20rem;
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: var(--fs-small);
     line-height: 1.625;
     color: var(--dim);
   }
   .gm-footer-socials {
-    margin-top: 1rem;
+    margin-top: var(--space-5);
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -2104,9 +2043,7 @@
     width: 2.25rem;
     place-items: center;
     border-radius: calc(infinity * 1px);
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     color: var(--dim);
   }
   @media (hover: hover) {
@@ -2116,13 +2053,13 @@
     }
   }
   .gm-footer-social-icon {
-    --icon-size: 1rem;
+    --icon-size: var(--title-6);
   }
   .gm-footer-title {
     font-family: var(--font-display);
     font-size: 0.875rem;
     line-height: 1.25rem;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
     color: var(--text);
   }
   .gm-footer-list {
@@ -2153,7 +2090,7 @@
   }
   .gm-footer-base {
     border-top-style: solid;
-    border-top-width: 1px;
+    border-top-width: var(--line-w);
     border-color: var(--line);
   }
   .gm-footer-base-row {
@@ -2164,10 +2101,10 @@
     align-items: center;
     column-gap: 0.75rem;
     row-gap: 0.25rem;
-    padding-inline: 1rem;
-    padding-block: 1rem;
+    padding-inline: var(--space-5);
+    padding-block: var(--space-5);
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: var(--fs-small);
     line-height: 1rem;
     color: var(--dim);
   }
@@ -2230,7 +2167,7 @@
   .gm-article-eyebrow,
   .gm-prev-next-label,
   .gm-next-label {
-    --icon-size: 0.75rem;
+    --icon-size: var(--fs-small);
   }
   .gm-index-kind,
   .gm-bio-link {
@@ -2245,12 +2182,12 @@
   .gm-legal-draft-title,
   .gm-archive-field,
   .gm-about-more {
-    --icon-size: 0.9375rem;
+    --icon-size: var(--fs-lead);
   }
   .gm-clip-icon,
   .gm-txasm-button,
   .gm-about-card-title {
-    --icon-size: 1rem;
+    --icon-size: var(--title-6);
   }
   .gm-post-card-icon,
   .gm-clips-title,

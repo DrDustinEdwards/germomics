@@ -3,7 +3,7 @@
 @import "capsomer/tokens.css";
 @import "capsomer/themes.css" layer(cap.tokens);
 @import "capsomer/base.css";
-@import "capsomer/site-header.css";
+@import "capsomer/site-header-frame.css";
 @import "capsomer/theme-switch.css";
 @import "capsomer/admin-shell.css";
 @import "capsomer/icons.css";
