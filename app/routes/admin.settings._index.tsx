@@ -37,9 +37,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 }
 
 const isCategory = (v: unknown): v is PodcastCategory =>
-  typeof v === "object" &&
-  v !== null &&
-  typeof (v as PodcastCategory).category === "string";
+  typeof v === "object" && v !== null && typeof (v as PodcastCategory).category === "string";
 const isHost = (v: unknown): v is Host =>
   typeof v === "object" && v !== null && typeof (v as Host).name === "string";
 
@@ -59,8 +57,7 @@ const settingSpec = (s: {
   key: `s:${s.key}`,
   label: s.label || s.key,
   help: s.description ? `${s.description} (${s.key})` : s.key,
-  kind:
-    s.type === "markdown" ? "textarea" : s.type === "json" ? "json" : "text",
+  kind: s.type === "markdown" ? "textarea" : s.type === "json" ? "json" : "text",
 });
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -82,17 +79,12 @@ export async function action({ request, context }: Route.ActionArgs) {
   const problems = [
     ...(categories
       ? []
-      : [
-          "The categories could not be read, so nothing was saved. Reload the page and try again.",
-        ]),
+      : ["The categories could not be read, so nothing was saved. Reload the page and try again."]),
     ...(parsedHosts
       ? []
-      : [
-          "The hosts could not be read, so nothing was saved. Reload the page and try again.",
-        ]),
+      : ["The hosts could not be read, so nothing was saved. Reload the page and try again."]),
   ];
-  if (!categories || !parsedHosts)
-    return { ok: false as const, message: problems.join(" ") };
+  if (!categories || !parsedHosts) return { ok: false as const, message: problems.join(" ") };
   const hosts = parsedHosts.filter((h) => h.name.trim());
   const et = form.get("itunesType");
 
@@ -118,13 +110,9 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
   const { show, siteSettings, blocks } = loaderData;
   const fetcher = useFetcher<{ ok: boolean; message?: string }>();
   const settingsFetcher = useFetcher<{ ok: boolean; message?: string }>();
-  const [categories, setCategories] = useState<PodcastCategory[]>(
-    show.categories ?? [],
-  );
+  const [categories, setCategories] = useState<PodcastCategory[]>(show.categories ?? []);
   const [hosts, setHosts] = useState<Host[]>(show.hosts ?? []);
-  const settingValues = Object.fromEntries(
-    siteSettings.map((s) => [`s:${s.key}`, s.value]),
-  );
+  const settingValues = Object.fromEntries(siteSettings.map((s) => [`s:${s.key}`, s.value]));
   const pages = blocks.filter((b) => b.kind === "page");
   const snippets = blocks.filter((b) => b.kind === "snippet");
 
@@ -149,12 +137,7 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
           <div className="space-y-4">
             <Field label="Title">
               {({ id }) => (
-                <input
-                  id={id}
-                  name="title"
-                  defaultValue={show.title}
-                  className={inputCx}
-                />
+                <input id={id} name="title" defaultValue={show.title} className={inputCx} />
               )}
             </Field>
             <Field label="Description">
@@ -171,12 +154,7 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
             <div className="grid grid-cols-2 gap-3">
               <Field label="Author">
                 {({ id }) => (
-                  <input
-                    id={id}
-                    name="author"
-                    defaultValue={show.author}
-                    className={inputCx}
-                  />
+                  <input id={id} name="author" defaultValue={show.author} className={inputCx} />
                 )}
               </Field>
               <Field label="Owner email">
@@ -208,12 +186,7 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
             <div className="grid grid-cols-3 gap-3">
               <Field label="Language">
                 {({ id }) => (
-                  <input
-                    id={id}
-                    name="language"
-                    defaultValue={show.language}
-                    className={inputCx}
-                  />
+                  <input id={id} name="language" defaultValue={show.language} className={inputCx} />
                 )}
               </Field>
               <Field label="Type">
@@ -230,38 +203,26 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
                 )}
               </Field>
               <label className="flex items-end gap-2 pb-2 text-sm">
-                <input
-                  type="checkbox"
-                  name="explicit"
-                  defaultChecked={show.explicit}
-                />{" "}
-                Explicit
+                <input type="checkbox" name="explicit" defaultChecked={show.explicit} /> Explicit
               </label>
             </div>
           </div>
         </Card>
 
-        <Card
-          title="iTunes categories"
-          icon={<ListTree size={15} aria-hidden />}
-        >
+        <Card title="iTunes categories" icon={<ListTree size={15} aria-hidden />}>
           <CategoriesEditor value={categories} onChange={setCategories} />
         </Card>
 
         <Card title="Hosts" icon={<Users size={15} aria-hidden />}>
           <p className="mb-4 text-sm text-muted">
-            Show-level byline. Maps to podcast:person in the feed alongside
-            per-episode guests.
+            Show-level byline. Maps to podcast:person in the feed alongside per-episode guests.
           </p>
           <HostsEditor hosts={hosts} onChange={setHosts} />
         </Card>
 
         <Card title="Funding">
           <div className="space-y-4">
-            <Field
-              label="Funding URL"
-              hint="Leave blank to omit podcast:funding from the feed."
-            >
+            <Field label="Funding URL" hint="Leave blank to omit podcast:funding from the feed.">
               {({ id }) => (
                 <input
                   id={id}
@@ -290,18 +251,11 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
         </Card>
 
         <div className="flex items-center gap-3">
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={fetcher.state !== "idle"}
-          >
+          <Button type="submit" variant="primary" disabled={fetcher.state !== "idle"}>
             Save settings
           </Button>
           {fetcher.data?.ok ? (
-            <span
-              role="status"
-              className="flex items-center gap-1 font-mono text-xs text-accent"
-            >
+            <span role="status" className="flex items-center gap-1 font-mono text-xs text-accent">
               <Check size={13} aria-hidden /> {fetcher.data.message}
             </span>
           ) : null}
@@ -316,33 +270,19 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
       {/* Site settings (settings table): non-secret config + AI prompts, edited live. */}
       <settingsFetcher.Form method="post" className="mt-8 space-y-5">
         <input type="hidden" name="_form" value="settings" />
-        <Card
-          title="Site settings"
-          icon={<SlidersHorizontal size={15} aria-hidden />}
-        >
+        <Card title="Site settings" icon={<SlidersHorizontal size={15} aria-hidden />}>
           <p className="mb-4 text-sm text-muted">
-            Non-secret config and the AI generator prompts. Saved instantly.
-            Identity that drives the feed lives in the Show card above, not
-            here.
+            Non-secret config and the AI generator prompts. Saved instantly. Identity that drives
+            the feed lives in the Show card above, not here.
           </p>
-          <SchemaFields
-            specs={siteSettings.map(settingSpec)}
-            values={settingValues}
-          />
+          <SchemaFields specs={siteSettings.map(settingSpec)} values={settingValues} />
         </Card>
         <div className="flex items-center gap-3">
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={settingsFetcher.state !== "idle"}
-          >
+          <Button type="submit" variant="primary" disabled={settingsFetcher.state !== "idle"}>
             Save site settings
           </Button>
           {settingsFetcher.data?.ok ? (
-            <span
-              role="status"
-              className="flex items-center gap-1 font-mono text-xs text-accent"
-            >
+            <span role="status" className="flex items-center gap-1 font-mono text-xs text-accent">
               <Check size={13} aria-hidden /> {settingsFetcher.data.message}
             </span>
           ) : null}
@@ -350,50 +290,35 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
       </settingsFetcher.Form>
 
       {/* Content blocks: pages (draft/publish) + snippets (instant). Edit on a dedicated page. */}
-      <Card
-        title="Content"
-        icon={<FileText size={15} aria-hidden />}
-        className="mt-8"
-      >
+      <Card title="Content" icon={<FileText size={15} aria-hidden />} className="mt-8">
         <p className="mb-4 text-sm text-muted">
           Pages render publicly only when published. Snippets are instant.
         </p>
         <h3 className="mb-2 font-display text-sm font-semibold">Pages</h3>
         <ul className="mb-5 divide-y divide-border">
           {pages.map((b) => (
-            <li
-              key={b.key}
-              className="flex items-center justify-between gap-3 py-2"
-            >
+            <li key={b.key} className="flex items-center justify-between gap-3 py-2">
               <Link
                 to={`/admin/content/${encodeURIComponent(b.key)}`}
                 className="font-display text-sm text-ink hover:text-brand"
               >
                 {b.title || b.key}
               </Link>
-              <Badge tone={b.status === "published" ? "accent" : "amber"}>
-                {b.status}
-              </Badge>
+              <Badge tone={b.status === "published" ? "accent" : "amber"}>{b.status}</Badge>
             </li>
           ))}
         </ul>
         <h3 className="mb-2 font-display text-sm font-semibold">Snippets</h3>
         <ul className="divide-y divide-border">
           {snippets.map((b) => (
-            <li
-              key={b.key}
-              className="flex items-center justify-between gap-3 py-2"
-            >
+            <li key={b.key} className="flex items-center justify-between gap-3 py-2">
               <Link
                 to={`/admin/content/${encodeURIComponent(b.key)}`}
                 className="font-mono text-xs text-ink hover:text-brand"
               >
                 {b.key}
               </Link>
-              <span
-                className="truncate text-xs text-muted"
-                style={{ maxWidth: "16rem" }}
-              >
+              <span className="truncate text-xs text-muted" style={{ maxWidth: "16rem" }}>
                 {b.value}
               </span>
             </li>

@@ -6,13 +6,7 @@ import { UserPlus, Trash2, Users } from "lucide-react";
 import type { Route } from "./+types/admin.people._index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { listPeople, upsertPerson, deletePerson } from "~/lib/people.server";
-import {
-  Card,
-  Field,
-  Button,
-  inputCx,
-  EmptyState,
-} from "~/components/admin/ui";
+import { Card, Field, Button, inputCx, EmptyState } from "~/components/admin/ui";
 import { ImageField } from "~/components/admin/ImageField";
 import { useSnippet } from "~/lib/content";
 import type { Person, PersonLink } from "~/db/schema";
@@ -70,10 +64,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
   const del = useFetcher();
   const [draft, setDraft] = useState(blank);
   const editing = draft.id !== 0;
-  const emptyPeople = useSnippet(
-    "snippet:empty.people",
-    "No people yet. Create one on the right.",
-  );
+  const emptyPeople = useSnippet("snippet:empty.people", "No people yet. Create one on the right.");
 
   function load(p: Person) {
     setDraft({
@@ -117,9 +108,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                     </span>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-display font-medium text-ink">
-                      {p.name}
-                    </p>
+                    <p className="truncate font-display font-medium text-ink">{p.name}</p>
                     {p.role ? (
                       <p className="truncate font-mono text-[0.6875rem] text-muted">{p.role}</p>
                     ) : null}
@@ -173,9 +162,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
             }
           >
             <save.Form method="post" className="space-y-4">
-              {editing ? (
-                <input type="hidden" name="id" value={draft.id} />
-              ) : null}
+              {editing ? <input type="hidden" name="id" value={draft.id} /> : null}
               <input type="hidden" name="photo" value={draft.photo} />
               <input type="hidden" name="photoAlt" value={draft.photoAlt} />
 
@@ -185,9 +172,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                     id={id}
                     name="name"
                     value={draft.name}
-                    onChange={(e) =>
-                      setDraft((d) => ({ ...d, name: e.target.value }))
-                    }
+                    onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
                     className={inputCx}
                     required
                   />
@@ -199,9 +184,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                     id={id}
                     name="role"
                     value={draft.role}
-                    onChange={(e) =>
-                      setDraft((d) => ({ ...d, role: e.target.value }))
-                    }
+                    onChange={(e) => setDraft((d) => ({ ...d, role: e.target.value }))}
                     className={inputCx}
                   />
                 )}
@@ -213,9 +196,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                     name="bio"
                     value={draft.bio}
                     rows={3}
-                    onChange={(e) =>
-                      setDraft((d) => ({ ...d, bio: e.target.value }))
-                    }
+                    onChange={(e) => setDraft((d) => ({ ...d, bio: e.target.value }))}
                     className={inputCx}
                   />
                 )}
@@ -226,9 +207,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                 url={draft.photo}
                 alt={draft.photoAlt}
                 postId="people"
-                onChange={({ url, alt }) =>
-                  setDraft((d) => ({ ...d, photo: url, photoAlt: alt }))
-                }
+                onChange={({ url, alt }) => setDraft((d) => ({ ...d, photo: url, photoAlt: alt }))}
               />
 
               <RepeaterField
@@ -261,17 +240,11 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
 
               <input type="hidden" name="intent" value="upsert" />
               <div className="flex items-center gap-3">
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={save.state !== "idle"}
-                >
+                <Button type="submit" variant="primary" disabled={save.state !== "idle"}>
                   {editing ? "Save" : "Create"}
                 </Button>
                 {save.data?.ok ? (
-                  <span className="font-mono text-xs text-accent">
-                    {save.data.message}
-                  </span>
+                  <span className="font-mono text-xs text-accent">{save.data.message}</span>
                 ) : null}
               </div>
             </save.Form>
