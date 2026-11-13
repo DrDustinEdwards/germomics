@@ -4,29 +4,28 @@
 // thus Organization/PodcastSeries sameAs). The Android/Email/RSS mechanisms are NOT here (they are
 // feed redirects, not identity profiles) and live only on the /subscribe page.
 import {
-  Podcast,
-  Music,
-  Music2,
-  Radio,
-  Antenna,
-  Disc3,
-  Library,
-  Star,
-  type LucideIcon,
-} from "lucide-react";
+  iconAntenna,
+  iconDisc,
+  iconLibrary,
+  iconMusic,
+  iconMusicNote,
+  iconPodcast,
+  iconRadio,
+  iconStar,
+} from "capsomer/behavior/icons";
 
 type SubTier = "primary" | "secondary";
-export type SubDest = { label: string; tier: SubTier; icon: LucideIcon };
+export type SubDest = { label: string; tier: SubTier; icon: string };
 
 export const SUBSCRIBE_DESTINATIONS: Record<string, SubDest> = {
-  apple: { label: "Apple Podcasts", tier: "primary", icon: Podcast },
-  spotify: { label: "Spotify", tier: "primary", icon: Music },
-  amazon: { label: "Amazon Music", tier: "primary", icon: Music2 },
-  pandora: { label: "Pandora", tier: "primary", icon: Radio },
-  tunein: { label: "TuneIn", tier: "primary", icon: Antenna },
-  deezer: { label: "Deezer", tier: "secondary", icon: Disc3 },
-  podcastindex: { label: "Podcast Index", tier: "secondary", icon: Library },
-  podchaser: { label: "Podchaser", tier: "secondary", icon: Star },
+  apple: { label: "Apple Podcasts", tier: "primary", icon: iconPodcast },
+  spotify: { label: "Spotify", tier: "primary", icon: iconMusic },
+  amazon: { label: "Amazon Music", tier: "primary", icon: iconMusicNote },
+  pandora: { label: "Pandora", tier: "primary", icon: iconRadio },
+  tunein: { label: "TuneIn", tier: "primary", icon: iconAntenna },
+  deezer: { label: "Deezer", tier: "secondary", icon: iconDisc },
+  podcastindex: { label: "Podcast Index", tier: "secondary", icon: iconLibrary },
+  podchaser: { label: "Podchaser", tier: "secondary", icon: iconStar },
 };
 
 const keysOf = (tier: SubTier) =>

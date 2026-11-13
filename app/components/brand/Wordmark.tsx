@@ -13,13 +13,13 @@ export function Wordmark({
   title?: string;
 }) {
   // The wrapper carries the accessible name and the brand color; the inner <svg> (aria-hidden) keeps
-  // its viewBox. Height comes from `className` (e.g. h-20) and the width follows the intrinsic ratio,
+  // its viewBox. Height comes from `className` (e.g. gm-footer-wordmark) and the width follows the intrinsic ratio,
   // so this rectangular lockup stays proportional at whatever height the caller sets.
   return (
     <span
       role="img"
       aria-label={title}
-      className={`inline-flex text-brand [&>svg]:h-full [&>svg]:w-auto ${className}`}
+      className={`gm-wordmark ${className}`}
       dangerouslySetInnerHTML={markup(wordmarkSvg)}
     />
   );

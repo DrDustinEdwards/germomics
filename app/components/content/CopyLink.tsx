@@ -1,5 +1,5 @@
-import { useId, type ComponentType } from "react";
-import { Check, Share2 } from "lucide-react";
+import { useId } from "react";
+import { Icon, iconCheck, iconShare } from "capsomer/react/icons";
 import { useCopy } from "capsomer/react/copy";
 import { usePlayer } from "capsomer/react/player";
 import { timecode } from "capsomer/behavior/time";
@@ -20,13 +20,14 @@ export function CopyButton({
   path,
   label,
   share = false,
-  icon: Icon,
+  icon,
   className = "gm-pill",
 }: {
   path: string;
   label: string;
   share?: boolean;
-  icon: ComponentType<{ size?: number; "aria-hidden"?: boolean }>;
+  // The icon's drawing, a Capsomer icon path.
+  icon: string;
   className?: string;
 }) {
   const id = useId();
@@ -38,10 +39,10 @@ export function CopyButton({
         className={`cap-copy-button ${className}`}
       >
         <span className="cap-copy-icon">
-          <Icon size={14} aria-hidden />
+          <Icon d={icon} />
         </span>
         <span className="cap-copy-done">
-          <Check size={14} aria-hidden />
+          <Icon d={iconCheck} />
         </span>
         {label}
       </button>
@@ -55,7 +56,7 @@ export function CopyButton({
 
 // Share a link to this post.
 export function CopyLink({ slug }: { slug: string }) {
-  return <CopyButton path={`/${slug}`} label="Share" share icon={Share2} />;
+  return <CopyButton path={`/${slug}`} label="Share" share icon={iconShare} />;
 }
 
 // Copies a deep link to the current playhead: /<slug>?t=<seconds>. The detail page reads ?t
@@ -73,10 +74,10 @@ export function ShareTimestamp({ slug }: { slug: string }) {
         className={"cap-copy-button gm-pill"}
       >
         <span className="cap-copy-icon">
-          <Share2 size={14} aria-hidden />
+          <Icon d={iconShare} />
         </span>
         <span className="cap-copy-done">
-          <Check size={14} aria-hidden />
+          <Icon d={iconCheck} />
         </span>
         {`Share at ${timecode(at * 1000)}`}
       </button>

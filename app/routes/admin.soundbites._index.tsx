@@ -2,7 +2,8 @@
 // gate. Clips render a public clip player on the episode page and emit <podcast:soundbite> in the
 // feed. Drizzle via soundbites.server.
 import { useFetcher } from "react-router";
-import { Icon } from "capsomer/react/icons";
+import { DeleteForm } from "~/components/admin/DeleteForm";
+import { Icon, iconCut } from "capsomer/react/icons";
 import type { Route } from "./+types/admin.soundbites._index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { listEpisodes } from "~/lib/posts.server";
@@ -15,7 +16,6 @@ import { Empty } from "capsomer/react/empty";
 import { useSnippet } from "~/lib/content";
 import { readForm } from "@dustinedwards/site-runtime/body";
 import { ADMIN_FORM } from "~/lib/body.server";
-import { confirmSubmit } from "capsomer/behavior/confirm-dialog";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
@@ -46,7 +46,6 @@ export async function action({ request, context }: Route.ActionArgs) {
 export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
   const { episodes, clips } = loaderData;
   const save = useFetcher<{ ok: boolean; message?: string }>();
-  const del = useFetcher();
   const emptySoundbites = useSnippet(
     "snippet:empty.soundbites",
     "No soundbites yet. Create one on the right.",
@@ -56,7 +55,7 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
   return (
     <div>
       <h1 className="flex items-center gap-2 font-display text-2xl font-semibold">
-        <Icon name="cut" className="size-[22px]" /> Soundbites
+        <Icon d={iconCut} className="size-[22px]" /> Soundbites
       </h1>
       <p className="mt-1 text-sm text-muted">
         Short clips of an episode. They power the episode clip player and the feed soundbite tags.
@@ -79,24 +78,12 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
                       {timecode(c.startSeconds * 1000)} for {c.durationSeconds}s
                     </p>
                   </div>
-                  <del.Form
-                    method="post"
-                    onSubmit={(e) =>
-                      confirmSubmit(e, {
-                        title: "Delete this soundbite?",
-                        action: "Delete soundbite",
-                      })
-                    }
-                  >
-                    <input type="hidden" name="intent" value="delete" />
-                    <input type="hidden" name="id" value={c.id} />
-                    <button
-                      aria-label="Delete soundbite"
-                      className="grid h-7 w-7 place-items-center rounded text-muted hover:text-brand"
-                    >
-                      <Icon name="trash" className="size-3.5" />
-                    </button>
-                  </del.Form>
+                  <DeleteForm
+                    id={c.id}
+                    label="Delete soundbite"
+                    title="Delete this soundbite?"
+                    action="Delete soundbite"
+                  />
                 </li>
               ))}
             </ul>

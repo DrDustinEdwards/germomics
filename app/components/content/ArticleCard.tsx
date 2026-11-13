@@ -1,5 +1,5 @@
 import { Link } from "capsomer/react/link";
-import { Calendar } from "lucide-react";
+import { Icon, iconCalendar } from "capsomer/react/icons";
 import { formatDate } from "capsomer/behavior/time";
 import type { Post } from "~/db/schema";
 import type { ImageAttributes } from "~/lib/images";
@@ -10,8 +10,8 @@ import { imageOrPlain } from "~/lib/images";
 // under the index's h1.
 export function ArticleCard({ post, image }: { post: Post; image?: ImageAttributes }) {
   return (
-    <article className="group gm-article-card">
-      <Link to={`/${post.slug}`} className="block">
+    <article className="gm-article-card">
+      <Link to={`/${post.slug}`} className="gm-article-card-link">
         {post.coverImage ? (
           <Picture
             attrs={imageOrPlain(image, post.coverImage)}
@@ -23,7 +23,7 @@ export function ArticleCard({ post, image }: { post: Post; image?: ImageAttribut
           <div className="gm-article-card-meta">
             {post.publishedAt ? (
               <span className="gm-article-card-kind">
-                <Calendar size={11} aria-hidden /> {formatDate(post.publishedAt)}
+                <Icon d={iconCalendar} /> {formatDate(post.publishedAt)}
               </span>
             ) : null}
             {post.readingTime ? <span className="gm-num">{post.readingTime} min read</span> : null}

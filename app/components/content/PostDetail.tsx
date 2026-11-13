@@ -4,7 +4,15 @@
 // Body is rendered once via BodyRenderer for both kinds.
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "react-router";
-import { Calendar, Clock, ArrowLeft, ArrowRight, FileText, Rss } from "lucide-react";
+import {
+  Icon,
+  iconArrowLeft,
+  iconArrowRight,
+  iconCalendar,
+  iconClock,
+  iconDocument,
+  iconRss,
+} from "capsomer/react/icons";
 import { Link } from "capsomer/react/link";
 import { SaveToggle } from "capsomer/react/save-toggle";
 import { SubscribeLinks } from "capsomer/react/subscribe-links";
@@ -76,10 +84,9 @@ function SubscribeRow({ links }: { links: Record<string, string> }) {
       links={[
         ...primary.map((k) => {
           const d = SUBSCRIBE_DESTINATIONS[k];
-          const Icon = d.icon;
           return {
             href: links[k]!,
-            icon: <Icon size={14} aria-hidden />,
+            icon: <Icon d={d.icon} />,
             label: (
               <>
                 {d.label}
@@ -88,7 +95,7 @@ function SubscribeRow({ links }: { links: Record<string, string> }) {
             ),
           };
         }),
-        { href: "/feed/podcast/", icon: <Rss size={14} aria-hidden />, label: "RSS" },
+        { href: "/feed/podcast/", icon: <Icon d={iconRss} />, label: "RSS" },
       ]}
       more={{ href: "/subscribe", label: "More ways to listen →" }}
       renderLink={({ href, className, children }) => (
@@ -184,9 +191,9 @@ export function PostDetail({ data }: { data: DetailData }) {
     prev || next ? (
       <nav className="gm-prev-next" aria-label="More posts">
         {prev ? (
-          <Link to={`/${prev.slug}`} className="group gm-prev">
+          <Link to={`/${prev.slug}`} className="gm-prev">
             <span className="gm-prev-next-label">
-              <ArrowLeft size={12} aria-hidden /> Previous
+              <Icon d={iconArrowLeft} /> Previous
             </span>
             <span className="gm-prev-next-title">{prev.title}</span>
           </Link>
@@ -194,9 +201,9 @@ export function PostDetail({ data }: { data: DetailData }) {
           <span />
         )}
         {next ? (
-          <Link to={`/${next.slug}`} className="group gm-next">
+          <Link to={`/${next.slug}`} className="gm-next">
             <span className="gm-next-label">
-              Next <ArrowRight size={12} aria-hidden />
+              Next <Icon d={iconArrowRight} />
             </span>
             <span className="gm-prev-next-title">{next.title}</span>
           </Link>
@@ -239,13 +246,13 @@ export function PostDetail({ data }: { data: DetailData }) {
               <p className="gm-post-meta">
                 {post.publishedAt ? (
                   <span className="gm-post-meta-item">
-                    <Calendar size={12} aria-hidden />{" "}
+                    <Icon d={iconCalendar} />{" "}
                     <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
                   </span>
                 ) : null}
                 {post.audioDuration ? (
                   <span className="gm-post-meta-time">
-                    <Clock size={12} aria-hidden /> {timecode(post.audioDuration * 1000)}
+                    <Icon d={iconClock} /> {timecode(post.audioDuration * 1000)}
                   </span>
                 ) : null}
                 {wasUpdatedAfterPublish(post) ? (
@@ -381,21 +388,21 @@ export function PostDetail({ data }: { data: DetailData }) {
         />
       ) : null}
       <p className="gm-article-eyebrow">
-        <FileText size={12} aria-hidden /> Article
+        <Icon d={iconDocument} /> Article
       </p>
       <h1 className="gm-post-title">{post.title}</h1>
       <div className="gm-post-meta">
         <span>{AUTHOR.byline}</span>
         {post.publishedAt ? (
           <span className="gm-post-meta-item">
-            <Calendar size={12} aria-hidden /> {formatDate(post.publishedAt)}
+            <Icon d={iconCalendar} /> {formatDate(post.publishedAt)}
           </span>
         ) : null}
         {wasUpdatedAfterPublish(post) ? (
           <span className="gm-post-updated">Updated {formatDate(post.updatedAt)}</span>
         ) : null}
         <span className="gm-post-meta-item">
-          <Clock size={12} aria-hidden /> {readingMinutes} min read
+          <Icon d={iconClock} /> {readingMinutes} min read
         </span>
       </div>
       <TagLinks tags={post.tags ?? []} className="gm-article-tags" />

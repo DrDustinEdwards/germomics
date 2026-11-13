@@ -10,7 +10,15 @@
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { Link } from "capsomer/react/link";
-import { Icon, type IconName } from "capsomer/react/icons";
+import {
+  Icon,
+  iconCut,
+  iconFileAudio,
+  iconMail,
+  iconOverview,
+  iconPeople,
+  iconSettings,
+} from "capsomer/react/icons";
 import { AdminShell, type AdminEntry } from "capsomer/react/admin-shell";
 import "~/admin.css";
 import type { Route } from "./+types/admin";
@@ -74,7 +82,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return { email: session?.email ?? "" };
 }
 
-const icon = (name: IconName) => <Icon name={name} className="cap-admin-icon" />;
+const icon = (d: string) => <Icon d={d} className="cap-admin-icon" />;
 
 // The admin's pages, grouped as the menu shows them. The shell marks the entry the address is in
 // (`pathname`); `match` adds the prefixes that also count.
@@ -84,42 +92,42 @@ const ENTRIES: AdminEntry[] = [
     label: "Dashboard",
     href: "/admin",
     group: "Overview",
-    icon: icon("overview"),
+    icon: icon(iconOverview),
   },
   {
     id: "episodes",
     label: "Episode audio",
     href: "/admin/episodes",
     group: "Content",
-    icon: icon("file-audio"),
+    icon: icon(iconFileAudio),
   },
   {
     id: "people",
     label: "People",
     href: "/admin/people",
     group: "Content",
-    icon: icon("people"),
+    icon: icon(iconPeople),
   },
   {
     id: "soundbites",
     label: "Soundbites",
     href: "/admin/soundbites",
     group: "Content",
-    icon: icon("cut"),
+    icon: icon(iconCut),
   },
   {
     id: "subscribers",
     label: "Subscribers",
     href: "/admin/subscribers",
     group: "Audience",
-    icon: icon("mail"),
+    icon: icon(iconMail),
   },
   {
     id: "settings",
     label: "Settings",
     href: "/admin/settings",
     group: "Site",
-    icon: icon("settings"),
+    icon: icon(iconSettings),
     match: ["/admin/settings", "/admin/content"],
   },
 ];

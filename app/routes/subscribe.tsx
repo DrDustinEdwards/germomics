@@ -1,7 +1,7 @@
 import { isEmail } from "@dustinedwards/site-runtime/email";
 import { Form } from "react-router";
 import { Link } from "capsomer/react/link";
-import { Rss, Check, Copy, Mail, Smartphone } from "lucide-react";
+import { Check } from "lucide-react";
 import { CopyButton } from "~/components/content/CopyLink";
 import { ExternalCue } from "~/components/ExternalCue";
 import { pageHead } from "~/lib/seo";
@@ -11,6 +11,7 @@ import { requestSubscription } from "~/lib/newsletter.server";
 import { getShowConfig } from "~/lib/show.server";
 import { SUBSCRIBE_DESTINATIONS, PRIMARY_KEYS, SECONDARY_KEYS } from "~/lib/subscribe";
 import { SITE_HOST } from "~/lib/site";
+import { Icon, iconCopy, iconMail, iconPhone, iconRss } from "capsomer/react/icons";
 import { readForm } from "@dustinedwards/site-runtime/body";
 import { PUBLIC_FORM } from "~/lib/body.server";
 
@@ -75,13 +76,12 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
           <div className="gm-sub-apps">
             {primary.map((k) => {
               const d = SUBSCRIBE_DESTINATIONS[k];
-              const Icon = d.icon;
               return (
                 <a key={k} href={sl[k]} className="gm-sub-app">
-                  <Icon size={18} aria-hidden />
+                  <Icon d={d.icon} />
                   <span className="gm-sub-app-name">
                     {d.label}
-                    <ExternalCue size={14} />
+                    <ExternalCue />
                   </span>
                 </a>
               );
@@ -97,10 +97,9 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
           <div className="gm-sub-chips">
             {secondary.map((k) => {
               const d = SUBSCRIBE_DESTINATIONS[k];
-              const Icon = d.icon;
               return (
                 <a key={k} href={sl[k]} className="gm-chip">
-                  <Icon size={14} aria-hidden /> {d.label}
+                  <Icon d={d.icon} /> {d.label}
                   <ExternalCue />
                 </a>
               );
@@ -114,17 +113,22 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
         <h2 className="gm-sub-title">Other ways to subscribe</h2>
         <div className="gm-sub-chips">
           <a href={`https://subscribeonandroid.com/${SITE_HOST}/feed/podcast/`} className="gm-chip">
-            <Smartphone size={14} aria-hidden /> Subscribe on Android
+            <Icon d={iconPhone} /> Subscribe on Android
             <ExternalCue />
           </a>
           <a href={`https://subscribebyemail.com/${SITE_HOST}/feed/podcast/`} className="gm-chip">
-            <Mail size={14} aria-hidden /> Subscribe by Email
+            <Icon d={iconMail} /> Subscribe by Email
             <ExternalCue />
           </a>
           <a href="/feed/podcast/" className="gm-chip">
-            <Rss size={14} aria-hidden /> RSS feed
+            <Icon d={iconRss} /> RSS feed
           </a>
-          <CopyButton path="/feed/podcast/" label="Copy RSS link" icon={Copy} className="gm-chip" />
+          <CopyButton
+            path="/feed/podcast/"
+            label="Copy RSS link"
+            icon={iconCopy}
+            className="gm-chip"
+          />
         </div>
       </section>
 

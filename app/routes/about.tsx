@@ -3,7 +3,15 @@
 // Public, WCAG AA. ?preview shows drafts to a signed-in admin.
 import { htmlToText } from "@drdustinedwards/site-helpers/text";
 import { Link } from "capsomer/react/link";
-import { Rss, Mic, FileText, Database, Gamepad2, User } from "lucide-react";
+import {
+  Icon,
+  iconDatabase,
+  iconDocument,
+  iconGamepad,
+  iconMic,
+  iconRss,
+  iconUser,
+} from "capsomer/react/icons";
 import type { Route } from "./+types/about";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getSettings } from "~/lib/context.server";
@@ -43,10 +51,15 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 const EXPLORE = [
-  { to: "/episodes", icon: Mic, label: "Episodes", note: "Listen, with transcripts and chapters." },
-  { to: "/writing", icon: FileText, label: "Writing", note: "Essays and notes." },
-  { to: "/data", icon: Database, label: "Data", note: "Interactive virus and bacteria pages." },
-  { to: "/games", icon: Gamepad2, label: "Games", note: "Short browser games." },
+  {
+    to: "/episodes",
+    icon: iconMic,
+    label: "Episodes",
+    note: "Listen, with transcripts and chapters.",
+  },
+  { to: "/writing", icon: iconDocument, label: "Writing", note: "Essays and notes." },
+  { to: "/data", icon: iconDatabase, label: "Data", note: "Interactive virus and bacteria pages." },
+  { to: "/games", icon: iconGamepad, label: "Games", note: "Short browser games." },
 ];
 
 export default function About({ loaderData }: Route.ComponentProps) {
@@ -61,7 +74,7 @@ export default function About({ loaderData }: Route.ComponentProps) {
 
       <section className="gm-callout">
         <h2 className="gm-about-host-title">
-          <User size={18} aria-hidden /> The author
+          <Icon d={iconUser} /> The author
         </h2>
         <div data-context="prose" className="gm-about-host-text">
           <BodyRenderer html={bioHtml} />
@@ -74,11 +87,11 @@ export default function About({ loaderData }: Route.ComponentProps) {
       <section className="gm-about-section">
         <h2 className="gm-post-section-title">Explore</h2>
         <ul className="gm-about-grid">
-          {EXPLORE.map(({ to, icon: Icon, label, note }) => (
+          {EXPLORE.map(({ to, icon, label, note }) => (
             <li key={to}>
               <Link to={to} className="gm-about-card">
                 <span className="gm-about-card-title">
-                  <Icon size={16} aria-hidden /> {label}
+                  <Icon d={icon} /> {label}
                 </span>
                 <span className="gm-index-card-text">{note}</span>
               </Link>
@@ -86,7 +99,7 @@ export default function About({ loaderData }: Route.ComponentProps) {
           ))}
         </ul>
         <a href="/feed/podcast/" className="gm-about-more">
-          <Rss size={15} aria-hidden /> Podcast RSS
+          <Icon d={iconRss} /> Podcast RSS
         </a>
       </section>
     </div>

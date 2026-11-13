@@ -1,5 +1,5 @@
 import { Link } from "capsomer/react/link";
-import { Headphones, FileText } from "lucide-react";
+import { Icon, iconDocument, iconHeadphones } from "capsomer/react/icons";
 import { formatDate, timecode } from "capsomer/behavior/time";
 import { PlayTrackButton } from "capsomer/react/player";
 import type { Post } from "~/db/schema";
@@ -30,14 +30,14 @@ export function PostCard({
           <PlayTrackButton track={track} queue={queue} />
         ) : (
           <span className="gm-post-card-icon">
-            <FileText size={18} aria-hidden />
+            <Icon d={iconDocument} />
           </span>
         )}
       </span>
       <header>
         <div className="gm-post-card-meta">
           <span className="gm-post-card-kind">
-            {isEpisode ? <Headphones size={12} aria-hidden /> : <FileText size={12} aria-hidden />}
+            <Icon d={isEpisode ? iconHeadphones : iconDocument} />
             {isEpisode ? "Episode" : "Article"}
           </span>
           {isEpisode && post.episodeNumber ? <span>#{post.episodeNumber}</span> : null}

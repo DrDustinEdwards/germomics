@@ -1,5 +1,5 @@
 import { Link } from "capsomer/react/link";
-import { Icon } from "capsomer/react/icons";
+import { Icon, iconDocument, iconEdit, iconExternal, iconHeadphones } from "capsomer/react/icons";
 import type { Route } from "./+types/admin._index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { listAllPosts } from "~/lib/admin.server";
@@ -29,15 +29,15 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
           to="/admin/episodes"
           className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 font-display text-sm text-white hover:bg-brand-strong"
         >
-          <Icon name="headphones" className="size-[15px]" /> Episode audio
+          <Icon d={iconHeadphones} className="size-[15px]" /> Episode audio
         </Link>
       </div>
 
       <div className="mt-6 grid grid-cols-3 gap-3">
         {[
-          ["Episodes", counts.episodes, <Icon key="e" name="headphones" className="size-4" />],
-          ["Articles", counts.articles, <Icon key="a" name="document" className="size-4" />],
-          ["Drafts", counts.drafts, <Icon key="d" name="edit" className="size-4" />],
+          ["Episodes", counts.episodes, <Icon key="e" d={iconHeadphones} className="size-4" />],
+          ["Articles", counts.articles, <Icon key="a" d={iconDocument} className="size-4" />],
+          ["Drafts", counts.drafts, <Icon key="d" d={iconEdit} className="size-4" />],
         ].map(([label, n, icon]) => (
           <div key={label as string} className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
@@ -58,7 +58,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
               className="flex items-center justify-between px-4 py-2.5 hover:bg-surface"
             >
               <span className="flex min-w-0 items-center gap-1.5 truncate font-display">
-                {p.title} <Icon name="external" className="size-3" />
+                {p.title} <Icon d={iconExternal} className="size-3" />
               </span>
               <span className="ml-3 flex shrink-0 items-center gap-2 font-mono text-[0.6875rem] uppercase text-muted">
                 <span>{p.kind}</span>
