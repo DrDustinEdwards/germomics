@@ -444,9 +444,7 @@
   .gm-data-map,
   .gm-data-chart {
     border-radius: 0.75rem;
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
   }
   /* The cards whose border turns on hover, fading only where motion is welcome. */
   @media (prefers-reduced-motion: no-preference) {
@@ -477,17 +475,20 @@
     background-color: var(--sunken);
     color: var(--primary);
   }
+  .gm-post-card-meta,
+  .gm-page-hits-label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.025em;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
   .gm-post-card-meta {
     margin-top: 0px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     column-gap: 0.5rem;
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    letter-spacing: 0.025em;
-    color: var(--dim);
-    text-transform: uppercase;
   }
   .gm-post-card-kind {
     display: flex;
@@ -533,9 +534,7 @@
   .gm-tag {
     display: block;
     border-radius: calc(infinity * 1px);
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     padding-inline: 0.5rem;
     padding-block: 0.125rem;
     font-family: var(--font-mono);
@@ -551,9 +550,7 @@
   .gm-article-card {
     overflow: hidden;
     border-radius: 1rem;
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     background-color: var(--raised);
   }
   @media (hover: hover) {
@@ -619,16 +616,22 @@
     margin-top: 2.5rem;
   }
   .gm-clips-title,
+  .gm-game-scores-title,
+  .gm-post-section-title,
+  .gm-post-summary,
+  .gm-episodes-heading {
+    font-family: var(--font-display);
+    font-size: var(--title-4);
+    line-height: 1.75rem;
+    font-weight: var(--weight-semibold);
+  }
+  .gm-clips-title,
   .gm-game-scores-title {
     --icon-size: 1.125rem;
     margin-bottom: 0.75rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-family: var(--font-display);
-    font-size: var(--title-4);
-    line-height: 1.75rem;
-    font-weight: var(--weight-semibold);
   }
   .gm-clips-list {
     display: grid;
@@ -683,11 +686,6 @@
   }
   .gm-page-hits-label {
     margin-bottom: 0.5rem;
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    letter-spacing: 0.025em;
-    color: var(--dim);
-    text-transform: uppercase;
   }
   .gm-page-hits-list {
     display: flex;
@@ -742,12 +740,6 @@
   .gm-legal {
     margin-inline: auto;
     max-width: 42rem;
-  }
-  .gm-legal-title {
-    font-family: var(--font-display);
-    font-size: var(--title-1);
-    line-height: 1.25;
-    font-weight: var(--weight-semibold);
   }
   .gm-context {
     background-color: var(--raised);
@@ -814,10 +806,6 @@
   }
   .gm-post-section-title {
     margin-bottom: 0.75rem;
-    font-family: var(--font-display);
-    font-size: var(--title-4);
-    line-height: 1.75rem;
-    font-weight: var(--weight-semibold);
   }
   .gm-guests-grid {
     display: grid;
@@ -839,9 +827,7 @@
     width: 3rem;
     flex-shrink: 0;
     border-radius: calc(infinity * 1px);
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     object-fit: cover;
   }
   .gm-guest-text {
@@ -1073,9 +1059,7 @@
     flex-shrink: 0;
     place-items: center;
     border-radius: calc(infinity * 1px);
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     background-color: var(--sunken);
   }
   .gm-avatar-mark-logo {
@@ -1089,19 +1073,13 @@
   .gm-post-summary {
     margin-bottom: 0.75rem;
     cursor: pointer;
-    font-family: var(--font-display);
-    font-size: var(--title-4);
-    line-height: 1.75rem;
-    font-weight: var(--weight-semibold);
   }
   .gm-article-image {
     margin-bottom: var(--space-6);
     aspect-ratio: 2/1;
     width: 100%;
     border-radius: 1rem;
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     object-fit: cover;
   }
   .gm-article-eyebrow {
@@ -1120,7 +1098,9 @@
     background-color: var(--sunken);
     padding: var(--space-5);
   }
-  .gm-rail-title {
+  .gm-rail-title,
+  .gm-bio-section-title,
+  .gm-data-section-title {
     margin-bottom: 0.5rem;
     font-family: var(--font-display);
     font-size: 0.875rem;
@@ -1257,9 +1237,7 @@
     width: 100%;
   }
   .gm-cover-bordered {
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
   }
   .gm-cover-ringed {
     box-shadow:
@@ -1278,7 +1256,8 @@
   /* The index and list pages: writing, episodes, a season, a tag, archive, search, games, data, txasm, contact and accessibility. */
   .gm-page-title,
   .gm-list-title,
-  .gm-archive-title {
+  .gm-archive-title,
+  .gm-detail-title {
     font-family: var(--font-display);
     font-size: var(--title-2);
     line-height: 2.25rem;
@@ -1287,6 +1266,7 @@
   .gm-list-title {
     margin-bottom: var(--space-6);
   }
+  .gm-legal-title,
   .gm-page-title-lg,
   .gm-eyebrow-title {
     font-family: var(--font-display);
@@ -1390,12 +1370,6 @@
   .gm-season-section {
     scroll-margin-top: 6rem;
   }
-  .gm-episodes-heading {
-    font-family: var(--font-display);
-    font-size: var(--title-4);
-    line-height: 1.75rem;
-    font-weight: var(--weight-semibold);
-  }
   .gm-index-card {
     background-color: var(--raised);
     padding: 1.25rem;
@@ -1443,9 +1417,7 @@
     padding-inline: var(--space-5);
     padding-block: 0.5rem;
     border-radius: calc(infinity * 1px);
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
   }
   .gm-archive-field {
     padding-inline: 0.75rem;
@@ -1511,9 +1483,7 @@
     padding-block: var(--space-2-5);
   }
   .gm-archive-tab-off {
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     color: var(--dim);
   }
   @media (hover: hover) {
@@ -1543,9 +1513,7 @@
     height: 4rem;
     width: 4rem;
     border-radius: calc(infinity * 1px);
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     object-fit: cover;
   }
   .gm-guest-page-links,
@@ -1578,12 +1546,7 @@
     padding-block: var(--space-9);
     text-align: center;
   }
-  .gm-notice-title {
-    font-family: var(--font-display);
-    font-size: var(--title-3);
-    line-height: 2rem;
-    font-weight: var(--weight-semibold);
-  }
+  .gm-notice-title,
   .gm-notice-text {
     margin-top: 0.75rem;
     color: var(--dim);
@@ -1649,14 +1612,6 @@
   .gm-data-section {
     margin-top: var(--space-7);
   }
-  .gm-bio-section-title,
-  .gm-data-section-title {
-    margin-bottom: 0.5rem;
-    font-family: var(--font-display);
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    font-weight: var(--weight-semibold);
-  }
   .gm-data-section-title {
     font-size: 1.125rem;
     line-height: 1.75rem;
@@ -1670,9 +1625,7 @@
     align-items: center;
     gap: 0.25rem;
     border-radius: calc(infinity * 1px);
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     padding-inline: 0.75rem;
     padding-block: var(--space-2-5);
   }
@@ -1711,9 +1664,7 @@
   .gm-callout {
     margin-top: 2.5rem;
     border-radius: 1rem;
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     background-color: var(--sunken);
     padding: var(--space-6);
   }
@@ -1790,10 +1741,6 @@
   }
   .gm-detail-title {
     margin-top: 0.5rem;
-    font-family: var(--font-display);
-    font-size: var(--title-2);
-    line-height: 2.25rem;
-    font-weight: var(--weight-semibold);
   }
   .gm-data-map,
   .gm-data-chart {
@@ -1895,9 +1842,7 @@
     align-items: center;
     gap: var(--space-5);
     border-radius: 1rem;
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     background-color: var(--raised);
     padding: 1.25rem;
     box-shadow:
@@ -1959,9 +1904,7 @@
     align-items: center;
     gap: 0.75rem;
     border-radius: 0.75rem;
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     background-color: var(--raised);
     padding: 0.75rem;
     font-family: var(--font-display);
@@ -1988,9 +1931,7 @@
   }
   .gm-game-input {
     border-radius: 0.5rem;
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     background-color: var(--raised);
     padding-inline: 0.75rem;
     padding-block: 0.5rem;
@@ -2033,9 +1974,7 @@
     flex-direction: column;
     gap: 0.5rem;
     border-radius: 0.75rem;
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     background-color: var(--sunken);
     padding: var(--space-5);
   }
@@ -2143,9 +2082,7 @@
     width: 2.25rem;
     place-items: center;
     border-radius: calc(infinity * 1px);
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     color: var(--dim);
   }
   @media (hover: hover) {

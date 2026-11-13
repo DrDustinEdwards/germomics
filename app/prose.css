@@ -75,19 +75,20 @@
     line-height: 1.25rem;
     color: var(--dim);
   }
-  .gm-prose .bookmark-host {
-    display: block;
+  .gm-prose .bookmark-host,
+  .gm-prose .code-title {
     font-family: var(--font-mono);
     font-size: var(--fs-small);
     line-height: 1rem;
     color: var(--dim);
   }
+  .gm-prose .bookmark-host {
+    display: block;
+  }
   .gm-prose .bookmark-link {
     display: block;
     border-radius: 0.75rem;
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     background-color: var(--raised);
     padding: var(--space-5);
     text-decoration-line: none;
@@ -122,9 +123,7 @@
   .gm-prose .callout {
     margin-block: var(--space-6);
     border-radius: 0.75rem;
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     background-color: var(--sunken);
     padding: var(--space-5);
     font-style: normal;
@@ -151,10 +150,6 @@
   }
   .gm-prose .code-title {
     margin-bottom: 0.25rem;
-    font-family: var(--font-mono);
-    font-size: var(--fs-small);
-    line-height: 1rem;
-    color: var(--dim);
   }
   .gm-prose .embed {
     margin-block: var(--space-6);
@@ -162,9 +157,7 @@
   .gm-prose .embed-link {
     display: inline-flex;
     border-radius: calc(infinity * 1px);
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     background-color: var(--raised);
     padding-inline: var(--space-5);
     padding-block: 0.5rem;
@@ -239,9 +232,7 @@
   .gm-prose .post-details {
     margin-block: 1.25rem;
     border-radius: 0.75rem;
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
     padding: var(--space-5);
   }
   .gm-prose .post-details summary {
@@ -317,9 +308,7 @@
   .gm-prose img {
     margin-block: var(--space-6);
     border-radius: 0.75rem;
-    border-style: solid;
-    border-width: var(--line-w);
-    border-color: var(--line);
+    border: var(--line-w) solid var(--line);
   }
   .gm-prose li {
     margin-block: 0.25rem;
