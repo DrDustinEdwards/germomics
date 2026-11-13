@@ -23,6 +23,9 @@
   --font-serif: "Fraunces", "Fraunces Fallback", Georgia, "Times New Roman", serif;
   --font-mono: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, Menlo, monospace;
   --font-sans: var(--font-display);
+  /* The small text's line height as a ratio, so a child at another size (pre > code, the sources list) inherits
+     the ratio, not a length (app/prose.css, app/site.css). */
+  --text-sm--line-height: calc(1.25 / 0.875);
 }
 
 @theme inline {
