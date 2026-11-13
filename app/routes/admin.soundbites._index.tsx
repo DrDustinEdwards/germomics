@@ -4,13 +4,14 @@
 import { useFetcher } from "react-router";
 import { Scissors, Trash2 } from "lucide-react";
 import type { Route } from "./+types/admin.soundbites._index";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { listEpisodes } from "~/lib/posts.server";
 import { listSoundbites, upsertSoundbite, deleteSoundbite } from "~/lib/soundbites.server";
-import { formatDuration } from "~/lib/format";
+import { timecode } from "capsomer/behavior/time";
 import { Card, Field, Button, inputCx, EmptyState } from "~/components/admin/ui";
 import { useSnippet } from "~/lib/content";
-import { ADMIN_FORM, readForm } from "~/lib/body.server";
+import { readForm } from "@dustinedwards/site-runtime/body";
+import { ADMIN_FORM } from "~/lib/body.server";
 import { confirmSubmit } from "capsomer/behavior/confirm-dialog";
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -70,9 +71,9 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
                     <p className="truncate font-display font-medium text-ink">
                       {c.title || "(untitled clip)"}
                     </p>
-                    <p className="truncate font-mono text-[11px] text-muted">
+                    <p className="truncate font-mono text-[0.6875rem] text-muted">
                       {titleById.get(c.postId) ?? `post ${c.postId}`} ·{" "}
-                      {formatDuration(c.startSeconds)} for {c.durationSeconds}s
+                      {timecode(c.startSeconds * 1000)} for {c.durationSeconds}s
                     </p>
                   </div>
                   <del.Form

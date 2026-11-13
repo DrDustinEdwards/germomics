@@ -8,14 +8,15 @@ import { useFetcher } from "react-router";
 import { Link } from "capsomer/react/link";
 import { ExternalLink, Save } from "lucide-react";
 import type { Route } from "./+types/admin.episodes.$id";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getPostById } from "~/lib/posts.server";
 import { snapshotVersion, updatePost } from "~/lib/admin.server";
 import { carrelEditUrl } from "~/lib/site";
 import { AudioField, type AudioState } from "~/components/admin/AudioField";
 import { TranscriptField } from "~/components/admin/TranscriptField";
 import { Button, Card } from "~/components/admin/ui";
-import { ADMIN_FORM, readForm } from "~/lib/body.server";
+import { readForm } from "@dustinedwards/site-runtime/body";
+import { ADMIN_FORM } from "~/lib/body.server";
 
 const text = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v.trim() : null);
 const whole = (v: unknown): number | null =>
@@ -89,7 +90,7 @@ export default function EpisodeAudio({ loaderData }: Route.ComponentProps) {
             ← Episode audio
           </Link>
           <h1 className="mt-1 font-display text-2xl font-semibold">{loaderData.title}</h1>
-          <p className="font-mono text-[11px] text-muted">
+          <p className="font-mono text-[0.6875rem] text-muted">
             GUID (locked): {loaderData.guid ?? "set on first publish"}
           </p>
         </div>

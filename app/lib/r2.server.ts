@@ -47,8 +47,3 @@ export async function uploadImage(
   await env.BLOG_IMAGES.put(key, body, { httpMetadata: { contentType }, customMetadata });
   return imageUrl(key);
 }
-
-/** Stream a game asset (sprite/sfx/wasm) from R2 over the CDN-cached binding. */
-export async function getGameAsset(env: Env, key: string): Promise<R2ObjectBody | null> {
-  return env.GAME_ASSETS.get(key);
-}

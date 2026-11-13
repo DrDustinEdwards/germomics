@@ -13,7 +13,7 @@ import { llmsDocument, type LlmsLink } from "@drdustinedwards/site-helpers/llms"
 import type { Post, ShowConfig } from "~/db/schema";
 
 import { ABOUT, AUTHOR } from "~/lib/about";
-import { formatDate } from "~/lib/format";
+import { formatDate } from "capsomer/behavior/time";
 
 // Curation caps — keep llms.txt well within model context limits even as the catalog grows.
 const INDEX_LIMIT = 40;

@@ -1,17 +1,18 @@
 import { Link } from "capsomer/react/link";
 import { Headphones } from "lucide-react";
 import type { Route } from "./+types/_index";
-import { getEnv, getSettings, getSnippets } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
+import { getSettings, getSnippets } from "~/lib/context.server";
 import { listEpisodes, listPosts, toPlayerTrack } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
 import { snippet, setting, settingAddress } from "~/lib/content.server";
-import { formatDate, formatDuration } from "~/lib/format";
-import { jsonLd, website } from "@drdustinedwards/site-helpers/schema";
+import { formatDate, timecode } from "capsomer/behavior/time";
+import { jsonLd, sameAs, website } from "@drdustinedwards/site-helpers/schema";
 import { buildOrganizationLd, buildPodcastSeriesLd, pageHead, socialSameAs } from "~/lib/seo";
 import { SITE_ORIGIN } from "~/lib/site";
 import { SNIPPET_DEFAULTS } from "~/lib/content-defaults";
 import { PostCard } from "~/components/content/PostCard";
-import { PlayButton } from "~/components/content/PlayButton";
+import { PlayTrackButton } from "capsomer/react/player";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 import { HeroEqualizer } from "~/components/content/HeroEqualizer";
 import { HeroBackground } from "~/components/content/HeroBackground";
@@ -24,11 +25,11 @@ export function meta({ loaderData }: Route.MetaArgs) {
     description: loaderData?.homeDescription ?? SNIPPET_DEFAULTS["snippet:meta.home_description"],
   });
   if (!loaderData?.show) return head;
-  const { show, address, sameAs } = loaderData;
+  const { show, address, sameAs: profiles } = loaderData;
   return [
     ...head,
-    jsonLd(buildOrganizationLd(show, { address, sameAs })),
-    jsonLd(buildPodcastSeriesLd(show, { address, sameAs })),
+    jsonLd(buildOrganizationLd(show, { address, sameAs: profiles })),
+    jsonLd(buildPodcastSeriesLd(show, { address, sameAs: profiles })),
     jsonLd(
       website({
         origin: SITE_ORIGIN,
@@ -51,14 +52,15 @@ export async function loader({ context }: Route.LoaderArgs) {
   const tracks = episodes.map(toPlayerTrack);
   // Org/PodcastSeries sameAs = the real socials (settings social.*) + the podcast-directory
   // subscribe_links (show_config), so it stays DB-driven and never duplicates a show_config fact.
-  const sameAs = [
+  // Prelum's sameAs keeps each absolute http(s) URL once.
+  const profiles = sameAs([
     ...socialSameAs({
       facebook: setting(settings, "social.facebook"),
       twitter: setting(settings, "social.twitter"),
       instagram: setting(settings, "social.instagram"),
     }),
     ...Object.values(show.subscribeLinks ?? {}),
-  ];
+  ]);
   // Listing loaders already return card-only rows (no body/transcript/peaks), so the payload stays
   // light and free of long-form migrated content (the only place em dashes legitimately live).
   return {
@@ -67,7 +69,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     tracks,
     show,
     address: settingAddress(settings),
-    sameAs,
+    sameAs: profiles,
     homeTitle: snippet(snippets, "snippet:meta.home_title"),
     homeDescription: snippet(snippets, "snippet:meta.home_description"),
   };
@@ -118,15 +120,15 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           {/* Latest episode, promoted to the elevated first row of the list (same teal play chip). */}
           {featured && featuredTrack ? (
             <article className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm ring-1 ring-brand/10">
-              <PlayButton track={featuredTrack} queue={tracks} size="lg" />
+              <PlayTrackButton track={featuredTrack} queue={tracks} size="lg" />
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-muted">
+                <div className="flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
                   <span className="flex items-center gap-1 text-brand">
                     <Headphones size={12} aria-hidden /> Latest episode
                   </span>
                   {featured.publishedAt ? <span>{formatDate(featured.publishedAt)}</span> : null}
                   {featured.audioDuration ? (
-                    <span className="tabular-nums">{formatDuration(featured.audioDuration)}</span>
+                    <span className="tabular-nums">{timecode(featured.audioDuration * 1000)}</span>
                   ) : null}
                 </div>
                 <h3 className="mt-1 font-display text-xl font-medium">

@@ -26,7 +26,7 @@ export function PageHits({
   if (!pages.length) return null;
   return (
     <Tag className={`${className} rounded-xl border border-border bg-surface p-4`}>
-      <p className="mb-2 font-mono text-[11px] uppercase tracking-wide text-muted">Pages</p>
+      <p className="mb-2 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">Pages</p>
       <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
         {pages.map((p) => (
           <li key={p.key}>

@@ -14,15 +14,16 @@ import { LayoutDashboard, FileAudio, Users, Settings, Mail, Scissors } from "luc
 import { AdminShell, type AdminEntry } from "capsomer/react/admin-shell";
 import "~/admin.css";
 import type { Route } from "./+types/admin";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { accessAdmin } from "@dustinedwards/site-runtime/access";
 import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runtime/log";
 import { isolationVerdict, refuseCrossSite } from "@dustinedwards/site-runtime/origin";
-import { applyTheme, effectiveTheme } from "~/lib/theme";
-import type { Theme } from "~/lib/types";
+import { UNCACHED } from "@dustinedwards/site-runtime/edge-cache";
+import { effectiveTheme, toggleTheme, type ThemeChoice } from "capsomer/behavior/theme-switch";
+import { THEME_KEY } from "~/lib/theme";
 import { markup } from "capsomer/behavior/trusted-html";
 
-const PRIVATE = { "Cache-Control": "private, no-store", "X-Robots-Tag": "noindex, nofollow" };
+const PRIVATE = { "Cache-Control": UNCACHED, "X-Robots-Tag": "noindex, nofollow" };
 
 // The admin is an app: it and every page under it hydrate on load (lib/hydration.ts).
 export const handle = { hydrate: true };
@@ -72,15 +73,15 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 const icon = (Icon: typeof LayoutDashboard) => <Icon className="cap-admin-icon" aria-hidden />;
 
-// The admin's pages, grouped as the menu shows them. `match` decides which entry is current.
-const ENTRIES: Array<AdminEntry & { match: (path: string) => boolean }> = [
+// The admin's pages, grouped as the menu shows them. The shell marks the entry the address is in
+// (`pathname`); `match` adds the prefixes that also count.
+const ENTRIES: AdminEntry[] = [
   {
     id: "dashboard",
     label: "Dashboard",
     href: "/admin",
     group: "Overview",
     icon: icon(LayoutDashboard),
-    match: (p) => p === "/admin",
   },
   {
     id: "episodes",
@@ -88,7 +89,6 @@ const ENTRIES: Array<AdminEntry & { match: (path: string) => boolean }> = [
     href: "/admin/episodes",
     group: "Content",
     icon: icon(FileAudio),
-    match: (p) => p.startsWith("/admin/episodes"),
   },
   {
     id: "people",
@@ -96,7 +96,6 @@ const ENTRIES: Array<AdminEntry & { match: (path: string) => boolean }> = [
     href: "/admin/people",
     group: "Content",
     icon: icon(Users),
-    match: (p) => p.startsWith("/admin/people"),
   },
   {
     id: "soundbites",
@@ -104,7 +103,6 @@ const ENTRIES: Array<AdminEntry & { match: (path: string) => boolean }> = [
     href: "/admin/soundbites",
     group: "Content",
     icon: icon(Scissors),
-    match: (p) => p.startsWith("/admin/soundbites"),
   },
   {
     id: "subscribers",
@@ -112,7 +110,6 @@ const ENTRIES: Array<AdminEntry & { match: (path: string) => boolean }> = [
     href: "/admin/subscribers",
     group: "Audience",
     icon: icon(Mail),
-    match: (p) => p.startsWith("/admin/subscribers"),
   },
   {
     id: "settings",
@@ -120,14 +117,14 @@ const ENTRIES: Array<AdminEntry & { match: (path: string) => boolean }> = [
     href: "/admin/settings",
     group: "Site",
     icon: icon(Settings),
-    match: (p) => p.startsWith("/admin/settings") || p.startsWith("/admin/content"),
+    match: ["/admin/settings", "/admin/content"],
   },
 ];
 
 // Capsomer's tokens are keyed on data-cap-theme; the site's own switch is data-theme on <html>
 // (or the system preference when none is set). Follow it, so the admin never disagrees with it.
-function useCapTheme(): Theme {
-  const [theme, setTheme] = useState<Theme>("light");
+function useCapTheme(): ThemeChoice {
+  const [theme, setTheme] = useState<ThemeChoice>("light");
   useEffect(() => {
     const sync = () => setTheme(effectiveTheme());
     sync();
@@ -153,7 +150,6 @@ const THEME_BOOT = `(function(s){try{var t=localStorage.getItem("germomics-theme
 export default function AdminLayout({ loaderData }: Route.ComponentProps) {
   const { pathname } = useLocation();
   const theme = useCapTheme();
-  const nav = ENTRIES.map(({ match, ...entry }) => ({ ...entry, current: match(pathname) }));
   const email = loaderData.email;
 
   return (
@@ -169,7 +165,8 @@ export default function AdminLayout({ loaderData }: Route.ComponentProps) {
         apps={[
           { id: "germomics", label: "Germomics admin", href: "/admin", mono: "G", current: true },
         ]}
-        nav={nav}
+        nav={ENTRIES}
+        pathname={pathname}
         renderLink={({ href, children, ...rest }) => (
           <Link to={href} {...rest}>
             {children}
@@ -184,7 +181,7 @@ export default function AdminLayout({ loaderData }: Route.ComponentProps) {
             { label: "View site", href: "/" },
             {
               label: theme === "dark" ? "Switch to light theme" : "Switch to dark theme",
-              onClick: () => applyTheme(theme === "dark" ? "light" : "dark"),
+              onClick: () => toggleTheme(THEME_KEY),
             },
           ],
           // Access owns sign-out: it ends the Access session, then returns to its own login.

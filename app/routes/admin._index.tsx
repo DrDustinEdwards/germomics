@@ -1,9 +1,9 @@
 import { Link } from "capsomer/react/link";
 import { ExternalLink, Headphones, FileText, PencilLine } from "lucide-react";
 import type { Route } from "./+types/admin._index";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { listAllPosts } from "~/lib/admin.server";
-import { formatDate } from "~/lib/format";
+import { formatDate } from "capsomer/behavior/time";
 import { carrelEditUrl } from "~/lib/site";
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -40,7 +40,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
           ["Drafts", counts.drafts, <PencilLine key="d" size={16} aria-hidden />],
         ].map(([label, n, icon]) => (
           <div key={label as string} className="rounded-xl border border-border bg-card p-4">
-            <div className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wide text-muted">
+            <div className="flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
               {icon} {label}
             </div>
             <div className="mt-1 font-display text-2xl font-semibold">{n as number}</div>
@@ -60,7 +60,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
               <span className="flex min-w-0 items-center gap-1.5 truncate font-display">
                 {p.title} <ExternalLink size={12} aria-hidden />
               </span>
-              <span className="ml-3 flex shrink-0 items-center gap-2 font-mono text-[11px] uppercase text-muted">
+              <span className="ml-3 flex shrink-0 items-center gap-2 font-mono text-[0.6875rem] uppercase text-muted">
                 <span>{p.kind}</span>
                 <span className={p.status === "published" ? "text-accent" : "text-brand"}>
                   {p.status}

@@ -1,0 +1,375 @@
+/* The public pages' own parts, loaded by their layout (routes/_site.tsx), so the admin never downloads them: the
+   header, the persistent player and the parts its settings use. The reading contexts are prose.css. The layer order repeats app.css's, so
+   whichever stylesheet arrives first, the order is the same. */
+@layer cap-tokens, theme, base, cap, components, utilities;
+/* Capsomer's scale and palette first of all (cap-tokens), so a name both define (--radius-xl, --ease-out) keeps
+   Tailwind's value on germomics' own classes, and germomics' palette (app.css, unlayered) wins over both. */
+@import "capsomer/tokens.css" layer(cap-tokens);
+/* The visible trail of a page inside a section (components/content/SectionTrail.tsx), in the cap layer. */
+@import "capsomer/breadcrumb.css";
+/* A post's Save toggle and its listen-and-subscribe card (components/content/PostDetail.tsx), in the cap layer. */
+@import "capsomer/chips.css";
+@import "capsomer/save-toggle.css";
+@import "capsomer/subscribe-links.css";
+/* Post cards in listings and under a post (components/content/PostCard.tsx), in the cap layer. */
+@import "capsomer/card.css";
+/* The site header and its theme button, and the parts it shares with the player's settings. */
+@import "capsomer/utilities.css";
+@import "capsomer/site-header.css";
+@import "capsomer/theme-switch.css";
+@import "capsomer/button.css";
+@import "capsomer/popover.css";
+@import "capsomer/dialog.css";
+/* The figure viewer (Capsomer's dialog as a lightbox), the copy and share buttons' bubble, and the reading bar. */
+@import "capsomer/lightbox.css";
+@import "capsomer/copy.css";
+@import "capsomer/reading-progress.css";
+/* The persistent player (dock, surface, transcript, chapters, key moments, hosts); its speed and volume settings are
+   a menu and a field. */
+@import "capsomer/field.css";
+@import "capsomer/menu.css";
+@import "capsomer/player.css";
+
+/* The player keeps the site's faces: titles in Space Grotesk, times and the status line in JetBrains Mono. */
+:is(
+  .cap-player-dock,
+  .cap-player-surface,
+  .cap-player-sheet,
+  .cap-player-transcript,
+  .cap-player-list,
+  .cap-player-wave,
+  .cap-player-wave-preview
+) {
+  --cap-player-face: var(--font-display);
+  --cap-player-meta-face: var(--font-mono);
+  /* The site's controls: 44px, the play button 48px. */
+  --cap-player-btn: 2.75rem;
+  --cap-player-btn-lg: 3rem;
+}
+/* The lists under the player keep the page's rhythm: a section's room above, the body's size for a title. */
+.cap-player-list {
+  position: relative;
+  margin-block-start: 2.5rem;
+  --fs-body: 1.125rem;
+  --fs-h3: 1.25rem;
+}
+.cap-player-list-heading {
+  margin-block-end: 0.75rem;
+  line-height: 1.75rem;
+}
+/* Key moments: two to a row from 640px, compact cards with the label at the small size. */
+.cap-player-moments {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.cap-player-moment {
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+}
+/* What a moment press did is announced, not shown, as it always was. */
+.cap-player-said {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  min-block-size: 0;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.cap-player-moment-label {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+/* Chapters: tight rows, the time in the mono face at the meta size. */
+.cap-player-chapters {
+  gap: 0.25rem;
+}
+.cap-player-chapter {
+  gap: 0.75rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: 0.25rem;
+}
+.cap-player-at {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+/* The surface's rows sit where the site's always did: the waveform's note 4px under it, the seek row 31px tall. */
+.cap-player-wave {
+  row-gap: 0.25rem;
+}
+.cap-player-surface .cap-player-scrubber {
+  min-block-size: 1.9375rem;
+}
+/* The seek and volume tracks are light, as the site's were; the played part fills violet. */
+.cap-player-surface .cap-range,
+.cap-player-dock .cap-range,
+.cap-player-sheet .cap-range {
+  --line-strong: var(--border);
+}
+.cap-player-wave-note {
+  margin-block-start: 0;
+  font-size: 0.625rem;
+  line-height: 1.7;
+}
+.cap-player-para-chapter {
+  margin-block-end: 0.25rem;
+  line-height: 1.25rem;
+}
+
+/* A listing's play button wears the cyan of the site's now-playing states, as it always has. */
+.cap-player-btn[data-play-intent] {
+  --cap-player-btn: 2.5rem;
+  --cap-player-btn-lg: 3rem;
+  --primary-line: transparent;
+  --primary: var(--accent);
+  --primary-hover: color-mix(in srgb, var(--accent) 85%, var(--ink));
+  --primary-fg: var(--bg);
+}
+/* Every play and pause glyph is drawn in outline, as the site's always were. Capsomer's triangle fills less of its
+   box than the site's did, so a play glyph's box is a fifth larger to draw the same triangle: 15px tall in the dock,
+   16.5px on an episode's player, 13.5px in a listing. */
+.cap-player-btn[data-part="play"] > svg path {
+  fill: none;
+  stroke: currentColor;
+}
+.cap-player-btn[data-part="play"][aria-label^="Play"] > svg {
+  inline-size: 24px;
+  block-size: 24px;
+}
+.cap-player-btn[data-part="play"][data-size="lg"][aria-label^="Play"] > svg {
+  inline-size: 26px;
+  block-size: 26px;
+}
+.cap-player-btn[data-play-intent] > svg {
+  inline-size: 18px;
+  block-size: 18px;
+}
+.cap-player-btn[data-play-intent][aria-label^="Play"] > svg {
+  inline-size: 22px;
+  block-size: 22px;
+}
+/* A key moment's time is violet in its own 36px column, as it was; a chapter's stays cyan. */
+.cap-player-moment .cap-player-at {
+  min-inline-size: 2.25rem;
+  color: var(--brand);
+}
+
+/* Capsomer's components in germomics' own look: the family's roles named from the palette above, on every public
+   page (not the admin, whose shell keeps Capsomer's own on [data-cap-theme]). Unlayered, so the palette's light and
+   dark both reach them. Faces: Space Grotesk for the interface, JetBrains Mono for times and figures. */
+:root:not(:has([data-cap-theme])) {
+  /* The header's band, 60px and its 1px rule below, as it always was. */
+  --header-h: calc(3.75rem + 1px);
+  --ui: var(--font-display);
+  --mono: var(--font-mono);
+  --ground: var(--bg);
+  --raised: var(--card);
+  --sunken: var(--surface);
+  --text: var(--ink);
+  --dim: var(--muted);
+  --line: var(--border);
+  --line-strong: color-mix(in srgb, var(--muted) 55%, var(--border));
+  --accent-text: var(--accent);
+  --accent-hover: var(--ink);
+  --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--card));
+  --accent-line: var(--accent);
+  --sel: color-mix(in srgb, var(--accent) 10%, var(--card));
+  --primary: var(--brand);
+  --primary-hover: var(--brand-strong);
+  --primary-fg: var(--on-brand);
+  --primary-line: var(--brand);
+  --on: var(--brand);
+  --on-hover: var(--brand-strong);
+  --ring: var(--accent);
+  --ring-width: 2px;
+  --link-hover-bg: var(--surface);
+}
+
+/* The breadcrumb is quiet, like the site's other small navigation: JetBrains Mono at the meta size, the levels muted
+   until the pointer reaches them, the current page in ink. */
+.cap-breadcrumb {
+  --ui: var(--font-mono);
+  --fs-body: 0.75rem;
+  --accent-text: var(--muted);
+  --accent-hover: var(--ink);
+  --accent-soft: var(--surface);
+  --target: 1.5rem;
+  --space-2: 0.5rem;
+  --space-4: 1rem;
+  --line-strong: var(--muted);
+  --raised: var(--surface);
+  --sunken: var(--surface);
+  --control: 2rem;
+  /* The first level's text lines up with the page's edge; its hover background reaches into the gutter. */
+  margin-inline-start: calc(-1 * var(--space-2));
+}
+
+/* Capsomer's save toggle and subscribe links in germomics' own tokens, as the breadcrumb: the
+   pills keep the site's look (the Save pill in JetBrains Mono on the card color, the listen links in
+   Space Grotesk, cyan under the pointer, the saved bookmark in cyan). */
+.cap-save,
+.cap-subscribe {
+  --ring: var(--accent);
+  --ring-width: 2px;
+  --dur-fast: 150ms;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --text: var(--ink);
+  --target: 2rem;
+  --radius-full: 9999px;
+}
+.cap-save,
+.cap-subscribe-link {
+  --surface: var(--card);
+  --raised: var(--card);
+  --line-strong: var(--border);
+  --accent-soft: var(--card);
+  --accent-5: var(--card);
+}
+.cap-save {
+  --ui: var(--font-mono);
+  --fs-label: 0.75rem;
+  --muted: var(--ink);
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-weight: 400;
+  &:is(:hover, [data-force="hover"]) {
+    border-color: var(--brand);
+    color: var(--ink);
+  }
+  &[aria-pressed="true"] {
+    border-color: var(--border);
+    & .cap-save-icon {
+      color: var(--accent);
+    }
+  }
+  & > .cap-save-icon {
+    inline-size: 14px;
+    block-size: 14px;
+  }
+}
+.cap-subscribe {
+  --pad-card: 1.25rem;
+  --line: var(--border);
+  --radius-l: 1rem;
+  --display: var(--font-display);
+  --fs-h3: 1.125rem;
+  --weight-heading: 600;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --fs-label: 0.875rem;
+  --link-weight: 400;
+  margin-block-start: 3rem;
+  background: var(--surface);
+  & .cap-subscribe-more {
+    padding-inline: 0.75rem;
+  }
+  /* Links as the site draws every link: cyan, in the body face. */
+  & .cap-subscribe-link {
+    --muted: var(--accent);
+    font-family: inherit;
+    line-height: 1.25rem;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    font-weight: 400;
+    &:is(:hover, [data-force="hover"]) {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    & > svg {
+      inline-size: 14px;
+      block-size: 14px;
+    }
+    & > svg:last-of-type:not(:first-child) {
+      inline-size: 12px;
+      block-size: 12px;
+    }
+  }
+}
+
+/* The public header (not the admin shell's): the page's ground at 85%, blurred (translucent), in the site's faces with
+   its violet button; the logo and controls line up with the page's column (max-w-5xl, 1rem gutters), as they always have. */
+.cap-site-header:not([data-cap-theme] .cap-site-header) {
+  --font-ui: var(--font-display);
+  --header-bg: var(--bg);
+  --header-fg: var(--ink);
+  --header-fg-muted: var(--muted);
+  --header-line: var(--border);
+  --header-cta: var(--brand);
+  --header-cta-fg: var(--on-brand);
+  --header-side: max(1rem, calc((100% - 64rem) / 2 + 1rem));
+  --header-accent: var(--brand);
+  /* Round icon controls with the site's hairline, and a pill for Subscribe. */
+  --icon-border: 1px;
+  --icon-radius: 999px;
+  --header-hover: var(--surface);
+  /* 34px circles on the surface with 16px glyphs, 4px apart, no divider; Subscribe first, then Search and the theme.
+     The phone's bar: the theme first, then Search and Subscribe, and a bare menu button. */
+  --header-icon-size: 34px;
+  --header-icon-glyph: 16px;
+  --header-icon-stroke: 2;
+  --header-icon-bg: var(--surface);
+  --header-tools-gap: 0.25rem;
+  --header-sep: none;
+  --header-cta-order: -1;
+  --header-menu-line: transparent;
+  --header-menu-bg: none;
+  --header-menu-size: 44px;
+  --header-menu-glyph: 20px;
+}
+@media (max-width: 767.98px) {
+  .cap-site-header:not([data-cap-theme] .cap-site-header) {
+    --header-cta-order: 0;
+    --header-theme-order: -1;
+  }
+}
+.cap-site-header:not([data-cap-theme] .cap-site-header) .cap-site-header-cta {
+  padding-inline: 12px;
+  border-radius: 999px;
+}
+.cap-site-header:not([data-cap-theme] .cap-site-header) .cap-site-header-chev {
+  inline-size: 14px;
+  block-size: 14px;
+}
+/* The theme button is in ink, the other icons muted, as they were. Capsomer's sun and moon fill less of their box
+   than the site's did; 18px draws them at the same size. */
+.cap-site-header:not([data-cap-theme] .cap-site-header) .cap-site-header-theme {
+  color: var(--ink);
+}
+.cap-site-header:not([data-cap-theme] .cap-site-header) .cap-site-header-theme .cap-theme-icon {
+  inline-size: 18px;
+  block-size: 18px;
+}
+/* The phone's bare menu button reaches 4px past the column, so its glyph lines up with the page's edge. */
+@media (max-width: 767.98px) {
+  .cap-site-header:not([data-cap-theme] .cap-site-header) .cap-site-header-menu {
+    margin-inline-end: -4px;
+    color: var(--muted);
+  }
+}
+.germomics-logo {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+/* The figure viewer is dimmer than a dialog: 80% black, as it always was. */
+.cap-lightbox {
+  --scrim: rgb(0 0 0 / 0.8);
+}
+
+/* The copy bubble speaks in JetBrains Mono, like the pills that open it. */
+.cap-copy {
+  --ui: var(--font-mono);
+}
+
+/* The reading bar: 2px, brand to cyan, as before (Capsomer's default is 3px in one color). */
+.cap-reading-progress {
+  --reading-progress-size: 2px;
+  --reading-progress-color: linear-gradient(to right, var(--brand), var(--accent));
+}

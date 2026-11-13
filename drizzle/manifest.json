@@ -1,6 +1,6 @@
 {
   "note": "sha256 of each migration. devkit-migrations compares against this. Adding a migration means adding its hash in the same commit.",
-  "expand_only_after": "0021_search_fields.sql",
+  "expand_only_after": "0028_drop_ai_error_snippets.sql",
   "sha256": {
     "0000_content_and_fts.sql": "f101560703ef545539506518c43b33c3ddfb2b631dceaf44c048609a8834d6f1",
     "0001_auth_and_app.sql": "9459ec89950f659faa4f831ccc19fda6eedb9fd1c65d64b7c78297d15b32e1a5",
@@ -31,6 +31,7 @@
     "0025_home_description_length.sql": "70d946fd8301c9d325db1081c4e32052cbc7c80cd03898851aed1adf0bf04452",
     "0026_site_api_store_v0_22.sql": "f424282b5ef683b146043c17bebc90eae8080e57c8527e5b946eab905434556c",
     "0027_subscriber_confirmation.sql": "a1fb2f37a827e33d7316e0d97e9c5f389a6aa4a81fc8432e10f3d9f8dc10738c",
-    "0028_drop_ai_error_snippets.sql": "44644e7efdec4b820931cc0b041d5491fe8d9675bfe6a67c9ae94bcde0b5be67"
+    "0028_drop_ai_error_snippets.sql": "44644e7efdec4b820931cc0b041d5491fe8d9675bfe6a67c9ae94bcde0b5be67",
+    "0029_shared_media_store.sql": "83d8223a5c63b7eea80abf8324eed2c982b29aab1091fd8f1923365eb8671d1d"
   }
 }

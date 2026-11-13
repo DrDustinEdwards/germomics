@@ -3,7 +3,7 @@
 import { llmsResponse } from "@drdustinedwards/site-helpers/llms";
 import { SITE_ORIGIN } from "~/lib/site";
 import type { Route } from "./+types/llms";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { listEpisodes, listArticles } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
 import { loadPage } from "~/lib/content.server";

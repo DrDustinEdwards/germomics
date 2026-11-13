@@ -1,7 +1,7 @@
 import { env } from "cloudflare:test";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { RouterContextProvider } from "react-router";
-import { cloudflareContext } from "~/lib/context.server";
+import { cloudflareContext } from "@dustinedwards/site-runtime/context";
 import { applyMigrations } from "./helpers/d1";
 
 // The editor's upload endpoint (app/routes/admin.upload.ts): images go to BLOG_IMAGES, audio to

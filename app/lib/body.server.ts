@@ -5,6 +5,3 @@ const KIB = 1024;
 export const PUBLIC_FORM = 16 * KIB;
 /** An admin form: settings, an episode's transcript and waveform. */
 export const ADMIN_FORM = 4 * KIB * KIB;
-
-// The form reader is site-runtime's ./body (a thrown 413 over the ceiling).
-export { readForm } from "@dustinedwards/site-runtime/body";

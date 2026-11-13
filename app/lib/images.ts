@@ -3,7 +3,6 @@
 // Every picture is served from this origin, as dustinedwards.info serves its own: the original at /media/<key> and
 // each size at /media/<key>?w= (app/routes/media.$.ts), from BLOG_IMAGES. A stored address is /media/<key>.
 import { defineImages, type ImageAttributes } from "@dustinedwards/site-runtime/image";
-import { SITE_ORIGIN } from "~/lib/site";
 
 export const images = defineImages({
   uses: {
@@ -50,20 +49,27 @@ export function imageFor(
   return src ? set?.[imageKey(use, src)] : undefined;
 }
 
-/** The prefixes a stored image address starts with: /media, relative or on this origin. */
-const IMAGE_PREFIXES = ["/media/", `${SITE_ORIGIN}/media/`];
-
-/** The BLOG_IMAGES key behind a stored image address (/media/<key>), or null for any other URL. */
-export function imageKeyOf(src: string): string | null {
-  const prefix = IMAGE_PREFIXES.find((p) => src.startsWith(p));
-  if (!prefix) return null;
-  const path = src.slice(prefix.length).split(/[?#]/)[0];
-  if (!path) return null;
-  try {
-    return decodeURIComponent(path);
-  } catch {
-    return null;
-  }
+/**
+ * What a picture shows: the attributes the loader made, or for an image it could not size the plain <img> at its stored
+ * size (no sources), so the page never waits on a size it does not have.
+ */
+export function imageOrPlain(
+  image: ImageAttributes | undefined,
+  src: string,
+  width?: number,
+  height?: number,
+): ImageAttributes {
+  return (
+    image ?? {
+      src,
+      srcset: undefined,
+      sizes: undefined,
+      sources: [],
+      width,
+      height,
+      background: undefined,
+    }
+  );
 }
 
 /** The /media path that serves a stored key (each segment encoded, the slashes kept). */

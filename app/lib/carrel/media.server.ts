@@ -10,6 +10,7 @@
 // sized from the media row when it is rendered and rendered again after each byte change (afterBytes). So a replace, a
 // revert or a quarter turn may change the size, and every page follows it.
 import {
+  d1MediaStore,
   pictureLimits,
   PICTURE_RESIZE,
   mediaLibrary,
@@ -17,7 +18,6 @@ import {
   type MediaAdapter,
 } from "@dustinedwards/site-api";
 import { rerenderUsing } from "~/lib/render.server";
-import { mediaStore } from "~/lib/media/store.server";
 import { suggestFor } from "~/lib/media/suggest.server";
 import { mediaPlaces, usesOfKey } from "~/lib/media/usage.server";
 import { buildKey, imageUrl } from "~/lib/r2.server";
@@ -25,7 +25,7 @@ import { buildKey, imageUrl } from "~/lib/r2.server";
 type Log = (event: string, id: string, version: string, changeId: string) => void;
 
 export function carrelMedia(env: Env, recordChange: Log): MediaAdapter {
-  const store = mediaStore(env);
+  const store = d1MediaStore(env.DB);
   return mediaLibrary({
     store,
     bucket: env.BLOG_IMAGES,

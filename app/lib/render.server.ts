@@ -15,17 +15,26 @@
 // Prelum is imported on first use, so the public routes that only read stored HTML never load the pipeline.
 import type * as Prelum from "@drdustinedwards/site-helpers/render/nomath";
 import { diagramPack } from "~/lib/diagram-pack";
+import { keyOfAddress, keysAtAddresses } from "@dustinedwards/site-runtime/image";
 import { logEvent } from "@dustinedwards/site-runtime/log";
-import { and, eq, inArray, isNotNull, like, ne, sql } from "drizzle-orm";
+import { and, eq, isNotNull, ne } from "drizzle-orm";
+import { inList, likeContains } from "@dustinedwards/site-runtime/d1";
+import { rerenderEach, storedRender } from "@drdustinedwards/site-helpers/stored-render";
 import { getDb } from "~/db/index.server";
 import { contentBlocks, media, posts, type Post } from "~/db/schema";
-import { inlineBlogDiagrams, loadBlogDiagrams, type DiagramFiles } from "~/lib/blog-diagram.server";
-import { imageKeyOf, images, mediaPath, type ImageUseName } from "~/lib/images";
-import { SITE_ORIGIN } from "~/lib/site";
+import {
+  drawsDiagrams,
+  inDiagramContext,
+  inlineBlogDiagrams,
+  loadBlogDiagrams,
+  type DiagramFiles,
+} from "~/lib/blog-diagram.server";
+import { images, mediaPath, type ImageUseName } from "~/lib/images";
+import { MEDIA_ADDRESS } from "~/lib/site";
 import type { BodyMeta } from "~/lib/types";
 
 /** Prelum's RENDER_VERSION, kept here so a read can compare without loading the pipeline. */
-export const RENDER_VERSION = "24";
+export const RENDER_VERSION = "25";
 // A Prelum upgrade that moves its version fails the typecheck here until this constant moves with it.
 RENDER_VERSION satisfies typeof Prelum.RENDER_VERSION;
 
@@ -57,12 +66,9 @@ export function libraryMedia(env: Env): MediaLookup {
             sha256: media.sha256,
           })
           .from(media)
-          .where(inArray(media.key, keys));
+          .where(inList(media.key, keys));
 }
 
-const escape = (s: string) => s.replace(/[.]/g, "\\.");
-/** A stored image address in Markdown: /media/<key>, relative or on this origin. */
-const IMAGE_URL = new RegExp(`(?:${escape(SITE_ORIGIN)})?/media/[^\\s"'()<>\\]]+`, "g");
 const FIGURE_LINE = /^:::figure\{(.*)\}\s*$/gm;
 
 /** The srcs of the figures written `width=wide`: the lead illustration, sized for 520px. */
@@ -104,17 +110,11 @@ export async function renderMarkdown(
   }: { lcpAbove?: boolean; env?: Env; diagrams?: DiagramFiles } = {},
 ): Promise<Rendered> {
   const { render } = await import("@drdustinedwards/site-helpers/render/nomath");
-  const keys = [
-    ...new Set(
-      [...body.matchAll(IMAGE_URL)]
-        .map(([url]) => imageKeyOf(url))
-        .filter((k): k is string => k !== null),
-    ),
-  ];
+  const keys = [...keysAtAddresses(body, MEDIA_ADDRESS)];
   const rows = new Map((await lookup(keys)).map((row) => [row.key, row]));
   const wide = wideSources(body);
   const attributesOf = (src: string) => {
-    const key = imageKeyOf(src);
+    const key = keyOfAddress(src, MEDIA_ADDRESS);
     const row = key ? rows.get(key) : undefined;
     if (!row) return null;
     const use: ImageUseName = wide.has(src) ? "leadFigure" : "figure";
@@ -145,13 +145,13 @@ export async function renderMarkdown(
       packs: [diagramPack()],
       priority: { taken: lcpAbove },
       media: {
-        keyOf: imageKeyOf,
+        keyOf: (src) => keyOfAddress(src, MEDIA_ADDRESS),
         imageProps(src) {
           const attrs = attributesOf(src);
           if (!attrs?.srcset) return null;
           // The link around a picture opens the original at /media, versioned like its sizes so it is never a stale
           // copy (the lightbox shows it instead when script runs).
-          const row = rows.get(imageKeyOf(src) ?? "");
+          const row = rows.get(keyOfAddress(src, MEDIA_ADDRESS) ?? "");
           const href = row ? images.url(mediaPath(row.key), { version: row.sha256 }) : src;
           return {
             srcSet: attrs.srcset,
@@ -200,45 +200,95 @@ type Stored = {
 };
 
 /**
- * The HTML a public read shows. A stored render at Prelum's version is used as it is, except a Mermaid figure this
- * site now draws inline: that figure is replaced in memory and its caption stays, so the page is current before the
- * row is saved again. A render older than Prelum's is rendered in memory, and the every-minute cron stores it. A body
- * that no longer renders keeps its last stored HTML, so a page never fails on its own text. The HTML is wrapped in
- * the version it was rendered at, which prelum-content reads to see a page left behind.
+ * The HTML a public read shows, through Prelum's storedRender (`./stored-render`): a stored render at Prelum's version
+ * is used as it is, except its diagrams (`current`: a Mermaid figure this site now draws inline, or a drawing inlined at
+ * an earlier render, is drawn from the site's current file in memory and its caption stays), so the page is current
+ * before the row is saved again. A render older than Prelum's is rendered in memory, and the every-minute cron stores
+ * it. A body that no longer renders keeps its last stored HTML, so a page never fails on its own text. The HTML is
+ * wrapped in the version it was rendered at, which prelum-content reads to see a page left behind.
  */
 export async function storedBody(env: Env, row: Stored): Promise<{ html: string; meta: BodyMeta }> {
-  if (row.renderVersion === null) return { html: row.body, meta: EMPTY_META };
-  const shown = (html: string, version: string, meta: BodyMeta) => ({
-    html: html && `<div data-render-version="${version}">${html}</div>`,
-    meta,
-  });
-  if (row.renderVersion === RENDER_VERSION && row.bodyHtml !== null) {
-    const html = row.bodyHtml.includes("diagram-figure")
-      ? inlineBlogDiagrams(row.bodyHtml, await loadBlogDiagrams(env))
-      : row.bodyHtml;
-    return shown(html, RENDER_VERSION, row.bodyMeta ?? EMPTY_META);
-  }
-  try {
-    const r = await renderMarkdown(row.body, libraryMedia(env), {
-      lcpAbove: lcpAboveBody(row),
-      env,
-    });
-    return shown(r.html, r.renderVersion, r.meta);
-  } catch (err) {
-    console.error(
-      JSON.stringify({
-        event: "render.failed",
-        error: err instanceof Error ? err.message : String(err),
-      }),
-    );
-    return shown(row.bodyHtml ?? "", row.renderVersion, row.bodyMeta ?? EMPTY_META);
-  }
+  if (row.renderVersion === null) return { html: inDiagramContext(row.body), meta: EMPTY_META };
+  let failed = false;
+  const shown = await storedRender(
+    {
+      body: row.body,
+      html: row.bodyHtml,
+      version: row.renderVersion,
+      meta: row.bodyMeta ?? EMPTY_META,
+    },
+    {
+      render: () =>
+        renderMarkdown(row.body, libraryMedia(env), { lcpAbove: lcpAboveBody(row), env }),
+      current: async (html) =>
+        drawsDiagrams(html)
+          ? inlineBlogDiagrams(html, await loadBlogDiagrams(env))
+          : inDiagramContext(html),
+      onError: (err) => {
+        failed = true;
+        logEvent("render.failed", { error: errorText(err) }, { level: "error" });
+      },
+    },
+  );
+  return { html: failed ? inDiagramContext(shown.html) : shown.html, meta: shown.meta };
 }
 
 /** The page's table of contents: the body's h2s, shown one level down as the page demotes them (BodyRenderer). */
 export function pageToc(meta: BodyMeta): Array<{ level: 2 | 3; id: string; text: string }> {
   return meta.toc.filter((t) => t.depth === 2).map((t) => ({ level: 3, id: t.id, text: t.text }));
 }
+
+const errorText = (err: unknown) => (err instanceof Error ? err.message : String(err));
+
+type PostRow = { id: number; body: string; kind: string | null; coverImage: string | null };
+type PageRow = { key: string; value: string };
+
+/**
+ * Renders the posts and pages again and saves each, one at a time, through Prelum's rerenderEach: a row that no longer
+ * renders goes to `onError` and is left as it is, and never stops the rest. The updated_at stays: nothing a writer did
+ * changed.
+ */
+async function rerenderRows(
+  env: Env,
+  postRows: PostRow[],
+  pageRows: PageRow[],
+  onError: (what: string, err: unknown) => void,
+): Promise<{ done: number; failed: number }> {
+  const db = getDb(env);
+  const lookup = libraryMedia(env);
+  const p = await rerenderEach(postRows, {
+    render: (row) => renderMarkdown(row.body, lookup, { lcpAbove: lcpAboveBody(row), env }),
+    save: (row, r) =>
+      db
+        .update(posts)
+        .set({
+          bodyHtml: r.html,
+          bodyMeta: r.meta,
+          renderVersion: r.renderVersion,
+          readingTime: r.readingMinutes,
+        })
+        .where(eq(posts.id, row.id)),
+    onError: (row, err) => onError(`post ${row.id}`, err),
+  });
+  const b = await rerenderEach(pageRows, {
+    render: (row) => renderMarkdown(row.value, lookup, { env }),
+    save: (row, r) =>
+      db
+        .update(contentBlocks)
+        .set({ bodyHtml: r.html, renderVersion: r.renderVersion })
+        .where(eq(contentBlocks.key, row.key)),
+    onError: (row, err) => onError(row.key, err),
+  });
+  return { done: p.done + b.done, failed: p.failed + b.failed };
+}
+
+const postColumns = {
+  id: posts.id,
+  body: posts.body,
+  kind: posts.kind,
+  coverImage: posts.coverImage,
+};
+const pageColumns = { key: contentBlocks.key, value: contentBlocks.value };
 
 /**
  * Re-renders the converted posts and pages whose Markdown names a library file, after its bytes change (a replace,
@@ -248,17 +298,14 @@ export function pageToc(meta: BodyMeta): Array<{ level: 2 | 3; id: string; text:
  */
 export async function rerenderUsing(env: Env, key: string): Promise<number> {
   const db = getDb(env);
-  const lookup = libraryMedia(env);
-  const pattern = `%${key.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
-  const names = (col: typeof posts.body | typeof contentBlocks.value) =>
-    sql`${like(col, pattern)} ESCAPE '\\'`;
+  const names = (col: typeof posts.body | typeof contentBlocks.value) => likeContains(col, key);
   const [postRows, pageRows] = await Promise.all([
     db
-      .select({ id: posts.id, body: posts.body, kind: posts.kind, coverImage: posts.coverImage })
+      .select(postColumns)
       .from(posts)
       .where(and(isNotNull(posts.renderVersion), names(posts.body))),
     db
-      .select({ key: contentBlocks.key, value: contentBlocks.value })
+      .select(pageColumns)
       .from(contentBlocks)
       .where(
         and(
@@ -268,105 +315,28 @@ export async function rerenderUsing(env: Env, key: string): Promise<number> {
         ),
       ),
   ]);
-  let done = 0;
-  for (const p of postRows) {
-    try {
-      const r = await renderMarkdown(p.body, lookup, { lcpAbove: lcpAboveBody(p), env });
-      await db
-        .update(posts)
-        .set({
-          bodyHtml: r.html,
-          bodyMeta: r.meta,
-          renderVersion: r.renderVersion,
-          readingTime: r.readingMinutes,
-        })
-        .where(eq(posts.id, p.id));
-      done += 1;
-    } catch (err) {
-      logEvent(
-        "render.media-failed",
-        { what: `post ${p.id}`, key, error: err instanceof Error ? err.message : String(err) },
-        { level: "error" },
-      );
-    }
-  }
-  for (const b of pageRows) {
-    try {
-      const r = await renderMarkdown(b.value, lookup, { env });
-      await db
-        .update(contentBlocks)
-        .set({ bodyHtml: r.html, renderVersion: r.renderVersion })
-        .where(eq(contentBlocks.key, b.key));
-      done += 1;
-    } catch (err) {
-      logEvent(
-        "render.media-failed",
-        { what: b.key, key, error: err instanceof Error ? err.message : String(err) },
-        { level: "error" },
-      );
-    }
-  }
+  const { done } = await rerenderRows(env, postRows, pageRows, (what, err) =>
+    logEvent("render.media-failed", { what, key, error: errorText(err) }, { level: "error" }),
+  );
   return done;
 }
 
-/**
- * Re-renders every converted post and page whose render is older than Prelum's, from the every-minute cron. Rows that
- * no longer render are logged and left as they are. The updated_at stays: nothing a writer did changed.
- */
+/** Re-renders every converted post and page whose render is older than Prelum's, from the every-minute cron. */
 export async function rerenderStale(
   env: Env,
 ): Promise<{ posts: number; pages: number; failed: number }> {
   const db = getDb(env);
-  const lookup = libraryMedia(env);
   const stale = (col: typeof posts.renderVersion | typeof contentBlocks.renderVersion) =>
     and(isNotNull(col), ne(col, RENDER_VERSION));
   const [postRows, pageRows] = await Promise.all([
+    db.select(postColumns).from(posts).where(stale(posts.renderVersion)),
     db
-      .select({ id: posts.id, body: posts.body, kind: posts.kind, coverImage: posts.coverImage })
-      .from(posts)
-      .where(stale(posts.renderVersion)),
-    db
-      .select({ key: contentBlocks.key, value: contentBlocks.value })
+      .select(pageColumns)
       .from(contentBlocks)
       .where(and(eq(contentBlocks.kind, "page"), stale(contentBlocks.renderVersion))),
   ]);
-  let failed = 0;
-  const attempt = async (what: string, run: () => Promise<unknown>) => {
-    try {
-      await run();
-    } catch (err) {
-      failed += 1;
-      console.error(
-        JSON.stringify({
-          event: "render.stale-failed",
-          what,
-          error: err instanceof Error ? err.message : String(err),
-        }),
-      );
-    }
-  };
-  for (const p of postRows) {
-    await attempt(`post ${p.id}`, async () => {
-      const r = await renderMarkdown(p.body, lookup, { lcpAbove: lcpAboveBody(p), env });
-      await db
-        .update(posts)
-        .set({
-          bodyHtml: r.html,
-          bodyMeta: r.meta,
-          renderVersion: r.renderVersion,
-          readingTime: r.readingMinutes,
-        })
-        .where(eq(posts.id, p.id));
-    });
-  }
-  for (const b of pageRows) {
-    await attempt(b.key, async () => {
-      const r = await renderMarkdown(b.value, lookup, { env });
-      await db
-        .update(contentBlocks)
-        .set({ bodyHtml: r.html, renderVersion: r.renderVersion })
-        .where(eq(contentBlocks.key, b.key));
-    });
-  }
+  const { failed } = await rerenderRows(env, postRows, pageRows, (what, err) =>
+    logEvent("render.stale-failed", { what, error: errorText(err) }, { level: "error" }),
+  );
   return { posts: postRows.length, pages: pageRows.length, failed };
 }

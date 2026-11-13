@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { matchRoutes, type RouteObject } from "react-router";
 import routes from "~/routes";
 import { loader } from "~/routes/google-verification";
 
@@ -21,13 +22,16 @@ describe("google search console verification", () => {
     expect(res.headers.get("Content-Type")).toContain("text/html");
   });
 
-  it("is registered at the exact path, ahead of the :slug catch-all", () => {
+  it("is what the exact path matches, not the :slug catch-all", () => {
     // Not vacuous: the loader above would keep passing while the route was unreachable.
-    const paths = routes.map((r) => ("path" in r ? r.path : undefined));
-    const proof = paths.indexOf("google7e6923f5a0eb8ba9.html");
-    const slug = paths.indexOf(":slug");
-    expect(proof).toBeGreaterThan(-1);
-    expect(slug).toBeGreaterThan(-1);
-    expect(proof).toBeLessThan(slug);
+    type Entry = { path?: string; index?: boolean; file: string; children?: Entry[] };
+    const tree = (entries: Entry[]): RouteObject[] =>
+      entries.map((r) =>
+        r.index
+          ? { index: true, id: r.file }
+          : { path: r.path, id: r.file, children: r.children ? tree(r.children) : undefined },
+      );
+    const matched = matchRoutes(tree(routes as Entry[]), "/google7e6923f5a0eb8ba9.html");
+    expect(matched?.at(-1)?.route.id).toBe("routes/google-verification.ts");
   });
 });

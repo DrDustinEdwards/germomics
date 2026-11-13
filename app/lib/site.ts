@@ -9,6 +9,8 @@ import { shareCard } from "@drdustinedwards/site-helpers/head";
  */
 export const SITE_HOST = "germomics.com";
 export const SITE_ORIGIN = `https://${SITE_HOST}`;
+/** Where a stored image address lives, for site-runtime's keyOfAddress and keysAtAddresses: /media/<key> on this origin. */
+export const MEDIA_ADDRESS = { origins: [SITE_ORIGIN] };
 export const MEDIA_ORIGIN = "https://media.germomics.com";
 /** The show's square cover art: its artwork in the feed until show_config sets one. */
 export const DEFAULT_ARTWORK = `${SITE_ORIGIN}/media/brand/germomics-artwork-1400.jpg`;
@@ -19,10 +21,6 @@ export const DEFAULT_CARD = shareCard(
 );
 /** The site's IndexNow key, public by the protocol's design: served as /<key>.txt and sent with each changed page. */
 export const INDEXNOW_KEY = "e181c18855ea5175390b4e1124cc23fd";
-
-/** The vulnerability contact /.well-known/security.txt lists, and the date it is next confirmed by (the family check warns first). */
-export const SECURITY_CONTACT = "security@dustinedwards.info";
-export const SECURITY_TXT_EXPIRES = "2027-09-28T00:00:00Z";
 
 /**
  * The paths never fetched ahead of a click, beyond the family's NEVER_PREFETCH (/admin, /api and the rest): /unsubscribe
@@ -35,7 +33,7 @@ export const NO_PREFETCH = ["/unsubscribe", "/subscribe/confirm", "/preview", "/
 /** OP3 (op3.dev), the download analytics prefix the podcast feed wraps enclosures in. */
 export const OP3_ORIGIN = "https://op3.dev";
 
-const SITE_ADDRESS = {
+export const SITE_ADDRESS = {
   streetAddress: "Box T-0100",
   locality: "Stephenville",
   region: "TX",
@@ -53,21 +51,6 @@ export type Address = {
   postalCode: string;
   country: string;
 };
-
-/**
- * schema.org PostalAddress node, for embedding in Organization / PodcastSeries. Accepts a partial
- * address (from the contact.address setting); any missing field falls back to SITE_ADDRESS.
- */
-export function postalAddressLd(a: Partial<Address> = {}) {
-  return {
-    "@type": "PostalAddress",
-    streetAddress: a.streetAddress ?? SITE_ADDRESS.streetAddress,
-    addressLocality: a.locality ?? SITE_ADDRESS.locality,
-    addressRegion: a.region ?? SITE_ADDRESS.region,
-    postalCode: a.postalCode ?? SITE_ADDRESS.postalCode,
-    addressCountry: a.country ?? SITE_ADDRESS.country,
-  };
-}
 
 /** Paths no crawler needs, in /robots.txt and /ai.txt alike. */
 export const ROBOTS_DISALLOW = ["/admin", "/preview/"];

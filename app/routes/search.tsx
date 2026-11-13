@@ -1,9 +1,10 @@
 // /search - public full-text search over posts (posts_fts) and content pages (content_blocks_fts).
 // Server-rendered from the loader via ?q=, reusing the existing FTS helpers (no new query dialect).
 // Results pages are noindex.
+import { plural } from "@drdustinedwards/site-helpers/text";
 import { Form } from "react-router";
 import type { Route } from "./+types/search";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { searchPosts, toPlayerTrack } from "~/lib/posts.server";
 import { searchPages } from "~/lib/content.server";
 import { PostCard } from "~/components/content/PostCard";
@@ -62,7 +63,7 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
 
       {q ? (
         <p className="mt-4 font-mono text-xs text-muted">
-          {total} result{total === 1 ? "" : "s"} for “{q}”
+          {plural(total, "result")} for “{q}”
         </p>
       ) : null}
 

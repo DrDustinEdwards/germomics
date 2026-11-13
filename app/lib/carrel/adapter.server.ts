@@ -34,7 +34,9 @@
 // slug of a post ever live redirects (301) to the new one (post_redirects, app/lib/posts.server.ts). Trash takes a live
 // post off the site (a draft, trashed_at set); a restore is a draft; only a trashed post is deleted, and site-api's
 // cron deletes one trashed 30 days.
-import { and, eq, inArray, isNotNull, lte } from "drizzle-orm";
+import { and, eq, isNotNull, lte } from "drizzle-orm";
+import { inList } from "@dustinedwards/site-runtime/d1";
+import { parseSqlTime } from "@dustinedwards/site-runtime/time";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
@@ -114,10 +116,8 @@ type Change = {
 
 // SQLite's datetime('now') is "YYYY-MM-DD HH:MM:SS" in UTC; the contract wants ISO with an offset.
 const iso = (v: string | null | undefined): string | null => {
-  if (!v) return null;
-  const withT = v.includes("T") ? v : `${v.replace(" ", "T")}Z`;
-  const d = new Date(withT);
-  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+  const at = parseSqlTime(v);
+  return at === null ? null : new Date(at).toISOString();
 };
 
 const nowIso = () => new Date().toISOString();
@@ -248,7 +248,7 @@ export function createCarrelAdapter(
       .select({ postId: episodePeople.postId, slug: people.slug, role: episodePeople.role })
       .from(episodePeople)
       .innerJoin(people, eq(people.id, episodePeople.personId))
-      .where(inArray(episodePeople.postId, ids))
+      .where(inList(episodePeople.postId, ids))
       .orderBy(episodePeople.sort);
     for (const r of rows)
       out.set(r.postId, [...(out.get(r.postId) ?? []), { slug: r.slug, role: r.role }]);
@@ -293,7 +293,7 @@ export function createCarrelAdapter(
       ? await db
           .select({ id: people.id, slug: people.slug })
           .from(people)
-          .where(inArray(people.slug, slugs))
+          .where(inList(people.slug, slugs))
       : [];
     const ids = new Map(found.map((p) => [p.slug, p.id]));
     const unknown = slugs.filter((s) => !ids.has(s));

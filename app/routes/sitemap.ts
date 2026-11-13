@@ -2,7 +2,7 @@
 // listPosts) plus the key static pages. Resource route returning raw XML.
 import { SITE_ORIGIN } from "~/lib/site";
 import type { Route } from "./+types/sitemap";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { listPostImages, listPosts, listSeasons } from "~/lib/posts.server";
 import { isoDay } from "@drdustinedwards/site-helpers/xml";
 import { sitemapDocument } from "@drdustinedwards/site-helpers/sitemap";
@@ -39,9 +39,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     { trailingNewline: false },
   );
 
-  return new Response(xml, {
-    headers: {
-      "Content-Type": "application/xml; charset=utf-8",
-    },
-  });
+  // No Cache-Control, as in the feeds: the edge stores it under the pages tag and a publish purges it. Prelum's
+  // sitemapResponse sends its own hour, which the edge does not store.
+  return new Response(xml, { headers: { "Content-Type": "application/xml; charset=utf-8" } });
 }

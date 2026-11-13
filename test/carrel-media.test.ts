@@ -432,12 +432,12 @@ describe("the writes", () => {
       .bind(item.id)
       .first<{ id: number }>())!;
     await e.DB.prepare(
-      "UPDATE media_revisions SET backup_key = ?, width = 400, height = 300, bytes = ? WHERE id = ?",
+      "UPDATE media_revisions SET copy_key = ?, width = 400, height = 300, bytes = ? WHERE id = ?",
     )
       .bind(copy, old.byteLength, id)
       .run();
     await e.DB.prepare(
-      "INSERT INTO media_revisions (media_key, at, bytes, width, height, reason, sha256) VALUES (?, '2026-01-02 00:00:00', 1, 800, 600, 'replace', NULL)",
+      "INSERT INTO media_revisions (media_key, at, bytes, width, height, reason, sha256) VALUES (?, '2026-01-02 00:00:00', 1, 800, 600, 'replace', '')",
     )
       .bind(item.id)
       .run();
@@ -530,14 +530,12 @@ describe("the backfill", () => {
     });
     expect((await e.BLOG_IMAGES.head("ep-1/vibrio-400.webp"))!.etag).toBe(before);
 
-    // A key from before Carrel that is not a MediaId keeps its row and address, and stays out of the library.
+    // A key from before Carrel that is not a MediaId keeps its address, gets no row, and stays out of the library.
     const cursor = (await media.list({ limit: 1 })).changeCursor!;
     await e.BLOG_IMAGES.put("old pics/a b.png", png(5, 5, {}, 3), {
       httpMetadata: { contentType: "image/png" },
     });
-    expect((await backfillMedia({ ...e, IMAGES: images } as unknown as Env)).added).toEqual([
-      "old pics/a b.png",
-    ]);
+    expect((await backfillMedia({ ...e, IMAGES: images } as unknown as Env)).added).toEqual([]);
     expect((await media.list({ limit: 50 })).items.map((i) => i.id)).not.toContain(
       "old pics/a b.png",
     );

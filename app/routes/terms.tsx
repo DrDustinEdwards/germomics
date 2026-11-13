@@ -2,7 +2,7 @@
 // {{email}} filled from show_config. DRAFT banner stays as chrome. ?preview shows admin drafts.
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/terms";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { loadFilledPage } from "~/lib/content.server";
 import { LegalPage } from "~/components/content/Legal";
 

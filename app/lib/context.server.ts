@@ -3,16 +3,9 @@
 // Loaders and actions reach D1/R2/KV through context.
 // RR v8 stabilized middleware/context, so the loader `context` is a RouterContextProvider and
 // the binding bag is read with context.get(key) rather than a bare context.cloudflare.env
-// property. getEnv() is the one sanctioned accessor — every loader/action/middleware goes
+// property. site-runtime's ./context getEnv() is the one sanctioned accessor — every loader/action/middleware goes
 // through it, so bindings never become a free-floating global and never reach the client.
 import { createContext, type RouterContextProvider } from "react-router";
-
-import { cloudflareContext, cspNonceContext, getEnv } from "@dustinedwards/site-runtime/context";
-import type { CloudflareContext } from "@dustinedwards/site-runtime/context";
-
-// The request context and the render nonce (workers/app.ts, app/entry.server.tsx) are site-runtime's ./context.
-export { cloudflareContext, cspNonceContext, getEnv };
-export type CloudflareBindings = CloudflareContext;
 
 // Per-request site content (settings + snippets), read from D1 at most once per request and only
 // when a loader asks: the root middleware puts a memoized reader on context, so loaders start it

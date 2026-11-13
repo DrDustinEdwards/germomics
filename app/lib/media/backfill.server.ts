@@ -6,7 +6,8 @@
 import { sha256Hex } from "@dustinedwards/site-runtime/encoding";
 import { FOCUS_METADATA, focusOf } from "@dustinedwards/site-runtime/image";
 import { logEvent } from "@dustinedwards/site-runtime/log";
-import { inArray } from "drizzle-orm";
+import { inList } from "@dustinedwards/site-runtime/d1";
+import { MediaId } from "@dustinedwards/site-api";
 import { getDb } from "~/db/index.server";
 import { mediaCaptions } from "~/db/schema";
 import { insertMediaRow, mediaRows } from "./store.server";
@@ -60,7 +61,10 @@ export async function backfillMedia(
   });
   const keys = listed.objects.map((o) => o.key);
   const held = new Set((await mediaRows(env, keys)).map((r) => r.key));
-  const waiting = listed.objects.filter((o) => !held.has(o.key));
+  // A key from before Carrel that is not a MediaId keeps its address but is not a library file, so it gets no row.
+  const waiting = listed.objects.filter(
+    (o) => !held.has(o.key) && MediaId.safeParse(o.key).success,
+  );
   const captions =
     waiting.length > 0
       ? new Map(
@@ -69,7 +73,7 @@ export async function backfillMedia(
               .select()
               .from(mediaCaptions)
               .where(
-                inArray(
+                inList(
                   mediaCaptions.mediaKey,
                   waiting.map((o) => o.key),
                 ),

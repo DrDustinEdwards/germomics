@@ -7,24 +7,21 @@
 // site-runtime runJobTool), recorded in cron_runs as the cron records it; { backup: true } runs the four backup jobs.
 import { operatorResponse } from "@dustinedwards/site-runtime/operator";
 import type { Route } from "./+types/api.operator";
-import { runJobTool } from "@dustinedwards/site-runtime/cron";
+import { operatorJobTools } from "@dustinedwards/site-runtime/cron";
 import { backupStatus } from "~/lib/backup.server";
 import { allCronJobs } from "~/lib/cron.server";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 
 function operator(request: Request, env: Env) {
   return operatorResponse(request, {
     token: env.OPERATOR_TOKEN,
     limiter: env.RATE_LIMITER,
-    tools: {
-      backup_status: {
-        description:
-          "Reads the backup state now, uncached: the newest complete D1 dump's age and each files pass (audio, images, game assets) " +
-          "with when it last completed, and a warning when any is past 26 hours. The same read as /health's backup field.",
-        run: () => backupStatus(env),
-      },
-      run_job: runJobTool(env.DB, () => allCronJobs(env)),
-    },
+    tools: operatorJobTools({
+      db: env.DB,
+      jobs: () => allCronJobs(env),
+      backupStatus: () => backupStatus(env),
+      files: ["audio", "images", "game assets"],
+    }),
   });
 }
 

@@ -7,20 +7,13 @@
 // `<slug>-<width>.webp` files, so for those the width is read from the name and the shape from the
 // figure's own width and height. An image with neither is left as it is: the original,
 // unsized, is better than a guess (site-runtime's rule).
-import { FOCUS_METADATA, type StoredImage } from "@dustinedwards/site-runtime/image";
+import { FOCUS_METADATA, keyOfAddress, type StoredImage } from "@dustinedwards/site-runtime/image";
 import type { HeadImage } from "@drdustinedwards/site-helpers/head";
-import { inArray } from "drizzle-orm";
+import { inList } from "@dustinedwards/site-runtime/d1";
 import { getDb } from "~/db/index.server";
 import { media } from "~/db/schema";
-import { DEFAULT_CARD, SITE_ORIGIN } from "~/lib/site";
-import {
-  imageKey,
-  imageKeyOf,
-  images,
-  mediaPath,
-  type ImageSet,
-  type ImageUseName,
-} from "~/lib/images";
+import { DEFAULT_CARD, MEDIA_ADDRESS, SITE_ORIGIN } from "~/lib/site";
+import { imageKey, images, mediaPath, type ImageSet, type ImageUseName } from "~/lib/images";
 
 const NAMED_WIDTH = /-(\d{2,4})\.(?:webp|jpe?g|png|avif|gif)$/i;
 
@@ -34,7 +27,7 @@ const positive = (v: string | null | undefined): number | null => {
  * (height over width) stands in for a height the file does not record.
  */
 async function storedImage(env: Env, src: string, aspect?: number): Promise<StoredImage | null> {
-  const key = imageKeyOf(src);
+  const key = keyOfAddress(src, MEDIA_ADDRESS);
   if (!key) return null;
   const head = await env.BLOG_IMAGES.head(key).catch(() => null);
   if (!head) return null;
@@ -61,7 +54,7 @@ async function placeholders(
   const rows = await getDb(env)
     .select({ key: media.key, placeholder: media.placeholder, color: media.color })
     .from(media)
-    .where(inArray(media.key, keys));
+    .where(inList(media.key, keys));
   return new Map(rows.map((r) => [r.key, { placeholder: r.placeholder, color: r.color }]));
 }
 
@@ -81,14 +74,14 @@ export async function imageSet(
     ),
     placeholders(
       env,
-      srcs.map(imageKeyOf).filter((k): k is string => k !== null),
+      srcs.map((s) => keyOfAddress(s, MEDIA_ADDRESS)).filter((k): k is string => k !== null),
     ),
   ]);
   const set: ImageSet = {};
   for (const [use, src] of wanted) {
     const image = src ? stored.get(src) : null;
     if (!src || !image) continue;
-    const key = imageKeyOf(src);
+    const key = keyOfAddress(src, MEDIA_ADDRESS);
     const attrs = images.attributes({ ...image, ...(key ? held.get(key) : undefined) }, use);
     if (attrs.sources.length) set[imageKey(use, src)] = attrs;
   }

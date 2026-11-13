@@ -1,9 +1,10 @@
+import { plural } from "@drdustinedwards/site-helpers/text";
 import { Form } from "react-router";
 import { Link } from "capsomer/react/link";
 import { Search } from "lucide-react";
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/archive";
-import { getEnv } from "~/lib/context.server";
+import { getEnv } from "@dustinedwards/site-runtime/context";
 import { listPosts, searchPosts, toPlayerTrack } from "~/lib/posts.server";
 import { searchPages } from "~/lib/content.server";
 import { PostCard } from "~/components/content/PostCard";
@@ -91,7 +92,7 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
 
       {q ? (
         <p className="mb-4 font-mono text-xs text-muted">
-          {items.length} result{items.length === 1 ? "" : "s"} for “{q}”
+          {plural(items.length, "result")} for “{q}”
         </p>
       ) : null}
 

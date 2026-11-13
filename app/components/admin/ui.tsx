@@ -70,7 +70,7 @@ export function Field({
         </label>
         {count ? (
           <span
-            className={`font-mono text-[11px] tabular-nums ${
+            className={`font-mono text-[0.6875rem] tabular-nums ${
               count.max && count.value > count.max ? "text-brand" : "text-muted"
             }`}
           >
@@ -158,7 +158,7 @@ export function Badge({
   }[tone];
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide ${cx}`}
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-wide ${cx}`}
     >
       {children}
     </span>
