@@ -18,7 +18,7 @@ import { getEnv } from "@dustinedwards/site-runtime/context";
 import { accessAdmin } from "@dustinedwards/site-runtime/access";
 import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runtime/log";
 import { isolationVerdict, refuseCrossSite } from "@dustinedwards/site-runtime/origin";
-import { UNCACHED } from "@dustinedwards/site-runtime/edge-cache";
+import { PRIVATE_PAGE_HEADERS, UNCACHED } from "@dustinedwards/site-runtime/edge-cache";
 import { effectiveTheme, toggleTheme, type ThemeChoice } from "capsomer/behavior/theme-switch";
 import { THEME_KEY } from "~/lib/theme";
 import { markup } from "capsomer/behavior/trusted-html";
@@ -27,6 +27,9 @@ const PRIVATE = { "Cache-Control": UNCACHED, "X-Robots-Tag": "noindex, nofollow"
 
 // The admin is an app: it and every page under it hydrate on load (lib/hydration.ts).
 export const handle = { hydrate: true };
+
+// A private page, like every child: no-transform keeps the Web Analytics beacon out (site-runtime PRIVATE_PAGE_HEADERS).
+export const headers = () => PRIVATE_PAGE_HEADERS;
 
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ request, context }, next) => {
