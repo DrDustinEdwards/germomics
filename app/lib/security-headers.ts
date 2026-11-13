@@ -38,9 +38,8 @@ const sitePolicy = (nonce: string | undefined) =>
       "manifest-src 'self'",
       "upgrade-insecure-requests",
     ],
-    // The Trusted Types policies a page may create: the network's (site-runtime TRUSTED_TYPES_NAMES) and the one that
-    // runs the held hydration scripts on a press of play (app/site/hydrate.ts).
-    trustedTypes: [...TRUSTED_TYPES_NAMES, "germomics-hydrate"],
+    // The Trusted Types policies a page may create: the network's (site-runtime TRUSTED_TYPES_NAMES).
+    trustedTypes: [...TRUSTED_TYPES_NAMES],
   }) as const;
 
 /**
