@@ -2,14 +2,11 @@ import {
   Links,
   Meta,
   Outlet,
-  Scripts,
-  ScrollRestoration,
   UNSAFE_FrameworkContext,
   useLocation,
   useMatches,
 } from "react-router";
-import { useContext, useEffect } from "react";
-import { useHydrated } from "capsomer/react/hooks";
+import { useContext } from "react";
 import { iconLinks } from "@drdustinedwards/site-helpers/icons";
 
 import type { Route } from "./+types/root";
@@ -20,15 +17,12 @@ import { loadSettings, loadSnippets, setting } from "~/lib/content.server";
 import { getShowConfig } from "~/lib/show.server";
 import { listSeasons } from "~/lib/posts.server";
 import { themeInitScript } from "~/lib/theme";
+import { pageDeferred } from "~/lib/hydration";
 import {
-  HYDRATED_ATTRIBUTE,
-  HYDRATED_EVENT,
-  HYDRATE_ON_INTENT_ID,
-  STREAM_BUFFER_SCRIPT,
-  isServer,
-  pageDeferred,
-} from "~/lib/hydration";
-import { routeHydrates } from "@dustinedwards/site-runtime/deferred-scripts";
+  HydrationScripts,
+  StreamBuffer,
+  routeHydrates,
+} from "@dustinedwards/site-runtime/deferred-scripts";
 import { PRELOADS } from "~/lib/preloads";
 import { socialLinks } from "~/lib/seo";
 import { NO_PREFETCH } from "~/lib/site";
@@ -101,32 +95,6 @@ export async function loader({ context }: Route.LoaderArgs) {
   };
 }
 
-/**
- * React Router's hydration scripts. A route that hydrates on load gets them as usual. Any other page gets them inside
- * a <noscript>, which a browser running script keeps as inert text (React renders a <link> there in place rather than
- * hoisting it to the head), so the page downloads no React; /site.js runs them when a reader presses play
- * (app/site/hydrate.ts). Once such a page has hydrated, ScrollRestoration mounts, so client-side navigations restore
- * and reset the scroll as on any other page.
- */
-function HydrationScripts({ deferred }: { deferred: boolean }) {
-  // False on the server and while hydrating, true once hydrated.
-  const hydrated = useHydrated();
-  if (!deferred) {
-    return (
-      <>
-        <ScrollRestoration />
-        <Scripts />
-      </>
-    );
-  }
-  return (
-    <>
-      <noscript id={HYDRATE_ON_INTENT_ID}>{isServer ? <Scripts /> : null}</noscript>
-      {hydrated ? <ScrollRestoration /> : null}
-    </>
-  );
-}
-
 export function Layout({ children }: { children: React.ReactNode }) {
   const nonce = useContext(UNSAFE_FrameworkContext)?.nonce;
   const hydrates = routeHydrates(useMatches());
@@ -151,13 +119,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           dangerouslySetInnerHTML={markup(themeInitScript)}
         />
         {/* A deferred page keeps its streamed loader data here until it hydrates (lib/hydration.ts). */}
-        {deferred ? (
-          <script
-            nonce={nonce}
-            suppressHydrationWarning
-            dangerouslySetInnerHTML={markup(STREAM_BUFFER_SCRIPT)}
-          />
-        ) : null}
+        <StreamBuffer deferred={deferred} />
         {/* Every page's own script: the menus, the theme button, the share buttons and hydrate-on-intent (app/site.ts). */}
         <script src="/site.js" defer nonce={nonce} suppressHydrationWarning />
       </head>
@@ -170,11 +132,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  // Tells /site.js the app is live, so a press that started the hydration can be handed to its button.
-  useEffect(() => {
-    document.documentElement.setAttribute(HYDRATED_ATTRIBUTE, "");
-    document.dispatchEvent(new Event(HYDRATED_EVENT));
-  }, []);
   // The public chrome (header, footer, player) is the public layout's (routes/_site.tsx), so the admin never loads it.
   return <Outlet />;
 }
