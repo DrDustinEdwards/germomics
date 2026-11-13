@@ -17,7 +17,7 @@
 @import "capsomer/card.css";
 /* The site header and its theme button, and the parts it shares with the player's settings. */
 @import "capsomer/utilities.css";
-@import "capsomer/site-header.css";
+@import "capsomer/site-header-frame.css";
 @import "capsomer/theme-switch.css";
 @import "capsomer/button.css";
 @import "capsomer/popover.css";
