@@ -2,17 +2,22 @@
    Capsomer v0.5.0: layers, tokens, both themes, the base rules, and the pieces AdminShell uses. */
 @import "capsomer/tokens.css";
 @import "capsomer/themes.css" layer(cap.tokens);
-@import "capsomer/site-germomics.css";
 @import "capsomer/base.css";
 @import "capsomer/site-header.css";
 @import "capsomer/theme-switch.css";
 @import "capsomer/admin-shell.css";
+@import "capsomer/icons.css";
 @import "capsomer/button.css";
+@import "capsomer/panel.css";
+@import "capsomer/field.css";
+@import "capsomer/select.css";
+@import "capsomer/status.css";
+@import "capsomer/empty.css";
 @import "capsomer/dialog.css";
 @import "capsomer/segmented.css";
 @import "capsomer/popover.css";
 @import "capsomer/sortable-list.css";
 
 /* Capsomer's faces from capsomer/fonts.css, loaded only with the admin, so public pages do not
-   download them. Numbers keep the site's JetBrains Mono. */
+   download them. */
 @import "capsomer/fonts.css";

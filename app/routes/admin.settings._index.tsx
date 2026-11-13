@@ -4,20 +4,15 @@
 import { useState } from "react";
 import { useFetcher } from "react-router";
 import { Link } from "capsomer/react/link";
-import {
-  Settings,
-  Megaphone,
-  ListTree,
-  Check,
-  SlidersHorizontal,
-  FileText,
-  Users,
-} from "lucide-react";
+import { Icon } from "capsomer/react/icons";
 import type { Route } from "./+types/admin.settings._index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getShowConfig, upsertShowConfig } from "~/lib/show.server";
 import { listSettings, listBlocks, upsertSetting } from "~/lib/content.server";
-import { Card, Field, Button, Badge, inputCx } from "~/components/admin/ui";
+import { Panel } from "capsomer/react/panel";
+import { Field } from "capsomer/react/field";
+import { Button } from "capsomer/react/button";
+import { Pill } from "capsomer/react/status";
 import { CategoriesEditor } from "~/components/admin/CategoriesEditor";
 import { HostsEditor } from "~/components/admin/HostsEditor";
 import type { PodcastCategory, Host } from "~/db/schema";
@@ -25,7 +20,6 @@ import { readForm } from "@dustinedwards/site-runtime/body";
 import { ADMIN_FORM } from "~/lib/body.server";
 import { parseJsonField, type FieldSpec } from "capsomer/behavior/schema-form";
 import { SchemaFields } from "capsomer/react/schema-form";
-import "capsomer/field.css";
 import "capsomer/schema-form.css";
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -121,7 +115,7 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
   return (
     <div className="mx-auto max-w-3xl">
       <h1 className="flex items-center gap-2 font-display text-2xl font-semibold">
-        <Settings size={22} aria-hidden /> Settings
+        <Icon name="settings" className="size-[22px]" /> Settings
       </h1>
       <p className="mt-1 text-sm text-muted">
         Podcast channel metadata, categories, and funding. These drive the feed.
@@ -135,69 +129,79 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
         />
         <input type="hidden" name="hosts" value={JSON.stringify(hosts)} />
 
-        <Card title="Show" icon={<Megaphone size={15} aria-hidden />}>
+        <Panel title="Show">
           <div className="space-y-4">
             <Field label="Title">
-              {({ id }) => (
-                <input id={id} name="title" defaultValue={show.title} className={inputCx} />
+              {(control) => (
+                <input {...control} name="title" defaultValue={show.title} className="cap-input" />
               )}
             </Field>
             <Field label="Description">
-              {({ id }) => (
+              {(control) => (
                 <textarea
-                  id={id}
+                  {...control}
                   name="description"
                   defaultValue={show.description}
                   rows={3}
-                  className={inputCx}
+                  className="cap-input"
                 />
               )}
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Author">
-                {({ id }) => (
-                  <input id={id} name="author" defaultValue={show.author} className={inputCx} />
+                {(control) => (
+                  <input
+                    {...control}
+                    name="author"
+                    defaultValue={show.author}
+                    className="cap-input"
+                  />
                 )}
               </Field>
               <Field label="Owner email">
-                {({ id }) => (
+                {(control) => (
                   <input
-                    id={id}
+                    {...control}
                     name="ownerEmail"
                     type="email"
                     defaultValue={show.ownerEmail}
-                    className={inputCx}
+                    className="cap-input"
                   />
                 )}
               </Field>
             </div>
             <Field
               label="Artwork URL"
-              hint="Square cover art (≥ 1400px). Image re-hosting is deferred."
+              help="Square cover art (≥ 1400px). Image re-hosting is deferred."
             >
-              {({ id }) => (
+              {(control) => (
                 <input
-                  id={id}
+                  {...control}
                   name="artwork"
                   type="url"
                   defaultValue={show.artwork}
-                  className={inputCx}
+                  className="cap-input"
                 />
               )}
             </Field>
             <div className="grid grid-cols-3 gap-3">
               <Field label="Language">
-                {({ id }) => (
-                  <input id={id} name="language" defaultValue={show.language} className={inputCx} />
+                {(control) => (
+                  <input
+                    {...control}
+                    name="language"
+                    defaultValue={show.language}
+                    className="cap-input"
+                  />
                 )}
               </Field>
               <Field label="Type">
-                {({ id }) => (
+                {(control) => (
                   <select
-                    id={id}
+                    {...control}
                     name="itunesType"
                     defaultValue={show.itunesType}
-                    className={inputCx}
+                    className="cap-input"
                   >
                     <option value="episodic">episodic</option>
                     <option value="serial">serial</option>
@@ -209,56 +213,56 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
               </label>
             </div>
           </div>
-        </Card>
+        </Panel>
 
-        <Card title="iTunes categories" icon={<ListTree size={15} aria-hidden />}>
+        <Panel title="iTunes categories">
           <CategoriesEditor value={categories} onChange={setCategories} />
-        </Card>
+        </Panel>
 
-        <Card title="Hosts" icon={<Users size={15} aria-hidden />}>
+        <Panel title="Hosts">
           <p className="mb-4 text-sm text-muted">
             Show-level byline. Maps to podcast:person in the feed alongside per-episode guests.
           </p>
           <HostsEditor hosts={hosts} onChange={setHosts} />
-        </Card>
+        </Panel>
 
-        <Card title="Funding">
+        <Panel title="Funding">
           <div className="space-y-4">
-            <Field label="Funding URL" hint="Leave blank to omit podcast:funding from the feed.">
-              {({ id }) => (
+            <Field label="Funding URL" help="Leave blank to omit podcast:funding from the feed.">
+              {(control) => (
                 <input
-                  id={id}
+                  {...control}
                   name="fundingUrl"
                   type="url"
                   defaultValue={show.fundingUrl ?? ""}
                   placeholder="https://…"
-                  className={inputCx}
+                  className="cap-input"
                 />
               )}
             </Field>
             <Field
               label="Funding label"
-              hint="Button text shown by apps (e.g. “Support the show”)."
+              help="Button text shown by apps (e.g. “Support the show”)."
             >
-              {({ id }) => (
+              {(control) => (
                 <input
-                  id={id}
+                  {...control}
                   name="fundingLabel"
                   defaultValue={show.fundingLabel ?? ""}
-                  className={inputCx}
+                  className="cap-input"
                 />
               )}
             </Field>
           </div>
-        </Card>
+        </Panel>
 
         <div className="flex items-center gap-3">
-          <Button type="submit" variant="primary" disabled={fetcher.state !== "idle"}>
+          <Button type="submit" variant="primary" pending={fetcher.state !== "idle"}>
             Save settings
           </Button>
           {fetcher.data?.ok ? (
             <span role="status" className="flex items-center gap-1 font-mono text-xs text-accent">
-              <Check size={13} aria-hidden /> {fetcher.data.message}
+              <Icon name="check" className="size-[13px]" /> {fetcher.data.message}
             </span>
           ) : null}
           {fetcher.data?.ok === false ? (
@@ -272,27 +276,27 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
       {/* Site settings (settings table): non-secret config + AI prompts, edited live. */}
       <settingsFetcher.Form method="post" className="mt-8 space-y-5">
         <input type="hidden" name="_form" value="settings" />
-        <Card title="Site settings" icon={<SlidersHorizontal size={15} aria-hidden />}>
+        <Panel title="Site settings">
           <p className="mb-4 text-sm text-muted">
             Non-secret config and the AI generator prompts. Saved instantly. Identity that drives
             the feed lives in the Show card above, not here.
           </p>
           <SchemaFields specs={siteSettings.map(settingSpec)} values={settingValues} />
-        </Card>
+        </Panel>
         <div className="flex items-center gap-3">
-          <Button type="submit" variant="primary" disabled={settingsFetcher.state !== "idle"}>
+          <Button type="submit" variant="primary" pending={settingsFetcher.state !== "idle"}>
             Save site settings
           </Button>
           {settingsFetcher.data?.ok ? (
             <span role="status" className="flex items-center gap-1 font-mono text-xs text-accent">
-              <Check size={13} aria-hidden /> {settingsFetcher.data.message}
+              <Icon name="check" className="size-[13px]" /> {settingsFetcher.data.message}
             </span>
           ) : null}
         </div>
       </settingsFetcher.Form>
 
       {/* Content blocks: pages (draft/publish) + snippets (instant). Edit on a dedicated page. */}
-      <Card title="Content" icon={<FileText size={15} aria-hidden />} className="mt-8">
+      <Panel title="Content" className="mt-8">
         <p className="mb-4 text-sm text-muted">
           Pages render publicly only when published. Snippets are instant.
         </p>
@@ -306,7 +310,7 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
               >
                 {b.title || b.key}
               </Link>
-              <Badge tone={b.status === "published" ? "accent" : "amber"}>{b.status}</Badge>
+              <Pill tone={b.status === "published" ? "ok" : "warn"}>{b.status}</Pill>
             </li>
           ))}
         </ul>
@@ -326,7 +330,7 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
             </li>
           ))}
         </ul>
-      </Card>
+      </Panel>
     </div>
   );
 }

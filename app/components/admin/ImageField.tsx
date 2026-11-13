@@ -2,8 +2,10 @@
 // past 2560px, thumbnail preview) OR "URL / Paste". Alt text is required whenever an image is set — we retire
 // URL-only fields here. Emits { url, alt } upward.
 import { useState } from "react";
-import { ImageUp, Link2, X } from "lucide-react";
-import { Tabs, Field, inputCx, Button } from "./ui";
+import { Icon } from "capsomer/react/icons";
+import { Field } from "capsomer/react/field";
+import { Button } from "capsomer/react/button";
+import { Segmented } from "capsomer/react/segmented";
 import { UploadDropzone } from "./UploadDropzone";
 
 export function ImageField({
@@ -28,13 +30,20 @@ export function ImageField({
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
         <span className="font-display text-sm font-medium text-ink">{label}</span>
-        <Tabs
-          label={`${label} input method`}
+        <Segmented
+          legend={`${label} input method`}
           value={tab}
           onChange={setTab}
-          tabs={[
-            { value: "upload", label: "Upload", icon: <ImageUp size={13} aria-hidden /> },
-            { value: "url", label: "URL", icon: <Link2 size={13} aria-hidden /> },
+          hideLegend
+          options={[
+            {
+              value: "upload",
+              label: "Upload",
+            },
+            {
+              value: "url",
+              label: "URL",
+            },
           ]}
         />
       </div>
@@ -50,11 +59,12 @@ export function ImageField({
             <p className="truncate font-mono text-[0.6875rem] text-muted">{url}</p>
             <Button
               variant="danger"
+              size="sm"
               type="button"
-              className="mt-2 min-h-0 px-2 py-1 text-xs"
+              className="mt-2"
               onClick={() => onChange({ url: "", alt: "" })}
             >
-              <X size={12} aria-hidden /> Remove
+              <Icon name="close" className="size-3" /> Remove
             </Button>
           </div>
         </div>
@@ -69,15 +79,15 @@ export function ImageField({
           onUploaded={(r) => r.url && onChange({ url: r.url, alt })}
         />
       ) : (
-        <Field label="Image URL" hint="Paste an absolute https:// image URL.">
-          {({ id }) => (
+        <Field label="Image URL" help="Paste an absolute https:// image URL.">
+          {(control) => (
             <input
-              id={id}
+              {...control}
               type="text"
               inputMode="url"
               value={url}
               placeholder="/media/…"
-              className={inputCx}
+              className="cap-input"
               onChange={(e) => onChange({ url: e.target.value, alt })}
             />
           )}
@@ -88,14 +98,13 @@ export function ImageField({
         label="Alt text"
         required={required ?? !!url}
         error={altMissing ? "Alt text is required for accessibility." : null}
-        hint="Describe the image for screen readers and when it fails to load."
+        help="Describe the image for screen readers and when it fails to load."
       >
-        {({ id, describedBy }) => (
+        {(control) => (
           <input
-            id={id}
-            aria-describedby={describedBy}
+            {...control}
             value={alt}
-            className={inputCx}
+            className="cap-input"
             onChange={(e) => onChange({ url, alt: e.target.value })}
           />
         )}

@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { useFetcher } from "react-router";
 import { Link } from "capsomer/react/link";
-import { ExternalLink, Save } from "lucide-react";
+import { Icon } from "capsomer/react/icons";
 import type { Route } from "./+types/admin.episodes.$id";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getPostById } from "~/lib/posts.server";
@@ -14,7 +14,8 @@ import { snapshotVersion, updatePost } from "~/lib/admin.server";
 import { carrelEditUrl } from "~/lib/site";
 import { AudioField, type AudioState } from "~/components/admin/AudioField";
 import { TranscriptField } from "~/components/admin/TranscriptField";
-import { Button, Card } from "~/components/admin/ui";
+import { Panel } from "capsomer/react/panel";
+import { Button } from "capsomer/react/button";
 import { readForm } from "@dustinedwards/site-runtime/body";
 import { ADMIN_FORM } from "~/lib/body.server";
 
@@ -99,10 +100,10 @@ export default function EpisodeAudio({ loaderData }: Route.ComponentProps) {
             href={carrelEditUrl(loaderData.slug)}
             className="inline-flex items-center gap-1.5 font-display text-sm text-muted hover:text-ink"
           >
-            <ExternalLink size={14} aria-hidden /> Write in Carrel
+            <Icon name="external" className="size-3.5" /> Write in Carrel
           </a>
-          <Button type="button" disabled={fetcher.state !== "idle"} onClick={save}>
-            <Save size={14} aria-hidden /> Save
+          <Button variant="primary" type="button" pending={fetcher.state !== "idle"} onClick={save}>
+            <Icon name="save" className="size-3.5" /> Save
           </Button>
         </div>
       </div>
@@ -111,16 +112,16 @@ export default function EpisodeAudio({ loaderData }: Route.ComponentProps) {
           {result.ok ? result.message : result.error}
         </p>
       ) : null}
-      <Card>
+      <Panel>
         <AudioField
           postId={loaderData.id}
           value={audio}
           onChange={(patch) => setAudio((a) => ({ ...a, ...patch }))}
         />
-      </Card>
-      <Card>
+      </Panel>
+      <Panel>
         <TranscriptField value={transcript} onChange={setTranscript} />
-      </Card>
+      </Panel>
     </div>
   );
 }

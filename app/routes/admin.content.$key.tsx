@@ -4,13 +4,15 @@
 // site renders it, with a link to edit it there, and only its title and status are saved; the plain-text pages
 // (TEXT_PAGES) and the snippets are edited here.
 import { useFetcher } from "react-router";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { Icon } from "capsomer/react/icons";
 import type { Route } from "./+types/admin.content.$key";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { loadBlock, TEXT_PAGES, updatePageSettings, upsertBlock } from "~/lib/content.server";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { carrelEditUrl } from "~/lib/site";
-import { Card, Field, Button, inputCx } from "~/components/admin/ui";
+import { Panel } from "capsomer/react/panel";
+import { Field } from "capsomer/react/field";
+import { Button } from "capsomer/react/button";
 import { PAGE_HREF } from "~/components/content/PageHits";
 import { readForm } from "@dustinedwards/site-runtime/body";
 import { ADMIN_FORM } from "~/lib/body.server";
@@ -62,7 +64,7 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
         href="/admin/settings"
         className="inline-flex items-center gap-1 font-mono text-xs text-muted hover:text-ink"
       >
-        <ArrowLeft size={12} aria-hidden /> Settings
+        <Icon name="arrow-left" className="size-3" /> Settings
       </a>
       <h1 className="mt-3 font-display text-2xl font-semibold">{block.title || block.key}</h1>
       <p className="mt-1 font-mono text-xs text-muted">
@@ -71,11 +73,11 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
       </p>
 
       <fetcher.Form method="post" className="mt-6 space-y-5">
-        <Card title="Content">
+        <Panel title="Content">
           <div className="space-y-4">
             <Field label="Title">
-              {({ id }) => (
-                <input id={id} name="title" defaultValue={block.title} className={inputCx} />
+              {(control) => (
+                <input {...control} name="title" defaultValue={block.title} className="cap-input" />
               )}
             </Field>
             {markdown && carrelUrl ? (
@@ -91,7 +93,7 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 font-mono text-xs text-accent hover:underline"
                   >
-                    <ExternalLink size={13} aria-hidden /> Edit in Carrel
+                    <Icon name="external" className="size-[13px]" /> Edit in Carrel
                     <span className="sr-only"> (opens in a new tab)</span>
                   </a>
                 </p>
@@ -102,15 +104,15 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
             ) : (
               <Field
                 label={isPage ? "Body (plain text)" : "Value"}
-                hint={isPage ? "Served as plain text, as written." : undefined}
+                help={isPage ? "Served as plain text, as written." : undefined}
               >
-                {({ id }) => (
+                {(control) => (
                   <textarea
-                    id={id}
+                    {...control}
                     name="value"
                     defaultValue={block.value}
                     rows={isPage ? 18 : 4}
-                    className={`${inputCx} font-mono text-xs`}
+                    className="cap-input font-mono text-xs"
                   />
                 )}
               </Field>
@@ -118,10 +120,15 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
             {isPage ? (
               <Field
                 label="Status"
-                hint="Only published pages render publicly. Drafts are visible via Preview."
+                help="Only published pages render publicly. Drafts are visible via Preview."
               >
-                {({ id }) => (
-                  <select id={id} name="status" defaultValue={block.status} className={inputCx}>
+                {(control) => (
+                  <select
+                    {...control}
+                    name="status"
+                    defaultValue={block.status}
+                    className="cap-input"
+                  >
                     <option value="draft">draft</option>
                     <option value="published">published</option>
                   </select>
@@ -129,10 +136,10 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
               </Field>
             ) : null}
           </div>
-        </Card>
+        </Panel>
 
         <div className="flex items-center gap-3">
-          <Button type="submit" variant="primary" disabled={fetcher.state !== "idle"}>
+          <Button type="submit" variant="primary" pending={fetcher.state !== "idle"}>
             Save
           </Button>
           {isPage && previewHref ? (
@@ -142,7 +149,7 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 font-mono text-sm text-accent hover:underline"
             >
-              <ExternalLink size={13} aria-hidden /> Preview
+              <Icon name="external" className="size-[13px]" /> Preview
               <span className="sr-only"> (opens in a new tab)</span>
             </a>
           ) : null}

@@ -2,7 +2,6 @@
 // official Apple taxonomy, in order (the first is primary). Capsomer's sortable list draws the rows, their reordering
 // and Add and Remove. A row with no category yet is kept here and dropped when the form is saved.
 import { SortableList, useRows } from "capsomer/react/sortable-list";
-import { inputCx } from "./ui";
 import { APPLE_CATEGORIES, APPLE_TOP_CATEGORIES } from "~/lib/apple-categories";
 import type { PodcastCategory } from "~/lib/types";
 
@@ -44,7 +43,7 @@ export function CategoriesEditor({
                 aria-label={`Category ${i + 1}`}
                 value={slot.category}
                 onChange={(e) => update(i, { category: e.target.value })}
-                className={inputCx}
+                className="cap-input"
               >
                 <option value="">none</option>
                 {APPLE_TOP_CATEGORIES.map((c) => (
@@ -63,7 +62,7 @@ export function CategoriesEditor({
                     ...(e.target.value ? { subcategory: e.target.value } : {}),
                   })
                 }
-                className={`${inputCx} disabled:opacity-50`}
+                className="cap-input disabled:opacity-50"
               >
                 <option value="">{subs.length ? "no subcategory" : "n/a"}</option>
                 {subs.map((s) => (

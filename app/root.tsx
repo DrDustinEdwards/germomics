@@ -8,7 +8,7 @@ import {
   useLocation,
   useMatches,
 } from "react-router";
-import { lazy, Suspense, useContext, useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { useHydrated } from "capsomer/react/hooks";
 import { iconLinks } from "@drdustinedwards/site-helpers/icons";
 
@@ -25,16 +25,14 @@ import {
   HYDRATED_EVENT,
   HYDRATE_ON_INTENT_ID,
   STREAM_BUFFER_SCRIPT,
+  isServer,
+  pageDeferred,
 } from "~/lib/hydration";
 import { routeHydrates } from "@dustinedwards/site-runtime/deferred-scripts";
 import { PRELOADS } from "~/lib/preloads";
 import { socialLinks } from "~/lib/seo";
 import { NO_PREFETCH } from "~/lib/site";
-import { PlayerProvider, usePlayer } from "capsomer/react/player-context";
-import { Header } from "~/components/chrome/Header";
 import { LinkPrefetch } from "capsomer/react/link";
-import { routerLink } from "~/components/chrome/router-link";
-import { Footer } from "~/components/chrome/Footer";
 import { ErrorPage, errorTitle } from "capsomer/react/error-page";
 import errorPageCss from "./error-page.css?url";
 import { markup } from "capsomer/behavior/trusted-html";
@@ -103,17 +101,6 @@ export async function loader({ context }: Route.LoaderArgs) {
   };
 }
 
-const isServer = typeof document === "undefined";
-
-// The lock screen's picture when an episode has none of its own (Media Session).
-const SHOW_ARTWORK = [
-  { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
-  { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
-];
-// In the browser the page hydrates once, so whether it was deferred is fixed then and holds for every client-side
-// navigation after it: the hydration scripts below stay one tree, never remounted.
-let clientDeferred: boolean | undefined;
-
 /**
  * React Router's hydration scripts. A route that hydrates on load gets them as usual. Any other page gets them inside
  * a <noscript>, which a browser running script keeps as inert text (React renders a <link> there in place rather than
@@ -121,21 +108,6 @@ let clientDeferred: boolean | undefined;
  * (app/site/hydrate.ts). Once such a page has hydrated, ScrollRestoration mounts, so client-side navigations restore
  * and reset the scroll as on any other page.
  */
-// The dock, with its menus and its bottom sheet, loads only once an episode is loaded: no page needs it before then,
-// and the admin, which shares this module, never does.
-const PlayerDock = lazy(() =>
-  import("capsomer/react/player").then(({ PlayerDock }) => ({ default: PlayerDock })),
-);
-
-function Dock() {
-  if (!usePlayer().current) return null;
-  return (
-    <Suspense fallback={null}>
-      <PlayerDock renderLink={routerLink} />
-    </Suspense>
-  );
-}
-
 function HydrationScripts({ deferred }: { deferred: boolean }) {
   // False on the server and while hydrating, true once hydrated.
   const hydrated = useHydrated();
@@ -158,9 +130,11 @@ function HydrationScripts({ deferred }: { deferred: boolean }) {
 export function Layout({ children }: { children: React.ReactNode }) {
   const nonce = useContext(UNSAFE_FrameworkContext)?.nonce;
   const hydrates = routeHydrates(useMatches());
-  const deferred = isServer ? !hydrates : (clientDeferred ??= !hydrates);
+  const deferred = pageDeferred(hydrates);
+  // The public pages take germomics' palette from Capsomer's site entry; the admin keeps Capsomer's own look.
+  const site = useLocation().pathname.startsWith("/admin") ? undefined : "germomics";
   return (
-    <html lang="en">
+    <html lang="en" data-cap-site={site}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -201,33 +175,8 @@ export default function App() {
     document.documentElement.setAttribute(HYDRATED_ATTRIBUTE, "");
     document.dispatchEvent(new Event(HYDRATED_EVENT));
   }, []);
-  // The admin brings its own shell (AdminShell), so it gets none of the public site's chrome.
-  const isAdmin = useLocation().pathname.startsWith("/admin");
-  // Whether this page's React runs from load: on the server the route says; in the browser the first page decides, as
-  // for the hydration scripts (Layout), so the header keeps one form across client-side navigation.
-  const hydratesNow = routeHydrates(useMatches());
-  if (isAdmin) return <Outlet />;
-  // PlayerProvider lives at the root, above the Outlet, so the single <audio> element and the
-  // queue survive every client-side navigation (CLAUDE.md §04 — uninterrupted playback).
-  return (
-    <PlayerProvider
-      storagePrefix="germomics-"
-      artist="Germomics"
-      album="Germomics"
-      noun="episode"
-      artwork={SHOW_ARTWORK}
-    >
-      {/* The header carries the skip link. It runs as React only on a page that hydrates on load. */}
-      <Header hydrate={isServer ? hydratesNow : !clientDeferred} />
-      <main id="main" className="mx-auto min-h-[60vh] max-w-5xl px-4 pb-12 pt-6">
-        <Outlet />
-      </main>
-      <Footer />
-      {/* The dock measures its own height into --cap-player-dock-h, which Capsomer's player.css
-          reserves under the body and the scroll, so the footer and an anchor always clear it. */}
-      <Dock />
-    </PlayerProvider>
-  );
+  // The public chrome (header, footer, player) is the public layout's (routes/_site.tsx), so the admin never loads it.
+  return <Outlet />;
 }
 
 // Capsomer's error page: the failed Empty in plain words for 404, 410 and server errors, never indexed, the stack only

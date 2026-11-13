@@ -1,6 +1,6 @@
 // Admin -> Subscribers: list (email, consent, status) + CSV export. Behind the admin gate
 // (admin.tsx middleware). The newsletter stores email + consent timestamp + unsubscribe token only.
-import { Mail, Download } from "lucide-react";
+import { Icon } from "capsomer/react/icons";
 import { desc } from "drizzle-orm";
 import { csvResponse, toCsv } from "@dustinedwards/site-runtime/csv";
 import type { Route } from "./+types/admin.subscribers._index";
@@ -8,7 +8,7 @@ import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getDb } from "~/db/index.server";
 import { subscribers } from "~/db/schema";
 import { formatDate } from "capsomer/behavior/time";
-import { EmptyState } from "~/components/admin/ui";
+import { Empty } from "capsomer/react/empty";
 import { useSnippet } from "~/lib/content";
 
 /** Pending until confirmed from the mailed link (double opt-in, app/lib/newsletter.server.ts); only active ones get mail. */
@@ -46,7 +46,7 @@ export default function SubscribersAdmin({ loaderData }: Route.ComponentProps) {
   return (
     <div>
       <h1 className="flex items-center gap-2 font-display text-2xl font-semibold">
-        <Mail size={22} aria-hidden /> Subscribers
+        <Icon name="mail" className="size-[22px]" /> Subscribers
       </h1>
       <p className="mt-1 flex items-center gap-3 text-sm text-muted">
         <span>
@@ -56,13 +56,13 @@ export default function SubscribersAdmin({ loaderData }: Route.ComponentProps) {
           href="/admin/subscribers?export=csv"
           className="inline-flex items-center gap-1 font-mono text-xs text-accent hover:underline"
         >
-          <Download size={13} aria-hidden /> Export CSV
+          <Icon name="download" className="size-[13px]" /> Export CSV
         </a>
       </p>
 
       {rows.length === 0 ? (
         <div className="mt-6">
-          <EmptyState>{emptySubscribers}</EmptyState>
+          <Empty kind="nothing-yet">{emptySubscribers}</Empty>
         </div>
       ) : (
         <div className="mt-6 overflow-hidden rounded-xl border border-border bg-card">

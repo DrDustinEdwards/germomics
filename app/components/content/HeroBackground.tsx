@@ -2,13 +2,13 @@ import type { CSSProperties } from "react";
 
 // Decorative hero backdrop: a few large, heavily blurred radial-gradient blobs that drift slowly,
 // reading as out-of-focus microbial colonies behind the words. Purely ambient: aria-hidden,
-// pointer-events-none, carries no information. Token-driven (the gradients use var(--brand) /
-// var(--accent)) so it flips with data-theme. In dark mode the brand token is a light lavender, so
+// pointer-events-none, carries no information. Token-driven (the gradients use var(--primary) /
+// var(--accent-text)) so it flips with data-theme. In dark mode the brand token is a light lavender, so
 // the whole group is dimmed to keep it as quiet texture instead of a glow. Reduced motion is handled
 // by the global app.css rule (animation: none), which holds every blob still.
 
 type Blob = {
-  // Token color expression for the radial center, e.g. var(--brand) / var(--accent).
+  // Token color expression for the radial center, e.g. var(--primary) / var(--accent-text).
   color: string;
   // Per-blob center opacity (the tint level). The group is dimmed again in dark mode below.
   op: number;
@@ -35,7 +35,7 @@ type Blob = {
 // (never the text). Durations 26s to 38s with varied negative delays so the drift never syncs.
 const BLOBS: Blob[] = [
   {
-    color: "var(--brand)",
+    color: "var(--primary)",
     op: 0.55,
     top: "-40%",
     left: "2%",
@@ -47,7 +47,7 @@ const BLOBS: Blob[] = [
     delay: "-4s",
   },
   {
-    color: "var(--brand)",
+    color: "var(--primary)",
     op: 0.5,
     top: "-44%",
     left: "48%",
@@ -59,7 +59,7 @@ const BLOBS: Blob[] = [
     delay: "-12s",
   },
   {
-    color: "var(--brand)",
+    color: "var(--primary)",
     op: 0.42,
     top: "-28%",
     left: "26%",
@@ -71,7 +71,7 @@ const BLOBS: Blob[] = [
     delay: "-8s",
   },
   {
-    color: "var(--accent)",
+    color: "var(--accent-text)",
     op: 0.38,
     top: "-36%",
     left: "70%",

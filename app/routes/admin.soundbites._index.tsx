@@ -2,13 +2,16 @@
 // gate. Clips render a public clip player on the episode page and emit <podcast:soundbite> in the
 // feed. Drizzle via soundbites.server.
 import { useFetcher } from "react-router";
-import { Scissors, Trash2 } from "lucide-react";
+import { Icon } from "capsomer/react/icons";
 import type { Route } from "./+types/admin.soundbites._index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { listEpisodes } from "~/lib/posts.server";
 import { listSoundbites, upsertSoundbite, deleteSoundbite } from "~/lib/soundbites.server";
 import { timecode } from "capsomer/behavior/time";
-import { Card, Field, Button, inputCx, EmptyState } from "~/components/admin/ui";
+import { Panel } from "capsomer/react/panel";
+import { Field } from "capsomer/react/field";
+import { Button } from "capsomer/react/button";
+import { Empty } from "capsomer/react/empty";
 import { useSnippet } from "~/lib/content";
 import { readForm } from "@dustinedwards/site-runtime/body";
 import { ADMIN_FORM } from "~/lib/body.server";
@@ -53,7 +56,7 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
   return (
     <div>
       <h1 className="flex items-center gap-2 font-display text-2xl font-semibold">
-        <Scissors size={22} aria-hidden /> Soundbites
+        <Icon name="cut" className="size-[22px]" /> Soundbites
       </h1>
       <p className="mt-1 text-sm text-muted">
         Short clips of an episode. They power the episode clip player and the feed soundbite tags.
@@ -62,7 +65,7 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_22rem]">
         <div>
           {clips.length === 0 ? (
-            <EmptyState>{emptySoundbites}</EmptyState>
+            <Empty kind="nothing-yet">{emptySoundbites}</Empty>
           ) : (
             <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
               {clips.map((c) => (
@@ -91,7 +94,7 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
                       aria-label="Delete soundbite"
                       className="grid h-7 w-7 place-items-center rounded text-muted hover:text-brand"
                     >
-                      <Trash2 size={14} aria-hidden />
+                      <Icon name="trash" className="size-3.5" />
                     </button>
                   </del.Form>
                 </li>
@@ -101,11 +104,11 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
         </div>
 
         <aside>
-          <Card title="New soundbite" icon={<Scissors size={15} aria-hidden />}>
+          <Panel title="New soundbite">
             <save.Form method="post" className="space-y-4">
               <Field label="Episode" required>
-                {({ id }) => (
-                  <select id={id} name="postId" className={inputCx} required defaultValue="">
+                {(control) => (
+                  <select {...control} name="postId" className="cap-input" required defaultValue="">
                     <option value="" disabled>
                       Choose an episode
                     </option>
@@ -119,36 +122,36 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Start (seconds)" required>
-                  {({ id }) => (
+                  {(control) => (
                     <input
-                      id={id}
+                      {...control}
                       name="startSeconds"
                       type="number"
                       min={0}
-                      className={inputCx}
+                      className="cap-input"
                       required
                     />
                   )}
                 </Field>
                 <Field label="Duration (seconds)" required>
-                  {({ id }) => (
+                  {(control) => (
                     <input
-                      id={id}
+                      {...control}
                       name="durationSeconds"
                       type="number"
                       min={1}
                       defaultValue={30}
-                      className={inputCx}
+                      className="cap-input"
                       required
                     />
                   )}
                 </Field>
               </div>
-              <Field label="Title" hint="Optional. Shown on the clip and in the feed.">
-                {({ id }) => <input id={id} name="title" className={inputCx} />}
+              <Field label="Title" help="Optional. Shown on the clip and in the feed.">
+                {(control) => <input {...control} name="title" className="cap-input" />}
               </Field>
               <div className="flex items-center gap-3">
-                <Button type="submit" variant="primary" disabled={save.state !== "idle"}>
+                <Button type="submit" variant="primary" pending={save.state !== "idle"}>
                   Create
                 </Button>
                 {save.data?.ok ? (
@@ -158,7 +161,7 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
                 ) : null}
               </div>
             </save.Form>
-          </Card>
+          </Panel>
         </aside>
       </div>
     </div>

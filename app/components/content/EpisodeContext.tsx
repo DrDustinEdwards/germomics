@@ -13,7 +13,7 @@ function DataPreview({ preview }: { preview: DataPreviewView }) {
         </p>
       </figcaption>
       <div
-        className="mt-3 [--enarratio-series-1:var(--brand)] forced-colors:[--enarratio-series-1:CanvasText] [&_svg]:block [&_svg]:h-auto [&_svg]:w-full"
+        className="mt-3 [--enarratio-series-1:var(--primary)] forced-colors:[--enarratio-series-1:CanvasText] [&_svg]:block [&_svg]:h-auto [&_svg]:w-full"
         aria-hidden="true"
         dangerouslySetInnerHTML={markup(preview.svg)}
       />
