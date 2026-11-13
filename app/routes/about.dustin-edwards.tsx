@@ -3,7 +3,7 @@
 // prose only, no institutional branding. ?preview shows the draft to a signed-in admin.
 import { htmlToText } from "@drdustinedwards/site-helpers/text";
 import { Link } from "capsomer/react/link";
-import { ExternalLink } from "lucide-react";
+import { Icon, iconExternal } from "capsomer/react/icons";
 import type { Route } from "./+types/about.dustin-edwards";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { loadPage, isPreviewing } from "~/lib/content.server";
@@ -66,7 +66,7 @@ export default function AuthorBio({ loaderData }: Route.ComponentProps) {
           {LINKS.map((l) => (
             <li key={l.url}>
               <a href={l.url} className="gm-bio-link">
-                <ExternalLink size={13} aria-hidden /> {l.label}
+                <Icon d={iconExternal} /> {l.label}
               </a>
             </li>
           ))}

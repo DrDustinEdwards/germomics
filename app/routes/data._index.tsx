@@ -1,5 +1,5 @@
 import { Link } from "capsomer/react/link";
-import { Activity, Dna } from "lucide-react";
+import { Icon, iconActivity, iconDna } from "capsomer/react/icons";
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/data._index";
 import { datasetSummary, listDatasets } from "~/lib/datasets.server";
@@ -37,11 +37,7 @@ export default function DataHub({ loaderData }: Route.ComponentProps) {
         {loaderData.datasets.map((d) => (
           <Link key={d.slug} to={`/data/${d.slug}`} className="gm-index-card">
             <div className="gm-index-kind">
-              {d.kind === "virus" ? (
-                <Dna size={13} aria-hidden />
-              ) : (
-                <Activity size={13} aria-hidden />
-              )}
+              <Icon d={d.kind === "virus" ? iconDna : iconActivity} />
               {d.kind}
             </div>
             <h2 className="gm-index-card-title">{d.title}</h2>

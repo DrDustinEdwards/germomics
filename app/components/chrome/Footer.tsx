@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { useRouteLoaderData } from "react-router";
-import { Rss, Lock } from "lucide-react";
 import { Link } from "capsomer/react/link";
-import { Icon, markFacebook, markInstagram, markLinkedin, markX } from "capsomer/react/icons";
+import {
+  Icon,
+  iconLock,
+  iconRss,
+  markFacebook,
+  markInstagram,
+  markLinkedin,
+  markX,
+} from "capsomer/react/icons";
 import { Wordmark } from "../brand/Wordmark";
 import { ExternalCue } from "../ExternalCue";
 import { useSnippet } from "~/lib/content";
@@ -14,7 +21,8 @@ import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 // the root loader (settings social.* + show_config.subscribe_links), so footer and schema agree.
 // Reuses Dustin's brand Wordmark. This consumes snippet:footer.tagline.
 
-const SOCIAL: Record<string, { d: string; fill: boolean }> = {
+// The social marks the footer draws, by the platform socialLinks (lib/seo.ts) names.
+const SOCIAL_MARKS: Record<string, { d: string; fill: boolean }> = {
   facebook: markFacebook,
   instagram: markInstagram,
   linkedin: markLinkedin,
@@ -57,7 +65,7 @@ export function Footer() {
       {/* Base is 3 columns so Listen/Explore/About sit side by side on phones; sm/lg layout is unchanged.
           The brand block spans all 3 at base to stay full width above them. */}
       <div className="gm-footer-grid">
-        {/* Brand block. max-sm:order-last flows it below the three nav columns on phones only; DOM order
+        {/* Brand block. gm-footer-brand flows it below the three nav columns on phones only; DOM order
             is unchanged, so at sm it is still the full-width top row and at lg still the first/left column. */}
         <div className="gm-footer-brand">
           {/* Rectangular germomics lockup as a modest mark (~80px tall) above the tagline. */}
@@ -70,8 +78,8 @@ export function Footer() {
               {socials.map((s) => (
                 <li key={s.platform}>
                   <a href={s.url} rel="me" aria-label={s.label} className="gm-footer-social">
-                    {SOCIAL[s.platform] ? (
-                      <Icon {...SOCIAL[s.platform]} className="gm-footer-social-icon" />
+                    {SOCIAL_MARKS[s.platform] ? (
+                      <Icon {...SOCIAL_MARKS[s.platform]} className="gm-footer-social-icon" />
                     ) : null}
                   </a>
                 </li>
@@ -104,7 +112,7 @@ export function Footer() {
                 href="/feed/podcast/"
                 className={"gm-footer-link-icon gm-footer-link gm-footer-tap"}
               >
-                <Rss size={14} aria-hidden /> Podcast RSS
+                <Icon d={iconRss} /> Podcast RSS
               </a>
             </li>
             <li>
@@ -162,7 +170,7 @@ export function Footer() {
             Writing feed
           </a>
           <Link to="/admin" rel="nofollow" prefetch="none" className="gm-footer-top">
-            <Lock size={14} aria-hidden /> Admin
+            <Icon d={iconLock} /> Admin
           </Link>
         </div>
       </div>

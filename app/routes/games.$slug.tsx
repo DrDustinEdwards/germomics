@@ -1,6 +1,6 @@
 import { lazy, useState } from "react";
 import { useFetcher } from "react-router";
-import { Trophy } from "lucide-react";
+import { Icon, iconTrophy } from "capsomer/react/icons";
 import { pageHead } from "~/lib/seo";
 import { sectionPageTrail } from "~/lib/trails";
 import { SectionTrail } from "~/components/content/SectionTrail";
@@ -110,7 +110,7 @@ export default function GamePage({ loaderData }: Route.ComponentProps) {
 
       <section className="gm-game-scores">
         <h2 className="gm-game-scores-title">
-          <Trophy size={18} className="gm-brand" aria-hidden /> Leaderboard
+          <Icon d={iconTrophy} className="gm-brand" /> Leaderboard
         </h2>
         <Leaderboard entries={leaderboard} empty={emptyScores} format={(score) => String(score)} />
       </section>

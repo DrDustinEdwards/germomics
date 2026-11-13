@@ -1,5 +1,5 @@
 import { Link } from "capsomer/react/link";
-import { Headphones } from "lucide-react";
+import { Icon, iconHeadphones } from "capsomer/react/icons";
 import type { Route } from "./+types/_index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getSettings, getSnippets } from "~/lib/context.server";
@@ -127,7 +127,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               <div className="gm-latest-text">
                 <div className="gm-latest-meta">
                   <span className="gm-latest-kind">
-                    <Headphones size={12} aria-hidden /> Latest episode
+                    <Icon d={iconHeadphones} /> Latest episode
                   </span>
                   {featured.publishedAt ? <span>{formatDate(featured.publishedAt)}</span> : null}
                   {featured.audioDuration ? (
