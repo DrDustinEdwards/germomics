@@ -20,7 +20,6 @@ import { readForm } from "@dustinedwards/site-runtime/body";
 import { ADMIN_FORM } from "~/lib/body.server";
 import { parseJsonField, type FieldSpec } from "capsomer/behavior/schema-form";
 import { SchemaFields } from "capsomer/react/schema-form";
-import "capsomer/field.css";
 import "capsomer/schema-form.css";
 
 export async function loader({ context }: Route.LoaderArgs) {

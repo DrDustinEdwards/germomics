@@ -18,7 +18,6 @@ import { ADMIN_FORM } from "~/lib/body.server";
 import { confirmSubmit } from "capsomer/behavior/confirm-dialog";
 import { TextField } from "capsomer/react/field";
 import { RepeaterField } from "capsomer/react/repeater-field";
-import "capsomer/field.css";
 import "capsomer/repeater-field.css";
 
 export async function loader({ context }: Route.LoaderArgs) {

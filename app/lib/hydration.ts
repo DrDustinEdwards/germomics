@@ -22,3 +22,14 @@ export const STREAM_BUFFER = "__germomicsStream";
  * them to the real controller. The text is fixed, so the page's nonce covers it like the theme script.
  */
 export const STREAM_BUFFER_SCRIPT = `window.${STREAM_BUFFER}={chunks:[],closed:false};window.__reactRouterContext={streamController:{enqueue:function(c){window.${STREAM_BUFFER}.chunks.push(c)},close:function(){window.${STREAM_BUFFER}.closed=true}}};`;
+
+export const isServer = typeof document === "undefined";
+
+// In the browser the page hydrates once, so whether it was deferred is fixed then and holds for every client-side
+// navigation after it: the hydration scripts (root.tsx) stay one tree, never remounted, and the header keeps one form.
+let clientDeferred: boolean | undefined;
+
+/** Whether this page's React waits for a press: on the server the route says; in the browser the first page decides. */
+export function pageDeferred(hydrates: boolean): boolean {
+  return isServer ? !hydrates : (clientDeferred ??= !hydrates);
+}
