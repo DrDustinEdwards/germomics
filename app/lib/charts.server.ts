@@ -1,22 +1,12 @@
 // The /data charts, drawn on the server by Enarratio in Capsomer's chart frame (nothing reaches the shared client
 // chunk, hard rule 4). Their look is capsomer/enarratio.css with germomics' tokens mapped in (app/charts.css); the
 // charts island (app/islands/charts.ts) enhances them and swaps in the narrow drawing on a phone.
-import { frameHtml } from "capsomer/behavior/chart-frame";
+import { frameHtml, NARROW_WIDTH, narrowRedraw } from "capsomer/behavior/chart-frame";
 import { type LineChartOptions, lineChart } from "enarratio/lite/line";
 import { type DotMapOptions, dotMap, type GeoFeatureCollection } from "enarratio/map";
 import type { DataMap } from "~/lib/datasets.server";
 import type { Timeline } from "~/lib/datasets.server";
 import streets from "~/lib/data/soho-streets.json";
-
-/**
- * The phone drawing's width: a 320 px screen leaves the frame 262 px. An SVG never grows past its width, so the phone
- * drawing shows at exactly this size in every phone's column, its text near 12 px, and the page can reserve its height
- * (D5). A full redraw spec (`{ chart: "line", options }`) would fit every width, but it travels as JSON and would lose
- * formatX, which names each point by its label ("Autumn 1918") in the hover details.
- */
-const NARROW_WIDTH = 262;
-/** 30rem at the default 16 px rem: a drawing this wide or wider keeps that width in a narrower column and scrolls (A13). */
-const WIDE_PX = 480;
 
 /** The `.enarratio-frame` (the drawing alone) of a chart's markup, what enarratio/redraw swaps in. */
 function drawingOf(html: string): string {
@@ -32,17 +22,6 @@ function viewBox(markup: string): { width: number; height: number } {
   const box = /<svg\b[^>]*?\sviewBox="[\d.-]+ [\d.-]+ ([\d.]+) ([\d.]+)"/.exec(markup);
   if (!box) throw new Error("charts: no viewBox in Enarratio's drawing");
   return { width: Number(box[1]), height: Number(box[2]) };
-}
-
-/**
- * The height the server's drawing shows at in a phone's column (NARROW_WIDTH): a wide drawing keeps 30rem and scrolls,
- * so it shows H * 480 / W; a narrower one scales to the column. The phone drawing is drawn at this height, so swapping it
- * in does not move the page (D5, Enarratio's narrowChart docs).
- */
-function shownHeight(markup: string): number {
-  const { width, height } = viewBox(markup);
-  const shown = width >= WIDE_PX ? WIDE_PX : Math.min(width, NARROW_WIDTH);
-  return Math.round(((height * shown) / width) * 100) / 100;
 }
 
 export function timelineChart(slug: string, t: Timeline): string {
@@ -65,10 +44,9 @@ export function timelineChart(slug: string, t: Timeline): string {
     formatX: (v: number | Date) => labels.get(Number(v)) ?? String(v),
   } satisfies LineChartOptions<(typeof data)[number]>;
   const wide = lineChart(options);
-  const narrow = drawingOf(
-    lineChart({ ...options, width: NARROW_WIDTH, height: shownHeight(wide) }),
-  );
-  return frameHtml(wide, { redraw: { narrow } });
+  return frameHtml(wide, {
+    redraw: narrowRedraw(wide, (width, fit) => drawingOf(lineChart({ ...options, width, ...fit }))),
+  });
 }
 
 /**
