@@ -37,11 +37,11 @@ const TITLES: Record<Result["status"], string> = {
 
 export default function ConfirmSubscription({ loaderData, actionData }: Route.ComponentProps) {
   const { status, email, token } = actionData ?? loaderData;
-  const who = email ? <strong className="text-ink">{email}</strong> : "this address";
+  const who = email ? <strong className="gm-ink">{email}</strong> : "this address";
   return (
-    <div className="mx-auto max-w-md py-16 text-center">
-      <h1 className="font-display text-2xl font-semibold">{TITLES[status]}</h1>
-      <p className="mt-3 text-muted">
+    <div className="gm-notice">
+      <h1 className="gm-notice-title">{TITLES[status]}</h1>
+      <p className="gm-notice-text">
         {status === "confirm" && <>Send the Germomics newsletter to {who}?</>}
         {status === "done" && (
           <>
@@ -54,22 +54,19 @@ export default function ConfirmSubscription({ loaderData, actionData }: Route.Co
           "This confirmation link is missing, already used or replaced by a newer one. Sign up again for a new link."}
       </p>
       {status === "confirm" && (
-        <Form method="post" className="mt-6">
+        <Form method="post" className="gm-notice-form">
           <input type="hidden" name="token" value={token} />
-          <button
-            type="submit"
-            className="rounded-lg bg-brand px-4 py-2 font-display text-sm font-medium text-bg hover:bg-brand-strong"
-          >
+          <button type="submit" className="gm-notice-button">
             Confirm subscription
           </button>
         </Form>
       )}
-      <div className="mt-6 flex justify-center gap-4 font-mono text-sm">
-        <Link to="/" className="text-accent hover:underline">
+      <div className="gm-notice-links">
+        <Link to="/" className="gm-link">
           Home
         </Link>
         {status === "expired" || status === "invalid" ? (
-          <Link to="/subscribe" className="text-accent hover:underline">
+          <Link to="/subscribe" className="gm-link">
             Sign up again
           </Link>
         ) : null}

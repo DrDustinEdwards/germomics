@@ -67,25 +67,25 @@ export async function action({ request, context }: Route.ActionArgs) {
 export default function Unsubscribe({ loaderData, actionData }: Route.ComponentProps) {
   const { status, email, token } = actionData ?? loaderData;
   return (
-    <div className="mx-auto max-w-md py-16 text-center">
-      <h1 className="font-display text-2xl font-semibold">
+    <div className="gm-notice">
+      <h1 className="gm-notice-title">
         {status === "invalid"
           ? "Link not recognized"
           : status === "confirm"
             ? "Unsubscribe?"
             : "Unsubscribed"}
       </h1>
-      <p className="mt-3 text-muted">
+      <p className="gm-notice-text">
         {status === "confirm" && (
           <>
             Stop sending the Germomics newsletter to{" "}
-            {email ? <strong className="text-ink">{email}</strong> : "this address"}?
+            {email ? <strong className="gm-ink">{email}</strong> : "this address"}?
           </>
         )}
         {status === "done" && (
           <>
-            {email ? <strong className="text-ink">{email}</strong> : "You"} has been removed from
-            the Germomics newsletter. Sorry to see you go.
+            {email ? <strong className="gm-ink">{email}</strong> : "You"} has been removed from the
+            Germomics newsletter. Sorry to see you go.
           </>
         )}
         {status === "already" && "You’re already unsubscribed. No further emails will be sent."}
@@ -93,21 +93,18 @@ export default function Unsubscribe({ loaderData, actionData }: Route.ComponentP
           "This unsubscribe link is missing or invalid. If you keep receiving emails, reply to one and we’ll remove you."}
       </p>
       {status === "confirm" && (
-        <Form method="post" className="mt-6">
+        <Form method="post" className="gm-notice-form">
           <input type="hidden" name="token" value={token} />
-          <button
-            type="submit"
-            className="rounded-lg bg-brand px-4 py-2 font-display text-sm font-medium text-bg hover:bg-brand-strong"
-          >
+          <button type="submit" className="gm-notice-button">
             Unsubscribe
           </button>
         </Form>
       )}
-      <div className="mt-6 flex justify-center gap-4 font-mono text-sm">
-        <Link to="/" className="text-accent hover:underline">
+      <div className="gm-notice-links">
+        <Link to="/" className="gm-link">
           Home
         </Link>
-        <Link to="/subscribe" className="text-accent hover:underline">
+        <Link to="/subscribe" className="gm-link">
           Re-subscribe
         </Link>
       </div>

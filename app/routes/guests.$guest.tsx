@@ -62,23 +62,23 @@ export default function GuestPage({ loaderData }: Route.ComponentProps) {
   return (
     <div>
       <QueueSeeder tracks={tracks} />
-      <p className="font-mono text-xs uppercase tracking-wide text-accent">Guest</p>
-      <div className="mb-6 mt-2 flex items-start gap-4">
+      <p className="gm-tag-eyebrow">Guest</p>
+      <div className="gm-guest-head">
         {photo ? (
           <Picture
             attrs={imageOrPlain(imageFor(images, "portrait", photo), photo)}
             alt={photoAlt ?? name}
-            className="h-16 w-16 rounded-full border border-border object-cover"
+            className="gm-guest-photo"
           />
         ) : null}
         <div>
-          <h1 className="font-display text-3xl font-semibold">{name}</h1>
-          {role ? <p className="font-mono text-xs text-muted">{role}</p> : null}
-          {bio ? <p className="mt-2 max-w-2xl text-muted">{bio}</p> : null}
+          <h1 className="gm-page-title">{name}</h1>
+          {role ? <p className="gm-guest-role">{role}</p> : null}
+          {bio ? <p className="gm-index-lede">{bio}</p> : null}
           {links.length ? (
-            <div className="mt-2 flex flex-wrap gap-3 font-mono text-xs">
+            <div className="gm-guest-page-links">
               {links.map((l) => (
-                <a key={l.url} href={l.url} className="text-accent hover:underline">
+                <a key={l.url} href={l.url} className="gm-link">
                   {l.label || "link"}
                 </a>
               ))}
@@ -86,11 +86,11 @@ export default function GuestPage({ loaderData }: Route.ComponentProps) {
           ) : null}
         </div>
       </div>
-      <div className="grid gap-3">
+      <div className="gm-list">
         {episodes.map((post) => (
           <PostCard key={post.id} post={post} queue={tracks} heading="h2" />
         ))}
-        {episodes.length === 0 ? <p className="text-muted">No episodes with this guest.</p> : null}
+        {episodes.length === 0 ? <p className="gm-muted">No episodes with this guest.</p> : null}
       </div>
     </div>
   );

@@ -154,7 +154,7 @@ export function PostDetail({ data }: { data: DetailData }) {
               {(g.links ?? []).length ? (
                 <div className="gm-guest-links">
                   {(g.links ?? []).map((l) => (
-                    <a key={l.url} href={l.url} className="gm-guest-link">
+                    <a key={l.url} href={l.url} className="gm-link">
                       {l.label || "link"}
                     </a>
                   ))}

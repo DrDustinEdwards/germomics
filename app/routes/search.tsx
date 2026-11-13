@@ -32,7 +32,7 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
   const { q, posts, pages, tracks } = loaderData;
   const total = posts.length + pages.length;
   return (
-    <div className="gm-search">
+    <div className="gm-column">
       <QueueSeeder tracks={tracks} />
       <h1 className="gm-page-title">Search</h1>
 

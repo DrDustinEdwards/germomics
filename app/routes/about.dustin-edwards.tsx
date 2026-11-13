@@ -47,28 +47,25 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export default function AuthorBio({ loaderData }: Route.ComponentProps) {
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="gm-narrow">
       <SectionTrail trail={authorTrail} />
 
-      <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent">Author</p>
-      <h1 className="mt-3 font-display text-4xl font-semibold leading-tight">
+      <p className="gm-eyebrow">Author</p>
+      <h1 className="gm-eyebrow-title">
         {AUTHOR.honorific} {AUTHOR.name}
       </h1>
-      <p className="mt-2 font-mono text-sm text-muted">{AUTHOR.jobTitle}</p>
+      <p className="gm-bio-meta">{AUTHOR.jobTitle}</p>
 
-      <div data-context="prose" className="mt-6">
+      <div data-context="prose" className="gm-bio-body">
         <BodyRenderer html={loaderData.bioHtml} />
       </div>
 
-      <section className="mt-8">
-        <h2 className="mb-2 font-display text-sm font-semibold">Find Dr. Edwards online</h2>
-        <ul className="flex flex-wrap gap-3 font-mono text-sm">
+      <section className="gm-bio-section">
+        <h2 className="gm-bio-section-title">Find Dr. Edwards online</h2>
+        <ul className="gm-bio-links">
           {LINKS.map((l) => (
             <li key={l.url}>
-              <a
-                href={l.url}
-                className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 hover:border-accent hover:text-accent"
-              >
+              <a href={l.url} className="gm-bio-link">
                 <ExternalLink size={13} aria-hidden /> {l.label}
               </a>
             </li>
@@ -76,8 +73,8 @@ export default function AuthorBio({ loaderData }: Route.ComponentProps) {
         </ul>
       </section>
 
-      <p className="mt-8">
-        <Link to="/episodes" className="font-mono text-sm text-accent hover:underline">
+      <p className="gm-bio-section">
+        <Link to="/episodes" className="gm-bio-back">
           Listen to Germomics →
         </Link>
       </p>
