@@ -9,7 +9,6 @@ import { getSettings } from "~/lib/context.server";
 import { loadFilledPage, setting } from "~/lib/content.server";
 import { SITE_ADDRESS_LINE } from "~/lib/site";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
-import "~/prose.css";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   return pageHead({
@@ -29,8 +28,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export default function Contact({ loaderData }: Route.ComponentProps) {
   return (
-    <article data-context="prose" className="mx-auto max-w-2xl">
-      <h1 className="font-display text-4xl font-semibold leading-tight">{loaderData.title}</h1>
+    <article data-context="prose" className="gm-narrow">
+      <h1 className="gm-page-title-lg">{loaderData.title}</h1>
       <BodyRenderer html={loaderData.html} page />
     </article>
   );

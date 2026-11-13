@@ -102,7 +102,7 @@ export function UploadDropzone({
             ref={inputRef}
             type="file"
             accept={accept}
-            className="sr-only"
+            className="cap-sr-only"
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) handle(file);

@@ -44,35 +44,27 @@ export function Footer() {
     ["/accessibility", "Accessibility"],
   ];
   const [year] = useState(() => new Date().getFullYear());
-  const link = "text-muted hover:text-ink";
-  // Below sm the three lists go 3-up; give each link a 44px tappable row there. Inert at sm+.
-  const tap = "max-sm:flex max-sm:min-h-11 max-sm:items-center";
 
   return (
-    <footer className="border-t border-border bg-surface">
+    <footer className="gm-footer">
       {/* Base is 3 columns so Listen/Explore/About sit side by side on phones; sm/lg layout is unchanged.
           The brand block spans all 3 at base to stay full width above them. */}
-      <div className="mx-auto grid max-w-5xl grid-cols-3 gap-x-3 gap-y-8 px-4 py-12 sm:grid-cols-2 sm:gap-x-8 lg:grid-cols-4">
+      <div className="gm-footer-grid">
         {/* Brand block. max-sm:order-last flows it below the three nav columns on phones only; DOM order
             is unchanged, so at sm it is still the full-width top row and at lg still the first/left column. */}
-        <div className="col-span-3 max-sm:order-last sm:col-span-2 lg:col-span-1">
+        <div className="gm-footer-brand">
           {/* Rectangular germomics lockup as a modest mark (~80px tall) above the tagline. */}
-          <Link to="/" aria-label="Germomics home" className="inline-flex">
-            <Wordmark className="h-20 w-auto" />
+          <Link to="/" aria-label="Germomics home" className="gm-footer-home">
+            <Wordmark className="gm-footer-wordmark" />
           </Link>
-          <p className="mt-3 max-w-xs font-mono text-xs leading-relaxed text-muted">{tagline}</p>
+          <p className="gm-footer-tagline">{tagline}</p>
           {socials.length ? (
-            <ul className="mt-4 flex items-center gap-3">
+            <ul className="gm-footer-socials">
               {socials.map((s) => (
                 <li key={s.platform}>
-                  <a
-                    href={s.url}
-                    rel="me"
-                    aria-label={s.label}
-                    className="grid h-9 w-9 place-items-center rounded-full border border-border text-muted hover:border-accent hover:text-accent"
-                  >
+                  <a href={s.url} rel="me" aria-label={s.label} className="gm-footer-social">
                     {s.platform in SOCIAL ? (
-                      <Icon name={s.platform as SocialName} className="[--icon-size:1rem]" />
+                      <Icon name={s.platform as SocialName} className="gm-footer-social-icon" />
                     ) : null}
                   </a>
                 </li>
@@ -83,16 +75,16 @@ export function Footer() {
 
         {/* Listen */}
         <nav aria-labelledby="footer-listen">
-          <h2 id="footer-listen" className="font-display text-sm font-semibold text-ink">
+          <h2 id="footer-listen" className="gm-footer-title">
             Listen
           </h2>
-          <ul className="mt-3 space-y-2 max-sm:space-y-0 text-sm">
+          <ul className="gm-footer-list">
             {PRIMARY_KEYS.map((k) =>
               subscribeLinks[k] ? (
                 <li key={k}>
                   <a
                     href={subscribeLinks[k]}
-                    className={`inline-flex items-center gap-1 ${link} ${tap}`}
+                    className={"gm-footer-link-icon gm-footer-link gm-footer-tap"}
                   >
                     {SUBSCRIBE_DESTINATIONS[k].label}
                     <ExternalCue />
@@ -101,12 +93,15 @@ export function Footer() {
               ) : null,
             )}
             <li>
-              <a href="/feed/podcast/" className={`inline-flex items-center gap-1 ${link} ${tap}`}>
+              <a
+                href="/feed/podcast/"
+                className={"gm-footer-link-icon gm-footer-link gm-footer-tap"}
+              >
                 <Rss size={14} aria-hidden /> Podcast RSS
               </a>
             </li>
             <li>
-              <Link to="/subscribe" className={`${link} ${tap}`}>
+              <Link to="/subscribe" className={"gm-footer-link gm-footer-tap"}>
                 More ways to listen →
               </Link>
             </li>
@@ -115,13 +110,13 @@ export function Footer() {
 
         {/* Explore */}
         <nav aria-labelledby="footer-explore">
-          <h2 id="footer-explore" className="font-display text-sm font-semibold text-ink">
+          <h2 id="footer-explore" className="gm-footer-title">
             Explore
           </h2>
-          <ul className="mt-3 space-y-2 max-sm:space-y-0 text-sm">
+          <ul className="gm-footer-list">
             {explore.map(([to, label]) => (
               <li key={to}>
-                <Link to={to} className={`${link} ${tap}`}>
+                <Link to={to} className={"gm-footer-link gm-footer-tap"}>
                   {label}
                 </Link>
               </li>
@@ -131,13 +126,13 @@ export function Footer() {
 
         {/* About */}
         <nav aria-labelledby="footer-about">
-          <h2 id="footer-about" className="font-display text-sm font-semibold text-ink">
+          <h2 id="footer-about" className="gm-footer-title">
             About
           </h2>
-          <ul className="mt-3 space-y-2 max-sm:space-y-0 text-sm">
+          <ul className="gm-footer-list">
             {about.map(([to, label]) => (
               <li key={to}>
-                <Link to={to} className={`${link} ${tap}`}>
+                <Link to={to} className={"gm-footer-link gm-footer-tap"}>
                   {label}
                 </Link>
               </li>
@@ -147,24 +142,19 @@ export function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-border">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-4 font-mono text-xs text-muted">
+      <div className="gm-footer-base">
+        <div className="gm-footer-base-row">
           <span>
             © {year} Germomics and{" "}
-            <a href="https://dustinedwards.info" rel="me" className={link}>
+            <a href="https://dustinedwards.info" rel="me" className="gm-footer-link">
               Dr. Dustin Edwards
             </a>
           </span>
           <span aria-hidden>·</span>
-          <a href="/feed/site.xml" className={link}>
+          <a href="/feed/site.xml" className="gm-footer-link">
             Writing feed
           </a>
-          <Link
-            to="/admin"
-            rel="nofollow"
-            prefetch="none"
-            className="ml-auto inline-flex items-center gap-1 text-muted hover:text-ink"
-          >
+          <Link to="/admin" rel="nofollow" prefetch="none" className="gm-footer-top">
             <Lock size={14} aria-hidden /> Admin
           </Link>
         </div>

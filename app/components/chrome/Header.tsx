@@ -70,10 +70,10 @@ export function Header({ hydrate }: { hydrate: boolean }) {
         href: "/",
         label: "Germomics",
         className: "germomics-logo",
-        mark: <GMark className="h-5 w-auto" />,
+        mark: <GMark className="gm-header-mark" />,
         wordmark: (
           <span>
-            germ<span className="text-brand">omics</span>
+            germ<span className="gm-brand">omics</span>
           </span>
         ),
       }}

@@ -6,25 +6,23 @@ import { markup } from "capsomer/behavior/trusted-html";
 
 function DataPreview({ preview }: { preview: DataPreviewView }) {
   return (
-    <figure id={preview.id} className="rounded-xl border border-border bg-card p-4">
+    <figure id={preview.id} className="gm-context">
       <figcaption>
-        <p className="font-display text-lg font-semibold leading-snug text-ink">
-          {preview.heading}
-        </p>
+        <p className="gm-context-title">{preview.heading}</p>
       </figcaption>
       <div
-        className="mt-3 [--enarratio-series-1:var(--primary)] forced-colors:[--enarratio-series-1:CanvasText] [&_svg]:block [&_svg]:h-auto [&_svg]:w-full"
+        className="gm-context-chart"
         aria-hidden="true"
         dangerouslySetInnerHTML={markup(preview.svg)}
       />
-      <p className="mt-3 text-sm leading-relaxed text-ink">{preview.summary}</p>
-      <p className="mt-3 text-sm">
-        <Link to={preview.href} className="font-display text-accent underline underline-offset-2">
+      <p className="gm-context-summary">{preview.summary}</p>
+      <p className="gm-context-more">
+        <Link to={preview.href} className="gm-context-link">
           {preview.link}
         </Link>
       </p>
-      <p className="mt-2 font-display text-xs leading-relaxed text-muted">
-        <a href={preview.source.href} className="text-accent underline underline-offset-2">
+      <p className="gm-context-source">
+        <a href={preview.source.href} className="gm-context-source-link">
           {preview.source.label}
           <ExternalCue />
         </a>
@@ -37,7 +35,7 @@ function DataPreview({ preview }: { preview: DataPreviewView }) {
 export function EpisodeContext({ context }: { context: EpisodeContextView }) {
   if (!context.preview) return null;
   return (
-    <div className="mb-10">
+    <div className="gm-context-wrap">
       <DataPreview preview={context.preview} />
     </div>
   );

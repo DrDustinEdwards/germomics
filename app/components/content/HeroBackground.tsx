@@ -88,7 +88,7 @@ export function HeroBackground() {
   return (
     <div
       aria-hidden="true"
-      className="hero-blobs pointer-events-none absolute overflow-x-clip"
+      className="gm-hero-blobs"
       style={{
         top: 0,
         bottom: 0,
@@ -103,16 +103,10 @@ export function HeroBackground() {
         right: "calc(50% - 50vw)",
       }}
     >
-      {/* Self-contained: theme-aware group opacity (dimmer in dark) and the shared drift keyframe.
-          Each blob parameterizes the drift with its own --dx/--dy/--s so one keyframe serves all. */}
-      <style>{`.hero-blobs{opacity:0.6}
-:root[data-theme="dark"] .hero-blobs{opacity:0.35}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hero-blobs{opacity:0.35}}
-@keyframes germomics-drift{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(var(--dx,0),var(--dy,0),0) scale(var(--s,1))}}`}</style>
       {BLOBS.map((b, i) => (
         <span
           key={i}
-          className="absolute blur-3xl"
+          className="gm-hero-blob"
           style={
             {
               top: b.top,

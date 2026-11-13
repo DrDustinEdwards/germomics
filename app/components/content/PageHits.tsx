@@ -25,12 +25,12 @@ export function PageHits({
 }) {
   if (!pages.length) return null;
   return (
-    <Tag className={`${className} rounded-xl border border-border bg-surface p-4`}>
-      <p className="mb-2 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">Pages</p>
-      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+    <Tag className={`${className} gm-page-hits`}>
+      <p className="gm-page-hits-label">Pages</p>
+      <ul className="gm-page-hits-list">
         {pages.map((p) => (
           <li key={p.key}>
-            <Link to={PAGE_HREF[p.key] ?? "/"} className="text-accent hover:underline">
+            <Link to={PAGE_HREF[p.key] ?? "/"} className="gm-page-hits-link">
               {p.title}
             </Link>
           </li>

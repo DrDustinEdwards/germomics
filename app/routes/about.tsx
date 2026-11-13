@@ -13,7 +13,6 @@ import { jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { buildOrganizationLd, pageHead } from "~/lib/seo";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { AUTHOR } from "~/lib/about";
-import "~/prose.css";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "About Germomics" }];
@@ -53,49 +52,40 @@ const EXPLORE = [
 export default function About({ loaderData }: Route.ComponentProps) {
   const { title, aboutHtml, bioHtml } = loaderData;
   return (
-    <div className="mx-auto max-w-2xl">
-      <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent">About</p>
-      <h1 className="mt-3 font-display text-4xl font-semibold leading-tight">{title}</h1>
-      <div data-context="prose" className="mt-4">
+    <div className="gm-narrow">
+      <p className="gm-eyebrow">About</p>
+      <h1 className="gm-eyebrow-title">{title}</h1>
+      <div data-context="prose" className="gm-page-body">
         <BodyRenderer html={aboutHtml} />
       </div>
 
-      <section className="mt-10 rounded-2xl border border-border bg-surface p-6">
-        <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
+      <section className="gm-callout">
+        <h2 className="gm-about-host-title">
           <User size={18} aria-hidden /> The author
         </h2>
-        <div data-context="prose" className="mt-2">
+        <div data-context="prose" className="gm-about-host-text">
           <BodyRenderer html={bioHtml} />
         </div>
-        <Link
-          to={`/about/${AUTHOR.slug}`}
-          className="mt-3 inline-flex items-center gap-1 font-mono text-sm text-accent hover:underline"
-        >
+        <Link to={`/about/${AUTHOR.slug}`} className="gm-about-host-link">
           More about {AUTHOR.name} →
         </Link>
       </section>
 
-      <section className="mt-10">
-        <h2 className="mb-3 font-display text-xl font-semibold">Explore</h2>
-        <ul className="grid gap-3 sm:grid-cols-2">
+      <section className="gm-about-section">
+        <h2 className="gm-post-section-title">Explore</h2>
+        <ul className="gm-about-grid">
           {EXPLORE.map(({ to, icon: Icon, label, note }) => (
             <li key={to}>
-              <Link
-                to={to}
-                className="flex h-full flex-col rounded-xl border border-border bg-card p-4 hover:border-brand"
-              >
-                <span className="flex items-center gap-2 font-display font-medium">
+              <Link to={to} className="gm-about-card">
+                <span className="gm-about-card-title">
                   <Icon size={16} aria-hidden /> {label}
                 </span>
-                <span className="mt-1 text-sm text-muted">{note}</span>
+                <span className="gm-index-card-text">{note}</span>
               </Link>
             </li>
           ))}
         </ul>
-        <a
-          href="/feed/podcast/"
-          className="mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 font-mono text-sm hover:border-accent hover:text-accent"
-        >
+        <a href="/feed/podcast/" className="gm-about-more">
           <Rss size={15} aria-hidden /> Podcast RSS
         </a>
       </section>

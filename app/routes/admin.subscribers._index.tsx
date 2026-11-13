@@ -67,7 +67,7 @@ export default function SubscribersAdmin({ loaderData }: Route.ComponentProps) {
       ) : (
         <div className="mt-6 overflow-hidden rounded-xl border border-border bg-card">
           <table className="w-full text-sm">
-            <caption className="sr-only">Newsletter subscribers</caption>
+            <caption className="cap-sr-only">Newsletter subscribers</caption>
             <thead>
               <tr className="border-b border-border text-left font-display text-muted">
                 <th scope="col" className="px-4 py-2">

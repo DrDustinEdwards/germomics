@@ -11,7 +11,7 @@
 // 128 MB. An image is read whole, to its 25 MB cap, because prepareUpload checks and converts its bytes.
 import type { Route } from "./+types/admin.upload";
 import { getEnv } from "@dustinedwards/site-runtime/context";
-import { uploadAudio, uploadImage, buildKey } from "~/lib/r2.server";
+import { putAudio, putImage, buildKey } from "~/lib/r2.server";
 import { RefusedError, prepareUpload } from "@dustinedwards/site-api";
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { pictureLimits, PICTURE_RESIZE } from "@dustinedwards/site-api";
@@ -71,7 +71,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       throw error;
     }
     const key = buildKey(`posts/${postId}`, prepared.filename);
-    const stored = await uploadImage(
+    const stored = await putImage(
       env,
       key,
       prepared.bytes,
@@ -104,7 +104,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     return Response.json({ ok: false, error: "Audio exceeds 100 MB." }, { status: 413 });
   const key = buildKey(`episodes/${postId}`, name);
   const ct = type || "audio/mpeg";
-  const { url: stored, size } = await uploadAudio(
+  const { url: stored, size } = await putAudio(
     env,
     key,
     request.body.pipeThrough(new FixedLengthStream(length)),

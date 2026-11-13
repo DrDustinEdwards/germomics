@@ -7,7 +7,6 @@ import {
 } from "@drdustinedwards/site-helpers/accessibility";
 import { pageHead } from "~/lib/seo";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
-import "~/prose.css";
 
 const statement = accessibilityStatement({
   siteName: "Germomics",
@@ -27,8 +26,8 @@ export function meta() {
 
 export default function Accessibility() {
   return (
-    <article data-context="prose" className="mx-auto max-w-2xl">
-      <h1 className="font-display text-4xl font-semibold leading-tight">{statement.title}</h1>
+    <article data-context="prose" className="gm-narrow">
+      <h1 className="gm-page-title-lg">{statement.title}</h1>
       <BodyRenderer html={statement.html} page />
     </article>
   );

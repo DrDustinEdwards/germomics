@@ -56,53 +56,49 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
   return (
     <div>
       <QueueSeeder tracks={tracks} />
-      <h1 className="mb-4 font-display text-3xl font-semibold">Archive</h1>
+      <h1 className="gm-archive-title">Archive</h1>
 
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-1">
+      <div className="gm-archive-bar">
+        <div className="gm-archive-tabs">
           {TABS.map(([key, label]) => (
             <Link
               key={key}
               to={`/archive?tab=${key}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
-              className={`rounded-full px-3 py-1.5 font-display text-sm ${
-                tab === key
-                  ? "bg-brand text-on-brand"
-                  : "border border-border text-muted hover:text-ink"
-              }`}
+              className={`gm-archive-tab ${tab === key ? "gm-archive-tab-on" : "gm-archive-tab-off"}`}
             >
               {label}
             </Link>
           ))}
         </div>
-        <Form method="get" data-keep-focus className="flex items-center gap-2">
+        <Form method="get" data-keep-focus className="gm-archive-form">
           <input type="hidden" name="tab" value={tab} />
-          <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
-            <Search size={15} aria-hidden className="text-muted" />
+          <div className="gm-archive-field">
+            <Search size={15} aria-hidden className="gm-muted" />
             <input
               type="search"
               name="q"
               defaultValue={q}
               placeholder="Search…"
               aria-label="Search content"
-              className="w-40 bg-transparent text-sm outline-none"
+              className="gm-archive-input"
             />
           </div>
         </Form>
       </div>
 
       {q ? (
-        <p className="mb-4 font-mono text-xs text-muted">
+        <p className="gm-archive-count">
           {plural(items.length, "result")} for “{q}”
         </p>
       ) : null}
 
-      <PageHits pages={pages} className="mb-4" />
+      <PageHits pages={pages} className="gm-archive-hits" />
 
-      <div className="grid gap-3">
+      <div className="gm-list">
         {items.map((post) => (
           <PostCard key={post.id} post={post} queue={tracks} heading="h2" />
         ))}
-        {items.length === 0 ? <p className="text-muted">Nothing here yet.</p> : null}
+        {items.length === 0 ? <p className="gm-muted">Nothing here yet.</p> : null}
       </div>
     </div>
   );

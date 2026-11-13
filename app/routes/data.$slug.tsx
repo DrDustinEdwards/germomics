@@ -42,7 +42,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 /** Where a table's numbers come from, as the chart's own source line reads. */
 function SourceLine({ source }: { source: Source }) {
   return (
-    <p className="mt-2 font-display text-xs text-muted">
+    <p className="gm-data-source">
       Source: <a href={source.url}>{source.label}</a>
     </p>
   );
@@ -58,16 +58,12 @@ function DataTable({
   rows: (string | number)[][];
 }) {
   return (
-    <table className="w-full border-collapse text-sm">
-      <caption className="sr-only">{title}</caption>
+    <table className="gm-data-table">
+      <caption className="cap-sr-only">{title}</caption>
       <thead>
         <tr>
           {columns.map((c) => (
-            <th
-              key={c}
-              scope="col"
-              className="border-b border-border py-2 pr-3 text-left align-bottom font-display text-muted"
-            >
+            <th key={c} scope="col" className="gm-data-th">
               {c}
             </th>
           ))}
@@ -77,7 +73,7 @@ function DataTable({
         {rows.map((r, i) => (
           <tr key={i}>
             {r.map((cell, j) => (
-              <td key={j} className="border-b border-border py-2 pr-3 align-top tabular-nums">
+              <td key={j} className="gm-data-td">
                 {typeof cell === "number" ? cell.toLocaleString("en-GB") : cell}
               </td>
             ))}
@@ -91,15 +87,15 @@ function DataTable({
 export default function DataDetail({ loaderData }: Route.ComponentProps) {
   const { dataset: d, map, chart } = loaderData;
   return (
-    <article className="mx-auto max-w-3xl">
+    <article className="gm-column">
       <SectionTrail trail={dataTrail(d)} />
-      <p className="font-mono text-xs uppercase tracking-wide text-accent">{d.kind}</p>
-      <h1 className="mt-2 font-display text-3xl font-semibold">{d.title}</h1>
-      <p className="mt-2 max-w-2xl text-muted">{d.summary}</p>
+      <p className="gm-tag-eyebrow">{d.kind}</p>
+      <h1 className="gm-detail-title">{d.title}</h1>
+      <p className="gm-index-lede">{d.summary}</p>
 
       {map ? (
         <div
-          className="mt-8 rounded-xl border border-border bg-card p-3"
+          className="gm-data-map"
           data-island="charts"
           data-client="visible"
           data-client-root-margin="200px"
@@ -109,7 +105,7 @@ export default function DataDetail({ loaderData }: Route.ComponentProps) {
 
       {chart ? (
         <div
-          className="mt-6 rounded-xl border border-border bg-card p-3"
+          className="gm-data-chart"
           data-island="charts"
           data-client="visible"
           data-client-root-margin="200px"
@@ -117,11 +113,11 @@ export default function DataDetail({ loaderData }: Route.ComponentProps) {
         />
       ) : null}
 
-      {d.note ? <p className="mt-6 max-w-2xl text-muted">{d.note}</p> : null}
+      {d.note ? <p className="gm-data-note">{d.note}</p> : null}
 
       {d.table ? (
-        <section className="mt-8">
-          <h2 className="mb-2 font-display text-lg font-semibold">{d.table.title}</h2>
+        <section className="gm-data-section">
+          <h2 className="gm-data-section-title">{d.table.title}</h2>
           <DataTable title={d.table.title} columns={d.table.columns} rows={d.table.rows} />
           <SourceLine source={d.table.source} />
         </section>

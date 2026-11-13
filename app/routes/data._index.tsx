@@ -28,19 +28,15 @@ export async function loader({ context }: Route.LoaderArgs) {
 export default function DataHub({ loaderData }: Route.ComponentProps) {
   return (
     <div>
-      <h1 className="font-display text-3xl font-semibold">Data</h1>
-      <p className="mt-2 max-w-2xl text-muted">
+      <h1 className="gm-page-title">Data</h1>
+      <p className="gm-index-lede">
         Interactive maps and charts on viruses and bacteria. Each page renders a real, crawlable
         summary and data table around the visualization.
       </p>
-      <div className="mt-8 grid gap-3 sm:grid-cols-2">
+      <div className="gm-index-grid">
         {loaderData.datasets.map((d) => (
-          <Link
-            key={d.slug}
-            to={`/data/${d.slug}`}
-            className="rounded-xl border border-border bg-card p-5 transition hover:border-brand"
-          >
-            <div className="flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wide text-accent">
+          <Link key={d.slug} to={`/data/${d.slug}`} className="gm-index-card">
+            <div className="gm-index-kind">
               {d.kind === "virus" ? (
                 <Dna size={13} aria-hidden />
               ) : (
@@ -48,8 +44,8 @@ export default function DataHub({ loaderData }: Route.ComponentProps) {
               )}
               {d.kind}
             </div>
-            <h2 className="mt-1 font-display text-lg font-medium text-ink">{d.title}</h2>
-            <p className="mt-1 text-sm text-muted">{d.summary}</p>
+            <h2 className="gm-index-card-title">{d.title}</h2>
+            <p className="gm-index-card-text">{d.summary}</p>
           </Link>
         ))}
       </div>
