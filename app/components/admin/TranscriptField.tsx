@@ -66,7 +66,7 @@ export function TranscriptField({
             ref={fileRef}
             type="file"
             accept=".vtt,.srt,text/vtt"
-            className="sr-only"
+            className="cap-sr-only"
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) void readFile(f);

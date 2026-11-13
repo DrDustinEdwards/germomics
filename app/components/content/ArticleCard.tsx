@@ -10,45 +10,43 @@ import { imageOrPlain } from "~/lib/images";
 // under the index's h1.
 export function ArticleCard({ post, image }: { post: Post; image?: ImageAttributes }) {
   return (
-    <article className="group overflow-hidden rounded-2xl border border-border bg-card transition hover:border-brand">
+    <article className="group gm-article-card">
       <Link to={`/${post.slug}`} className="block">
         {post.coverImage ? (
           <Picture
             attrs={imageOrPlain(image, post.coverImage)}
             alt={post.coverAlt ?? ""}
-            className="aspect-[2/1] w-full border-b border-border object-cover"
+            className="gm-article-card-image"
           />
         ) : null}
-        <div className="p-4">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
+        <div className="gm-article-card-body">
+          <div className="gm-article-card-meta">
             {post.publishedAt ? (
-              <span className="flex items-center gap-1">
+              <span className="gm-article-card-kind">
                 <Calendar size={11} aria-hidden /> {formatDate(post.publishedAt)}
               </span>
             ) : null}
-            {post.readingTime ? (
-              <span className="tabular-nums">{post.readingTime} min read</span>
-            ) : null}
+            {post.readingTime ? <span className="gm-num">{post.readingTime} min read</span> : null}
           </div>
-          <h2 className="mt-1.5 font-display text-xl font-semibold text-ink group-hover:text-brand">
-            {post.title}
-          </h2>
-          {post.excerpt ? <p className="mt-1.5 text-sm text-muted">{post.excerpt}</p> : null}
+          <h2 className="gm-article-card-title">{post.title}</h2>
+          {post.excerpt ? <p className="gm-article-card-excerpt">{post.excerpt}</p> : null}
         </div>
       </Link>
-      {(post.tags ?? []).length ? (
-        <div className="flex flex-wrap gap-1.5 px-4 pb-4">
-          {(post.tags ?? []).slice(0, 4).map((t) => (
-            <Link
-              key={t}
-              to={`/tag/${encodeURIComponent(t)}`}
-              className="rounded-full border border-border px-2 py-0.5 font-mono text-[0.6875rem] text-muted hover:border-brand hover:text-brand"
-            >
-              {t}
-            </Link>
-          ))}
-        </div>
-      ) : null}
+      <TagLinks tags={(post.tags ?? []).slice(0, 4)} className="gm-article-card-tags" />
     </article>
+  );
+}
+
+// A post's tags as pills linking to each tag's page; nothing when it has none. Used by the card and the post page.
+export function TagLinks({ tags, className }: { tags: string[]; className: string }) {
+  if (!tags.length) return null;
+  return (
+    <div className={className}>
+      {tags.map((t) => (
+        <Link key={t} to={`/tag/${encodeURIComponent(t)}`} className="gm-tag">
+          {t}
+        </Link>
+      ))}
+    </div>
   );
 }

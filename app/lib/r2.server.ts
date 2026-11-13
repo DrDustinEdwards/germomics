@@ -25,7 +25,7 @@ export function buildKey(folder: string, filename: string): string {
   return `${folder.replace(/^\/+|\/+$/g, "")}/${Date.now()}-${safe}`;
 }
 
-export async function uploadAudio(
+export async function putAudio(
   env: Env,
   key: string,
   body: ArrayBuffer | ReadableStream,
@@ -37,7 +37,7 @@ export async function uploadAudio(
   return { url: mediaUrl(key), size: obj?.size ?? 0 };
 }
 
-export async function uploadImage(
+export async function putImage(
   env: Env,
   key: string,
   body: Uint8Array,

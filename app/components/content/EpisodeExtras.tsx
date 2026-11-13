@@ -42,15 +42,13 @@ export function EpisodeToc({ items }: { items: TocItem[] }) {
   if (items.length < 3) return null;
 
   const list = (
-    <ol className="space-y-1 text-sm">
+    <ol className="gm-toc-list">
       {items.map((it) => (
-        <li key={it.id} className={it.level === 3 ? "pl-3" : ""}>
+        <li key={it.id} className={it.level === 3 ? "gm-chapters-sub" : undefined}>
           <a
             href={`#${it.id}`}
             onClick={(e) => onJump(e, it.id)}
-            className={`block rounded px-2 py-1 ${
-              active === it.id ? "bg-surface font-medium text-brand" : "text-muted hover:text-ink"
-            }`}
+            className="gm-chapter-link"
             aria-current={active === it.id ? "true" : undefined}
           >
             {it.text}
@@ -63,16 +61,13 @@ export function EpisodeToc({ items }: { items: TocItem[] }) {
   return (
     <>
       {/* Mobile: a collapsible jump-to control. */}
-      <details className="mb-6 rounded-xl border border-border bg-surface p-3 lg:hidden">
-        <summary className="cursor-pointer font-display text-sm font-semibold">Jump to</summary>
-        <div className="mt-2">{list}</div>
+      <details className="gm-chapters-mobile">
+        <summary className="gm-chapters-summary">Jump to</summary>
+        <div className="gm-chapters-mobile-list">{list}</div>
       </details>
       {/* Desktop: a sticky rail. */}
-      <nav
-        aria-label="On this page"
-        className="sticky top-24 hidden max-h-[calc(100vh-8rem)] overflow-auto lg:block"
-      >
-        <p className="mb-2 font-display text-sm font-semibold">On this page</p>
+      <nav aria-label="On this page" className="gm-chapters-rail">
+        <p className="gm-rail-title">On this page</p>
         {list}
       </nav>
     </>
@@ -92,37 +87,30 @@ const SOURCE_KIND: Record<string, string> = {
 export function Sources({ sources }: { sources: Source[] }) {
   if (!sources.length) return null;
   return (
-    <section id="sources" className="mt-12 scroll-mt-20">
+    <section id="sources" className="gm-post-transcript">
       {/* Collapsed by default to match the Transcript section directly below it; the two read as a
           matched pair. The full content (including the legally-required CC BY music attribution and the
           image credits) stays server-rendered inside <details> so it's present in view-source while
           collapsed, not lazy-mounted on open. */}
       <details>
-        <summary className="mb-3 cursor-pointer font-display text-xl font-semibold">
-          Sources and Credits
-        </summary>
-        <ol className="space-y-2 text-sm">
+        <summary className="gm-post-summary">Sources and Credits</summary>
+        <ol className="gm-sources-list">
           {sources.map((s, i) => (
-            <li key={i} className="flex flex-wrap items-baseline gap-x-2 text-muted">
-              <span className="rounded bg-surface px-1.5 py-0.5 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
-                {SOURCE_KIND[s.type] ?? s.type}
-              </span>
+            <li key={i} className="gm-source">
+              <span className="gm-source-kind">{SOURCE_KIND[s.type] ?? s.type}</span>
               {s.url ? (
-                <a
-                  href={s.url}
-                  className="inline-flex items-center gap-1 text-accent hover:underline"
-                >
+                <a href={s.url} className="gm-source-link">
                   {s.title}
                   <ExternalLink size={12} aria-hidden />
-                  <span className="sr-only"> (another site)</span>
+                  <span className="cap-sr-only"> (another site)</span>
                 </a>
               ) : (
-                <span className="text-ink">{s.title}</span>
+                <span className="gm-source-title">{s.title}</span>
               )}
               {s.authors ? <span>{s.authors}</span> : null}
               {s.publisher ? <span>{s.publisher}</span> : null}
-              {s.license ? <span className="font-mono text-[0.6875rem]">{s.license}</span> : null}
-              {s.note ? <span className="italic">{s.note}</span> : null}
+              {s.license ? <span className="gm-source-license">{s.license}</span> : null}
+              {s.note ? <span className="gm-source-note">{s.note}</span> : null}
             </li>
           ))}
         </ol>

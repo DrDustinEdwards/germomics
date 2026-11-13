@@ -27,10 +27,5 @@ export default function PhaserGame({
     return () => game.destroy(true);
   }, [slug]);
 
-  return (
-    <div
-      ref={ref}
-      className="mx-auto w-full max-w-[800px] overflow-hidden rounded-xl border border-border"
-    />
-  );
+  return <div ref={ref} className="gm-game-frame" />;
 }

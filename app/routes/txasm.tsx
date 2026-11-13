@@ -8,7 +8,6 @@ import { getEnv } from "@dustinedwards/site-runtime/context";
 import { loadPage, isPreviewing } from "~/lib/content.server";
 import { pageHead } from "~/lib/seo";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
-import "~/prose.css";
 
 const TITLE = "Texas Branch of the American Society for Microbiology";
 
@@ -32,20 +31,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 export default function Txasm({ loaderData }: Route.ComponentProps) {
   const { title, html } = loaderData;
   return (
-    <div className="mx-auto max-w-2xl">
-      <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent">Texas Branch ASM</p>
-      <h1 className="mt-3 font-display text-4xl font-semibold leading-tight">{title}</h1>
-      <div data-context="prose" className="mt-4">
+    <div className="gm-narrow">
+      <p className="gm-eyebrow">Texas Branch ASM</p>
+      <h1 className="gm-eyebrow-title">{title}</h1>
+      <div data-context="prose" className="gm-page-body">
         <BodyRenderer html={html} page />
       </div>
 
-      <a
-        href="https://txasm.org"
-        className="mt-6 inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 font-display text-sm font-medium text-on-brand hover:bg-brand-strong"
-      >
+      <a href="https://txasm.org" className="gm-txasm-button">
         Visit txasm.org
         <ExternalLink size={16} aria-hidden />
-        <span className="sr-only"> (another site)</span>
+        <span className="cap-sr-only"> (another site)</span>
       </a>
     </div>
   );

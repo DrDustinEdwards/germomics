@@ -30,26 +30,20 @@ export function SoundbiteClips({ track, clips }: { track: PlayerTrack; clips: So
   }
 
   return (
-    <section className="mt-10">
-      <h2 className="mb-3 flex items-center gap-2 font-display text-xl font-semibold">
+    <section className="gm-clips">
+      <h2 className="gm-clips-title">
         <Scissors size={18} aria-hidden /> Soundbites
       </h2>
-      <ul className="grid gap-2">
+      <ul className="gm-clips-list">
         {clips.map((c) => (
           <li key={c.id}>
-            <button
-              type="button"
-              onClick={() => playClip(c.start, c.duration)}
-              className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-3 text-left hover:border-accent"
-            >
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-bg">
+            <button type="button" onClick={() => playClip(c.start, c.duration)} className="gm-clip">
+              <span className="gm-clip-icon">
                 <Play size={16} aria-hidden />
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate font-display text-sm text-ink">
-                  {c.title || "Clip"}
-                </span>
-                <span className="font-mono text-[0.6875rem] text-muted">
+              <span className="gm-clip-text">
+                <span className="gm-clip-title">{c.title || "Clip"}</span>
+                <span className="gm-clip-meta">
                   {timecode(c.start * 1000)} · {c.duration}s
                 </span>
               </span>

@@ -24,47 +24,42 @@ export function PostCard({
   const track = queue?.find((t) => t.id === post.id);
   const tags = (post.tags ?? []).slice(0, 4);
   return (
-    <article className="cap-card gap-x-4 gap-y-0 rounded-xl border border-border bg-card p-4 text-ink">
+    <article className="cap-card gm-post-card">
       <span className="cap-card-lead">
         {isEpisode && track ? (
           <PlayTrackButton track={track} queue={queue} />
         ) : (
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-brand">
+          <span className="gm-post-card-icon">
             <FileText size={18} aria-hidden />
           </span>
         )}
       </span>
       <header>
-        <div className="mt-0 flex flex-wrap items-center gap-x-2 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
-          <span className="flex items-center gap-1 text-brand">
+        <div className="gm-post-card-meta">
+          <span className="gm-post-card-kind">
             {isEpisode ? <Headphones size={12} aria-hidden /> : <FileText size={12} aria-hidden />}
             {isEpisode ? "Episode" : "Article"}
           </span>
           {isEpisode && post.episodeNumber ? <span>#{post.episodeNumber}</span> : null}
           {post.publishedAt ? <span>{formatDate(post.publishedAt)}</span> : null}
           {isEpisode && post.audioDuration ? (
-            <span className="tabular-nums">{timecode(post.audioDuration * 1000)}</span>
+            <span className="gm-num">{timecode(post.audioDuration * 1000)}</span>
           ) : null}
-          {post.readingTime ? (
-            <span className="tabular-nums">{post.readingTime} min read</span>
-          ) : null}
+          {post.readingTime ? <span className="gm-num">{post.readingTime} min read</span> : null}
         </div>
-        <Heading className="mt-1 font-display text-lg font-medium text-wrap">
-          <Link to={`/${post.slug}`} className="cap-card-link text-ink hover:text-brand">
+        <Heading className="gm-post-card-title">
+          <Link to={`/${post.slug}`} className="cap-card-link gm-post-card-link">
             {post.title}
           </Link>
         </Heading>
       </header>
-      {post.excerpt ? <p className="mt-1 text-sm text-muted text-wrap">{post.excerpt}</p> : null}
+      {post.excerpt ? <p className="gm-post-card-excerpt">{post.excerpt}</p> : null}
       {tags.length ? (
-        <footer className="mt-2 p-0">
-          <ul className="flex flex-wrap gap-1.5" aria-label="Tags">
+        <footer className="gm-post-card-foot">
+          <ul className="gm-tags" aria-label="Tags">
             {tags.map((t) => (
               <li key={t}>
-                <Link
-                  to={`/tag/${encodeURIComponent(t)}`}
-                  className="block rounded-full border border-border px-2 py-0.5 font-mono text-[0.6875rem] text-muted hover:border-brand hover:text-brand"
-                >
+                <Link to={`/tag/${encodeURIComponent(t)}`} className="gm-tag">
                   {t}
                 </Link>
               </li>

@@ -32,17 +32,12 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
   const { q, posts, pages, tracks } = loaderData;
   const total = posts.length + pages.length;
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="gm-column">
       <QueueSeeder tracks={tracks} />
-      <h1 className="font-display text-3xl font-semibold">Search</h1>
+      <h1 className="gm-page-title">Search</h1>
 
-      <Form
-        role="search"
-        method="get"
-        data-keep-focus
-        className="mt-4 flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2"
-      >
-        <label htmlFor="q" className="sr-only">
+      <Form role="search" method="get" data-keep-focus className="gm-search-form">
+        <label htmlFor="q" className="cap-sr-only">
           Search Germomics
         </label>
         <input
@@ -51,32 +46,29 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
           name="q"
           defaultValue={q}
           placeholder="Search episodes, writing, and pages"
-          className="w-full bg-transparent outline-none"
+          className="gm-search-input"
         />
-        <button
-          type="submit"
-          className="rounded-full bg-brand px-3 py-1 font-display text-sm text-on-brand hover:bg-brand-strong"
-        >
+        <button type="submit" className="gm-search-go">
           Go
         </button>
       </Form>
 
       {q ? (
-        <p className="mt-4 font-mono text-xs text-muted">
+        <p className="gm-search-count">
           {plural(total, "result")} for “{q}”
         </p>
       ) : null}
 
-      <PageHits pages={pages} as="section" className="mt-4" />
+      <PageHits pages={pages} as="section" className="gm-search-hits" />
 
-      <div className="mt-4 grid gap-3">
+      <div className="gm-search-list">
         {posts.map((post) => (
           <PostCard key={post.id} post={post} queue={tracks} heading="h2" />
         ))}
       </div>
 
       {q && total === 0 ? (
-        <p className="mt-6 text-muted">Nothing matched. Try different words.</p>
+        <p className="gm-search-empty">Nothing matched. Try different words.</p>
       ) : null}
     </div>
   );

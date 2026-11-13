@@ -45,7 +45,7 @@ export default function Episodes({ loaderData }: Route.ComponentProps) {
   return (
     <div>
       <QueueSeeder tracks={tracks} />
-      <h1 className="mb-6 font-display text-3xl font-semibold">Episodes</h1>
+      <h1 className="gm-list-title">Episodes</h1>
 
       {seasons.map((s) => {
         const eps = bySeason
@@ -53,24 +53,22 @@ export default function Episodes({ loaderData }: Route.ComponentProps) {
           .slice()
           .sort((a, b) => (a.episodeNumber ?? 0) - (b.episodeNumber ?? 0));
         return (
-          <section key={s} id={`season-${s}`} className="mb-10 scroll-mt-24">
+          <section key={s} id={`season-${s}`} className="gm-season-section">
             {/* Teal eyebrow divider (same style as /season/:num), one per season group. */}
-            <h2 className="mb-4 font-mono text-sm font-medium uppercase tracking-[0.18em] text-accent">
-              Season {s}
-            </h2>
-            <div className="grid gap-3">{eps.map(card)}</div>
+            <h2 className="gm-season-heading">Season {s}</h2>
+            <div className="gm-list">{eps.map(card)}</div>
           </section>
         );
       })}
 
       {noSeason.length ? (
-        <section className="mb-10">
-          <h2 className="mb-4 font-display text-xl font-semibold">More episodes</h2>
-          <div className="grid gap-3">{noSeason.map(card)}</div>
+        <section className="gm-episodes-section">
+          <h2 className="gm-episodes-heading">More episodes</h2>
+          <div className="gm-list">{noSeason.map(card)}</div>
         </section>
       ) : null}
 
-      {episodes.length === 0 ? <p className="text-muted">No episodes yet.</p> : null}
+      {episodes.length === 0 ? <p className="gm-muted">No episodes yet.</p> : null}
     </div>
   );
 }

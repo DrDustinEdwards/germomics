@@ -3,7 +3,7 @@
    is repeated first because React hoists this link above app.css: without it Capsomer's layers would be declared
    before Tailwind's, and preflight and the site's link color would win over the page's padding, heading and button.
    Nothing here is a color: Capsomer's germomics site entry gives the page the site's palette in both themes. */
-@layer theme, base, cap, components, utilities;
+@layer theme, base, cap, components, utilities, site;
 @import "capsomer/tokens.css";
 @import "capsomer/site-germomics.css";
 @import "capsomer/button.css";

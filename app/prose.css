@@ -1,7 +1,6 @@
-/* The reading contexts (Capsomer's prose blocks), loaded only by the pages that hold one: the legal pages
-   (components/content/Legal.tsx), about, contact, accessibility, txasm, and an essay or episode with its diagrams
-   (routes/$slug.tsx). The layer order repeats app.css's, so whichever stylesheet arrives first, the order is the same. */
-@layer cap-tokens, theme, base, cap, components, utilities;
+/* The reading contexts: Capsomer's prose blocks, and the body of every post and content page (BodyRenderer, which
+   imports this file, so it loads wherever a body shows, the admin's previews included). The layer order repeats app.css's, so whichever stylesheet arrives first, the order is the same. */
+@layer cap-tokens, theme, base, cap, components, utilities, site;
 @import "capsomer/prose-blocks.css";
 
 /* Reading contexts (Capsomer's prose blocks): the legal and about pages, and each diagram in an essay
@@ -57,4 +56,360 @@
   --diagram-title-face: var(--font-display);
   --diagram-title-size: 1.125rem;
   --diagram-title-align: center;
+}
+
+/* A body's look: Prelum's rendered Markdown (its README, "The markdown pipeline") in germomics' palette and faces. The
+   wrapper is .gm-prose with .gm-headings-section (a post) or .gm-headings-page (a content page). In the site layer,
+   after Tailwind's, so it wins over preflight as the utilities it replaces did. */
+@layer site {
+  .gm-prose {
+    font-size: 1.05rem;
+    line-height: 1.625;
+  }
+  .gm-prose .bookmark {
+    margin-block: 1.25rem;
+  }
+  .gm-prose .bookmark-description {
+    display: block;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--dim);
+  }
+  .gm-prose .bookmark-host {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--dim);
+  }
+  .gm-prose .bookmark-link {
+    display: block;
+    border-radius: 0.75rem;
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--line);
+    background-color: var(--raised);
+    padding: 1rem;
+    text-decoration-line: none;
+  }
+  .gm-prose .bookmark-link:hover {
+    border-color: var(--primary);
+  }
+  .gm-prose .bookmark-title {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--text);
+  }
+  .gm-prose .button {
+    display: inline-flex;
+    border-radius: calc(infinity * 1px);
+    background-color: var(--primary);
+    padding-inline: 1.25rem;
+    padding-block: 0.625rem;
+    font-family: var(--font-display);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--primary-fg);
+    text-decoration-line: none;
+  }
+  .gm-prose .button-row {
+    margin-block: 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .gm-prose .callout {
+    margin-block: 1.5rem;
+    border-radius: 0.75rem;
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--line);
+    background-color: var(--sunken);
+    padding: 1rem;
+    font-style: normal;
+  }
+  .gm-prose .callout p {
+    margin-block: 0.5rem;
+  }
+  .gm-prose .callout-caution {
+    border-color: var(--primary);
+  }
+  .gm-prose .callout-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--accent-text);
+  }
+  .gm-prose .callout-warning {
+    border-color: color-mix(in oklab, oklch(76.9% 0.188 70.08) 50%, transparent);
+  }
+  .gm-prose .code-frame {
+    margin-block: 1.25rem;
+  }
+  .gm-prose .code-frame pre {
+    margin-block: 0px;
+  }
+  .gm-prose .code-title {
+    margin-bottom: 0.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--dim);
+  }
+  .gm-prose .embed {
+    margin-block: 1.5rem;
+  }
+  .gm-prose .embed-link {
+    display: inline-flex;
+    border-radius: calc(infinity * 1px);
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--line);
+    background-color: var(--raised);
+    padding-inline: 1rem;
+    padding-block: 0.5rem;
+    text-decoration-line: none;
+  }
+  .gm-prose .faq {
+    margin-block: 1.5rem;
+  }
+  .gm-prose .faq dd {
+    margin-top: 0.25rem;
+  }
+  .gm-prose .faq dt {
+    margin-top: 1rem;
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+  .gm-prose .figure-dark {
+    display: none;
+  }
+  .gm-prose .footnotes {
+    margin-top: 2.5rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--dim);
+  }
+  .gm-prose .gallery {
+    margin-block: 1.5rem;
+  }
+  .gm-prose .gallery img {
+    margin-block: 0px;
+    height: auto;
+    width: 100%;
+  }
+  .gm-prose .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  @media (width >= 40rem) {
+    .gm-prose .gallery-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .gm-prose .heading-anchor {
+    margin-left: 0.5rem;
+    font-weight: 400;
+    color: var(--dim);
+    text-decoration-line: none;
+    opacity: 0%;
+  }
+  .gm-prose .heading-anchor:focus-visible {
+    opacity: 100%;
+  }
+  .gm-prose .heading-anchor:hover {
+    color: var(--accent-text);
+  }
+  .gm-prose .media {
+    margin-block: 1.5rem;
+  }
+  .gm-prose .media audio {
+    width: 100%;
+  }
+  .gm-prose .media video {
+    width: 100%;
+    border-radius: 0.75rem;
+  }
+  .gm-prose .media-transcript {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  .gm-prose .post-details {
+    margin-block: 1.25rem;
+    border-radius: 0.75rem;
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--line);
+    padding: 1rem;
+  }
+  .gm-prose .post-details summary {
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+  .gm-prose .table-scroll {
+    margin-block: 1.5rem;
+    overflow-x: auto;
+  }
+  .gm-prose :is(h2, h3, h4, h5, h6):hover .heading-anchor {
+    opacity: 100%;
+  }
+  .gm-prose a {
+    color: var(--accent-text);
+    text-decoration-line: underline;
+    text-underline-offset: 2px;
+  }
+  .gm-prose a.image-link {
+    display: block;
+    text-decoration-line: none;
+  }
+  .gm-prose blockquote {
+    margin-block: 1.25rem;
+    border-left-style: solid;
+    border-left-width: 2px;
+    border-color: var(--primary);
+    padding-left: 1rem;
+    font-style: italic;
+  }
+  .gm-prose code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+  .gm-prose figcaption {
+    margin-top: 0.5rem;
+    text-align: center;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--dim);
+  }
+  .gm-prose figcaption .figure-credit {
+    margin-top: 0.125rem;
+    display: block;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--dim);
+  }
+  .gm-prose figcaption p {
+    margin-block: 0px;
+  }
+  .gm-prose figure {
+    margin-block: 1.5rem;
+  }
+  .gm-prose figure img {
+    margin-inline: auto;
+    margin-block: 0px;
+    display: block;
+    height: auto;
+    max-width: 100%;
+  }
+  .gm-prose figure.width-wide img {
+    max-width: min(100%, 520px);
+  }
+  .gm-prose figure:not(.width-wide):not(.width-full) img {
+    max-width: min(100%, 400px);
+  }
+  .gm-prose hr {
+    margin-block: 2rem;
+    border-color: var(--line);
+  }
+  .gm-prose img {
+    margin-block: 1.5rem;
+    border-radius: 0.75rem;
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--line);
+  }
+  .gm-prose li {
+    margin-block: 0.25rem;
+  }
+  .gm-prose ol {
+    margin-block: 1rem;
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+  }
+  .gm-prose p {
+    margin-block: 1rem;
+  }
+  .gm-prose picture {
+    display: block;
+  }
+  .gm-prose pre {
+    margin-block: 1.25rem;
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    background-color: var(--sunken);
+    padding: 1rem;
+    font-size: 0.875rem;
+    line-height: var(--text-sm--line-height);
+  }
+  .gm-prose table {
+    width: 100%;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  .gm-prose td {
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    border-color: var(--line);
+    padding-inline: 0.75rem;
+    padding-block: 0.5rem;
+  }
+  .gm-prose th {
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    border-color: var(--line);
+    padding-inline: 0.75rem;
+    padding-block: 0.5rem;
+    text-align: left;
+  }
+  .gm-prose ul {
+    margin-block: 1rem;
+    list-style-type: disc;
+    padding-left: 1.5rem;
+  }
+
+  /* Headings. A post's are demoted one level under the page's own h2s (.gm-headings-section), so h3 and h4 carry its
+     section and subsection steps; a content page's keep their level under its h1 (.gm-headings-page), with the same
+     look one step up. */
+  .gm-headings-section :is(h2, h3, h4, h5),
+  .gm-headings-page :is(h2, h3, h4) {
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+  .gm-headings-section h2 {
+    margin-top: 3rem;
+    margin-bottom: 0.75rem;
+    scroll-margin-top: 6rem;
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+  }
+  .gm-headings-section h3,
+  .gm-headings-page h2 {
+    margin-top: 2.5rem;
+    margin-bottom: 0.5rem;
+    scroll-margin-top: 6rem;
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+  .gm-headings-section h4,
+  .gm-headings-page h3 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.25rem;
+    scroll-margin-top: 6rem;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+  }
+  .gm-headings-section h5,
+  .gm-headings-page h4 {
+    margin-top: 1.25rem;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
 }

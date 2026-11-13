@@ -94,7 +94,7 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
                     className="inline-flex items-center gap-1 font-mono text-xs text-accent hover:underline"
                   >
                     <Icon name="external" className="size-[13px]" /> Edit in Carrel
-                    <span className="sr-only"> (opens in a new tab)</span>
+                    <span className="cap-sr-only"> (opens in a new tab)</span>
                   </a>
                 </p>
                 <div className="max-h-[32rem] overflow-y-auto rounded-xl border border-border bg-card p-4">
@@ -150,7 +150,7 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
               className="inline-flex items-center gap-1 font-mono text-sm text-accent hover:underline"
             >
               <Icon name="external" className="size-[13px]" /> Preview
-              <span className="sr-only"> (opens in a new tab)</span>
+              <span className="cap-sr-only"> (opens in a new tab)</span>
             </a>
           ) : null}
           {fetcher.data?.ok ? (

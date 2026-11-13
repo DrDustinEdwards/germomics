@@ -1,7 +1,7 @@
 /* The /data charts' stylesheet, linked by that route alone (routes/data.$slug.tsx). Capsomer's chart path is the
    whole look: its tokens, capsomer/enarratio.css (Enarratio's base rules, the token mapping, gridlines, series inks)
    and the chart frame. Nothing here is a color: Capsomer's germomics site entry gives the charts the site's palette in both themes. */
-@layer theme, base, cap, components, utilities;
+@layer theme, base, cap, components, utilities, site;
 @import "capsomer/tokens.css";
 @import "capsomer/site-germomics.css";
 @import "capsomer/enarratio.css";
