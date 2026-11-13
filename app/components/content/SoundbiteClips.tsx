@@ -2,7 +2,7 @@
 // and auto-pauses after its duration (scaled by playback rate). Uses the shared persistent player,
 // so a clip just steers the one <audio> element. Renders nothing when there are no clips.
 import { useEffect, useRef } from "react";
-import { Scissors, Play } from "lucide-react";
+import { Icon, iconCut, iconPlay } from "capsomer/react/icons";
 import type { PlayerTrack, SoundbiteView } from "~/lib/types";
 import { timecode } from "capsomer/behavior/time";
 import { usePlayer } from "capsomer/react/player";
@@ -32,14 +32,14 @@ export function SoundbiteClips({ track, clips }: { track: PlayerTrack; clips: So
   return (
     <section className="gm-clips">
       <h2 className="gm-clips-title">
-        <Scissors size={18} aria-hidden /> Soundbites
+        <Icon d={iconCut} /> Soundbites
       </h2>
       <ul className="gm-clips-list">
         {clips.map((c) => (
           <li key={c.id}>
             <button type="button" onClick={() => playClip(c.start, c.duration)} className="gm-clip">
               <span className="gm-clip-icon">
-                <Play size={16} aria-hidden />
+                <Icon d={iconPlay} />
               </span>
               <span className="gm-clip-text">
                 <span className="gm-clip-title">{c.title || "Clip"}</span>

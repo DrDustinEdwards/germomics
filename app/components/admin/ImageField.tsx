@@ -2,7 +2,7 @@
 // past 2560px, thumbnail preview) OR "URL / Paste". Alt text is required whenever an image is set — we retire
 // URL-only fields here. Emits { url, alt } upward.
 import { useState } from "react";
-import { Icon } from "capsomer/react/icons";
+import { Icon, iconClose } from "capsomer/react/icons";
 import { Field } from "capsomer/react/field";
 import { Button } from "capsomer/react/button";
 import { Segmented } from "capsomer/react/segmented";
@@ -64,7 +64,7 @@ export function ImageField({
               className="mt-2"
               onClick={() => onChange({ url: "", alt: "" })}
             >
-              <Icon name="close" className="size-3" /> Remove
+              <Icon d={iconClose} className="size-3" /> Remove
             </Button>
           </div>
         </div>

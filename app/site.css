@@ -31,6 +31,8 @@
 @import "capsomer/field.css";
 @import "capsomer/menu.css";
 @import "capsomer/player.css";
+/* Capsomer's icons (the pictograms beside the cards' and pages' words, the footer's marks), in the cap layer. */
+@import "capsomer/icons.css";
 
 /* The player keeps the site's faces: titles in Space Grotesk, times and the status line in JetBrains Mono. */
 :is(
@@ -513,7 +515,7 @@
     color: var(--text);
   }
   @media (hover: hover) {
-    .gm-article-card-title:is(:where(.group):hover *) {
+    .gm-article-card:hover .gm-article-card-title {
       color: var(--primary);
     }
   }
@@ -847,7 +849,8 @@
     color: var(--text);
   }
   @media (hover: hover) {
-    .gm-prev-next-title:is(:where(.group):hover *) {
+    .gm-prev:hover .gm-prev-next-title,
+    .gm-next:hover .gm-prev-next-title {
       color: var(--primary);
     }
   }
@@ -2336,5 +2339,62 @@
   .gm-external-cue {
     flex-shrink: 0;
     color: color-mix(in oklab, var(--dim) 70%, transparent);
+  }
+  /* The brand marks (components/brand) in the brand color; the wordmark's drawing takes the height its caller sets. */
+  .gm-wordmark,
+  .gm-mark {
+    color: var(--primary);
+  }
+  .gm-wordmark {
+    display: inline-flex;
+    & > svg {
+      height: 100%;
+      width: auto;
+    }
+  }
+  .gm-article-card-link {
+    display: block;
+  }
+  /* Capsomer's icons at Lucide's stroke, which the site's pictograms were drawn at, and each place's size. */
+  :root {
+    --icon-stroke: 2;
+  }
+  .gm-article-card-kind {
+    --icon-size: 0.6875rem;
+  }
+  .gm-external-cue,
+  .gm-post-card-kind,
+  .gm-post-meta-item,
+  .gm-post-meta-time,
+  .gm-article-eyebrow,
+  .gm-prev-next-label,
+  .gm-next-label {
+    --icon-size: 0.75rem;
+  }
+  .gm-index-kind,
+  .gm-bio-link {
+    --icon-size: 0.8125rem;
+  }
+  .gm-footer-link-icon,
+  .gm-footer-top,
+  .gm-chip,
+  .gm-sub-app-name .gm-external-cue {
+    --icon-size: 0.875rem;
+  }
+  .gm-legal-draft-title,
+  .gm-archive-field,
+  .gm-about-more {
+    --icon-size: 0.9375rem;
+  }
+  .gm-clip-icon,
+  .gm-txasm-button,
+  .gm-about-card-title {
+    --icon-size: 1rem;
+  }
+  .gm-post-card-icon,
+  .gm-clips-title,
+  .gm-about-host-title,
+  .gm-sub-app {
+    --icon-size: 1.125rem;
   }
 }

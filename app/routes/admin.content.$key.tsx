@@ -4,7 +4,7 @@
 // site renders it, with a link to edit it there, and only its title and status are saved; the plain-text pages
 // (TEXT_PAGES) and the snippets are edited here.
 import { useFetcher } from "react-router";
-import { Icon } from "capsomer/react/icons";
+import { Icon, iconArrowLeft, iconExternal } from "capsomer/react/icons";
 import type { Route } from "./+types/admin.content.$key";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { loadBlock, TEXT_PAGES, updatePageSettings, upsertBlock } from "~/lib/content.server";
@@ -64,7 +64,7 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
         href="/admin/settings"
         className="inline-flex items-center gap-1 font-mono text-xs text-muted hover:text-ink"
       >
-        <Icon name="arrow-left" className="size-3" /> Settings
+        <Icon d={iconArrowLeft} className="size-3" /> Settings
       </a>
       <h1 className="mt-3 font-display text-2xl font-semibold">{block.title || block.key}</h1>
       <p className="mt-1 font-mono text-xs text-muted">
@@ -93,7 +93,7 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 font-mono text-xs text-accent hover:underline"
                   >
-                    <Icon name="external" className="size-[13px]" /> Edit in Carrel
+                    <Icon d={iconExternal} className="size-[13px]" /> Edit in Carrel
                     <span className="cap-sr-only"> (opens in a new tab)</span>
                   </a>
                 </p>
@@ -149,7 +149,7 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 font-mono text-sm text-accent hover:underline"
             >
-              <Icon name="external" className="size-[13px]" /> Preview
+              <Icon d={iconExternal} className="size-[13px]" /> Preview
               <span className="cap-sr-only"> (opens in a new tab)</span>
             </a>
           ) : null}

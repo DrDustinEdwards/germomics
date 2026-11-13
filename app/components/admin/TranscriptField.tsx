@@ -2,7 +2,7 @@
 // converted to VTT on import; the value is stored as VTT (keeping the VTT-native rendering). A
 // parsed preview shows cue count + the first lines so the author can confirm it parsed.
 import { useMemo, useRef, useState } from "react";
-import { Icon } from "capsomer/react/icons";
+import { Icon, iconCaptions, iconFileUp } from "capsomer/react/icons";
 import { Segmented } from "capsomer/react/segmented";
 import { isVtt, parseVtt, srtToVtt } from "@drdustinedwards/site-helpers/vtt";
 import { timecode } from "capsomer/behavior/time";
@@ -33,7 +33,7 @@ export function TranscriptField({
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
         <span className="flex items-center gap-1.5 font-display text-sm font-medium text-ink">
-          <Icon name="captions" className="size-3.5" /> Transcript
+          <Icon d={iconCaptions} className="size-3.5" /> Transcript
         </span>
         <Segmented
           legend="Transcript input method"
@@ -58,7 +58,7 @@ export function TranscriptField({
           htmlFor="transcript-file"
           className="flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 border-dashed border-border bg-surface px-4 py-6 text-center hover:border-brand"
         >
-          <Icon name="file-up" className="size-5 text-brand" />
+          <Icon d={iconFileUp} className="size-5 text-brand" />
           <span className="font-display text-sm text-ink">Upload .vtt or .srt</span>
           <span className="text-xs text-muted">Click to choose a caption file</span>
           <input

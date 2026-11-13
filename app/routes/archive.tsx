@@ -1,7 +1,7 @@
 import { plural } from "@drdustinedwards/site-helpers/text";
 import { Form } from "react-router";
 import { Link } from "capsomer/react/link";
-import { Search } from "lucide-react";
+import { Icon, iconSearch } from "capsomer/react/icons";
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/archive";
 import { getEnv } from "@dustinedwards/site-runtime/context";
@@ -73,7 +73,7 @@ export default function Archive({ loaderData }: Route.ComponentProps) {
         <Form method="get" data-keep-focus className="gm-archive-form">
           <input type="hidden" name="tab" value={tab} />
           <div className="gm-archive-field">
-            <Search size={15} aria-hidden className="gm-muted" />
+            <Icon d={iconSearch} className="gm-muted" />
             <input
               type="search"
               name="q"

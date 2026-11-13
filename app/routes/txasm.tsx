@@ -2,7 +2,7 @@
 // hosted for years. Prose comes from the page:txasm content block (D1, editable); a prominent CTA
 // bridges to the branch's own site at txasm.org. ?preview shows the draft to a signed-in admin.
 import { htmlToText } from "@drdustinedwards/site-helpers/text";
-import { ExternalLink } from "lucide-react";
+import { Icon, iconExternal } from "capsomer/react/icons";
 import type { Route } from "./+types/txasm";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { loadPage, isPreviewing } from "~/lib/content.server";
@@ -40,7 +40,7 @@ export default function Txasm({ loaderData }: Route.ComponentProps) {
 
       <a href="https://txasm.org" className="gm-txasm-button">
         Visit txasm.org
-        <ExternalLink size={16} aria-hidden />
+        <Icon d={iconExternal} />
         <span className="cap-sr-only"> (another site)</span>
       </a>
     </div>

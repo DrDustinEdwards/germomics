@@ -1,5 +1,5 @@
 import { Link } from "capsomer/react/link";
-import { Gamepad2 } from "lucide-react";
+import { Icon, iconGamepad } from "capsomer/react/icons";
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/games._index";
 import { listGames } from "~/lib/games.server";
@@ -30,7 +30,7 @@ export default function GamesHub({ loaderData }: Route.ComponentProps) {
         {loaderData.games.map((g) => (
           <Link key={g.slug} to={`/games/${g.slug}`} className="gm-index-card">
             <div className="gm-index-kind">
-              <Gamepad2 size={13} aria-hidden /> arcade
+              <Icon d={iconGamepad} /> arcade
             </div>
             <h2 className="gm-index-card-title">{g.title}</h2>
             <p className="gm-index-card-text">{g.tagline}</p>

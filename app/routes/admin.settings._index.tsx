@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useFetcher } from "react-router";
 import { Link } from "capsomer/react/link";
-import { Icon } from "capsomer/react/icons";
+import { Icon, iconCheck, iconSettings } from "capsomer/react/icons";
 import type { Route } from "./+types/admin.settings._index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getShowConfig, upsertShowConfig } from "~/lib/show.server";
@@ -115,7 +115,7 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
   return (
     <div className="mx-auto max-w-3xl">
       <h1 className="flex items-center gap-2 font-display text-2xl font-semibold">
-        <Icon name="settings" className="size-[22px]" /> Settings
+        <Icon d={iconSettings} className="size-[22px]" /> Settings
       </h1>
       <p className="mt-1 text-sm text-muted">
         Podcast channel metadata, categories, and funding. These drive the feed.
@@ -262,7 +262,7 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
           </Button>
           {fetcher.data?.ok ? (
             <span role="status" className="flex items-center gap-1 font-mono text-xs text-accent">
-              <Icon name="check" className="size-[13px]" /> {fetcher.data.message}
+              <Icon d={iconCheck} className="size-[13px]" /> {fetcher.data.message}
             </span>
           ) : null}
           {fetcher.data?.ok === false ? (
@@ -289,7 +289,7 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
           </Button>
           {settingsFetcher.data?.ok ? (
             <span role="status" className="flex items-center gap-1 font-mono text-xs text-accent">
-              <Icon name="check" className="size-[13px]" /> {settingsFetcher.data.message}
+              <Icon d={iconCheck} className="size-[13px]" /> {settingsFetcher.data.message}
             </span>
           ) : null}
         </div>

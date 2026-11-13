@@ -1,7 +1,7 @@
 // The legal pages (privacy + terms): a clearly-marked "draft, not legal advice" banner and the
 // last-updated date around the page body. Keeping these here means both pages stay consistent and the
 // review status is impossible to miss.
-import { Info } from "lucide-react";
+import { Icon, iconInfo } from "capsomer/react/icons";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 
 // Bump this whenever the legal copy changes.
@@ -15,7 +15,7 @@ function ReviewBanner() {
   return (
     <aside role="note" className="gm-legal-draft">
       <p className="gm-legal-draft-title">
-        <Info size={15} aria-hidden /> Draft, pending review
+        <Icon d={iconInfo} /> Draft, pending review
       </p>
       <p className="gm-legal-draft-text">
         This is a plain-language draft for completeness, not legal advice. It should be reviewed by

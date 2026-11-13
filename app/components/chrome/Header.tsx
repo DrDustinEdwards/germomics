@@ -1,6 +1,6 @@
 import { useLocation, useRouteLoaderData } from "react-router";
 import { SiteHeader, type HeaderSection } from "capsomer/react/site-header";
-import { Search } from "lucide-react";
+import { Icon, iconSearch } from "capsomer/react/icons";
 import { GMark } from "../brand/GMark";
 import { routerLink } from "./router-link";
 import { useSnippet } from "~/lib/content";
@@ -81,7 +81,7 @@ export function Header({ hydrate }: { hydrate: boolean }) {
       links="right"
       navLabel="Primary"
       extras={[
-        { id: "search", label: "Search", icon: <Search size={16} aria-hidden />, href: "/search" },
+        { id: "search", label: "Search", icon: <Icon d={iconSearch} />, href: "/search" },
         { id: "subscribe", label: subscribe, kind: "button", href: "/subscribe", phone: "bar" },
       ]}
       themePrefKey={THEME_KEY}

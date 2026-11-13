@@ -1,7 +1,7 @@
 // Drag-drop / click upload target → POSTs to /admin/upload (gated) and reports progress via
 // XHR (fetch can't surface upload progress). Reused by the image, audio and transcript fields.
 import { useId, useRef, useState } from "react";
-import { Icon } from "capsomer/react/icons";
+import { Icon, iconCloudUpload, iconSpinner } from "capsomer/react/icons";
 
 export type UploadResult = {
   ok: boolean;
@@ -91,9 +91,9 @@ export function UploadDropzone({
           }`}
         >
           {busy ? (
-            <Icon name="spinner" className="size-[22px] animate-spin text-accent" />
+            <Icon d={iconSpinner} className="size-[22px] animate-spin text-accent" />
           ) : (
-            <Icon name="cloud-upload" className="size-[22px] text-brand" />
+            <Icon d={iconCloudUpload} className="size-[22px] text-brand" />
           )}
           <span className="font-display text-sm text-ink">{label}</span>
           <span className="text-xs text-muted">Drag &amp; drop or click to choose</span>
