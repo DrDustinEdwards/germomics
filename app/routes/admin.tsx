@@ -153,11 +153,7 @@ export default function AdminLayout({ loaderData }: Route.ComponentProps) {
   const email = loaderData.email;
 
   return (
-    <div
-      data-cap-theme={theme}
-      suppressHydrationWarning
-      style={{ display: "contents" }}
-    >
+    <div data-cap-theme={theme} suppressHydrationWarning style={{ display: "contents" }}>
       <script dangerouslySetInnerHTML={markup(THEME_BOOT)} />
       <AdminShell
         title="Germomics"
