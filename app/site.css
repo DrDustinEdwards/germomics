@@ -367,15 +367,17 @@
     border-width: 1px;
     border-color: var(--line);
   }
-  /* The cards whose border turns on hover. */
-  .gm-article-card,
-  .gm-index-card {
-    transition-property:
-      color, background-color, border-color, outline-color, text-decoration-color, fill, stroke,
-      opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter,
-      backdrop-filter, display, content-visibility, overlay, pointer-events;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
+  /* The cards whose border turns on hover, fading only where motion is welcome. */
+  @media (prefers-reduced-motion: no-preference) {
+    .gm-article-card,
+    .gm-index-card {
+      transition-property:
+        color, background-color, border-color, outline-color, text-decoration-color, fill, stroke,
+        opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter,
+        backdrop-filter, display, content-visibility, overlay, pointer-events;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      transition-duration: 150ms;
+    }
   }
   .gm-post-card {
     column-gap: 1rem;
@@ -1253,6 +1255,14 @@
     border-radius: 0.25rem;
     background-color: var(--accent-text);
   }
+  /* The equalizer's bars and the hero's blobs are animated by inline styles (HeroEqualizer.tsx, HeroBackground.tsx),
+     which only !important outranks: under reduced motion they hold still, at their resting row and place. */
+  @media (prefers-reduced-motion: reduce) {
+    .gm-equalizer-bar,
+    .gm-hero-blob {
+      animation: none !important;
+    }
+  }
   @keyframes germomics-eq {
     from {
       transform: scaleY(0.3);
@@ -2082,9 +2092,13 @@
     aspect-ratio: 4/3;
     width: 100%;
     max-width: 800px;
-    animation: gm-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     border-radius: 0.75rem;
     background-color: var(--sunken);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .gm-game-skeleton {
+      animation: gm-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
   }
   .gm-game-save {
     margin-top: 1rem;
