@@ -324,20 +324,6 @@ export type NewPerson = typeof people.$inferInsert;
 export type EpisodePerson = typeof episodePeople.$inferSelect;
 export type Soundbite = typeof soundbites.$inferSelect;
 
-// 0013: an update Carrel scheduled on a live article (site-api v0.10.0). Read and written only through
-// @dustinedwards/site-api/schedules (app/lib/carrel/adapter.server.ts); declared here so the schema test sees it.
-export const scheduledUpdates = sqliteTable(
-  "scheduled_updates",
-  {
-    contentId: text("content_id").primaryKey(),
-    source: text("source").notNull(),
-    publishAt: text("publish_at").notNull(),
-    changeId: text("change_id").notNull(),
-    scheduledAt: text("scheduled_at").notNull(),
-  },
-  (t) => ({ dueIdx: index("scheduled_updates_due").on(t.publishAt) }),
-);
-
 // 0019: a renamed post's old slug, which redirects (301) to the post's slug now (app/lib/posts.server.ts).
 export const postRedirects = sqliteTable("post_redirects", {
   fromSlug: text("from_slug").primaryKey(),
@@ -349,79 +335,6 @@ export const postRedirects = sqliteTable("post_redirects", {
     .default(sql`(datetime('now'))`),
 });
 
-// 0018: site-api's store (safe retries, hook retries, preview links, the webmentions sent). Read and written only
-// through @dustinedwards/site-api/store (app/lib/carrel/handler.server.ts); declared here so the schema test sees it.
-export const siteApiWrites = sqliteTable(
-  "site_api_writes",
-  {
-    changeId: text("change_id").primaryKey(),
-    route: text("route").notNull(),
-    requestHash: text("request_hash").notNull(),
-    status: integer("status"),
-    response: text("response"),
-    state: text("state").notNull(),
-    at: text("at").notNull(),
-  },
-  (t) => ({ atIdx: index("site_api_writes_at").on(t.at) }),
-);
-
-export const hookRetries = sqliteTable(
-  "hook_retries",
-  {
-    id: text("id").primaryKey(),
-    hook: text("hook").notNull(),
-    event: text("event").notNull(),
-    attempts: integer("attempts").notNull(),
-    nextAt: text("next_at").notNull(),
-    lastError: text("last_error").notNull(),
-  },
-  (t) => ({ dueIdx: index("hook_retries_due").on(t.nextAt) }),
-);
-
-export const previewLinks = sqliteTable(
-  "preview_links",
-  {
-    tokenHash: text("token_hash").primaryKey(),
-    contentId: text("content_id").notNull(),
-    createdAt: text("created_at").notNull(),
-    expiresAt: text("expires_at").notNull(),
-    revokedAt: text("revoked_at"),
-    changeId: text("change_id").notNull(),
-  },
-  (t) => ({ contentIdx: index("preview_links_content").on(t.contentId, t.expiresAt) }),
-);
-
-export const webmentionTargets = sqliteTable("webmention_targets", {
-  source: text("source").primaryKey(),
-  targets: text("targets").notNull(),
-  sentAt: text("sent_at").notNull(),
-});
-
-// site-api 0.21.0 (migration 0024): the media file each upload's duplicates key became. Only d1SiteApiStore reads it.
-export const mediaUploads = sqliteTable("media_uploads", {
-  sha256: text("sha256").primaryKey(),
-  mediaId: text("media_id").notNull(),
-  at: text("at").notNull(),
-});
-
-// site-api 0.22.0 (migration 0026): the public path of each post Carrel deleted or trashed (gone_paths) and each publish
-// hook's run (hook_runs). Only d1SiteApiStore reads them.
-export const gonePaths = sqliteTable("gone_paths", {
-  path: text("path").primaryKey(),
-  goneAt: text("gone_at").notNull(),
-});
-
-export const hookRuns = sqliteTable(
-  "hook_runs",
-  {
-    changeId: text("change_id").notNull(),
-    hook: text("hook").notNull(),
-    ok: integer("ok").notNull(),
-    at: text("at").notNull(),
-  },
-  (t) => [index("hook_runs_change").on(t.changeId), index("hook_runs_at").on(t.at)],
-);
-
 // 0014: the caption Carrel set on an image in BLOG_IMAGES, keyed by its R2 key. Since 0015 a caption lives on its
 // `media` row; this table is read only by the backfill that made those rows (app/lib/media/backfill.server.ts).
 export const mediaCaptions = sqliteTable("media_captions", {
@@ -432,61 +345,24 @@ export const mediaCaptions = sqliteTable("media_captions", {
     .default(sql`(datetime('now'))`),
 });
 
-// The media library: site-api's standard tables (MEDIA_LIBRARY_SQL, drizzle/0029), one row per image in BLOG_IMAGES,
-// its byte history and a change log (filled by triggers in the migration). Carrel's library writes them through
-// site-api's d1MediaStore; the pages and the admin editor's upload read and add rows through app/lib/media/store.server.ts.
-export const media = sqliteTable(
-  "media",
-  {
-    key: text("key").primaryKey(),
-    filename: text("filename"),
-    contentType: text("content_type").notNull(),
-    bytes: integer("bytes").notNull(),
-    width: integer("width"),
-    height: integer("height"),
-    sha256: text("sha256").notNull(),
-    alt: text("alt").notNull().default(""),
-    caption: text("caption").notNull().default(""),
-    tags: text("tags", { mode: "json" })
-      .$type<string[]>()
-      .notNull()
-      .default(sql`'[]'`),
-    focus: text("focus"),
-    credit: text("credit").notNull().default(""),
-    license: text("license").notNull().default(""),
-    sourceUrl: text("source_url"),
-    licenseExpires: text("license_expires"),
-    takenAt: text("taken_at"),
-    uploadedAt: text("uploaded_at").notNull(),
-    trashedAt: text("trashed_at"),
-    rev: integer("rev").notNull().default(0),
-    // prepareUpload's blurred data: URI and #rrggbb; null for files stored before, or one the binding cannot read.
-    placeholder: text("placeholder"),
-    color: text("color"),
-  },
-  (t) => ({ shaIdx: index("media_sha256").on(t.sha256) }),
-);
-
-export const mediaRevisions = sqliteTable(
-  "media_revisions",
-  {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    mediaKey: text("media_key").notNull(),
-    at: text("at").notNull(),
-    bytes: integer("bytes").notNull(),
-    width: integer("width"),
-    height: integer("height"),
-    reason: text("reason").notNull(),
-    sha256: text("sha256").notNull(),
-    copyKey: text("copy_key"),
-  },
-  (t) => ({ keyIdx: index("media_revisions_key").on(t.mediaKey, t.id) }),
-);
-
-export const mediaChanges = sqliteTable("media_changes", {
-  seq: integer("seq").primaryKey({ autoIncrement: true }),
-  mediaKey: text("media_key").notNull(),
-});
+// site-api's tables (SQL in drizzle/0013, 0018, 0024, 0026 and 0029), mirrored by its ./drizzle export: the scheduled
+// updates, the store (safe retries, hook retries and runs, preview links, webmentions sent, upload duplicates, gone
+// paths) and the media library (one row per image in BLOG_IMAGES, its byte history and a change log filled by triggers
+// in the migration). Read and written only through site-api's stores; here so drizzle-kit and the schema test see them.
+export {
+  scheduledUpdates,
+  siteApiWrites,
+  hookRetries,
+  previewLinks,
+  webmentionTargets,
+  mediaUploads,
+  gonePaths,
+  hookRuns,
+  media,
+  mediaRevisions,
+  mediaChanges,
+} from "@dustinedwards/site-api/drizzle";
+import { media } from "@dustinedwards/site-api/drizzle";
 
 export type MediaRow = typeof media.$inferSelect;
 

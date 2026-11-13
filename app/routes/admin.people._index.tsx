@@ -2,7 +2,7 @@
 // (app/lib/carrel/source.ts), so a person is added here first.
 import { useState } from "react";
 import { useFetcher } from "react-router";
-import { UserPlus, Trash2, Plus, X, Users } from "lucide-react";
+import { UserPlus, Trash2, Users } from "lucide-react";
 import type { Route } from "./+types/admin.people._index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { listPeople, upsertPerson, deletePerson } from "~/lib/people.server";
@@ -13,6 +13,10 @@ import type { Person, PersonLink } from "~/db/schema";
 import { readForm } from "@dustinedwards/site-runtime/body";
 import { ADMIN_FORM } from "~/lib/body.server";
 import { confirmSubmit } from "capsomer/behavior/confirm-dialog";
+import { TextField } from "capsomer/react/field";
+import { RepeaterField } from "capsomer/react/repeater-field";
+import "capsomer/field.css";
+import "capsomer/repeater-field.css";
 
 export async function loader({ context }: Route.LoaderArgs) {
   return { people: await listPeople(getEnv(context)) };
@@ -121,7 +125,10 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                   <del.Form
                     method="post"
                     onSubmit={(e) =>
-                      confirmSubmit(e, { title: `Delete ${p.name}?`, action: "Delete person" })
+                      confirmSubmit(e, {
+                        title: `Delete ${p.name}?`,
+                        action: "Delete person",
+                      })
                     }
                   >
                     <input type="hidden" name="intent" value="delete" />
@@ -160,7 +167,6 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
               {editing ? <input type="hidden" name="id" value={draft.id} /> : null}
               <input type="hidden" name="photo" value={draft.photo} />
               <input type="hidden" name="photoAlt" value={draft.photoAlt} />
-              <input type="hidden" name="links" value={JSON.stringify(draft.links)} />
 
               <Field label="Name" required>
                 {({ id }) => (
@@ -206,62 +212,33 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
                 onChange={({ url, alt }) => setDraft((d) => ({ ...d, photo: url, photoAlt: alt }))}
               />
 
-              <div>
-                <span className="font-display text-sm font-medium text-ink">Links</span>
-                <div className="mt-2 space-y-2">
-                  {draft.links.map((l, i) => (
-                    <div key={i} className="flex gap-2">
-                      <input
-                        aria-label="Link label"
-                        placeholder="label"
-                        value={l.label}
-                        onChange={(e) =>
-                          setDraft((d) => ({
-                            ...d,
-                            links: d.links.map((x, idx) =>
-                              idx === i ? { ...x, label: e.target.value } : x,
-                            ),
-                          }))
-                        }
-                        className={`${inputCx} w-28 text-xs`}
-                      />
-                      <input
-                        aria-label="Link URL"
-                        placeholder="https://"
-                        value={l.url}
-                        onChange={(e) =>
-                          setDraft((d) => ({
-                            ...d,
-                            links: d.links.map((x, idx) =>
-                              idx === i ? { ...x, url: e.target.value } : x,
-                            ),
-                          }))
-                        }
-                        className={`${inputCx} flex-1 text-xs`}
-                      />
-                      <button
-                        type="button"
-                        aria-label="Remove link"
-                        onClick={() =>
-                          setDraft((d) => ({ ...d, links: d.links.filter((_, idx) => idx !== i) }))
-                        }
-                        className="grid h-8 w-8 place-items-center rounded text-muted hover:text-brand"
-                      >
-                        <X size={14} aria-hidden />
-                      </button>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() =>
-                      setDraft((d) => ({ ...d, links: [...d.links, { label: "", url: "" }] }))
-                    }
-                  >
-                    <Plus size={13} aria-hidden /> Add link
-                  </Button>
-                </div>
-              </div>
+              <RepeaterField
+                legend="Links"
+                rows={draft.links}
+                onChange={(links) => setDraft((d) => ({ ...d, links }))}
+                newRow={() => ({ label: "", url: "" })}
+                rowLabel={(i) => `Link ${i + 1}`}
+                addLabel="Add link"
+                name="links"
+                json
+              >
+                {(link, { set }) => (
+                  <>
+                    <TextField
+                      label="Link label"
+                      placeholder="label"
+                      value={link.label}
+                      onChange={(e) => set({ label: e.target.value })}
+                    />
+                    <TextField
+                      label="Link URL"
+                      placeholder="https://"
+                      value={link.url}
+                      onChange={(e) => set({ url: e.target.value })}
+                    />
+                  </>
+                )}
+              </RepeaterField>
 
               <input type="hidden" name="intent" value="upsert" />
               <div className="flex items-center gap-3">

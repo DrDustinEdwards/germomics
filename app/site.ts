@@ -7,8 +7,9 @@ import { startIslands } from "@dustinedwards/devkit/islands";
 import { enhance as enhanceCopy } from "capsomer/behavior/copy";
 import { enhance as enhanceHeader } from "capsomer/behavior/site-header";
 import { enhance as enhanceTheme } from "capsomer/behavior/theme-switch";
+import { keepFocus } from "capsomer/behavior/field";
+import { HYDRATED_ATTRIBUTE } from "./lib/hydration";
 import { enhanceHydrateOnIntent } from "./site/hydrate";
-import { enhanceSearch } from "./site/search";
 
 // First, before anything renders: the Trusted Types default policy and INP reporting.
 startPage();
@@ -16,7 +17,12 @@ startPage();
 enhanceHeader();
 enhanceTheme();
 enhanceCopy();
-enhanceSearch();
+// The search forms (data-keep-focus) are plain GET forms on a page that sends no React: keep the focus after a search.
+// A hydrated page submits in place, and the focus stays without help.
+keepFocus({
+  key: "germomics-keep-focus",
+  skip: () => document.documentElement.hasAttribute(HYDRATED_ATTRIBUTE),
+});
 // The nonce of this script, for the hydration scripts it may add: the page's CSP trusts inline scripts by nonce.
 enhanceHydrateOnIntent((document.currentScript as HTMLScriptElement | null)?.nonce ?? "");
 // A part of a page that needs its own script (app/islands/, such as the /data charts) loads it only on that page.

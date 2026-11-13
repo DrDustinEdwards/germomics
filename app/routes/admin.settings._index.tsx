@@ -23,6 +23,10 @@ import { HostsEditor } from "~/components/admin/HostsEditor";
 import type { PodcastCategory, Host } from "~/db/schema";
 import { readForm } from "@dustinedwards/site-runtime/body";
 import { ADMIN_FORM } from "~/lib/body.server";
+import { parseJsonField, type FieldSpec } from "capsomer/behavior/schema-form";
+import { SchemaFields } from "capsomer/react/schema-form";
+import "capsomer/field.css";
+import "capsomer/schema-form.css";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
@@ -40,15 +44,23 @@ const isHost = (v: unknown): v is Host =>
   typeof v === "object" && v !== null && typeof (v as Host).name === "string";
 
 /** A JSON array field whose every item passes `valid`, or null when it is missing, does not parse or holds anything else. */
-function parseList<T>(raw: FormDataEntryValue | null, valid: (v: unknown) => v is T): T[] | null {
-  if (typeof raw !== "string") return null;
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.every(valid) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
+const listOf =
+  <T,>(valid: (v: unknown) => v is T) =>
+  (v: unknown): v is T[] =>
+    Array.isArray(v) && v.every(valid);
+
+// A settings row as a field: it posts as `s:<key>`, which the action saves.
+const settingSpec = (s: {
+  key: string;
+  label: string | null;
+  description: string | null;
+  type: string;
+}): FieldSpec => ({
+  key: `s:${s.key}`,
+  label: s.label || s.key,
+  help: s.description ? `${s.description} (${s.key})` : s.key,
+  kind: s.type === "markdown" ? "textarea" : s.type === "json" ? "json" : "text",
+});
 
 export async function action({ request, context }: Route.ActionArgs) {
   const env = getEnv(context);
@@ -64,8 +76,8 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   // Categories and hosts arrive as JSON from their editors. One that is missing or does not parse is answered as a form
   // error and the stored value kept: falling back to [] would erase the categories and hosts the directories read.
-  const categories = parseList(form.get("categories"), isCategory);
-  const parsedHosts = parseList(form.get("hosts"), isHost);
+  const categories = parseJsonField(form.get("categories"), listOf(isCategory));
+  const parsedHosts = parseJsonField(form.get("hosts"), listOf(isHost));
   const problems = [
     ...(categories
       ? []
@@ -102,6 +114,7 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
   const settingsFetcher = useFetcher<{ ok: boolean; message?: string }>();
   const [categories, setCategories] = useState<PodcastCategory[]>(show.categories ?? []);
   const [hosts, setHosts] = useState<Host[]>(show.hosts ?? []);
+  const settingValues = Object.fromEntries(siteSettings.map((s) => [`s:${s.key}`, s.value]));
   const pages = blocks.filter((b) => b.kind === "page");
   const snippets = blocks.filter((b) => b.kind === "snippet");
 
@@ -264,29 +277,7 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
             Non-secret config and the AI generator prompts. Saved instantly. Identity that drives
             the feed lives in the Show card above, not here.
           </p>
-          <div className="space-y-4">
-            {siteSettings.map((s) => (
-              <Field
-                key={s.key}
-                label={s.label || s.key}
-                hint={s.description ? `${s.description} (${s.key})` : s.key}
-              >
-                {({ id }) =>
-                  s.type === "markdown" || s.type === "json" ? (
-                    <textarea
-                      id={id}
-                      name={`s:${s.key}`}
-                      defaultValue={s.value}
-                      rows={s.type === "markdown" ? 6 : 2}
-                      className={`${inputCx} font-mono text-xs`}
-                    />
-                  ) : (
-                    <input id={id} name={`s:${s.key}`} defaultValue={s.value} className={inputCx} />
-                  )
-                }
-              </Field>
-            ))}
-          </div>
+          <SchemaFields specs={siteSettings.map(settingSpec)} values={settingValues} />
         </Card>
         <div className="flex items-center gap-3">
           <Button type="submit" variant="primary" disabled={settingsFetcher.state !== "idle"}>
