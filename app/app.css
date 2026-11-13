@@ -1,6 +1,6 @@
 /* Capsomer's layers sit above Tailwind's base and below its components and utilities: its element rules win in the admin shell, and Tailwind classes on page content still win over Capsomer.
    Capsomer's scale and palette (cap-tokens) come first of all, so a name both define (--radius-xl, --ease-out) keeps
-   Tailwind's value on germomics' own classes, and germomics' palette below (unlayered) wins over both. */
+   Tailwind's value on germomics' own classes. germomics' palette is Capsomer's germomics site entry (site.css). */
 @layer cap-tokens, theme, base, cap, components, utilities;
 /* Capsomer's parts (the header, the player, the reading contexts) and their tokens load with the public pages alone,
    from site.css (routes/_site.tsx); the admin brings its own (admin.css). */
@@ -12,9 +12,10 @@
 
 /* ── germomics design system ───────────────────────────────────────────────
    Anchor #4F2D7F (crystal violet). Light + dark are both first-class, switched by
-   data-theme on <html> and remembered. Cyan (#0E7490 light / #22D3EE dark) is the
-   accent, reserved for interactive and now-playing states only. Tokens are CSS vars;
-   @theme inline maps them into Tailwind utilities so bg-bg / text-brand / text-accent
+   data-theme on <html> and remembered. Cyan is the accent, reserved for interactive and
+   now-playing states only. The palette is Capsomer's germomics site entry
+   (capsomer/site-germomics.css, data-cap-site="germomics" on <html> on the public pages);
+   @theme inline maps its roles into Tailwind utilities so bg-bg / text-brand / text-accent
    respond to the theme. No hard-coded colors anywhere else. */
 
 @theme {
@@ -25,65 +26,16 @@
 }
 
 @theme inline {
-  --color-bg: var(--bg);
-  --color-surface: var(--surface);
-  --color-card: var(--card);
-  --color-border: var(--border);
-  --color-ink: var(--ink);
-  --color-muted: var(--muted);
-  --color-brand: var(--brand);
-  --color-brand-strong: var(--brand-strong);
-  --color-on-brand: var(--on-brand);
-  --color-accent: var(--accent);
-}
-
-:root {
-  --bg: #fbfafd;
-  --surface: #f4f1fa;
-  --card: #ffffff;
-  --border: #e2dcec;
-  --ink: #14101f;
-  --muted: #6b6577;
-  --brand: #4f2d7f;
-  --brand-strong: #402567;
-  --on-brand: #ffffff;
-  --accent: #0e7490;
-  color-scheme: light;
-}
-
-/* System dark, unless the visitor explicitly chose light. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #120b1f;
-    --surface: #1e1630;
-    --card: #181125;
-    --border: #2c2440;
-    --ink: #edeaf5;
-    --muted: #9a8fb0;
-    --brand: #c4aef0;
-    --brand-strong: #b29ad9;
-    --on-brand: #120b1f;
-    --accent: #22d3ee;
-    color-scheme: dark;
-  }
-}
-
-/* Explicit choice always wins. */
-:root[data-theme="dark"] {
-  --bg: #120b1f;
-  --surface: #1e1630;
-  --card: #181125;
-  --border: #2c2440;
-  --ink: #edeaf5;
-  --muted: #9a8fb0;
-  --brand: #c4aef0;
-  --brand-strong: #b29ad9;
-  --on-brand: #120b1f;
-  --accent: #22d3ee;
-  color-scheme: dark;
-}
-:root[data-theme="light"] {
-  color-scheme: light;
+  --color-bg: var(--ground);
+  --color-surface: var(--sunken);
+  --color-card: var(--raised);
+  --color-border: var(--line);
+  --color-ink: var(--text);
+  --color-muted: var(--dim);
+  --color-brand: var(--primary);
+  --color-brand-strong: var(--primary-hover);
+  --color-on-brand: var(--primary-fg);
+  --color-accent: var(--accent-text);
 }
 
 @layer base {

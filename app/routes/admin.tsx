@@ -155,7 +155,7 @@ export default function AdminLayout({ loaderData }: Route.ComponentProps) {
   return (
     <div
       data-cap-theme={theme}
-      data-cap-site="germomics"
+      data-cap-site="germomics-admin"
       suppressHydrationWarning
       style={{ display: "contents" }}
     >

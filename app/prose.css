@@ -10,7 +10,7 @@
   --prose: var(--font-serif);
   --fs-prose: 18px;
   --prose-heading-face: var(--font-display);
-  --prose-heading-ink: var(--ink);
+  --prose-heading-ink: var(--text);
   --prose-heading-weight: 600;
   --prose-h2-size: 1.25rem;
   --prose-heading-space: 2rem;
@@ -23,21 +23,21 @@
   --diagram-face: var(--font-display);
   --diagram-stroke: 1.5px;
   --diagram-label-weight: 600;
-  --diagram-neutral: var(--surface);
-  --diagram-neutral-line: var(--brand);
-  --diagram-accent: color-mix(in srgb, var(--brand) 16%, var(--card));
-  --diagram-accent-line: var(--brand);
-  --diagram-success: color-mix(in srgb, var(--accent) 14%, var(--card));
-  --diagram-success-line: var(--accent);
-  --diagram-warning: color-mix(in srgb, var(--brand-strong) 18%, var(--card));
-  --diagram-warning-line: var(--brand-strong);
-  --diagram-info: var(--surface);
-  --diagram-info-line: var(--accent);
-  --diagram-ink: var(--ink);
-  --diagram-ink-muted: var(--muted);
-  --diagram-arrow: var(--muted);
-  --diagram-rule: var(--border);
-  --diagram-ground: var(--card);
+  --diagram-neutral: var(--sunken);
+  --diagram-neutral-line: var(--primary);
+  --diagram-accent: color-mix(in srgb, var(--primary) 16%, var(--raised));
+  --diagram-accent-line: var(--primary);
+  --diagram-success: color-mix(in srgb, var(--accent-text) 14%, var(--raised));
+  --diagram-success-line: var(--accent-text);
+  --diagram-warning: color-mix(in srgb, var(--primary-hover) 18%, var(--raised));
+  --diagram-warning-line: var(--primary-hover);
+  --diagram-info: var(--sunken);
+  --diagram-info-line: var(--accent-text);
+  --diagram-ink: var(--text);
+  --diagram-ink-muted: var(--dim);
+  --diagram-arrow: var(--dim);
+  --diagram-rule: var(--line);
+  --diagram-ground: var(--raised);
 }
 /* A drawing sits flush in its block, as it always has: the body's figure spacing (Tailwind's, in the utilities layer)
    stops at the diagram; a drawing with its credit keeps its 2.5rem below, and the credit is the body's serif at

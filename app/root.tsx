@@ -159,8 +159,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const nonce = useContext(UNSAFE_FrameworkContext)?.nonce;
   const hydrates = routeHydrates(useMatches());
   const deferred = isServer ? !hydrates : (clientDeferred ??= !hydrates);
+  // The public pages take germomics' palette from Capsomer's site entry; the admin keeps Capsomer's own look.
+  const site = useLocation().pathname.startsWith("/admin") ? undefined : "germomics";
   return (
-    <html lang="en">
+    <html lang="en" data-cap-site={site}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

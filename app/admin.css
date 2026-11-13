@@ -2,7 +2,7 @@
    Capsomer v0.5.0: layers, tokens, both themes, the base rules, and the pieces AdminShell uses. */
 @import "capsomer/tokens.css";
 @import "capsomer/themes.css" layer(cap.tokens);
-@import "capsomer/site-germomics.css";
+@import "capsomer/site-germomics-admin.css";
 @import "capsomer/base.css";
 @import "capsomer/site-header.css";
 @import "capsomer/theme-switch.css";
