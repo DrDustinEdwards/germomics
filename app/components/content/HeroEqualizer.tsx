@@ -66,18 +66,14 @@ export function HeroEqualizer() {
       // The 28 flex-1 bars evenly fill this fixed-width shelf under the cover, so every bar gets an
       // identical computed width (no hardcoded bar width). Hidden below sm so it never crowds the
       // headline on phones; the cover above it carries the right column there.
-      className="hidden h-16 w-44 items-center gap-px sm:flex sm:w-52"
+      className="gm-equalizer"
     >
-      {/* Keyframes live with the component so it stays self-contained. scaleY from the default
-          center origin grows each bar symmetrically around the centerline, the way the player
-          waveform renders. */}
-      <style>{"@keyframes germomics-eq{from{transform:scaleY(0.3)}to{transform:scaleY(1)}}"}</style>
       {BARS.map((b, i) => (
         <span
           key={i}
           // The waveform's exact bar classes: relative, flex-1 (identical width, never a fixed
           // width), rounded-sm, bg-accent. Height is per-bar, as in EpisodeWaveform.
-          className="relative flex-1 rounded-sm bg-accent"
+          className="gm-equalizer-bar"
           style={{
             height: `${b.h}%`,
             // Resting state (also what shows when reduced motion freezes the animation).

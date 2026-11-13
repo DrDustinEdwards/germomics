@@ -6,9 +6,7 @@ import { timecode } from "capsomer/behavior/time";
 import { SITE_ORIGIN } from "~/lib/site";
 
 // The share buttons are Capsomer's copy (components/copy): the icon turns to a check and a bubble beside the button says
-// Copied or Copy failed, which is also its status region. The pill is germomics' own.
-const PILL =
-  "inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 font-mono text-xs hover:border-accent hover:text-accent [&_svg]:size-3.5";
+// Copied or Copy failed, which is also its status region. The pill is germomics' own (gm-pill, site.css).
 
 // Invoker Commands (command, commandfor) are not in React's button types yet; the attributes pass through as written.
 const INVOKER = (command: string, commandfor: string): object => ({ command, commandfor });
@@ -23,7 +21,7 @@ export function CopyButton({
   label,
   share = false,
   icon: Icon,
-  className = PILL,
+  className = "gm-pill",
 }: {
   path: string;
   label: string;
@@ -72,7 +70,7 @@ export function ShareTimestamp({ slug }: { slug: string }) {
         type="button"
         data-state={state}
         onClick={() => void copy(`${window.location.origin}/${slug}?t=${at}`)}
-        className={`cap-copy-button ${PILL}`}
+        className={"cap-copy-button gm-pill"}
       >
         <span className="cap-copy-icon">
           <Share2 size={14} aria-hidden />

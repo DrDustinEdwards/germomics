@@ -44,7 +44,7 @@ export default function Txasm({ loaderData }: Route.ComponentProps) {
       >
         Visit txasm.org
         <ExternalLink size={16} aria-hidden />
-        <span className="sr-only"> (another site)</span>
+        <span className="cap-sr-only"> (another site)</span>
       </a>
     </div>
   );

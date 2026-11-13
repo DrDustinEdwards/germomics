@@ -103,7 +103,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </div>
         <div className="relative flex flex-col items-center gap-3 lg:col-span-2">
           <div className="w-44 sm:w-52">
-            <CoverArt alt="Germomics cover art" className="shadow-lg ring-1 ring-border" />
+            <CoverArt alt="Germomics cover art" className="gm-cover-ringed" />
           </div>
           <HeroEqualizer />
         </div>

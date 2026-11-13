@@ -33,7 +33,7 @@ export function CoverArt({
   /** The item's own artwork. When absent (the default cover), the SVG-on-violet square renders. */
   src?: string | null;
   alt: string;
-  /** Border / ring / shadow for the frame, so each site keeps its current treatment. */
+  /** The frame: gm-cover-bordered or gm-cover-ringed (site.css). */
   className?: string;
   eager?: boolean;
   /** The artwork's sizes from /media, when the loader could size it. */
@@ -41,7 +41,6 @@ export function CoverArt({
 }) {
   const [failed, setFailed] = useState(false);
   const holder = useRef<HTMLSpanElement | null>(null);
-  const frame = "aspect-square w-full rounded-2xl";
 
   // An image's error event does not bubble, so the wrapper listens in the capture phase; one that failed before this
   // ran (the page was server-rendered) is seen by its size.
@@ -58,12 +57,12 @@ export function CoverArt({
   // Per-item raster wins; fall through to the SVG square if it 404s or fails to decode.
   if (src && !failed) {
     return (
-      <span ref={holder} className="contents">
+      <span ref={holder} className="gm-cover-holder">
         <Picture
           attrs={imageOrPlain(image, src, 1400, 1400)}
           alt={alt}
           priority={eager}
-          className={`${frame} object-cover ${className}`}
+          className={`gm-cover gm-cover-photo ${className}`}
         />
       </span>
     );
@@ -73,12 +72,12 @@ export function CoverArt({
     <div
       role="img"
       aria-label={alt}
-      className={`relative overflow-hidden ${frame} ${className}`}
+      className={`gm-cover gm-cover-default ${className}`}
       style={{ backgroundColor: VIOLET }}
     >
       <span
         aria-hidden="true"
-        className="absolute text-white [&>svg]:block [&>svg]:h-full [&>svg]:w-full"
+        className="gm-cover-logo"
         style={{ left: LOGO.left, top: LOGO.top, width: LOGO.width, height: LOGO.height }}
         dangerouslySetInnerHTML={markup(WORDMARK)}
       />

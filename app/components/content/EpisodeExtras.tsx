@@ -102,7 +102,7 @@ export function Sources({ sources }: { sources: Source[] }) {
                 <a href={s.url} className="gm-source-link">
                   {s.title}
                   <ExternalLink size={12} aria-hidden />
-                  <span className="sr-only"> (another site)</span>
+                  <span className="cap-sr-only"> (another site)</span>
                 </a>
               ) : (
                 <span className="gm-source-title">{s.title}</span>

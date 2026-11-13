@@ -59,7 +59,7 @@ function DataTable({
 }) {
   return (
     <table className="w-full border-collapse text-sm">
-      <caption className="sr-only">{title}</caption>
+      <caption className="cap-sr-only">{title}</caption>
       <thead>
         <tr>
           {columns.map((c) => (

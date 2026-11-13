@@ -260,7 +260,7 @@ export function PostDetail({ data }: { data: DetailData }) {
                 image={imageFor(data.images, "artwork", cover)}
                 alt={post.coverAlt ?? "Germomics cover art"}
                 eager
-                className="border border-border"
+                className="gm-cover-bordered"
               />
             </div>
           </header>

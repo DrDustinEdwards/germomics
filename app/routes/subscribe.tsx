@@ -146,7 +146,7 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
         ) : (
           <Form method="post" className="mt-3 space-y-3">
             <div className="flex flex-col gap-2 sm:flex-row">
-              <label htmlFor="email" className="sr-only">
+              <label htmlFor="email" className="cap-sr-only">
                 Email address
               </label>
               <input

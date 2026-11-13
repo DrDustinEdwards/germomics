@@ -7,7 +7,7 @@ export function ExternalCue({ size = 12 }: { size?: number }) {
   return (
     <>
       <ExternalLink size={size} aria-hidden className="shrink-0 text-muted/70" />
-      <span className="sr-only"> (another site)</span>
+      <span className="cap-sr-only"> (another site)</span>
     </>
   );
 }
