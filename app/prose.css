@@ -10,9 +10,9 @@
   --fs-prose: 18px;
   --prose-heading-face: var(--font-display);
   --prose-heading-ink: var(--text);
-  --prose-heading-weight: 600;
-  --prose-h2-size: 1.25rem;
-  --prose-heading-space: 2rem;
+  --prose-heading-weight: var(--weight-semibold);
+  --prose-h2-size: var(--title-4);
+  --prose-heading-space: var(--space-7);
   --prose-flow: 0.75rem;
   --link-decoration: underline;
 }
@@ -21,7 +21,7 @@
 .blog-diagram {
   --diagram-face: var(--font-display);
   --diagram-stroke: 1.5px;
-  --diagram-label-weight: 600;
+  --diagram-label-weight: var(--weight-semibold);
   --diagram-neutral: var(--sunken);
   --diagram-neutral-line: var(--primary);
   --diagram-accent: color-mix(in srgb, var(--primary) 16%, var(--raised));
@@ -78,7 +78,7 @@
   .gm-prose .bookmark-host {
     display: block;
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: var(--fs-small);
     line-height: 1rem;
     color: var(--dim);
   }
@@ -86,10 +86,10 @@
     display: block;
     border-radius: 0.75rem;
     border-style: solid;
-    border-width: 1px;
+    border-width: var(--line-w);
     border-color: var(--line);
     background-color: var(--raised);
-    padding: 1rem;
+    padding: var(--space-5);
     text-decoration-line: none;
   }
   .gm-prose .bookmark-link:hover {
@@ -98,7 +98,7 @@
   .gm-prose .bookmark-title {
     display: block;
     font-family: var(--font-display);
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
     color: var(--text);
   }
   .gm-prose .button {
@@ -106,7 +106,7 @@
     border-radius: calc(infinity * 1px);
     background-color: var(--primary);
     padding-inline: 1.25rem;
-    padding-block: 0.625rem;
+    padding-block: var(--space-3-5);
     font-family: var(--font-display);
     font-size: 0.875rem;
     line-height: 1.25rem;
@@ -120,13 +120,13 @@
     gap: 0.5rem;
   }
   .gm-prose .callout {
-    margin-block: 1.5rem;
+    margin-block: var(--space-6);
     border-radius: 0.75rem;
     border-style: solid;
-    border-width: 1px;
+    border-width: var(--line-w);
     border-color: var(--line);
     background-color: var(--sunken);
-    padding: 1rem;
+    padding: var(--space-5);
     font-style: normal;
   }
   .gm-prose .callout p {
@@ -137,7 +137,7 @@
   }
   .gm-prose .callout-title {
     font-family: var(--font-display);
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
     color: var(--accent-text);
   }
   .gm-prose .callout-warning {
@@ -152,34 +152,34 @@
   .gm-prose .code-title {
     margin-bottom: 0.25rem;
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: var(--fs-small);
     line-height: 1rem;
     color: var(--dim);
   }
   .gm-prose .embed {
-    margin-block: 1.5rem;
+    margin-block: var(--space-6);
   }
   .gm-prose .embed-link {
     display: inline-flex;
     border-radius: calc(infinity * 1px);
     border-style: solid;
-    border-width: 1px;
+    border-width: var(--line-w);
     border-color: var(--line);
     background-color: var(--raised);
-    padding-inline: 1rem;
+    padding-inline: var(--space-5);
     padding-block: 0.5rem;
     text-decoration-line: none;
   }
   .gm-prose .faq {
-    margin-block: 1.5rem;
+    margin-block: var(--space-6);
   }
   .gm-prose .faq dd {
     margin-top: 0.25rem;
   }
   .gm-prose .faq dt {
-    margin-top: 1rem;
+    margin-top: var(--space-5);
     font-family: var(--font-display);
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
   }
   .gm-prose .figure-dark {
     display: none;
@@ -191,7 +191,7 @@
     color: var(--dim);
   }
   .gm-prose .gallery {
-    margin-block: 1.5rem;
+    margin-block: var(--space-6);
   }
   .gm-prose .gallery img {
     margin-block: 0px;
@@ -210,7 +210,7 @@
   }
   .gm-prose .heading-anchor {
     margin-left: 0.5rem;
-    font-weight: 400;
+    font-weight: var(--weight-regular);
     color: var(--dim);
     text-decoration-line: none;
     opacity: 0%;
@@ -222,7 +222,7 @@
     color: var(--accent-text);
   }
   .gm-prose .media {
-    margin-block: 1.5rem;
+    margin-block: var(--space-6);
   }
   .gm-prose .media audio {
     width: 100%;
@@ -240,17 +240,17 @@
     margin-block: 1.25rem;
     border-radius: 0.75rem;
     border-style: solid;
-    border-width: 1px;
+    border-width: var(--line-w);
     border-color: var(--line);
-    padding: 1rem;
+    padding: var(--space-5);
   }
   .gm-prose .post-details summary {
     cursor: pointer;
     font-family: var(--font-display);
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
   }
   .gm-prose .table-scroll {
-    margin-block: 1.5rem;
+    margin-block: var(--space-6);
     overflow-x: auto;
   }
   .gm-prose :is(h2, h3, h4, h5, h6):hover .heading-anchor {
@@ -268,9 +268,9 @@
   .gm-prose blockquote {
     margin-block: 1.25rem;
     border-left-style: solid;
-    border-left-width: 2px;
+    border-left-width: var(--line-w-thick);
     border-color: var(--primary);
-    padding-left: 1rem;
+    padding-left: var(--space-5);
     font-style: italic;
   }
   .gm-prose code {
@@ -287,7 +287,7 @@
   .gm-prose figcaption .figure-credit {
     margin-top: 0.125rem;
     display: block;
-    font-size: 0.75rem;
+    font-size: var(--fs-small);
     line-height: 1rem;
     color: var(--dim);
   }
@@ -295,7 +295,7 @@
     margin-block: 0px;
   }
   .gm-prose figure {
-    margin-block: 1.5rem;
+    margin-block: var(--space-6);
   }
   .gm-prose figure img {
     margin-inline: auto;
@@ -311,26 +311,26 @@
     max-width: min(100%, 400px);
   }
   .gm-prose hr {
-    margin-block: 2rem;
+    margin-block: var(--space-7);
     border-color: var(--line);
   }
   .gm-prose img {
-    margin-block: 1.5rem;
+    margin-block: var(--space-6);
     border-radius: 0.75rem;
     border-style: solid;
-    border-width: 1px;
+    border-width: var(--line-w);
     border-color: var(--line);
   }
   .gm-prose li {
     margin-block: 0.25rem;
   }
   .gm-prose ol {
-    margin-block: 1rem;
+    margin-block: var(--space-5);
     list-style-type: decimal;
-    padding-left: 1.5rem;
+    padding-left: var(--space-6);
   }
   .gm-prose p {
-    margin-block: 1rem;
+    margin-block: var(--space-5);
   }
   .gm-prose picture {
     display: block;
@@ -340,7 +340,7 @@
     overflow-x: auto;
     border-radius: 0.5rem;
     background-color: var(--sunken);
-    padding: 1rem;
+    padding: var(--space-5);
     font-size: 0.875rem;
     line-height: var(--text-sm--line-height);
   }
@@ -351,23 +351,23 @@
   }
   .gm-prose td {
     border-bottom-style: solid;
-    border-bottom-width: 1px;
+    border-bottom-width: var(--line-w);
     border-color: var(--line);
     padding-inline: 0.75rem;
     padding-block: 0.5rem;
   }
   .gm-prose th {
     border-bottom-style: solid;
-    border-bottom-width: 1px;
+    border-bottom-width: var(--line-w);
     border-color: var(--line);
     padding-inline: 0.75rem;
     padding-block: 0.5rem;
     text-align: left;
   }
   .gm-prose ul {
-    margin-block: 1rem;
+    margin-block: var(--space-5);
     list-style-type: disc;
-    padding-left: 1.5rem;
+    padding-left: var(--space-6);
   }
 
   /* Headings. A post's are demoted one level under the page's own h2s (.gm-headings-section), so h3 and h4 carry its
@@ -376,15 +376,15 @@
   .gm-headings-section :is(h2, h3, h4, h5),
   .gm-headings-page :is(h2, h3, h4) {
     font-family: var(--font-display);
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
   }
   .gm-headings-section h2 {
-    margin-top: 3rem;
+    margin-top: var(--space-8);
     margin-bottom: 0.75rem;
     scroll-margin-top: 6rem;
-    font-size: 1.875rem;
+    font-size: var(--title-2);
     line-height: 2.25rem;
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     letter-spacing: -0.025em;
   }
   .gm-headings-section h3,
@@ -392,15 +392,15 @@
     margin-top: 2.5rem;
     margin-bottom: 0.5rem;
     scroll-margin-top: 6rem;
-    font-size: 1.5rem;
+    font-size: var(--title-3);
     line-height: 2rem;
   }
   .gm-headings-section h4,
   .gm-headings-page h3 {
-    margin-top: 1.5rem;
+    margin-top: var(--space-6);
     margin-bottom: 0.25rem;
     scroll-margin-top: 6rem;
-    font-size: 1rem;
+    font-size: var(--title-6);
     line-height: 1.5rem;
     letter-spacing: 0.025em;
     text-transform: uppercase;

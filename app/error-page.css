@@ -19,7 +19,7 @@
 /* The heading as the site's page headings are (font-display text-3xl font-semibold), in the brand purple of the old
    404; the edge in the site's border, not Capsomer's critical red; the column's side padding the site's (px-4). */
 .cap-error-page {
-  padding-inline: 1rem;
+  padding-inline: var(--space-5);
 
   & > .cap-empty[data-kind="failed"] {
     border-color: var(--line);
@@ -28,11 +28,11 @@
   & h1.cap-empty-title {
     color: var(--primary);
     font-family: var(--font-display);
-    font-size: 1.875rem;
+    font-size: var(--title-2);
     line-height: 1.2;
   }
 
   & .cap-empty-text {
-    font-size: 1.0625rem;
+    font-size: var(--fs-page);
   }
 }
