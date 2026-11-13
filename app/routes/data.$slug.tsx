@@ -90,7 +90,7 @@ export default function DataDetail({ loaderData }: Route.ComponentProps) {
     <article className="gm-column">
       <SectionTrail trail={dataTrail(d)} />
       <p className="gm-tag-eyebrow">{d.kind}</p>
-      <h1 className="gm-data-title">{d.title}</h1>
+      <h1 className="gm-detail-title">{d.title}</h1>
       <p className="gm-index-lede">{d.summary}</p>
 
       {map ? (

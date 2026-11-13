@@ -59,7 +59,7 @@ export default function About({ loaderData }: Route.ComponentProps) {
         <BodyRenderer html={aboutHtml} />
       </div>
 
-      <section className="gm-about-host">
+      <section className="gm-callout">
         <h2 className="gm-about-host-title">
           <User size={18} aria-hidden /> The author
         </h2>

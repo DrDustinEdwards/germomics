@@ -73,7 +73,7 @@ export default function GuestPage({ loaderData }: Route.ComponentProps) {
         ) : null}
         <div>
           <h1 className="gm-page-title">{name}</h1>
-          {role ? <p className="gm-guest-role">{role}</p> : null}
+          {role ? <p className="gm-meta-text">{role}</p> : null}
           {bio ? <p className="gm-index-lede">{bio}</p> : null}
           {links.length ? (
             <div className="gm-guest-page-links">

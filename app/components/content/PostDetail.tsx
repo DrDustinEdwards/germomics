@@ -149,7 +149,7 @@ export function PostDetail({ data }: { data: DetailData }) {
               <Link to={`/guests/${g.slug}`} className="gm-guest-name">
                 {g.name}
               </Link>
-              {g.role ? <p className="gm-guest-role">{g.role}</p> : null}
+              {g.role ? <p className="gm-meta-text">{g.role}</p> : null}
               {g.bio ? <p className="gm-guest-bio">{g.bio}</p> : null}
               {(g.links ?? []).length ? (
                 <div className="gm-guest-links">

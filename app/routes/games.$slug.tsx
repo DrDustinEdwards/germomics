@@ -69,29 +69,22 @@ export default function GamePage({ loaderData }: Route.ComponentProps) {
   const emptyScores = useSnippet("snippet:empty.scores", "No scores yet. Be the first.");
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="gm-column">
       <SectionTrail trail={gameTrail(game)} />
-      <p className="font-mono text-xs uppercase tracking-wide text-accent">Arcade</p>
-      <h1 className="mt-2 font-display text-3xl font-semibold">{game.title}</h1>
-      <p className="mt-2 text-muted">{game.instructions}</p>
+      <p className="gm-tag-eyebrow">Arcade</p>
+      <h1 className="gm-detail-title">{game.title}</h1>
+      <p className="gm-lede">{game.instructions}</p>
 
-      <div className="mt-6">
-        <ClientOnly
-          fallback={
-            <div className="mx-auto aspect-[4/3] w-full max-w-[800px] animate-pulse rounded-xl bg-surface" />
-          }
-        >
+      <div className="gm-game-stage">
+        <ClientOnly fallback={<div className="gm-game-skeleton" />}>
           <PhaserGame slug={game.slug} onScore={setLastScore} />
         </ClientOnly>
       </div>
 
       {lastScore != null && !submitted ? (
-        <fetcher.Form
-          method="post"
-          className="mt-4 flex flex-col gap-2 rounded-xl border border-border bg-surface p-4 sm:flex-row sm:items-center"
-        >
-          <p className="font-display text-sm">
-            Run over. <span className="text-brand">{lastScore}</span> bacteria stopped. Save your
+        <fetcher.Form method="post" className="gm-game-save">
+          <p className="gm-game-save-label">
+            Run over. <span className="gm-brand">{lastScore}</span> bacteria stopped. Save your
             score:
           </p>
           <input type="hidden" name="score" value={lastScore} />
@@ -101,39 +94,36 @@ export default function GamePage({ loaderData }: Route.ComponentProps) {
             required
             placeholder="name"
             aria-label="Your name for the leaderboard"
-            className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm outline-none focus-visible:border-accent"
+            className="gm-game-input"
           />
-          <button
-            type="submit"
-            className="rounded-lg bg-brand px-3 py-1.5 font-display text-sm font-medium text-white hover:bg-brand-strong"
-          >
+          <button type="submit" className="gm-game-button">
             Submit
           </button>
         </fetcher.Form>
       ) : null}
       {fetcher.data && fetcher.data.ok === false ? (
-        <p className="mt-2 text-sm text-accent">{fetcher.data.error}</p>
+        <p className="gm-form-note">{fetcher.data.error}</p>
       ) : null}
-      {submitted ? <p className="mt-2 text-sm text-accent">Saved to the leaderboard ↓</p> : null}
+      {submitted ? <p className="gm-form-note">Saved to the leaderboard ↓</p> : null}
 
-      <section className="mt-8">
-        <h2 className="mb-3 flex items-center gap-2 font-display text-xl font-semibold">
-          <Trophy size={18} className="text-brand" aria-hidden /> Leaderboard
+      <section className="gm-game-scores">
+        <h2 className="gm-game-scores-title">
+          <Trophy size={18} className="gm-brand" aria-hidden /> Leaderboard
         </h2>
         {leaderboard.length ? (
-          <ol className="divide-y divide-border rounded-xl border border-border bg-card">
+          <ol className="gm-scores">
             {leaderboard.map((s, i) => (
-              <li key={s.id} className="flex items-center justify-between px-4 py-2">
-                <span className="flex items-center gap-3">
-                  <span className="font-mono text-xs text-muted">{i + 1}</span>
-                  <span className="font-display">{s.name}</span>
+              <li key={s.id} className="gm-score">
+                <span className="gm-score-who">
+                  <span className="gm-meta-text">{i + 1}</span>
+                  <span className="gm-score-name">{s.name}</span>
                 </span>
-                <span className="font-mono tabular-nums text-accent">{s.score}</span>
+                <span className="gm-score-value">{s.score}</span>
               </li>
             ))}
           </ol>
         ) : (
-          <p className="text-muted">{emptyScores}</p>
+          <p className="gm-muted">{emptyScores}</p>
         )}
       </section>
     </div>

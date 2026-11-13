@@ -55,38 +55,31 @@ export async function action({ request, context }: Route.ActionArgs) {
   return { ok: true as const };
 }
 
-const chip =
-  "inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 font-mono text-sm hover:border-accent hover:text-accent";
-
 export default function Subscribe({ loaderData, actionData }: Route.ComponentProps) {
   const sl = loaderData.subscribeLinks as Record<string, string>;
   const primary = PRIMARY_KEYS.filter((k) => sl[k]);
   const secondary = SECONDARY_KEYS.filter((k) => sl[k]);
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <h1 className="font-display text-3xl font-semibold">Subscribe</h1>
-      <p className="mt-2 text-muted">
+    <div className="gm-narrow">
+      <h1 className="gm-page-title">Subscribe</h1>
+      <p className="gm-lede">
         Follow Germomics in your podcast app, by email, or by RSS. New episodes and essays land
         automatically.
       </p>
 
       {/* Primary apps */}
       {primary.length ? (
-        <section className="mt-8">
-          <h2 className="font-display text-lg font-semibold">Listen in your app</h2>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        <section className="gm-sub-section">
+          <h2 className="gm-sub-title">Listen in your app</h2>
+          <div className="gm-sub-apps">
             {primary.map((k) => {
               const d = SUBSCRIBE_DESTINATIONS[k];
               const Icon = d.icon;
               return (
-                <a
-                  key={k}
-                  href={sl[k]}
-                  className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 font-display text-sm font-medium hover:border-accent hover:text-accent"
-                >
+                <a key={k} href={sl[k]} className="gm-sub-app">
                   <Icon size={18} aria-hidden />
-                  <span className="inline-flex items-center gap-1.5">
+                  <span className="gm-sub-app-name">
                     {d.label}
                     <ExternalCue size={14} />
                   </span>
@@ -99,14 +92,14 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
 
       {/* Secondary directories */}
       {secondary.length ? (
-        <section className="mt-8">
-          <h2 className="font-display text-lg font-semibold">More directories</h2>
-          <div className="mt-3 flex flex-wrap gap-2">
+        <section className="gm-sub-section">
+          <h2 className="gm-sub-title">More directories</h2>
+          <div className="gm-sub-chips">
             {secondary.map((k) => {
               const d = SUBSCRIBE_DESTINATIONS[k];
               const Icon = d.icon;
               return (
-                <a key={k} href={sl[k]} className={chip}>
+                <a key={k} href={sl[k]} className="gm-chip">
                   <Icon size={14} aria-hidden /> {d.label}
                   <ExternalCue />
                 </a>
@@ -117,35 +110,35 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
       ) : null}
 
       {/* Other ways (feed mechanisms; not identity profiles) */}
-      <section className="mt-8">
-        <h2 className="font-display text-lg font-semibold">Other ways to subscribe</h2>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <a href={`https://subscribeonandroid.com/${SITE_HOST}/feed/podcast/`} className={chip}>
+      <section className="gm-sub-section">
+        <h2 className="gm-sub-title">Other ways to subscribe</h2>
+        <div className="gm-sub-chips">
+          <a href={`https://subscribeonandroid.com/${SITE_HOST}/feed/podcast/`} className="gm-chip">
             <Smartphone size={14} aria-hidden /> Subscribe on Android
             <ExternalCue />
           </a>
-          <a href={`https://subscribebyemail.com/${SITE_HOST}/feed/podcast/`} className={chip}>
+          <a href={`https://subscribebyemail.com/${SITE_HOST}/feed/podcast/`} className="gm-chip">
             <Mail size={14} aria-hidden /> Subscribe by Email
             <ExternalCue />
           </a>
-          <a href="/feed/podcast/" className={chip}>
+          <a href="/feed/podcast/" className="gm-chip">
             <Rss size={14} aria-hidden /> RSS feed
           </a>
-          <CopyButton path="/feed/podcast/" label="Copy RSS link" icon={Copy} className={chip} />
+          <CopyButton path="/feed/podcast/" label="Copy RSS link" icon={Copy} className="gm-chip" />
         </div>
       </section>
 
       {/* Newsletter */}
-      <section className="mt-10 rounded-2xl border border-border bg-surface p-6">
-        <h2 className="font-display text-lg font-semibold">Newsletter</h2>
+      <section className="gm-callout">
+        <h2 className="gm-sub-title">Newsletter</h2>
         {actionData?.ok ? (
-          <p role="status" className="mt-3 flex items-center gap-2 text-accent">
+          <p role="status" className="gm-sub-done">
             <Check size={16} aria-hidden /> Almost done: check your inbox for a link to confirm your
             subscription.
           </p>
         ) : (
-          <Form method="post" className="mt-3 space-y-3">
-            <div className="flex flex-col gap-2 sm:flex-row">
+          <Form method="post" className="gm-sub-form">
+            <div className="gm-sub-row">
               <label htmlFor="email" className="cap-sr-only">
                 Email address
               </label>
@@ -156,26 +149,23 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
                 required
                 autoComplete="email"
                 placeholder="you@example.com"
-                className="flex-1 rounded-lg border border-border bg-card px-3 py-2 outline-none focus-visible:border-accent"
+                className="gm-sub-input"
               />
-              <button
-                type="submit"
-                className="rounded-lg bg-brand px-4 py-2 font-display text-sm font-medium text-on-brand hover:bg-brand-strong"
-              >
+              <button type="submit" className="gm-sub-button">
                 Subscribe
               </button>
             </div>
-            <div className="flex items-start gap-2">
+            <div className="gm-sub-consent">
               <input
                 id="consent"
                 type="checkbox"
                 name="consent"
                 required
-                className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-brand)]"
+                className="gm-sub-check"
               />
-              <label htmlFor="consent" className="text-sm text-muted">
+              <label htmlFor="consent" className="gm-sub-consent-text">
                 I agree to receive the Germomics newsletter by email and accept the{" "}
-                <Link to="/privacy" className="text-accent underline underline-offset-2">
+                <Link to="/privacy" className="gm-sub-consent-link">
                   privacy policy
                 </Link>
                 . You can unsubscribe anytime via the link in every email.
@@ -184,7 +174,7 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
           </Form>
         )}
         {actionData?.ok === false ? (
-          <p role="alert" className="mt-2 text-sm text-accent">
+          <p role="alert" className="gm-form-note">
             {actionData.error}
           </p>
         ) : null}

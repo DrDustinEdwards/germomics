@@ -80,7 +80,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const featuredTrack = tracks.find((t) => t.id === featured?.id);
 
   return (
-    <div className="space-y-12">
+    <div className="gm-home">
       <QueueSeeder tracks={tracks} />
 
       {/* Split hero: words on the left, the show cover (with the equalizer docked beneath it as a
@@ -88,21 +88,21 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           full-bleeds the page width and fades out at the bottom (see HeroBackground); the section
           stays relative as its positioning context but no longer clips, so the wash is not boxed.
           Columns stack on mobile (words first, then the cover). */}
-      <section className="relative grid gap-8 pt-6 lg:grid-cols-5 lg:items-center">
+      <section className="gm-hero">
         <HeroBackground />
-        <div className="relative lg:col-span-3">
-          <h1 className="max-w-3xl font-display text-5xl font-semibold leading-[1.05] sm:text-6xl">
-            A mix of <span className="text-brand">microbiology</span> and{" "}
-            <span className="text-brand">history</span>.
+        <div className="gm-hero-text">
+          <h1 className="gm-hero-title">
+            A mix of <span className="gm-brand">microbiology</span> and{" "}
+            <span className="gm-brand">history</span>.
           </h1>
-          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
+          <p className="gm-hero-lede">
             This series connects different aspects of modern life and society to microbes, bacteria,
             viruses, and parasites through seemingly unconnected natural events, scientific
             discoveries, and human inventions.
           </p>
         </div>
-        <div className="relative flex flex-col items-center gap-3 lg:col-span-2">
-          <div className="w-44 sm:w-52">
+        <div className="gm-hero-art">
+          <div className="gm-hero-cover">
             <CoverArt alt="Germomics cover art" className="gm-cover-ringed" />
           </div>
           <HeroEqualizer />
@@ -110,35 +110,33 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       </section>
 
       <section>
-        <div className="mb-4 flex items-baseline justify-between">
-          <h2 className="font-display text-2xl font-semibold">Latest</h2>
-          <Link to="/archive" className="font-mono text-xs text-accent hover:underline">
+        <div className="gm-home-head">
+          <h2 className="gm-home-title">Latest</h2>
+          <Link to="/archive" className="gm-home-more">
             view all →
           </Link>
         </div>
-        <div className="grid gap-3">
+        <div className="gm-list">
           {/* Latest episode, promoted to the elevated first row of the list (same teal play chip). */}
           {featured && featuredTrack ? (
-            <article className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm ring-1 ring-brand/10">
+            <article className="gm-latest">
               <PlayTrackButton track={featuredTrack} queue={tracks} size="lg" />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wide text-muted">
-                  <span className="flex items-center gap-1 text-brand">
+              <div className="gm-latest-text">
+                <div className="gm-latest-meta">
+                  <span className="gm-latest-kind">
                     <Headphones size={12} aria-hidden /> Latest episode
                   </span>
                   {featured.publishedAt ? <span>{formatDate(featured.publishedAt)}</span> : null}
                   {featured.audioDuration ? (
-                    <span className="tabular-nums">{timecode(featured.audioDuration * 1000)}</span>
+                    <span className="gm-num">{timecode(featured.audioDuration * 1000)}</span>
                   ) : null}
                 </div>
-                <h3 className="mt-1 font-display text-xl font-medium">
-                  <Link to={`/${featured.slug}`} className="text-ink hover:text-brand">
+                <h3 className="gm-latest-title">
+                  <Link to={`/${featured.slug}`} className="gm-latest-link">
                     {featured.title}
                   </Link>
                 </h3>
-                {featured.excerpt ? (
-                  <p className="mt-1 text-sm text-muted">{featured.excerpt}</p>
-                ) : null}
+                {featured.excerpt ? <p className="gm-index-card-text">{featured.excerpt}</p> : null}
               </div>
             </article>
           ) : null}
