@@ -491,9 +491,10 @@
     color: var(--primary);
   }
   .gm-post-card-meta,
-  .gm-page-hits-label {
+  .gm-page-hits-label,
+  .gm-article-card-meta {
     font-family: var(--font-mono);
-    font-size: 0.6875rem;
+    font-size: var(--fs-label);
     letter-spacing: 0.025em;
     color: var(--dim);
     text-transform: uppercase;
@@ -553,7 +554,7 @@
     padding-inline: var(--space-3);
     padding-block: var(--space-1);
     font-family: var(--font-mono);
-    font-size: 0.6875rem;
+    font-size: var(--fs-label);
     color: var(--dim);
   }
   @media (hover: hover) {
@@ -590,11 +591,6 @@
     align-items: center;
     column-gap: var(--space-4);
     row-gap: var(--space-2);
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    letter-spacing: 0.025em;
-    color: var(--dim);
-    text-transform: uppercase;
   }
   .gm-article-card-kind,
   .gm-post-meta-item,
@@ -698,7 +694,7 @@
   }
   .gm-clip-meta {
     font-family: var(--font-mono);
-    font-size: 0.6875rem;
+    font-size: var(--fs-label);
     color: var(--dim);
   }
   .gm-page-hits {
@@ -831,7 +827,7 @@
     flex-wrap: wrap;
     gap: var(--space-3);
     font-family: var(--font-mono);
-    font-size: 0.6875rem;
+    font-size: var(--fs-label);
   }
   .gm-link {
     color: var(--accent-text);
@@ -877,12 +873,13 @@
       border-color: var(--primary);
     }
   }
-  .gm-prev-next-label {
+  .gm-prev-next-label,
+  .gm-next-label {
     display: flex;
     align-items: center;
     gap: var(--space-2);
     font-family: var(--font-mono);
-    font-size: 0.6875rem;
+    font-size: var(--fs-label);
     color: var(--dim);
   }
   .gm-prev-next-title {
@@ -898,13 +895,7 @@
     text-align: right;
   }
   .gm-next-label {
-    display: flex;
-    align-items: center;
     justify-content: flex-end;
-    gap: var(--space-2);
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    color: var(--dim);
   }
   .gm-episode {
     margin-inline: auto;
@@ -1328,7 +1319,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    font-size: 0.6875rem;
+    font-size: var(--fs-label);
     line-height: inherit;
   }
   .gm-latest-meta {
@@ -1706,7 +1697,7 @@
     max-width: 48rem;
     font-family: var(--font-display);
     font-size: var(--display-3);
-    line-height: 1.05;
+    line-height: var(--leading-none);
     font-weight: var(--weight-semibold);
   }
   @media (width >= 40rem) {
@@ -2115,7 +2106,7 @@
     --icon-stroke: 2;
   }
   .gm-article-card-kind {
-    --icon-size: 0.6875rem;
+    --icon-size: var(--fs-label);
   }
   .gm-external-cue,
   .gm-post-card-kind,
