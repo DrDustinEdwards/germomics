@@ -10,8 +10,7 @@ import type { Route } from "./+types/unsubscribe";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getDb } from "~/db/index.server";
 import { subscribers } from "~/db/schema";
-import { readForm } from "@dustinedwards/site-runtime/body";
-import { PUBLIC_FORM } from "~/lib/body.server";
+import { formToken } from "~/lib/body.server";
 
 type Result = {
   status: "confirm" | "done" | "already" | "invalid";
@@ -55,12 +54,7 @@ export async function loader({ request, context }: Route.LoaderArgs): Promise<Re
 
 export async function action({ request, context }: Route.ActionArgs) {
   // RFC 8058 one-click: the token can arrive in the POST body or the query string.
-  const url = new URL(request.url);
-  let token = url.searchParams.get("token");
-  if (!token) {
-    const form = await readForm(request, PUBLIC_FORM).catch(() => null);
-    token = form ? String(form.get("token") ?? "") || null : null;
-  }
+  const token = new URL(request.url).searchParams.get("token") || (await formToken(request));
   return unsubscribe(getEnv(context), token);
 }
 

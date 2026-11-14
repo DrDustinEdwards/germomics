@@ -224,10 +224,10 @@ describe("content", () => {
         guid: string;
       }>())!.guid,
     ).toBe(guid);
-    const { renamedPostRedirect } = await import("~/lib/posts.server");
-    expect(
-      (await renamedPostRedirect(e, "old-name", "/transcript.vtt"))?.headers.get("Location"),
-    ).toBe("/new-name/transcript.vtt");
+    const { missingPost } = await import("~/lib/posts.server");
+    expect((await missingPost(e, "old-name", "/transcript.vtt")).headers.get("Location")).toBe(
+      "/new-name/transcript.vtt",
+    );
     // A taken slug is refused; the history moved with the post.
     await put("other", "x", null);
     expect(

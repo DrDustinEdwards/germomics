@@ -208,15 +208,11 @@ export async function getPostBySlug(
 }
 
 /**
- * The permanent redirect for a slug a post was renamed from (Carrel's rename, post_redirects), to the same `suffix`
- * under the slug it has now; null when the slug was never renamed or the post is not publicly visible, so a redirect
- * never names a draft's address.
+ * What a loader throws for a slug with no visible post: the permanent redirect for a slug a post was renamed from
+ * (Carrel's rename, post_redirects), to the same `suffix` under the slug it has now, else a 404. A post that is not
+ * publicly visible gets the 404, so a redirect never names a draft's address.
  */
-export async function renamedPostRedirect(
-  env: Env,
-  slug: string,
-  suffix = "",
-): Promise<Response | null> {
+export async function missingPost(env: Env, slug: string, suffix = ""): Promise<Response> {
   const [row] = await getDb(env)
     .select({ slug: posts.slug })
     .from(postRedirects)
@@ -225,7 +221,7 @@ export async function renamedPostRedirect(
     .limit(1);
   return row
     ? new Response(null, { status: 301, headers: { Location: `/${row.slug}${suffix}` } })
-    : null;
+    : new Response("Not found", { status: 404 });
 }
 
 export async function getPostById(env: Env, id: number): Promise<Post | null> {

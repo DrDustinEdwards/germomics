@@ -16,6 +16,7 @@ import { SETTING_DEFAULTS, SNIPPET_DEFAULTS, PAGE_DEFAULTS } from "~/lib/content
 import { toFtsMatch } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
 import { storedBody } from "~/lib/render.server";
+import { SITE_ADDRESS_LINE } from "~/lib/site";
 
 /** True only for an admin viewing a page with ?preview (so drafts render in real context). */
 export async function isPreviewing(env: Env, request: Request): Promise<boolean> {
@@ -24,27 +25,31 @@ export async function isPreviewing(env: Env, request: Request): Promise<boolean>
 }
 
 /**
- * A contact or legal page (drafts with ?preview for the admin), its {{email}} filled from show_config
- * and, when given, its {{address_line}}. The values are escaped: they come from settings, not from
- * the rendered body, and are injected as HTML (Grok audit 2026-10-21, GE-3).
+ * A contact or legal page (drafts with ?preview for the admin), its {{email}} filled from show_config and its
+ * {{address_line}} from the contact.address_line setting (the request's settings, getSettings in context.server).
+ * The values are escaped: they come from settings, not from the rendered body, and are injected as HTML (Grok audit
+ * 2026-10-21, GE-3).
  */
 export async function loadFilledPage(
   env: Env,
   request: Request,
   key: string,
   fallbackTitle: string,
-  addressLine?: Promise<string>,
+  settings: Promise<StrMap>,
 ): Promise<{ title: string; html: string }> {
   const preview = await isPreviewing(env, request);
-  const [page, show, address] = await Promise.all([
+  const [page, show, s] = await Promise.all([
     loadPage(env, key, { includeDrafts: preview }),
     getShowConfig(env),
-    addressLine,
+    settings,
   ]);
-  const html = fill(page.html, "email", show.ownerEmail);
   return {
     title: page.title || fallbackTitle,
-    html: address === undefined ? html : fill(html, "address_line", address),
+    html: fill(
+      fill(page.html, "email", show.ownerEmail),
+      "address_line",
+      setting(s, "contact.address_line", SITE_ADDRESS_LINE),
+    ),
   };
 }
 

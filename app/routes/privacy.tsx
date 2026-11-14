@@ -5,8 +5,7 @@ import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/privacy";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getSettings } from "~/lib/context.server";
-import { loadFilledPage, setting } from "~/lib/content.server";
-import { SITE_ADDRESS_LINE } from "~/lib/site";
+import { loadFilledPage } from "~/lib/content.server";
 import { LegalPage } from "~/components/content/Legal";
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -19,10 +18,13 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const addressLine = getSettings(context).then((s) =>
-    setting(s, "contact.address_line", SITE_ADDRESS_LINE),
+  return loadFilledPage(
+    getEnv(context),
+    request,
+    "page:privacy",
+    "Privacy policy",
+    getSettings(context),
   );
-  return loadFilledPage(getEnv(context), request, "page:privacy", "Privacy policy", addressLine);
 }
 
 export default function Privacy({ loaderData }: Route.ComponentProps) {
