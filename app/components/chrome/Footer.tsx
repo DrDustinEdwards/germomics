@@ -29,6 +29,26 @@ const SOCIAL_MARKS: Record<string, { d: string; fill: boolean }> = {
   x: markX,
 };
 
+/** One of the footer's labeled link columns (Explore, About). */
+function FooterNav({ id, title, links }: { id: string; title: string; links: [string, string][] }) {
+  return (
+    <nav aria-labelledby={id}>
+      <h2 id={id} className="gm-footer-title">
+        {title}
+      </h2>
+      <ul className="gm-footer-list">
+        {links.map(([to, label]) => (
+          <li key={to}>
+            <Link to={to} className="gm-footer-link gm-footer-tap">
+              {label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
 type RootData = {
   socials?: { platform: string; label: string; url: string }[];
   subscribeLinks?: Record<string, string>;
@@ -43,13 +63,13 @@ export function Footer() {
     "a microbiology and history podcast and writing project.",
   );
 
-  const explore: [string, string, string][] = [
-    ["/episodes", useSnippet("snippet:nav.episodes", "Episodes"), "episodes"],
-    ["/writing", useSnippet("snippet:nav.writing", "Writing"), "writing"],
-    ["/archive", useSnippet("snippet:nav.archive", "Archive"), "archive"],
-    ["/data", useSnippet("snippet:nav.data", "Data"), "data"],
-    ["/games", useSnippet("snippet:nav.games", "Games"), "games"],
-    ["/search", useSnippet("snippet:nav.search", "Search"), "search"],
+  const explore: [string, string][] = [
+    ["/episodes", useSnippet("snippet:nav.episodes", "Episodes")],
+    ["/writing", useSnippet("snippet:nav.writing", "Writing")],
+    ["/archive", useSnippet("snippet:nav.archive", "Archive")],
+    ["/data", useSnippet("snippet:nav.data", "Data")],
+    ["/games", useSnippet("snippet:nav.games", "Games")],
+    ["/search", useSnippet("snippet:nav.search", "Search")],
   ];
   const about: [string, string][] = [
     ["/about", useSnippet("snippet:nav.about", "About")],
@@ -123,37 +143,8 @@ export function Footer() {
           </ul>
         </nav>
 
-        {/* Explore */}
-        <nav aria-labelledby="footer-explore">
-          <h2 id="footer-explore" className="gm-footer-title">
-            Explore
-          </h2>
-          <ul className="gm-footer-list">
-            {explore.map(([to, label]) => (
-              <li key={to}>
-                <Link to={to} className={"gm-footer-link gm-footer-tap"}>
-                  {label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        {/* About */}
-        <nav aria-labelledby="footer-about">
-          <h2 id="footer-about" className="gm-footer-title">
-            About
-          </h2>
-          <ul className="gm-footer-list">
-            {about.map(([to, label]) => (
-              <li key={to}>
-                <Link to={to} className={"gm-footer-link gm-footer-tap"}>
-                  {label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <FooterNav id="footer-explore" title="Explore" links={explore} />
+        <FooterNav id="footer-about" title="About" links={about} />
       </div>
 
       {/* Bottom bar */}

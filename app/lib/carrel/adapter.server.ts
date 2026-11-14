@@ -260,6 +260,20 @@ export function createCarrelAdapter(
     return rows.map((p) => (p.kind === "episode" ? { ...p, people: byPost.get(p.id) ?? [] } : p));
   };
 
+  /**
+   * Writes `fields` to `current`'s row only while it is the row whose version was checked: every post write moves
+   * updated_at (nextUpdatedAt), so of two saves from one version only the first can write (EmDash 1.4.0 fixed the same
+   * race, emdash-cms/emdash PR 4286). False when another save got there first.
+   */
+  async function writeUnchanged(current: Item, fields: Partial<Post>): Promise<boolean> {
+    const written = await db
+      .update(posts)
+      .set({ ...fields, updatedAt: nextUpdatedAt })
+      .where(and(eq(posts.id, current.id), eq(posts.updatedAt, current.updatedAt)))
+      .returning({ id: posts.id });
+    return written.length > 0;
+  }
+
   async function findPost(slug: string): Promise<Item | null> {
     const rows = await db.select().from(posts).where(eq(posts.slug, slug)).limit(1);
     return rows[0] ? (await withPeople(rows))[0] : null;
@@ -326,15 +340,7 @@ export function createCarrelAdapter(
     const { fields, people: links } = await build(current);
     let id: number;
     if (current) {
-      const written = await db
-        .update(posts)
-        .set({ ...fields, updatedAt: nextUpdatedAt })
-        // Only while the row is the one whose version was checked: every post write moves updated_at
-        // (nextUpdatedAt), so of two saves from one version only the first can write (EmDash 1.4.0
-        // fixed the same race, emdash-cms/emdash PR 4286).
-        .where(and(eq(posts.id, current.id), eq(posts.updatedAt, current.updatedAt)))
-        .returning({ id: posts.id });
-      if (written.length === 0) {
+      if (!(await writeUnchanged(current, fields))) {
         const now = await findPost(slug);
         throw new VersionConflictError(now ? await versionOf(now, await waiting(slug)) : null);
       }
@@ -689,12 +695,7 @@ export function createCarrelAdapter(
       if (current.kind !== "episode") throw new RefusedError("Only an episode has a transcript.");
       const held = current.transcript?.trim() ? await transcriptVersion(current.transcript) : null;
       if (held !== expectedTranscriptVersion) throw new VersionConflictError(held);
-      const written = await db
-        .update(posts)
-        .set({ transcript, updatedAt: nextUpdatedAt })
-        .where(and(eq(posts.id, current.id), eq(posts.updatedAt, current.updatedAt)))
-        .returning({ id: posts.id });
-      if (written.length === 0) {
+      if (!(await writeUnchanged(current, { transcript }))) {
         const now = await findPost(id);
         throw new VersionConflictError(
           now?.transcript?.trim() ? await transcriptVersion(now.transcript) : null,

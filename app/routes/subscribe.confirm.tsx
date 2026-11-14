@@ -6,8 +6,7 @@ import { Link } from "capsomer/react/link";
 import type { Route } from "./+types/subscribe.confirm";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { checkConfirmation, confirmSubscription, type Confirmation } from "~/lib/newsletter.server";
-import { readForm } from "@dustinedwards/site-runtime/body";
-import { PUBLIC_FORM } from "~/lib/body.server";
+import { formToken } from "~/lib/body.server";
 
 type Result = Confirmation & { token?: string };
 
@@ -23,9 +22,7 @@ export async function loader({ request, context }: Route.LoaderArgs): Promise<Re
 }
 
 export async function action({ request, context }: Route.ActionArgs): Promise<Result> {
-  const form = await readForm(request, PUBLIC_FORM).catch(() => null);
-  const token = form ? String(form.get("token") ?? "") || null : null;
-  return confirmSubscription(getEnv(context), token);
+  return confirmSubscription(getEnv(context), await formToken(request));
 }
 
 const TITLES: Record<Result["status"], string> = {

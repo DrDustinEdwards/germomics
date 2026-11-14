@@ -3,16 +3,12 @@
 // from the source), so it is served as text/vtt with no transformation.
 import type { Route } from "./+types/transcript";
 import { getEnv } from "@dustinedwards/site-runtime/context";
-import { getPostBySlug, renamedPostRedirect } from "~/lib/posts.server";
+import { getPostBySlug, missingPost } from "~/lib/posts.server";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const post = await getPostBySlug(env, params.slug);
-  if (!post)
-    throw (
-      (await renamedPostRedirect(env, params.slug, "/transcript.vtt")) ??
-      new Response("Not found", { status: 404 })
-    );
+  if (!post) throw await missingPost(env, params.slug, "/transcript.vtt");
   if (!post.transcript) throw new Response("Not found", { status: 404 });
   return new Response(post.transcript, {
     headers: {

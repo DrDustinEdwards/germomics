@@ -1,4 +1,5 @@
-import { pageHead } from "~/lib/seo";
+import { jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { buildDatasetLd, pageHead } from "~/lib/seo";
 import { sectionPageTrail } from "~/lib/trails";
 import { SectionTrail } from "~/components/content/SectionTrail";
 import type { Route } from "./+types/data.$slug";
@@ -21,12 +22,15 @@ const dataTrail = (page: { slug: string; title: string }) =>
 
 export function meta({ loaderData, location }: Route.MetaArgs) {
   if (!loaderData?.dataset) return [{ title: "Data · Germomics" }];
-  return pageHead({
-    path: location.pathname,
-    title: `${loaderData.dataset.title} · Germomics`,
-    description: loaderData.dataset.summary,
-    breadcrumbs: dataTrail(loaderData.dataset),
-  });
+  return [
+    ...pageHead({
+      path: location.pathname,
+      title: `${loaderData.dataset.title} · Germomics`,
+      description: loaderData.dataset.summary,
+      breadcrumbs: dataTrail(loaderData.dataset),
+    }),
+    jsonLd(loaderData.ld),
+  ];
 }
 
 export async function loader({ params, context }: Route.LoaderArgs) {
@@ -36,7 +40,12 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const map = dataset.map ? dataMap(dataset.slug, dataset.map) : null;
   const chart = dataset.timeline ? timelineChart(dataset.slug, dataset.timeline) : null;
   // The map's points travel as its drawing and table, not again as loader data.
-  return { dataset: { ...dataset, map: null, summary }, map, chart };
+  return {
+    dataset: { ...dataset, map: null, summary },
+    map,
+    chart,
+    ld: buildDatasetLd(dataset, summary),
+  };
 }
 
 /** Where a table's numbers come from, as the chart's own source line reads. */

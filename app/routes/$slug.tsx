@@ -6,7 +6,7 @@ import {
   listPosts,
   relatedPosts,
   adjacentPosts,
-  renamedPostRedirect,
+  missingPost,
   toPlayerTrack,
 } from "~/lib/posts.server";
 import { getEpisodeGuests } from "~/lib/people.server";
@@ -72,10 +72,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     getShowConfig(env),
   ]);
   // A slug Carrel renamed away from answers a permanent redirect to the post's address now.
-  if (!post)
-    throw (
-      (await renamedPostRedirect(env, params.slug)) ?? new Response("Not found", { status: 404 })
-    );
+  if (!post) throw await missingPost(env, params.slug);
 
   const [guests, clips] = await Promise.all([
     getEpisodeGuests(env, post),
