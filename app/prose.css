@@ -63,7 +63,7 @@
    after Tailwind's, so it wins over preflight as the utilities it replaces did. */
 @layer site {
   .gm-prose {
-    font-size: 1.05rem;
+    font-size: var(--fs-page);
     line-height: var(--leading-relaxed-5);
   }
   .gm-prose .bookmark {
