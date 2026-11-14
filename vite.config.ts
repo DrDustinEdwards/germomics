@@ -1,11 +1,14 @@
 import { reactRouter } from "@react-router/dev/vite";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
+import { nativeBuiltins } from "@dustinedwards/devkit/vite/native-builtins";
 import { siteScript } from "@dustinedwards/devkit/vite/site-script";
 import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [
+    // First: Prelum's render imports @ungap/structured-clone, and Workers have structuredClone.
+    nativeBuiltins(),
     cloudflare({
       viteEnvironment: { name: "ssr" },
       // The deployed commit for /health's `sha`: CI's deploy passes `--var DEPLOY_SHA:<commit>`. Always written, empty
