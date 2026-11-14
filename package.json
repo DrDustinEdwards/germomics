@@ -33,7 +33,7 @@
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.159.0",
     "capsomer": "github:DrDustinEdwards/capsomer#v0.152.2",
     "drizzle-orm": "0.45.4",
-    "enarratio": "0.13.1",
+    "enarratio": "0.15.0",
     "hast-util-from-html": "2.1.0",
     "hast-util-to-mdast": "10.1.2",
     "hast-util-to-string": "3.0.1",
