@@ -46,7 +46,7 @@
 }
 /* The context ends its own flow at its last child, so the room under a drawing with its credit is the context's. */
 .diagram-context:has(> .blog-diagram-block) {
-  margin-block-end: 2.5rem;
+  margin-block-end: var(--space-7-5);
 }
 .diagram-context .blog-diagram-credit {
   --ui: var(--font-serif);
@@ -54,7 +54,7 @@
 }
 .diagram-context .diagram-title {
   --diagram-title-face: var(--font-display);
-  --diagram-title-size: 1.125rem;
+  --diagram-title-size: var(--fs-h3);
   --diagram-title-align: center;
 }
 
@@ -64,30 +64,30 @@
 @layer site {
   .gm-prose {
     font-size: 1.05rem;
-    line-height: 1.625;
+    line-height: var(--leading-relaxed-5);
   }
   .gm-prose .bookmark {
-    margin-block: 1.25rem;
+    margin-block: var(--space-5-5);
   }
   .gm-prose .bookmark-description {
     display: block;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
     color: var(--dim);
   }
   .gm-prose .bookmark-host,
   .gm-prose .code-title {
+    color: var(--dim);
     font-family: var(--font-mono);
     font-size: var(--fs-small);
-    line-height: 1rem;
-    color: var(--dim);
+    line-height: var(--line-box-4);
   }
   .gm-prose .bookmark-host {
     display: block;
   }
   .gm-prose .bookmark-link {
     display: block;
-    border-radius: 0.75rem;
+    border-radius: var(--radius-l-5);
     border: var(--line-w) solid var(--line);
     background-color: var(--raised);
     padding: var(--space-5);
@@ -106,30 +106,30 @@
     display: inline-flex;
     border-radius: calc(infinity * 1px);
     background-color: var(--primary);
-    padding-inline: 1.25rem;
+    padding-inline: var(--space-5-5);
     padding-block: var(--space-3-5);
     font-family: var(--font-display);
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
     color: var(--primary-fg);
     text-decoration-line: none;
   }
   .gm-prose .button-row {
-    margin-block: 1.25rem;
+    margin-block: var(--space-5-5);
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: var(--space-3);
   }
   .gm-prose .callout {
     margin-block: var(--space-6);
-    border-radius: 0.75rem;
+    border-radius: var(--radius-l-5);
     border: var(--line-w) solid var(--line);
     background-color: var(--sunken);
     padding: var(--space-5);
     font-style: normal;
   }
   .gm-prose .callout p {
-    margin-block: 0.5rem;
+    margin-block: var(--space-3);
   }
   .gm-prose .callout-caution {
     border-color: var(--primary);
@@ -143,13 +143,13 @@
     border-color: color-mix(in oklab, oklch(76.9% 0.188 70.08) 50%, transparent);
   }
   .gm-prose .code-frame {
-    margin-block: 1.25rem;
+    margin-block: var(--space-5-5);
   }
   .gm-prose .code-frame pre {
     margin-block: 0px;
   }
   .gm-prose .code-title {
-    margin-bottom: 0.25rem;
+    margin-bottom: var(--space-2);
   }
   .gm-prose .embed {
     margin-block: var(--space-6);
@@ -160,14 +160,14 @@
     border: var(--line-w) solid var(--line);
     background-color: var(--raised);
     padding-inline: var(--space-5);
-    padding-block: 0.5rem;
+    padding-block: var(--space-3);
     text-decoration-line: none;
   }
   .gm-prose .faq {
     margin-block: var(--space-6);
   }
   .gm-prose .faq dd {
-    margin-top: 0.25rem;
+    margin-top: var(--space-2);
   }
   .gm-prose .faq dt {
     margin-top: var(--space-5);
@@ -178,9 +178,9 @@
     display: none;
   }
   .gm-prose .footnotes {
-    margin-top: 2.5rem;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    margin-top: var(--space-7-5);
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
     color: var(--dim);
   }
   .gm-prose .gallery {
@@ -194,7 +194,7 @@
   .gm-prose .gallery-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
+    gap: var(--space-4);
   }
   @media (width >= 40rem) {
     .gm-prose .gallery-grid {
@@ -202,7 +202,7 @@
     }
   }
   .gm-prose .heading-anchor {
-    margin-left: 0.5rem;
+    margin-left: var(--space-3);
     font-weight: var(--weight-regular);
     color: var(--dim);
     text-decoration-line: none;
@@ -222,16 +222,16 @@
   }
   .gm-prose .media video {
     width: 100%;
-    border-radius: 0.75rem;
+    border-radius: var(--radius-l-5);
   }
   .gm-prose .media-transcript {
-    margin-top: 0.5rem;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    margin-top: var(--space-3);
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
   }
   .gm-prose .post-details {
-    margin-block: 1.25rem;
-    border-radius: 0.75rem;
+    margin-block: var(--space-5-5);
+    border-radius: var(--radius-l-5);
     border: var(--line-w) solid var(--line);
     padding: var(--space-5);
   }
@@ -257,7 +257,7 @@
     text-decoration-line: none;
   }
   .gm-prose blockquote {
-    margin-block: 1.25rem;
+    margin-block: var(--space-5-5);
     border-left-style: solid;
     border-left-width: var(--line-w-thick);
     border-color: var(--primary);
@@ -269,17 +269,17 @@
     font-size: 0.9em;
   }
   .gm-prose figcaption {
-    margin-top: 0.5rem;
+    margin-top: var(--space-3);
     text-align: center;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
     color: var(--dim);
   }
   .gm-prose figcaption .figure-credit {
-    margin-top: 0.125rem;
+    margin-top: var(--space-1);
     display: block;
     font-size: var(--fs-small);
-    line-height: 1rem;
+    line-height: var(--line-box-4);
     color: var(--dim);
   }
   .gm-prose figcaption p {
@@ -307,11 +307,11 @@
   }
   .gm-prose img {
     margin-block: var(--space-6);
-    border-radius: 0.75rem;
+    border-radius: var(--radius-l-5);
     border: var(--line-w) solid var(--line);
   }
   .gm-prose li {
-    margin-block: 0.25rem;
+    margin-block: var(--space-2);
   }
   .gm-prose ol {
     margin-block: var(--space-5);
@@ -325,32 +325,28 @@
     display: block;
   }
   .gm-prose pre {
-    margin-block: 1.25rem;
+    margin-block: var(--space-5-5);
     overflow-x: auto;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-m-5);
     background-color: var(--sunken);
     padding: var(--space-5);
-    font-size: 0.875rem;
+    font-size: var(--fs-body);
     line-height: var(--text-sm--line-height);
   }
   .gm-prose table {
     width: 100%;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
   }
-  .gm-prose td {
-    border-bottom-style: solid;
-    border-bottom-width: var(--line-w);
-    border-color: var(--line);
-    padding-inline: 0.75rem;
-    padding-block: 0.5rem;
-  }
+  .gm-prose td,
   .gm-prose th {
     border-bottom-style: solid;
     border-bottom-width: var(--line-w);
     border-color: var(--line);
-    padding-inline: 0.75rem;
-    padding-block: 0.5rem;
+    padding-inline: var(--space-4);
+    padding-block: var(--space-3);
+  }
+  .gm-prose th {
     text-align: left;
   }
   .gm-prose ul {
@@ -369,36 +365,36 @@
   }
   .gm-headings-section h2 {
     margin-top: var(--space-8);
-    margin-bottom: 0.75rem;
-    scroll-margin-top: 6rem;
+    margin-bottom: var(--space-4);
+    scroll-margin-top: var(--space-10);
     font-size: var(--title-2);
-    line-height: 2.25rem;
+    line-height: var(--line-box-9);
     font-weight: var(--weight-bold);
     letter-spacing: -0.025em;
   }
   .gm-headings-section h3,
   .gm-headings-page h2 {
-    margin-top: 2.5rem;
-    margin-bottom: 0.5rem;
-    scroll-margin-top: 6rem;
+    margin-top: var(--space-7-5);
+    margin-bottom: var(--space-3);
+    scroll-margin-top: var(--space-10);
     font-size: var(--title-3);
-    line-height: 2rem;
+    line-height: var(--line-box-8);
   }
   .gm-headings-section h4,
   .gm-headings-page h3 {
     margin-top: var(--space-6);
-    margin-bottom: 0.25rem;
-    scroll-margin-top: 6rem;
+    margin-bottom: var(--space-2);
+    scroll-margin-top: var(--space-10);
     font-size: var(--title-6);
-    line-height: 1.5rem;
+    line-height: var(--line-box-6);
     letter-spacing: 0.025em;
     text-transform: uppercase;
   }
   .gm-headings-section h5,
   .gm-headings-page h4 {
-    margin-top: 1.25rem;
-    margin-bottom: 0.25rem;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    margin-top: var(--space-5-5);
+    margin-bottom: var(--space-2);
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
   }
 }
