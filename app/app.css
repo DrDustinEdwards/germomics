@@ -44,7 +44,7 @@
 @layer base {
   html {
     /* leave room for the sticky header when anchoring; Capsomer's player.css adds the dock's room at the bottom */
-    scroll-padding-top: 5rem;
+    scroll-padding-top: var(--space-9-5);
     /* Let full-bleed decoration (the hero backdrop) reach the screen edges without ever adding a
        horizontal scrollbar. clip (not hidden) leaves overflow-y visible, so sticky/fixed chrome
        and vertical scrolling are unaffected. */
@@ -54,7 +54,7 @@
     background: var(--color-bg);
     color: var(--color-ink);
     font-family: var(--font-serif);
-    font-size: 1.125rem;
+    font-size: var(--fs-h3);
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
     @media (prefers-reduced-motion: no-preference) {
@@ -79,6 +79,6 @@
   :focus-visible {
     outline: var(--focus-width) solid var(--color-accent);
     outline-offset: var(--focus-offset);
-    border-radius: 4px;
+    border-radius: var(--radius-s-5);
   }
 }
