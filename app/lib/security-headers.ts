@@ -30,7 +30,8 @@ const sitePolicy = (nonce: string | undefined) =>
       img: ["data:", "blob:", MEDIA_ORIGIN],
       media: ["blob:", MEDIA_ORIGIN, OP3_ORIGIN],
       font: ["data:"],
-      connect: [MEDIA_ORIGIN, OP3_ORIGIN, "blob:"],
+      // No connect sources beyond 'self': the player streams through <audio> (media-src), the admin's audio analysis
+      // reads the File it was handed, and uploads post to /admin/upload. Measured in a browser 2026-11-14.
     },
     extraDirectives: [
       "worker-src 'self' blob:",
