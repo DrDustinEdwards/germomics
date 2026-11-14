@@ -4,9 +4,11 @@
 // (+ MediaObject + partOfSeries) for episodes.
 import type { Post } from "~/db/schema";
 import type { GuestView, Host } from "~/lib/types";
+import type { Dataset, Source } from "~/lib/datasets.server";
 import { type ArticleFacts, type HeadImage, defineHead } from "@drdustinedwards/site-helpers/head";
 import {
   article,
+  dataset,
   organization,
   person,
   podcastEpisode,
@@ -165,6 +167,37 @@ export function buildPodcastSeriesLd(show: ShowLike, opts: SiteLdOpts = {}) {
     author: { "@type": "Person", name: show.author },
     address: addressOf(opts.address),
     sameAs: opts.sameAs,
+  });
+}
+
+/**
+ * A /data page's Dataset node (Prelum's dataset), from what the page shows: its title, its summary as the page reads it,
+ * the quantities its chart and map count, the span of its dated points, and the sources it cites. Germomics compiled
+ * the page from those sources, so it is the creator and they are the citations.
+ */
+export function buildDatasetLd(page: Dataset, description: string) {
+  const dates = (page.timeline?.series ?? []).flatMap((s) => s.points.map((p) => p.date)).sort();
+  const sources = [page.map?.source, page.timeline?.source, page.table?.source].filter(
+    (source): source is Source => Boolean(source),
+  );
+  return dataset({
+    name: page.title,
+    description,
+    url: `${SITE_ORIGIN}/data/${page.slug}`,
+    creator: { "@type": "Organization", name: "Germomics", url: `${SITE_ORIGIN}/` },
+    isAccessibleForFree: true,
+    variableMeasured: [
+      ...new Set([
+        ...(page.timeline?.series ?? []).map((s) => s.name),
+        ...(page.map ? [page.map.valueLabel] : []),
+      ]),
+    ],
+    temporalCoverage: dates.length > 0 ? `${dates[0]}/${dates[dates.length - 1]}` : undefined,
+    citation: [...new Map(sources.map((s) => [s.url, s])).values()].map((s) => ({
+      "@type": "CreativeWork",
+      name: s.label,
+      url: s.url,
+    })),
   });
 }
 

@@ -2,6 +2,8 @@ import { kvPageRecord, trackPageDates } from "@drdustinedwards/site-helpers/last
 import { htmlToMarkdown } from "@drdustinedwards/site-helpers/markdown-copy";
 import { SITE_ORIGIN } from "~/lib/site";
 import { listSeasons } from "~/lib/posts.server";
+import { listDatasets } from "~/lib/datasets.server";
+import { listGames } from "~/lib/games.server";
 
 // The day each hub and static page of /sitemap.xml last changed. No row dates these pages (the episode list, the data
 // pages, the policies), so the daily page-dates job reads each as Markdown, the way a Markdown copy is made, with
@@ -14,7 +16,9 @@ export const STATIC_PATHS = [
   "writing",
   "archive",
   "data",
+  ...listDatasets().map((d) => `data/${d.slug}`),
   "games",
+  ...listGames().map((g) => `games/${g.slug}`),
   "subscribe",
   "about",
   "about/dustin-edwards",
