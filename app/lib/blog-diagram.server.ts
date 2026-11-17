@@ -85,15 +85,26 @@ export function inDiagramContext(html: string): string {
   return html.replace(UNWRAPPED, (figure) => `${CONTEXT_OPEN}${figure}</div>`);
 }
 
-/** A figure inlined at an earlier render: its key, from its title's id, and the drawing it was given then. */
-const INLINED =
-  /(<figure class="blog-diagram" role="img" aria-labelledby="bd-([0-9a-f]{8})-title"[^>]*>)<svg\b[\s\S]*?<\/svg>/g;
+/**
+ * A figure inlined at an earlier render, in either form it has had: role="img" on the figure (which made its caption's
+ * source links nested interactive controls) or on the drawing. Its key is the drawing's title id.
+ */
+const INLINED = /<figure class="blog-diagram"[^>]*>(<svg\b[\s\S]*?<\/svg>)/g;
+const TITLE_KEY = /<title id="bd-([0-9a-f]{8})-title"/;
 
-/** The site's current drawing for a key, its title and description named for the figure's aria references. */
+/**
+ * The site's current drawing for a key, its title and description named for the aria references. The drawing is the
+ * image (role="img"), not its figure: an image's children are presentational, so a figure that was one made the
+ * caption's source links nested interactive controls.
+ */
 function drawing(files: DiagramFiles, key: string): string | undefined {
   const svg = /<svg\b[\s\S]*<\/svg>/.exec(files.get(key) ?? "")?.[0];
   return svg
-    ?.replace("<title>", `<title id="bd-${key}-title">`)
+    ?.replace(
+      "<svg",
+      `<svg role="img" aria-labelledby="bd-${key}-title" aria-describedby="bd-${key}-desc"`,
+    )
+    .replace("<title>", `<title id="bd-${key}-title">`)
     .replace("<desc>", `<desc id="bd-${key}-desc">`);
 }
 
@@ -117,14 +128,12 @@ export function inlineBlogDiagrams(html: string, files: DiagramFiles): string {
         const named = key ? drawing(files, key) : undefined;
         if (!key || !named) return figure;
         const caption = /<figcaption\b[^>]*>[\s\S]*?<\/figcaption>/.exec(figure)?.[0] ?? "";
-        return (
-          `<figure class="blog-diagram" role="img" aria-labelledby="bd-${key}-title" aria-describedby="bd-${key}-desc">` +
-          `${named}${caption}</figure>`
-        );
+        return `<figure class="blog-diagram">${named}${caption}</figure>`;
       })
-      .replace(INLINED, (whole, open: string, key: string) => {
-        const named = drawing(files, key);
-        return named ? `${open}${named}` : whole;
+      .replace(INLINED, (whole, svg: string) => {
+        const key = TITLE_KEY.exec(svg)?.[1];
+        const named = key ? drawing(files, key) : undefined;
+        return named ? `<figure class="blog-diagram">${named}` : whole;
       }),
   );
 }
