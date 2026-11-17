@@ -128,9 +128,10 @@ a change to a game route needs `/games/<slug>` only, because Phaser loads nowher
 else (hard rule 4).
 
 The first run after the server starts also logs `504 (Outdated Optimize Dep)` loads
-while Vite optimizes dependencies. Run the script a second time for the real result. Once, while the machine was busy,
-a run hit `TrustedHTML` hydration errors and a stuck step; six reruns on the same
-server passed. That is Vite re-optimizing under load, so wait for it to settle and rerun.
+while Vite optimizes dependencies. Run the script a second time for the real result.
+A `TrustedHTML` or hydration error is never noise: it is a finding, even if a rerun
+passes. One run hit both on 2026-11-17 while the machine was busy, and six reruns
+passed; the cause was not found, so name it in the report if it comes back.
 `npm run dev` also adds a devkit dev toolbar, which logs known console errors that
 production does not: a 404 for `/@devkit/axe.js` and `Cannot read properties of null
 (reading 'replaceChildren')` or `(setting 'hidden')` from `toolbar.js`. Anything else in
