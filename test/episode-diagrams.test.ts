@@ -79,6 +79,17 @@ describe("the mechanism diagrams", () => {
     // A drawing stored inline at an earlier render is drawn as the site's file is now.
     const stale = out.replace("<svg", '<svg data-old=""');
     expect(inlineBlogDiagrams(stale, files())).toBe(out);
+    // The drawing is the image; its figure is not, so the caption's source links are not inside an image.
+    expect(out).toContain(
+      '<figure class="blog-diagram"><svg role="img" aria-labelledby="bd-52d7f101-title"',
+    );
+    expect(out).not.toContain('<figure class="blog-diagram" role="img"');
+    // A figure stored with role="img" on the figure is redrawn the same way.
+    const old = out.replace(
+      '<figure class="blog-diagram"><svg role="img"',
+      '<figure class="blog-diagram" role="img" aria-labelledby="bd-52d7f101-title"><svg',
+    );
+    expect(inlineBlogDiagrams(old, files())).toBe(out);
   });
 
   it("follows the asset redirect from a .html address to the drawing", async () => {
