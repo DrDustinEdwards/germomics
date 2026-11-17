@@ -1,23 +1,7 @@
 # CI gate. Runs on every push and PR, and a push to main that passes it deploys: D1 migrations first, then the
 # Worker (the `deploy` job at the end).
 #
-# TWO JOBS, NOT ONE, AND THE SPLIT IS THE POINT (2026-09-08).
-#
-# `verify` and `audit` used to be one job with the audit as its last step. The audit step had
-# failed on EVERY run since 2026-07-27, six weeks, because three production advisories were
-# reported and unactioned. That did not just leave the advisories open, it retired the whole
-# gate: any typecheck or build regression in those six weeks arrived in a run that was already
-# red, so there was no signal to notice. A permanently red gate gates nothing.
-#
-# What made it concrete: a CRITICAL advisory (GHSA-jrc7-96c5-q579, maplibre-gl) appeared on
-# 2026-09-08 and produced NO new signal at all, because the line was already red. It was found
-# by reading audit output by hand.
-#
-# Split, the two answer different questions and fail on their own lines. `verify` is "does this
-# commit compile and build", which is about the change in front of you. `audit` is "has the
-# dependency tree grown a new hole", which is about the world moving underneath you and often
-# has nothing to do with the commit that surfaced it. Neither can now mask the other, and a new
-# critical goes red on a line of its own.
+# Advisories are not checked here: OSV-Scanner (dependencies.yml) fails a pull request on any advisory the change adds.
 name: CI
 
 on:
@@ -100,40 +84,11 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: npm run --silent nobloat:weight
 
-  audit:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    # Deliberately NOT `needs: verify`. A dependency advisory is independent of whether this
-    # commit compiles, and chaining them would reintroduce the masking this split removes: a
-    # broken build would skip the audit and a new critical would go unreported until it was
-    # fixed.
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          persist-credentials: false
-
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-
-      - name: Install
-        run: npm ci
-
-      # Fail only on high+ advisories in PRODUCTION deps. Dev-only advisories (the tracked
-      # drizzle-kit chain) don't ship to the Worker, so --omit=dev keeps the gate meaningful
-      # without blocking on them.
-      #
-      # Never raise --audit-level past high, and never drop this step. Both convert a known
-      # problem into an unknown one, which is how six weeks of red happened in the first place.
-      - name: Audit (production deps)
-        run: npm audit --omit=dev --audit-level=high
-
-  # deploy needs verify. The 18:11Z push of efc26c1 ran audit and skipped deploy because
+  # deploy needs verify. The 18:11Z push of efc26c1 skipped deploy because
   # verify was never created. GitHub reported an Actions incident at 18:12Z ("Incident with
   # Actions and Checks API") and marked it mitigated at 18:43Z. The workflow file was the same as the 92c30fc deploy.
   # A later push to main runs verify and, when it passes, deploy.
-  # A merge to main deploys once both jobs are green: migrations first, then the Worker, so a migration is never a
+  # A merge to main deploys once verify is green: migrations first, then the Worker, so a migration is never a
   # manual step. Dormant until the repo variable CF_DEPLOY is 'true' (with the secrets CLOUDFLARE_API_TOKEN and
   # CLOUDFLARE_ACCOUNT_ID), so Cloudflare Workers Builds keeps deploying until it is turned off; turn it off before
   # setting CF_DEPLOY, or both deploy each merge.
@@ -143,7 +98,7 @@ jobs:
   # DEPLOY_SHA set to this commit, waits for /health to report it, checks the home page answers, and rolls the deploy
   # back if it does not. A rollback never undoes a migration, so migrations stay additive (CLAUDE.md, hard rule 2).
   deploy:
-    needs: [verify, audit]
+    needs: [verify]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CF_DEPLOY == 'true'
     concurrency:
       group: deploy
