@@ -33,7 +33,7 @@ Stain" (`/the-purple-stain`). It deletes those two tables first, which is safe
 because this D1 is local.
 
 Check the port is free, then start Vite (workerd, local D1, bindings from
-`wrangler.jsonc`) in the background and note its PID:
+`wrangler.jsonc`) in the background:
 
 ```sh
 curl -s -o /dev/null -m 2 http://localhost:5173/ && echo "5173 is busy: pick another port below" || echo "5173 free"
@@ -137,9 +137,16 @@ production does not: a 404 for `/@devkit/axe.js` and `Cannot read properties of 
 (reading 'replaceChildren')` or `(setting 'hidden')` from `toolbar.js`. Anything else in
 the list is a finding.
 
-Stop the dev server you started by its PID (and its child processes), never with
-`pkill` by name: other sessions may run servers on the same machine. Remove
-`.dev.vars` if you made it, and check that `git status` shows nothing new.
+Stop the dev server you started. `npm run dev` leaves `react-router dev` running when its own process is killed,
+so stop the server by the port you chose, which only your server holds because of
+`--strictPort` (never `pkill` by name: other sessions may run servers on the same
+machine):
+
+```sh
+kill $(pgrep -f "react-router dev --port 5173 --strictPort")
+```
+
+Then remove `.dev.vars` if you made it, and check that `git status` shows nothing new.
 
 ## 3. Run the tests that cover the area
 
