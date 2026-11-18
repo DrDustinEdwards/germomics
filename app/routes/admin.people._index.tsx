@@ -95,7 +95,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
         {/* List */}
         <div>
           {loaderData.people.length === 0 ? (
-            <Empty kind="nothing-yet">{emptyPeople}</Empty>
+            <Empty kind="nothing-yet" title={emptyPeople} />
           ) : (
             <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
               {loaderData.people.map((p) => (

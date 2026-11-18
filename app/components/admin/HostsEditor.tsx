@@ -28,7 +28,7 @@ export function HostsEditor({
       onRemove={rows.onRemove}
       onAdd={() => onChange([...hosts, { name: "" }])}
       addLabel="Add host"
-      empty={<Empty kind="nothing-yet">No hosts yet.</Empty>}
+      empty={<Empty kind="nothing-yet" title="No hosts yet." />}
       renderItem={({ value: h, index: i }) => (
         <div className="space-y-2">
           <div className="flex items-center gap-2">

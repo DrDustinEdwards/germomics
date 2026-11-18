@@ -65,7 +65,7 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_22rem]">
         <div>
           {clips.length === 0 ? (
-            <Empty kind="nothing-yet">{emptySoundbites}</Empty>
+            <Empty kind="nothing-yet" title={emptySoundbites} />
           ) : (
             <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
               {clips.map((c) => (

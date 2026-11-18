@@ -62,7 +62,7 @@ export default function SubscribersAdmin({ loaderData }: Route.ComponentProps) {
 
       {rows.length === 0 ? (
         <div className="mt-6">
-          <Empty kind="nothing-yet">{emptySubscribers}</Empty>
+          <Empty kind="nothing-yet" title={emptySubscribers} />
         </div>
       ) : (
         <div className="mt-6 overflow-hidden rounded-xl border border-border bg-card">
