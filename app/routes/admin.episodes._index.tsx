@@ -76,7 +76,7 @@ export default function AdminEpisodes({ loaderData }: Route.ComponentProps) {
           ))}
         </ul>
         {loaderData.episodes.length === 0 ? (
-          <Empty kind="nothing-yet">No episodes yet.</Empty>
+          <Empty kind="nothing-yet" title="No episodes yet." />
         ) : null}
       </div>
     </div>
