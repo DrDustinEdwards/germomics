@@ -12,8 +12,8 @@ import { iconLinks } from "@drdustinedwards/site-helpers/icons";
 import type { Route } from "./+types/root";
 import "./app.css";
 import { getEnv } from "@dustinedwards/site-runtime/context";
-import { getSnippets, getSettings, once, siteContentContext } from "~/lib/context.server";
-import { loadSettings, loadSnippets, setting } from "~/lib/content.server";
+import { getSettings, once, siteContentContext } from "~/lib/context.server";
+import { loadSettings, setting } from "~/lib/content.server";
 import { getShowConfig } from "~/lib/show.server";
 import { listSeasons } from "~/lib/posts.server";
 import { themeInitScript } from "~/lib/theme";
@@ -56,27 +56,24 @@ export function meta({ error }: Route.MetaArgs): Route.MetaDescriptors {
   return error ? [{ title: errorTitle(error, "Germomics") }] : [];
 }
 
-// Site content (settings + snippets) for any loader, read once per request on first use. Nothing is
+// Site settings for any loader, read once per request on first use. Nothing is
 // awaited here, so the loaders' own D1 queries run in the same round trip (context.server).
 export const middleware: Route.MiddlewareFunction[] = [
   ({ context }, next) => {
     const env = getEnv(context);
     context.set(siteContentContext, {
       settings: once(() => loadSettings(env)),
-      snippets: once(() => loadSnippets(env)),
     });
     return next();
   },
 ];
 
 // Cloudflare Web Analytics is injected automatically by Cloudflare (one beacon; Dustin's ruling,
-// 2026-10-03), so the app renders none of its own. Snippets are passed to the client so
-// components can read them via useSnippet().
+// 2026-10-03), so the app renders none of its own.
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
-  const [settings, snippets, show, seasons] = await Promise.all([
+  const [settings, show, seasons] = await Promise.all([
     getSettings(context),
-    getSnippets(context),
     getShowConfig(env),
     listSeasons(env),
   ]);
@@ -88,7 +85,6 @@ export async function loader({ context }: Route.LoaderArgs) {
     instagram: setting(settings, "social.instagram"),
   });
   return {
-    snippets,
     socials,
     subscribeLinks: show.subscribeLinks ?? {},
     // Distinct episode season numbers (newest first) feed the global Header "Episodes" dropdown.

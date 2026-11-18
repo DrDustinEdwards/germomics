@@ -2,8 +2,7 @@ import { Link } from "capsomer/react/link";
 import { Icon, iconActivity, iconDna } from "capsomer/react/icons";
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/data._index";
-import { datasetSummary, listDatasets } from "~/lib/datasets.server";
-import { getSnippets } from "~/lib/context.server";
+import { listDatasets } from "~/lib/datasets.server";
 
 export function meta() {
   return pageHead({
@@ -15,14 +14,8 @@ export function meta() {
   });
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
-  const snippets = await getSnippets(context);
-  return {
-    datasets: listDatasets().map((d) => ({
-      ...d,
-      summary: datasetSummary(snippets, d.slug, d.summary),
-    })),
-  };
+export function loader() {
+  return { datasets: listDatasets() };
 }
 
 export default function DataHub({ loaderData }: Route.ComponentProps) {

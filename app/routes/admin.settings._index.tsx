@@ -110,7 +110,6 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
   const [hosts, setHosts] = useState<Host[]>(show.hosts ?? []);
   const settingValues = Object.fromEntries(siteSettings.map((s) => [`s:${s.key}`, s.value]));
   const pages = blocks.filter((b) => b.kind === "page");
-  const snippets = blocks.filter((b) => b.kind === "snippet");
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -279,10 +278,10 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
         </div>
       </settingsFetcher.Form>
 
-      {/* Content blocks: pages (draft/publish) + snippets (instant). Edit on a dedicated page. */}
+      {/* Content blocks: pages (draft/publish). Edit on a dedicated page. */}
       <Panel title="Content" className="mt-8">
         <h3 className="mb-2 font-display text-sm font-semibold">Pages</h3>
-        <ul className="mb-5 divide-y divide-border">
+        <ul className="divide-y divide-border">
           {pages.map((b) => (
             <li key={b.key} className="flex items-center justify-between gap-3 py-2">
               <Link
@@ -292,22 +291,6 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
                 {b.title || b.key}
               </Link>
               <Pill tone={b.status === "published" ? "ok" : "warn"}>{b.status}</Pill>
-            </li>
-          ))}
-        </ul>
-        <h3 className="mb-2 font-display text-sm font-semibold">Snippets</h3>
-        <ul className="divide-y divide-border">
-          {snippets.map((b) => (
-            <li key={b.key} className="flex items-center justify-between gap-3 py-2">
-              <Link
-                to={`/admin/content/${encodeURIComponent(b.key)}`}
-                className="font-mono text-xs text-ink hover:text-brand"
-              >
-                {b.key}
-              </Link>
-              <span className="truncate text-xs text-muted" style={{ maxWidth: "16rem" }}>
-                {b.value}
-              </span>
             </li>
           ))}
         </ul>

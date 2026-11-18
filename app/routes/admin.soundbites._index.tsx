@@ -12,7 +12,6 @@ import { Panel } from "capsomer/react/panel";
 import { Field } from "capsomer/react/field";
 import { Button } from "capsomer/react/button";
 import { Empty } from "capsomer/react/empty";
-import { useSnippet } from "~/lib/content";
 import { readForm } from "@dustinedwards/site-runtime/body";
 import { ADMIN_FORM } from "~/lib/body.server";
 import { DeleteRowForm } from "~/components/admin/DeleteRowForm";
@@ -47,10 +46,6 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
   const { episodes, clips } = loaderData;
   const save = useFetcher<{ ok: boolean; message?: string }>();
   const del = useFetcher();
-  const emptySoundbites = useSnippet(
-    "snippet:empty.soundbites",
-    "No soundbites yet. Create one on the right.",
-  );
   const titleById = new Map(episodes.map((e) => [e.id, e.title]));
 
   return (
@@ -62,7 +57,7 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_22rem]">
         <div>
           {clips.length === 0 ? (
-            <Empty kind="nothing-yet" title={emptySoundbites} />
+            <Empty kind="nothing-yet" title="No soundbites yet." />
           ) : (
             <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
               {clips.map((c) => (

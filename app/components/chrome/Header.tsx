@@ -3,15 +3,14 @@ import { SiteHeader, type HeaderSection } from "capsomer/react/site-header";
 import { Icon, iconSearch } from "capsomer/react/icons";
 import { GMark } from "../brand/GMark";
 import { routerLink } from "./router-link";
-import { useSnippet } from "~/lib/content";
 import { THEME_KEY } from "~/lib/theme";
 
-// Primary nav after the Episodes menu. Labels read from snippet:nav.*.
+// Primary nav after the Episodes menu.
 const NAV = [
-  { to: "/writing", key: "snippet:nav.writing", fallback: "Writing" },
-  { to: "/archive", key: "snippet:nav.archive", fallback: "Archive" },
-  { to: "/data", key: "snippet:nav.data", fallback: "Data" },
-  { to: "/games", key: "snippet:nav.games", fallback: "Games" },
+  { to: "/writing", label: "Writing" },
+  { to: "/archive", label: "Archive" },
+  { to: "/data", label: "Data" },
+  { to: "/games", label: "Games" },
 ] as const;
 
 function useSeasons(): number[] {
@@ -29,19 +28,11 @@ const within = (path: string, base: string) => path === base || path.startsWith(
 export function Header({ hydrate }: { hydrate: boolean }) {
   const { pathname } = useLocation();
   const seasons = useSeasons();
-  const episodes = useSnippet("snippet:nav.episodes", "Episodes");
-  const subscribe = useSnippet("snippet:nav.subscribe", "Subscribe");
-  const labels = {
-    "/writing": useSnippet("snippet:nav.writing", "Writing"),
-    "/archive": useSnippet("snippet:nav.archive", "Archive"),
-    "/data": useSnippet("snippet:nav.data", "Data"),
-    "/games": useSnippet("snippet:nav.games", "Games"),
-  };
 
   const sections: HeaderSection[] = [
     {
       id: "episodes",
-      label: episodes,
+      label: "Episodes",
       current: within(pathname, "/episodes") || within(pathname, "/season"),
       groups: [
         {
@@ -58,7 +49,7 @@ export function Header({ hydrate }: { hydrate: boolean }) {
     },
     ...NAV.map((item) => ({
       id: item.to.slice(1),
-      label: labels[item.to],
+      label: item.label,
       href: item.to,
       current: within(pathname, item.to),
     })),
@@ -82,7 +73,7 @@ export function Header({ hydrate }: { hydrate: boolean }) {
       navLabel="Primary"
       extras={[
         { id: "search", label: "Search", icon: <Icon d={iconSearch} />, href: "/search" },
-        { id: "subscribe", label: subscribe, kind: "button", href: "/subscribe", phone: "bar" },
+        { id: "subscribe", label: "Subscribe", kind: "button", href: "/subscribe", phone: "bar" },
       ]}
       themePrefKey={THEME_KEY}
       translucent

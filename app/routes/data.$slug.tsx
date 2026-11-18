@@ -3,8 +3,7 @@ import { buildDatasetLd, pageHead } from "~/lib/seo";
 import { sectionPageTrail } from "~/lib/trails";
 import { SectionTrail } from "~/components/content/SectionTrail";
 import type { Route } from "./+types/data.$slug";
-import { datasetSummary, getDataset } from "~/lib/datasets.server";
-import { getSnippets } from "~/lib/context.server";
+import { getDataset } from "~/lib/datasets.server";
 import { dataMap, timelineChart } from "~/lib/charts.server";
 import type { Source } from "~/lib/datasets.server";
 import chartsCss from "~/charts.css?url";
@@ -33,18 +32,17 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
   ];
 }
 
-export async function loader({ params, context }: Route.LoaderArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
   const dataset = getDataset(params.slug);
   if (!dataset) throw new Response("Not found", { status: 404 });
-  const summary = datasetSummary(await getSnippets(context), dataset.slug, dataset.summary);
   const map = dataset.map ? dataMap(dataset.slug, dataset.map) : null;
   const chart = dataset.timeline ? timelineChart(dataset.slug, dataset.timeline) : null;
   // The map's points travel as its drawing and table, not again as loader data.
   return {
-    dataset: { ...dataset, map: null, summary },
+    dataset: { ...dataset, map: null },
     map,
     chart,
-    ld: buildDatasetLd(dataset, summary),
+    ld: buildDatasetLd(dataset, dataset.summary),
   };
 }
 

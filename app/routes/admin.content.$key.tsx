@@ -1,8 +1,8 @@
-// Admin → edit one content block (page or snippet). Behind the admin gate (admin.tsx middleware).
+// Admin → edit one content page. Behind the admin gate (admin.tsx middleware).
 // Pages have a draft/publish status and a Preview link (renders the draft in real context via
-// ?preview); snippets are instant. A Markdown page's text is written in Carrel, so here it is shown as the
+// ?preview). A Markdown page's text is written in Carrel, so here it is shown as the
 // site renders it, with a link to edit it there, and only its title and status are saved; the plain-text pages
-// (TEXT_PAGES) and the snippets are edited here.
+// (TEXT_PAGES) are edited here.
 import { useFetcher } from "react-router";
 import { Icon, iconArrowLeft, iconExternal } from "capsomer/react/icons";
 import type { Route } from "./+types/admin.content.$key";
@@ -20,12 +20,9 @@ import { ADMIN_FORM } from "~/lib/body.server";
 export async function loader({ params, context }: Route.LoaderArgs) {
   const block = await loadBlock(getEnv(context), params.key, { includeDrafts: true });
   if (!block) throw new Response("Not found", { status: 404 });
-  // loadBlock omits kind/description; fetch them is unnecessary here, infer kind from the key.
-  const kind = params.key.startsWith("page:") ? "page" : "snippet";
-  const markdown = kind === "page" && !TEXT_PAGES.has(params.key);
+  const markdown = !TEXT_PAGES.has(params.key);
   return {
     block,
-    kind,
     markdown,
     previewHref: PAGE_HREF[params.key] ?? null,
     carrelUrl: markdown ? carrelEditUrl(params.key.replace(/^page:/, "page.")) : null,
@@ -34,29 +31,26 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
 export async function action({ params, request, context }: Route.ActionArgs) {
   const form = await readForm(request, ADMIN_FORM);
-  const kind = params.key.startsWith("page:") ? "page" : "snippet";
   const title = String(form.get("title") ?? "") || null;
   const status = form.get("status") === "published" ? "published" : "draft";
-  if (kind === "page" && !TEXT_PAGES.has(params.key)) {
+  if (!TEXT_PAGES.has(params.key)) {
     await updatePageSettings(getEnv(context), params.key, { title, status });
     return { ok: true as const, message: "Saved." };
   }
-  // The plain-text pages are served as text and keep their bytes; a snippet is text in the page's markup.
+  // The plain-text pages are served as text and keep their bytes.
   const value = String(form.get("value") ?? "");
   await upsertBlock(getEnv(context), {
     key: params.key,
-    kind,
     title,
     value,
-    status: kind === "page" ? status : "published",
+    status,
   });
   return { ok: true as const, message: "Saved." };
 }
 
 export default function EditBlock({ loaderData }: Route.ComponentProps) {
-  const { block, kind, markdown, previewHref, carrelUrl } = loaderData;
+  const { block, markdown, previewHref, carrelUrl } = loaderData;
   const fetcher = useFetcher<{ ok: boolean; message?: string }>();
-  const isPage = kind === "page";
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -95,33 +89,31 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
                 </div>
               </div>
             ) : (
-              <Field label={isPage ? "Body (plain text)" : "Value"}>
+              <Field label="Body (plain text)">
                 {(control) => (
                   <textarea
                     {...control}
                     name="value"
                     defaultValue={block.value}
-                    rows={isPage ? 18 : 4}
+                    rows={18}
                     className="cap-input font-mono text-xs"
                   />
                 )}
               </Field>
             )}
-            {isPage ? (
-              <Field label="Status">
-                {(control) => (
-                  <select
-                    {...control}
-                    name="status"
-                    defaultValue={block.status}
-                    className="cap-input"
-                  >
-                    <option value="draft">draft</option>
-                    <option value="published">published</option>
-                  </select>
-                )}
-              </Field>
-            ) : null}
+            <Field label="Status">
+              {(control) => (
+                <select
+                  {...control}
+                  name="status"
+                  defaultValue={block.status}
+                  className="cap-input"
+                >
+                  <option value="draft">draft</option>
+                  <option value="published">published</option>
+                </select>
+              )}
+            </Field>
           </div>
         </Panel>
 
@@ -129,7 +121,7 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
           <Button type="submit" variant="primary" pending={fetcher.state !== "idle"}>
             Save
           </Button>
-          {isPage && previewHref ? (
+          {previewHref ? (
             <a
               href={`${previewHref}?preview=1`}
               target="_blank"

@@ -12,7 +12,6 @@ import { getLeaderboard, submitScore } from "~/lib/scores.server";
 import { ClientOnly } from "capsomer/react/hooks";
 import { Leaderboard } from "capsomer/react/leaderboard";
 import "capsomer/leaderboard.css";
-import { useSnippet } from "~/lib/content";
 import { readForm } from "@dustinedwards/site-runtime/body";
 import { PUBLIC_FORM } from "~/lib/body.server";
 
@@ -68,7 +67,6 @@ export default function GamePage({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher<typeof action>();
   const [lastScore, setLastScore] = useState<number | null>(null);
   const submitted = fetcher.data?.ok === true;
-  const emptyScores = useSnippet("snippet:empty.scores", "No scores yet. Be the first.");
 
   return (
     <div className="gm-column">
@@ -110,7 +108,11 @@ export default function GamePage({ loaderData }: Route.ComponentProps) {
         <h2 className="gm-game-scores-title">
           <Icon d={iconTrophy} className="gm-brand" /> Leaderboard
         </h2>
-        <Leaderboard entries={leaderboard} empty={emptyScores} format={(score) => String(score)} />
+        <Leaderboard
+          entries={leaderboard}
+          empty="No scores yet."
+          format={(score) => String(score)}
+        />
       </section>
     </div>
   );

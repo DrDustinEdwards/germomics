@@ -11,7 +11,6 @@ import { Field } from "capsomer/react/field";
 import { Button } from "capsomer/react/button";
 import { Empty } from "capsomer/react/empty";
 import { ImageField } from "~/components/admin/ImageField";
-import { useSnippet } from "~/lib/content";
 import type { Person, PersonLink } from "~/db/schema";
 import { readForm } from "@dustinedwards/site-runtime/body";
 import { ADMIN_FORM } from "~/lib/body.server";
@@ -68,7 +67,6 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
   const del = useFetcher();
   const [draft, setDraft] = useState(blank);
   const editing = draft.id !== 0;
-  const emptyPeople = useSnippet("snippet:empty.people", "No people yet. Create one on the right.");
 
   function load(p: Person) {
     setDraft({
@@ -92,7 +90,7 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
         {/* List */}
         <div>
           {loaderData.people.length === 0 ? (
-            <Empty kind="nothing-yet" title={emptyPeople} />
+            <Empty kind="nothing-yet" title="No people yet." />
           ) : (
             <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
               {loaderData.people.map((p) => (

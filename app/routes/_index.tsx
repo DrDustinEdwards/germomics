@@ -1,15 +1,14 @@
 import { Link } from "capsomer/react/link";
 import type { Route } from "./+types/_index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
-import { getSettings, getSnippets } from "~/lib/context.server";
+import { getSettings } from "~/lib/context.server";
 import { listEpisodes, listPosts, toPlayerTrack } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
-import { snippet, setting, settingAddress } from "~/lib/content.server";
+import { setting, settingAddress } from "~/lib/content.server";
 import { formatDate, timecode } from "capsomer/behavior/time";
 import { jsonLd, sameAs, website } from "@drdustinedwards/site-helpers/schema";
 import { buildOrganizationLd, buildPodcastSeriesLd, pageHead, socialSameAs } from "~/lib/seo";
 import { SITE_ORIGIN } from "~/lib/site";
-import { SNIPPET_DEFAULTS } from "~/lib/content-defaults";
 import { PostCard } from "~/components/content/PostCard";
 import { PlayTrackButton } from "capsomer/react/player";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
@@ -23,8 +22,9 @@ import { CoverArt } from "~/components/content/CoverArt";
 export function meta({ loaderData }: Route.MetaArgs) {
   const head = pageHead({
     path: "/",
-    title: loaderData?.homeTitle ?? SNIPPET_DEFAULTS["snippet:meta.home_title"],
-    description: loaderData?.homeDescription ?? SNIPPET_DEFAULTS["snippet:meta.home_description"],
+    title: "Germomics · microbiology & history",
+    description:
+      "A mix of microbiology and history that links microbes, bacteria, viruses, and parasites to modern life through natural events, discoveries, and inventions.",
   });
   if (!loaderData?.show) return head;
   const { show, address, sameAs: profiles } = loaderData;
@@ -44,11 +44,10 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
-  const [episodes, combined, show, snippets, settings] = await Promise.all([
+  const [episodes, combined, show, settings] = await Promise.all([
     listEpisodes(env),
     listPosts(env, { limit: 24 }),
     getShowConfig(env),
-    getSnippets(context),
     getSettings(context),
   ]);
   const tracks = episodes.map(toPlayerTrack);
@@ -72,8 +71,6 @@ export async function loader({ context }: Route.LoaderArgs) {
     show,
     address: settingAddress(settings),
     sameAs: profiles,
-    homeTitle: snippet(snippets, "snippet:meta.home_title"),
-    homeDescription: snippet(snippets, "snippet:meta.home_description"),
   };
 }
 

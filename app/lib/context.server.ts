@@ -7,12 +7,12 @@
 // through it, so bindings never become a free-floating global and never reach the client.
 import { createContext, type RouterContextProvider } from "react-router";
 
-// Per-request site content (settings + snippets), read from D1 at most once per request and only
+// Per-request site content (settings), read from D1 at most once per request and only
 // when a loader asks: the root middleware puts a memoized reader on context, so loaders start it
 // alongside their own queries instead of after it, and the feeds and other resource routes that
 // never ask cost nothing.
 type StrMap = Record<string, string>;
-export type SiteContent = { settings: () => Promise<StrMap>; snippets: () => Promise<StrMap> };
+export type SiteContent = { settings: () => Promise<StrMap> };
 export const siteContentContext = createContext<SiteContent>();
 
 export function once<T>(read: () => Promise<T>): () => Promise<T> {
@@ -22,7 +22,4 @@ export function once<T>(read: () => Promise<T>): () => Promise<T> {
 
 export function getSettings(context: Readonly<RouterContextProvider>): Promise<StrMap> {
   return context.get(siteContentContext).settings();
-}
-export function getSnippets(context: Readonly<RouterContextProvider>): Promise<StrMap> {
-  return context.get(siteContentContext).snippets();
 }
