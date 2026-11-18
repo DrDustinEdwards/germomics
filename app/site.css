@@ -1624,6 +1624,13 @@
   .gm-brand {
     color: var(--primary);
   }
+  .gm-hero-lede {
+    margin-top: var(--space-5-5);
+    max-width: 42rem;
+    font-size: var(--fs-h3);
+    line-height: var(--leading-relaxed-5);
+    color: var(--dim);
+  }
   .gm-hero-art {
     position: relative;
     display: flex;
