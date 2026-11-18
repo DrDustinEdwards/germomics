@@ -97,6 +97,11 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             A mix of <span className="gm-brand">microbiology</span> and{" "}
             <span className="gm-brand">history</span>.
           </h1>
+          <p className="gm-hero-lede">
+            This series connects different aspects of modern life and society to microbes, bacteria,
+            viruses, and parasites through seemingly unconnected natural events, scientific
+            discoveries, and human inventions.
+          </p>
         </div>
         <div className="gm-hero-art">
           <div className="gm-hero-cover">
