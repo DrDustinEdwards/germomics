@@ -24,7 +24,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
     path: "/",
     title: "Germomics · microbiology & history",
     description:
-      "A mix of microbiology and history: how microbes, bacteria, viruses, and parasites connect to natural events, discoveries, and human inventions.",
+      "A mix of microbiology and history that links microbes, bacteria, viruses, and parasites to modern life through natural events, discoveries, and inventions.",
   });
   if (!loaderData?.show) return head;
   const { show, address, sameAs: profiles } = loaderData;
