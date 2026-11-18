@@ -23,4 +23,6 @@ export const suggestFor = mediaSuggester<Env>({
       throw new Error("today's AI cap (the ai.daily_cap setting) is reached");
   },
   afterCall: (env) => recordAiUse(env),
+  // /health's ai-alt-text check.
+  outcomeKv: (env) => env.APP_KV,
 });
