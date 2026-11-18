@@ -138,7 +138,6 @@ const sourceOf = (p: Item) =>
     episodeType: p.episodeType ?? "full",
     explicit: p.explicit ?? false,
     chapters: p.chapters ?? [],
-    keyMoments: p.keyMoments ?? [],
     guests: p.guests ?? [],
     people: p.people ?? [],
   });
