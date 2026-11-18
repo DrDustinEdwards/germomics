@@ -20,12 +20,11 @@ import type {
   Chapter,
   Guest,
   Host,
-  KeyMoment,
   PersonLink,
   PodcastCategory,
   Source,
 } from "~/lib/types";
-export type { BodyMeta, Chapter, Guest, Host, KeyMoment, PersonLink, PodcastCategory, Source };
+export type { BodyMeta, Chapter, Guest, Host, PersonLink, PodcastCategory, Source };
 
 // ============================================================
 // 1. Content (live)
@@ -90,7 +89,9 @@ export const posts = sqliteTable(
 
     // 0009: editorial extras for the redesigned episode page.
     sources: text("sources", { mode: "json" }).$type<Source[]>(), // references/credits + image credits
-    keyMoments: text("key_moments", { mode: "json" }).$type<KeyMoment[]>(), // "In this episode"
+    // Retired 2026-11-18: an episode has one chapter list, `chapters`, and nothing reads or writes this column.
+    // It stays until a hand-run migration drops it (hard rule 2: the schema matches the migrations).
+    keyMoments: text("key_moments", { mode: "json" }).$type<unknown[]>(),
     readingTime: integer("reading_time"), // minutes, computed from body at save
 
     // 0016: body is Markdown; beside it, Prelum's render of it and the RENDER_VERSION it was rendered with

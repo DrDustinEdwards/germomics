@@ -61,34 +61,6 @@
   margin-block-end: 0.75rem;
   line-height: var(--line-box-7);
 }
-/* Key moments: two to a row from 640px, compact cards with the label at the small size. */
-.cap-player-moments {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.5rem;
-  @media (min-width: 640px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-.cap-player-moment {
-  gap: 0.75rem;
-  padding: 0.75rem;
-  border-radius: var(--radius-l-5);
-}
-/* What a moment press did is announced, not shown, as it always was. */
-.cap-player-said {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  min-block-size: 0;
-  margin: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-.cap-player-moment-label {
-  font-size: 0.875rem;
-  line-height: var(--line-box-5);
-}
 /* Chapters: tight rows, the time in the mono face at the meta size. */
 .cap-player-chapters {
   gap: 0.25rem;
@@ -157,12 +129,6 @@
   inline-size: 22px;
   block-size: 22px;
 }
-/* A key moment's time is violet in its own 36px column, as it was; a chapter's stays cyan. */
-.cap-player-moment .cap-player-at {
-  min-inline-size: 2.25rem;
-  color: var(--primary);
-}
-
 /* The breadcrumb is quiet, like the site's other small navigation: JetBrains Mono at the meta size, the levels muted
    until the pointer reaches them, the current page in ink. */
 .cap-breadcrumb {

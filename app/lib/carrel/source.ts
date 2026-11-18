@@ -27,7 +27,7 @@
 // objects) are read as text, which jsonSource hands back as written, and parsed and checked here.
 import { splitSource } from "@drdustinedwards/site-helpers/frontmatter";
 import { jsonSource } from "@dustinedwards/site-api/frontmatter";
-import type { Chapter, Guest, KeyMoment, Source } from "~/lib/types";
+import type { Chapter, Guest, Source } from "~/lib/types";
 
 /** An episode's guest by their People entry (/admin/people), with the role on this episode. */
 export type PersonRef = { slug: string; role: string | null };
@@ -56,7 +56,6 @@ type EpisodeFields = {
   episodeArtwork: string | null;
   episodeArtworkAlt: string | null;
   chapters: Chapter[];
-  keyMoments: KeyMoment[];
   guests: Guest[];
   people: PersonRef[];
 };
@@ -96,7 +95,6 @@ const EPISODE_KEYS = {
   episodeArtwork: "text",
   episodeArtworkAlt: "text",
   chapters: "text",
-  keyMoments: "text",
   guests: "text",
   people: "text",
 } as const;
@@ -191,10 +189,6 @@ export function parseSource(source: string, kind: "article" | "episode"): Parsed
       chapters: objects<Chapter>("chapters", v.chapters, problems, {
         start: "number",
         title: "string",
-      }),
-      keyMoments: objects<KeyMoment>("keyMoments", v.keyMoments, problems, {
-        seconds: "number",
-        label: "string",
       }),
       guests: objects<Guest>("guests", v.guests, problems, { name: "string" }),
       people: objects<{ slug: string; role?: string | null }>("people", v.people, problems, {

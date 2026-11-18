@@ -120,7 +120,6 @@ describe("listing reads", () => {
       transcript: null,
       audioPeaks: null,
       sources: null,
-      keyMoments: null,
     });
     const full = (await getPostBySlug(e, "ep"))!;
     expect(full.transcript).toBe("WEBVTT");

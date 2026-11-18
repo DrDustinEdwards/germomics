@@ -42,17 +42,13 @@ const {
   transcript: _transcript,
   audioPeaks: _peaks,
   sources: _sources,
-  keyMoments: _km,
   ...cardColumns
 } = getTableColumns(posts);
 // readingTime stays in the projection: listing cards show it without loading the body.
 
 function asCards(
   rows: Array<
-    Omit<
-      Post,
-      "body" | "bodyHtml" | "bodyMeta" | "transcript" | "audioPeaks" | "sources" | "keyMoments"
-    >
+    Omit<Post, "body" | "bodyHtml" | "bodyMeta" | "transcript" | "audioPeaks" | "sources">
   >,
 ): Post[] {
   return rows.map(
@@ -65,7 +61,6 @@ function asCards(
         transcript: null,
         audioPeaks: null,
         sources: null,
-        keyMoments: null,
       }) as Post,
   );
 }

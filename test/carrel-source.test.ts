@@ -34,7 +34,6 @@ describe("the source", () => {
       episodeArtwork: "/media/ep.png",
       episodeArtworkAlt: "Art",
       chapters: [{ start: 0, title: "Cold open" }],
-      keyMoments: [{ seconds: 90, label: "The pump" }],
       guests: [{ name: "Sample Guest" }],
       people: [{ slug: "sample-person", role: "guest" }],
     };

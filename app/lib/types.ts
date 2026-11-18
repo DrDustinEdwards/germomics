@@ -22,9 +22,6 @@ export type BodyMeta = {
   faq: Array<{ question: string; answer: string }>;
 };
 
-/** A curated, scannable "In this episode" moment. Distinct from player chapters; both seek the player. */
-export type KeyMoment = { seconds: number; label: string };
-
 /** A show host (show-level byline). Maps to <podcast:person> in the feed alongside per-episode guests. */
 export type Host = { name: string; role?: string; img?: string; href?: string };
 

@@ -37,7 +37,6 @@ import type { EpisodeContextView } from "~/lib/episode-context";
 import {
   ChapterList,
   Hosts,
-  KeyMoments,
   PlayerSurface,
   PlayerTranscript,
   usePlayer,
@@ -213,7 +212,7 @@ export function PostDetail({ data }: { data: DetailData }) {
       </nav>
     ) : null;
 
-  // ── Episode layout (redesigned: hero, player surface, key moments, TOC + body, hosts, then the
+  // ── Episode layout (redesigned: hero, player surface, chapters, TOC + body, hosts, then the
   //     collapsed Sources/Credits + Transcript pair, subscribe, related + prev/next). See Vault
   //     episode-page-* specs. ──────────────────────────────────────────────────────────────────────
   if (isEpisode) {
@@ -224,10 +223,6 @@ export function PostDetail({ data }: { data: DetailData }) {
       ]
         .filter(Boolean)
         .join(" · ") || "Episode";
-    const moments =
-      post.keyMoments && post.keyMoments.length
-        ? post.keyMoments
-        : chapters.map((c) => ({ seconds: c.start, label: c.title }));
     const sources = post.sources ?? [];
 
     return (
@@ -288,15 +283,8 @@ export function PostDetail({ data }: { data: DetailData }) {
             </div>
           ) : null}
 
-          {/* In this episode */}
-          {track ? (
-            <KeyMoments
-              track={track}
-              moments={moments}
-              heading="In this episode"
-              playerId="player"
-            />
-          ) : null}
+          {/* The episode's one chapter list, right under the player: its chapters, from the transcript's times. */}
+          {track && chapters.length ? <ChapterList track={track} /> : null}
 
           {/* TOC rail + article body */}
           <div className="gm-episode-columns">
@@ -333,7 +321,6 @@ export function PostDetail({ data }: { data: DetailData }) {
               }
             />
             {track ? <SoundbiteClips track={track} clips={soundbites} /> : null}
-            {track && chapters.length ? <ChapterList track={track} /> : null}
 
             {/* Sources and Credits sits directly above the Transcript, both collapsed by default so they
                 read as a matched pair. */}
