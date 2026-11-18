@@ -7,12 +7,10 @@ import {
   loadBlock,
   loadPage,
   loadSettings,
-  loadSnippets,
   searchPages,
   setting,
   settingAddress,
   settingNum,
-  snippet,
   upsertBlock,
   upsertSetting,
 } from "~/lib/content.server";
@@ -62,22 +60,10 @@ describe("settings", () => {
   });
 });
 
-describe("snippets and pages", () => {
-  it("serves snippets whatever their status, with defaults behind them", async () => {
-    await upsertBlock(e, { key: "snippet:x", kind: "snippet", value: "X", status: "draft" });
-    await upsertBlock(e, { key: "page:p", kind: "page", value: "P", status: "published" });
-    const map = await loadSnippets(e);
-    expect(map).toEqual({ "snippet:x": "X" });
-    expect(snippet(map, "snippet:x")).toBe("X");
-    expect(snippet({}, "snippet:nav.writing")).toBe("Writing");
-    expect(snippet({}, "snippet:none", "fb")).toBe("fb");
-    expect(snippet({}, "snippet:none")).toBe("");
-  });
-
+describe("pages", () => {
   it("never serves a draft page publicly, but shows it to an admin preview", async () => {
     await upsertBlock(e, {
       key: "page:about",
-      kind: "page",
       title: "Draft about",
       value: "<p>draft</p>",
     });
@@ -97,13 +83,12 @@ describe("snippets and pages", () => {
   it("shows a saved page on the next read", async () => {
     await upsertBlock(e, {
       key: "page:p",
-      kind: "page",
       title: "T",
       value: "v1",
       status: "published",
     });
     expect((await loadPage(e, "page:p")).value).toBe("v1");
-    await upsertBlock(e, { key: "page:p", kind: "page", value: "v2", status: "published" });
+    await upsertBlock(e, { key: "page:p", value: "v2", status: "published" });
     // Not converted (no render version): the value is still the HTML it was saved as, and is shown as it is.
     expect(await loadPage(e, "page:p")).toEqual({
       key: "page:p",
@@ -126,9 +111,9 @@ describe("snippets and pages", () => {
   });
 
   it("lists every block for the admin", async () => {
-    await upsertBlock(e, { key: "snippet:a", kind: "snippet", value: "a" });
-    await upsertBlock(e, { key: "page:b", kind: "page", value: "b", title: null });
-    expect((await listBlocks(e)).map((b) => b.key).sort()).toEqual(["page:b", "snippet:a"]);
+    await upsertBlock(e, { key: "page:a", value: "a" });
+    await upsertBlock(e, { key: "page:b", value: "b", title: null });
+    expect((await listBlocks(e)).map((b) => b.key).sort()).toEqual(["page:a", "page:b"]);
   });
 });
 
@@ -136,23 +121,15 @@ describe("searchPages", () => {
   beforeEach(async () => {
     await upsertBlock(e, {
       key: "page:cholera",
-      kind: "page",
       title: "Cholera",
       value: "<p>The Broad Street pump</p>",
       status: "published",
     });
     await upsertBlock(e, {
       key: "page:draft",
-      kind: "page",
       title: "Hidden",
       value: "<p>Broad Street draft</p>",
       status: "draft",
-    });
-    await upsertBlock(e, {
-      key: "snippet:s",
-      kind: "snippet",
-      value: "Broad Street snippet",
-      status: "published",
     });
   });
 

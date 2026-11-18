@@ -12,13 +12,11 @@ import {
 } from "capsomer/react/icons";
 import { Wordmark } from "../brand/Wordmark";
 import { ExternalCue } from "../ExternalCue";
-import { useSnippet } from "~/lib/content";
 import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 
 // Fat footer: a persistent nav + trust + SEO surface. Brand block (logo + real socials),
 // three labeled nav columns (Listen / Explore / About), and a bottom bar. Stacks to one column on
-// mobile. Nav labels come from content snippets; socials + podcast directories come from
-// the root loader (settings social.* + show_config.subscribe_links), so footer and schema agree.
+// mobile. Socials + podcast directories come from the root loader (settings social.* + show_config.subscribe_links), so footer and schema agree.
 // Reuses Dustin's brand Wordmark.
 
 // The social marks the footer draws, by the platform socialLinks (lib/seo.ts) names.
@@ -60,18 +58,18 @@ export function Footer() {
   const subscribeLinks = root?.subscribeLinks ?? {};
 
   const explore: [string, string][] = [
-    ["/episodes", useSnippet("snippet:nav.episodes", "Episodes")],
-    ["/writing", useSnippet("snippet:nav.writing", "Writing")],
-    ["/archive", useSnippet("snippet:nav.archive", "Archive")],
-    ["/data", useSnippet("snippet:nav.data", "Data")],
-    ["/games", useSnippet("snippet:nav.games", "Games")],
-    ["/search", useSnippet("snippet:nav.search", "Search")],
+    ["/episodes", "Episodes"],
+    ["/writing", "Writing"],
+    ["/archive", "Archive"],
+    ["/data", "Data"],
+    ["/games", "Games"],
+    ["/search", "Search"],
   ];
   const about: [string, string][] = [
-    ["/about", useSnippet("snippet:nav.about", "About")],
-    ["/contact", useSnippet("snippet:nav.contact", "Contact")],
-    ["/privacy", useSnippet("snippet:nav.privacy", "Privacy")],
-    ["/terms", useSnippet("snippet:nav.terms", "Terms")],
+    ["/about", "About"],
+    ["/contact", "Contact"],
+    ["/privacy", "Privacy"],
+    ["/terms", "Terms"],
     ["/accessibility", "Accessibility"],
   ];
   const [year] = useState(() => new Date().getFullYear());

@@ -26,35 +26,6 @@ export const SETTING_DEFAULTS: Record<string, string> = {
     'From the transcript below, write SEO metadata. Return ONLY JSON (no prose, no code fences): {"seoTitle": "60 chars or fewer", "seoDescription": "155 chars or fewer", "socialBlurb": "200 chars or fewer, engaging, first-person plural voice"}. Ground every claim in the transcript; invent nothing.',
 };
 
-export const SNIPPET_DEFAULTS: Record<string, string> = {
-  "snippet:footer.tagline": "a microbiology and history podcast and writing project.",
-  "snippet:nav.episodes": "Episodes",
-  "snippet:nav.writing": "Writing",
-  "snippet:nav.archive": "Archive",
-  "snippet:nav.data": "Data",
-  "snippet:nav.games": "Games",
-  "snippet:nav.search": "Search",
-  "snippet:nav.subscribe": "Subscribe",
-  "snippet:nav.about": "About",
-  "snippet:nav.privacy": "Privacy",
-  "snippet:nav.terms": "Terms",
-  "snippet:nav.contact": "Contact",
-  "snippet:empty.people": "No people yet. Create one on the right.",
-  "snippet:empty.versions": "No saved versions yet. They are snapshotted on each save.",
-  "snippet:empty.scores": "No scores yet. Be the first.",
-  "snippet:empty.posts": "No posts match these filters.",
-  "snippet:empty.soundbites": "No soundbites yet. Create one on the right.",
-  "snippet:empty.subscribers": "No subscribers yet.",
-  "snippet:meta.home_title": "Germomics · microbiology & history",
-  "snippet:meta.home_description":
-    "A mix of microbiology and history: how microbes, bacteria, viruses, and parasites connect to natural events, discoveries, and human inventions.",
-  "snippet:meta.title_template": "{title} · Germomics",
-  "snippet:dataset.cholera-soho-1854":
-    "John Snow's map of the Broad Street outbreak: deaths clustered around a single pump, the founding case of epidemiology and a Vibrio cholerae story.",
-  "snippet:dataset.influenza-1918":
-    "The three waves of the 1918 H1N1 pandemic: mortality peaked sharply in the deadly autumn wave, a defining example of viral pandemic dynamics.",
-};
-
 export const PAGE_DEFAULTS: Record<string, { title: string; value: string }> = {
   "page:about": {
     title: "About Germomics",

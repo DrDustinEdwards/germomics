@@ -9,7 +9,6 @@ import { getDb } from "~/db/index.server";
 import { subscribers } from "~/db/schema";
 import { formatDate } from "capsomer/behavior/time";
 import { Empty } from "capsomer/react/empty";
-import { useSnippet } from "~/lib/content";
 
 /** Pending until confirmed from the mailed link (double opt-in, app/lib/newsletter.server.ts); only active ones get mail. */
 const statusOf = (r: { confirmedAt: string | null; unsubscribedAt: string | null }) =>
@@ -42,7 +41,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 export default function SubscribersAdmin({ loaderData }: Route.ComponentProps) {
   const { rows } = loaderData;
   const active = rows.filter((r) => r.status === "active").length;
-  const emptySubscribers = useSnippet("snippet:empty.subscribers", "No subscribers yet.");
   return (
     <div>
       <h1 className="flex items-center gap-2 font-display text-2xl font-semibold">
@@ -62,7 +60,7 @@ export default function SubscribersAdmin({ loaderData }: Route.ComponentProps) {
 
       {rows.length === 0 ? (
         <div className="mt-6">
-          <Empty kind="nothing-yet" title={emptySubscribers} />
+          <Empty kind="nothing-yet" title="No subscribers yet." />
         </div>
       ) : (
         <div className="mt-6 overflow-hidden rounded-xl border border-border bg-card">

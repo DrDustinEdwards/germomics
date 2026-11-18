@@ -265,10 +265,9 @@ describe("settings actions", () => {
 });
 
 describe("content block action", () => {
-  it("saves a Markdown page's title and status but never its text, which Carrel writes, and a snippet always published", async () => {
+  it("saves a Markdown page's title and status but never its text, which Carrel writes", async () => {
     await upsertBlock(e, {
       key: "page:about",
-      kind: "page",
       title: "Old",
       value: "Carrel's *text*",
       status: "draft",
@@ -292,12 +291,6 @@ describe("content block action", () => {
       title: "",
       value: before,
     });
-    await content.action(
-      args(form("/admin/content/snippet:x", { value: "Hi", status: "draft" }), {
-        key: "snippet:x",
-      }),
-    );
-    expect(await loadBlock(e, "snippet:x")).toMatchObject({ status: "published" });
   });
 });
 

@@ -5,14 +5,14 @@
 //
 // Reads go straight to D1: the edge cache (workers/app.ts) already serves repeat visits, and on
 // its misses a KV cache in front of D1 was cold too, adding a KV read and write to the round trips
-// before the first byte. Settings and snippets are started once per request by the root middleware
-// (getSettings/getSnippets in context.server).
+// before the first byte. Settings are started once per request by the root middleware
+// (getSettings in context.server).
 import { accessAdmin } from "@dustinedwards/site-runtime/access";
 import { escapeHtml } from "@dustinedwards/site-runtime/html";
 import { eq, sql } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { settings as settingsTable, contentBlocks } from "~/db/schema";
-import { SETTING_DEFAULTS, SNIPPET_DEFAULTS, PAGE_DEFAULTS } from "~/lib/content-defaults";
+import { SETTING_DEFAULTS, PAGE_DEFAULTS } from "~/lib/content-defaults";
 import { toFtsMatch } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
 import { storedBody } from "~/lib/render.server";
@@ -69,15 +69,6 @@ export async function loadSettings(env: Env): Promise<StrMap> {
   const rows = await getDb(env)
     .select({ key: settingsTable.key, value: settingsTable.value })
     .from(settingsTable);
-  return Object.fromEntries(rows.map((r) => [r.key, r.value]));
-}
-
-/** All snippet blocks as a key→value map. Snippets are instant (status ignored). */
-export async function loadSnippets(env: Env): Promise<StrMap> {
-  const rows = await getDb(env)
-    .select({ key: contentBlocks.key, value: contentBlocks.value })
-    .from(contentBlocks)
-    .where(eq(contentBlocks.kind, "snippet"));
   return Object.fromEntries(rows.map((r) => [r.key, r.value]));
 }
 
@@ -152,10 +143,6 @@ export function settingNum(map: StrMap, key: string, fallback: number): number {
   const v = Number(setting(map, key, String(fallback)));
   return Number.isFinite(v) ? v : fallback;
 }
-/** Read a snippet with fallback to the generated default then an optional caller default. */
-export function snippet(map: StrMap, key: string, fallback = ""): string {
-  return map[key] ?? SNIPPET_DEFAULTS[key] ?? fallback;
-}
 
 /** Parse the contact.address JSON setting into a partial Address (for schema.org). */
 export function settingAddress(map: StrMap): Partial<import("~/lib/site").Address> {
@@ -181,7 +168,6 @@ export async function upsertSetting(env: Env, key: string, value: string): Promi
 
 export type BlockInput = {
   key: string;
-  kind: "page" | "snippet";
   title?: string | null;
   value: string;
   status?: "draft" | "published";
@@ -196,7 +182,7 @@ export async function upsertBlock(env: Env, b: BlockInput): Promise<void> {
   };
   await getDb(env)
     .insert(contentBlocks)
-    .values({ key: b.key, kind: b.kind, ...set })
+    .values({ key: b.key, kind: "page", ...set })
     .onConflictDoUpdate({ target: contentBlocks.key, set });
 }
 

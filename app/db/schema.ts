@@ -221,7 +221,7 @@ export const settings = sqliteTable("settings", {
     .default(sql`(datetime('now'))`),
 });
 
-// Prose: pages get a draft/published gate (only published renders publicly); snippets are instant.
+// Prose: pages get a draft/published gate (only published renders publicly).
 // FTS (content_blocks_fts + triggers) lives in the raw migration drizzle/0005_content_settings.sql.
 export const contentBlocks = sqliteTable(
   "content_blocks",
