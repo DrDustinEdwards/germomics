@@ -62,7 +62,6 @@ export default function GuestPage({ loaderData }: Route.ComponentProps) {
   return (
     <div>
       <QueueSeeder tracks={tracks} />
-      <p className="gm-tag-eyebrow">Guest</p>
       <div className="gm-guest-head">
         {photo ? (
           <Picture

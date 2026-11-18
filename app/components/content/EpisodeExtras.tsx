@@ -68,7 +68,6 @@ export function EpisodeToc({ items }: { items: TocItem[] }) {
       </details>
       {/* Desktop: a sticky rail. */}
       <nav aria-label="On this page" className="gm-chapters-rail">
-        <p className="gm-rail-title">On this page</p>
         {list}
       </nav>
     </>

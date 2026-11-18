@@ -3,15 +3,7 @@
 // Public, WCAG AA. ?preview shows drafts to a signed-in admin.
 import { htmlToText } from "@drdustinedwards/site-helpers/text";
 import { Link } from "capsomer/react/link";
-import {
-  Icon,
-  iconDatabase,
-  iconDocument,
-  iconGamepad,
-  iconMic,
-  iconRss,
-  iconUser,
-} from "capsomer/react/icons";
+import { Icon, iconUser } from "capsomer/react/icons";
 import type { Route } from "./+types/about";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getSettings } from "~/lib/context.server";
@@ -50,23 +42,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   };
 }
 
-const EXPLORE = [
-  {
-    to: "/episodes",
-    icon: iconMic,
-    label: "Episodes",
-    note: "Listen, with transcripts and chapters.",
-  },
-  { to: "/writing", icon: iconDocument, label: "Writing", note: "Essays and notes." },
-  { to: "/data", icon: iconDatabase, label: "Data", note: "Interactive virus and bacteria pages." },
-  { to: "/games", icon: iconGamepad, label: "Games", note: "Short browser games." },
-];
-
 export default function About({ loaderData }: Route.ComponentProps) {
   const { title, aboutHtml, bioHtml } = loaderData;
   return (
     <div className="gm-narrow">
-      <p className="gm-eyebrow">About</p>
       <h1 className="gm-eyebrow-title">{title}</h1>
       <div data-context="prose" className="gm-page-body">
         <BodyRenderer html={aboutHtml} />
@@ -82,25 +61,6 @@ export default function About({ loaderData }: Route.ComponentProps) {
         <Link to={`/about/${AUTHOR.slug}`} className="gm-about-host-link">
           More about {AUTHOR.name} →
         </Link>
-      </section>
-
-      <section className="gm-about-section">
-        <h2 className="gm-post-section-title">Explore</h2>
-        <ul className="gm-about-grid">
-          {EXPLORE.map(({ to, icon, label, note }) => (
-            <li key={to}>
-              <Link to={to} className="gm-about-card">
-                <span className="gm-about-card-title">
-                  <Icon d={icon} /> {label}
-                </span>
-                <span className="gm-index-card-text">{note}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-        <a href="/feed/podcast/" className="gm-about-more">
-          <Icon d={iconRss} /> Podcast RSS
-        </a>
       </section>
     </div>
   );

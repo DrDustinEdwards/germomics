@@ -25,7 +25,7 @@ export function TranscriptField({
       file.name.toLowerCase().endsWith(".srt") || (!isVtt(text.trimStart()) && /-->/.test(text));
     const vtt = isSrt ? srtToVtt(text) : text;
     onChange(vtt);
-    setNote(isSrt ? "Converted SRT → VTT." : "Loaded VTT.");
+    setNote(isSrt ? "Converted SRT → VTT." : null);
     setTab("paste");
   }
 
@@ -60,7 +60,6 @@ export function TranscriptField({
         >
           <Icon d={iconFileUp} className="size-5 text-brand" />
           <span className="font-display text-sm text-ink">Upload .vtt or .srt</span>
-          <span className="text-xs text-muted">Click to choose a caption file</span>
           <input
             id="transcript-file"
             ref={fileRef}

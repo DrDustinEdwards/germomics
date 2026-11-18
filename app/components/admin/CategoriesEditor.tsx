@@ -75,9 +75,7 @@ export function CategoriesEditor({
           );
         }}
       />
-      <p className="text-[0.6875rem] text-muted">
-        Apple allows up to 3 categories; the first is primary.
-      </p>
+      <p className="text-[0.6875rem] text-muted">Up to 3; the first is primary.</p>
     </div>
   );
 }

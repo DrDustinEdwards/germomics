@@ -79,7 +79,7 @@ export default function Unsubscribe({ loaderData, actionData }: Route.ComponentP
         {status === "done" && (
           <>
             {email ? <strong className="gm-ink">{email}</strong> : "You"} has been removed from the
-            Germomics newsletter. Sorry to see you go.
+            Germomics newsletter.
           </>
         )}
         {status === "already" && "You’re already unsubscribed. No further emails will be sent."}

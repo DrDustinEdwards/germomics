@@ -96,7 +96,6 @@ export function UploadDropzone({
             <Icon d={iconCloudUpload} className="size-[22px] text-brand" />
           )}
           <span className="font-display text-sm text-ink">{label}</span>
-          <span className="text-xs text-muted">Drag &amp; drop or click to choose</span>
           <input
             id={inputId}
             ref={inputRef}

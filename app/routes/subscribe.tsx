@@ -66,10 +66,6 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
   return (
     <div className="gm-narrow">
       <h1 className="gm-page-title">Subscribe</h1>
-      <p className="gm-lede">
-        Follow Germomics in your podcast app, by email, or by RSS. New episodes and essays land
-        automatically.
-      </p>
 
       {/* Primary apps */}
       {primary.length ? (
@@ -112,7 +108,7 @@ export default function Subscribe({ loaderData, actionData }: Route.ComponentPro
 
       {/* Other ways (feed mechanisms; not identity profiles) */}
       <section className="gm-sub-section">
-        <h2 className="gm-sub-title">Other ways to subscribe</h2>
+        <h2 className="gm-sub-title">Other</h2>
         <div className="gm-sub-chips">
           <a href={`https://subscribeonandroid.com/${SITE_HOST}/feed/podcast/`} className="gm-chip">
             <Icon d={iconPhone} /> Subscribe on Android
