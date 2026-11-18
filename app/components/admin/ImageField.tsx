@@ -79,7 +79,7 @@ export function ImageField({
           onUploaded={(r) => r.url && onChange({ url: r.url, alt })}
         />
       ) : (
-        <Field label="Image URL" help="Paste an absolute https:// image URL.">
+        <Field label="Image URL">
           {(control) => (
             <input
               {...control}
@@ -98,7 +98,6 @@ export function ImageField({
         label="Alt text"
         required={required ?? !!url}
         error={altMissing ? "Alt text is required for accessibility." : null}
-        help="Describe the image for screen readers and when it fails to load."
       >
         {(control) => (
           <input

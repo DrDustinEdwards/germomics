@@ -73,7 +73,6 @@ export default function GamePage({ loaderData }: Route.ComponentProps) {
   return (
     <div className="gm-column">
       <SectionTrail trail={gameTrail(game)} />
-      <p className="gm-tag-eyebrow">Arcade</p>
       <h1 className="gm-detail-title">{game.title}</h1>
       <p className="gm-lede">{game.instructions}</p>
 
@@ -86,8 +85,7 @@ export default function GamePage({ loaderData }: Route.ComponentProps) {
       {lastScore != null && !submitted ? (
         <fetcher.Form method="post" className="gm-game-save">
           <p className="gm-game-save-label">
-            Run over. <span className="gm-brand">{lastScore}</span> bacteria stopped. Save your
-            score:
+            <span className="gm-brand">{lastScore}</span> bacteria stopped. Save your score
           </p>
           <input type="hidden" name="score" value={lastScore} />
           <input
@@ -106,7 +104,7 @@ export default function GamePage({ loaderData }: Route.ComponentProps) {
       {fetcher.data && fetcher.data.ok === false ? (
         <p className="gm-form-note">{fetcher.data.error}</p>
       ) : null}
-      {submitted ? <p className="gm-form-note">Saved to the leaderboard ↓</p> : null}
+      {submitted ? <p className="gm-form-note">Saved</p> : null}
 
       <section className="gm-game-scores">
         <h2 className="gm-game-scores-title">

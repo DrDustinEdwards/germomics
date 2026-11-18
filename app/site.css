@@ -421,7 +421,6 @@
   .gm-chapters-mobile,
   .gm-game-frame,
   .gm-index-card,
-  .gm-about-card,
   .gm-data-map,
   .gm-data-chart {
     border-radius: var(--radius-l-5);
@@ -809,8 +808,7 @@
   .gm-related-list,
   .gm-list,
   .gm-search-list,
-  .gm-index-grid,
-  .gm-about-grid {
+  .gm-index-grid {
     display: grid;
     gap: var(--space-4);
   }
@@ -1007,18 +1005,14 @@
     background-color: var(--sunken);
     padding: var(--space-5);
   }
-  .gm-rail-title,
   .gm-bio-section-title,
-  .gm-data-section-title,
   .gm-chapters-summary {
     font-family: var(--font-display);
     font-size: var(--fs-body);
     line-height: var(--line-box-5);
     font-weight: var(--weight-semibold);
   }
-  .gm-rail-title,
-  .gm-bio-section-title,
-  .gm-data-section-title {
+  .gm-bio-section-title {
     margin-bottom: var(--space-3);
   }
   :where(.gm-toc-list > :not(:last-child)) {
@@ -1189,17 +1183,12 @@
   .gm-eyebrow-title {
     margin-top: var(--space-4);
   }
-  .gm-page-header {
-    margin-bottom: var(--space-7);
-  }
   .gm-muted,
-  .gm-page-lede,
   .gm-index-lede,
   .gm-search-empty,
   .gm-index-card-text {
     color: var(--dim);
   }
-  .gm-page-lede,
   .gm-index-card-text,
   .gm-index-card-title {
     margin-top: var(--space-2);
@@ -1234,9 +1223,7 @@
   .gm-column {
     max-width: 48rem;
   }
-  .gm-article-eyebrow,
   .gm-latest-meta,
-  .gm-tag-eyebrow,
   .gm-season-title,
   .gm-season-heading,
   .gm-index-kind {
@@ -1503,15 +1490,10 @@
   .gm-data-section {
     margin-top: var(--space-7);
   }
-  .gm-data-section-title {
-    font-size: var(--fs-h3);
-    line-height: var(--line-box-7);
-  }
   /* The outlined pills: the share and copy pill (CopyLink), the bio's links and the about page's more link. */
   .gm-pill,
   .gm-chip,
-  .gm-bio-link,
-  .gm-about-more {
+  .gm-bio-link {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
@@ -1523,8 +1505,7 @@
   @media (hover: hover) {
     .gm-pill:hover,
     .gm-chip:hover,
-    .gm-bio-link:hover,
-    .gm-about-more:hover {
+    .gm-bio-link:hover {
       border-color: var(--accent-text);
       color: var(--accent-text);
     }
@@ -1537,17 +1518,6 @@
   }
   .gm-chip {
     gap: var(--space-2-5);
-    font-family: var(--font-mono);
-    font-size: var(--fs-body);
-    line-height: var(--line-box-5);
-  }
-
-  .gm-about-more {
-    margin-top: var(--space-5);
-    gap: var(--space-3);
-    background-color: var(--raised);
-    padding-inline: var(--space-5);
-    padding-block: var(--space-3);
     font-family: var(--font-mono);
     font-size: var(--fs-body);
     line-height: var(--line-box-5);
@@ -1574,26 +1544,6 @@
   }
   .gm-about-host-text {
     margin-top: var(--space-3);
-  }
-  .gm-about-section {
-    margin-top: var(--space-7-5);
-  }
-  @media (width >= 40rem) {
-    .gm-about-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-  .gm-about-card {
-    display: flex;
-    height: 100%;
-    flex-direction: column;
-    background-color: var(--raised);
-    padding: var(--space-5);
-  }
-  @media (hover: hover) {
-    .gm-about-card:hover {
-      border-color: var(--primary);
-    }
   }
   .gm-data-source {
     margin-top: var(--space-3);
@@ -1736,13 +1686,6 @@
       0 0 0 var(--line-w) color-mix(in oklab, var(--primary) 10%, transparent),
       0 1px 3px 0 rgb(0 0 0 / 0.1),
       0 1px 2px -1px rgb(0 0 0 / 0.1);
-  }
-  .gm-latest-kind {
-    --icon-size: var(--fs-small);
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    color: var(--primary);
   }
   .gm-latest-title {
     margin-top: var(--space-2);
@@ -1941,14 +1884,6 @@
     height: 5rem;
     width: auto;
   }
-  .gm-footer-tagline {
-    margin-top: 0.75rem;
-    max-width: 20rem;
-    font-family: var(--font-mono);
-    font-size: var(--fs-small);
-    line-height: var(--leading-relaxed-5);
-    color: var(--dim);
-  }
   .gm-footer-socials {
     margin-top: var(--space-5);
     display: flex;
@@ -2078,7 +2013,6 @@
   .gm-post-card-kind,
   .gm-post-meta-item,
   .gm-post-meta-time,
-  .gm-article-eyebrow,
   .gm-prev-next-label,
   .gm-next-label {
     --icon-size: var(--fs-small);
@@ -2094,8 +2028,7 @@
     --icon-size: 0.875rem;
   }
   .gm-legal-draft-title,
-  .gm-archive-field,
-  .gm-about-more {
+  .gm-archive-field {
     --icon-size: var(--fs-lead);
   }
   .gm-clip-icon,

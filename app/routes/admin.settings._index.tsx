@@ -117,9 +117,6 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
       <h1 className="flex items-center gap-2 font-display text-2xl font-semibold">
         <Icon d={iconSettings} className="size-[22px]" /> Settings
       </h1>
-      <p className="mt-1 text-sm text-muted">
-        Podcast channel metadata, categories, and funding. These drive the feed.
-      </p>
 
       <fetcher.Form method="post" className="mt-6 space-y-5">
         <input
@@ -170,10 +167,7 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
                 )}
               </Field>
             </div>
-            <Field
-              label="Artwork URL"
-              help="Square cover art (≥ 1400px). Image re-hosting is deferred."
-            >
+            <Field label="Artwork URL" help="Square, at least 1400px.">
               {(control) => (
                 <input
                   {...control}
@@ -220,15 +214,12 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
         </Panel>
 
         <Panel title="Hosts">
-          <p className="mb-4 text-sm text-muted">
-            Show-level byline. Maps to podcast:person in the feed alongside per-episode guests.
-          </p>
           <HostsEditor hosts={hosts} onChange={setHosts} />
         </Panel>
 
         <Panel title="Funding">
           <div className="space-y-4">
-            <Field label="Funding URL" help="Leave blank to omit podcast:funding from the feed.">
+            <Field label="Funding URL">
               {(control) => (
                 <input
                   {...control}
@@ -240,10 +231,7 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
                 />
               )}
             </Field>
-            <Field
-              label="Funding label"
-              help="Button text shown by apps (e.g. “Support the show”)."
-            >
+            <Field label="Funding label">
               {(control) => (
                 <input
                   {...control}
@@ -277,10 +265,6 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
       <settingsFetcher.Form method="post" className="mt-8 space-y-5">
         <input type="hidden" name="_form" value="settings" />
         <Panel title="Site settings">
-          <p className="mb-4 text-sm text-muted">
-            Non-secret config and the AI generator prompts. Saved instantly. Identity that drives
-            the feed lives in the Show card above, not here.
-          </p>
           <SchemaFields specs={siteSettings.map(settingSpec)} values={settingValues} />
         </Panel>
         <div className="flex items-center gap-3">
@@ -297,9 +281,6 @@ export default function Settings_({ loaderData }: Route.ComponentProps) {
 
       {/* Content blocks: pages (draft/publish) + snippets (instant). Edit on a dedicated page. */}
       <Panel title="Content" className="mt-8">
-        <p className="mb-4 text-sm text-muted">
-          Pages render publicly only when published. Snippets are instant.
-        </p>
         <h3 className="mb-2 font-display text-sm font-semibold">Pages</h3>
         <ul className="mb-5 divide-y divide-border">
           {pages.map((b) => (

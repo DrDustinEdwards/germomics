@@ -38,7 +38,7 @@ export function PostCard({
         <div className="gm-post-card-meta">
           <span className="gm-post-card-kind">
             <Icon d={isEpisode ? iconHeadphones : iconDocument} />
-            {isEpisode ? "Episode" : "Article"}
+            <span className="cap-sr-only">{isEpisode ? "Episode" : "Article"}</span>
           </span>
           {isEpisode && post.episodeNumber ? <span>#{post.episodeNumber}</span> : null}
           {post.publishedAt ? <span>{formatDate(post.publishedAt)}</span> : null}

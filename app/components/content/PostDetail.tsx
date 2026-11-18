@@ -10,7 +10,6 @@ import {
   iconArrowRight,
   iconCalendar,
   iconClock,
-  iconDocument,
   iconRss,
 } from "capsomer/react/icons";
 import { Link } from "capsomer/react/link";
@@ -216,13 +215,12 @@ export function PostDetail({ data }: { data: DetailData }) {
   //     collapsed Sources/Credits + Transcript pair, subscribe, related + prev/next). See Vault
   //     episode-page-* specs. ──────────────────────────────────────────────────────────────────────
   if (isEpisode) {
-    const eyebrow =
-      [
-        post.seasonNumber ? `Season ${post.seasonNumber}` : null,
-        post.episodeNumber ? `Episode ${post.episodeNumber}` : null,
-      ]
-        .filter(Boolean)
-        .join(" · ") || "Episode";
+    const eyebrow = [
+      post.seasonNumber ? `Season ${post.seasonNumber}` : null,
+      post.episodeNumber ? `Episode ${post.episodeNumber}` : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
     const sources = post.sources ?? [];
 
     return (
@@ -236,7 +234,7 @@ export function PostDetail({ data }: { data: DetailData }) {
           {/* Hero */}
           <header className="gm-episode-hero">
             <div>
-              <p className="gm-eyebrow">{eyebrow}</p>
+              {eyebrow ? <p className="gm-eyebrow">{eyebrow}</p> : null}
               <h1 className="gm-post-title">{post.title}</h1>
               <p className="gm-post-meta">
                 {post.publishedAt ? (
@@ -374,9 +372,6 @@ export function PostDetail({ data }: { data: DetailData }) {
           className="gm-article-image"
         />
       ) : null}
-      <p className="gm-article-eyebrow">
-        <Icon d={iconDocument} /> Article
-      </p>
       <h1 className="gm-post-title">{post.title}</h1>
       <div className="gm-post-meta">
         <span>{AUTHOR.byline}</span>
@@ -396,7 +391,6 @@ export function PostDetail({ data }: { data: DetailData }) {
 
       {toc.length >= 3 ? (
         <nav aria-label="Table of contents" className="gm-toc">
-          <p className="gm-rail-title">On this page</p>
           <ol className="gm-toc-list">
             {toc.map((t) => (
               <li key={t.id} className={t.level === 3 ? "gm-toc-sub" : undefined}>
@@ -430,9 +424,7 @@ function PreviewBanner({ post }: { post: Post }) {
   return (
     <div className="gm-preview-banner">
       <span className="gm-preview-banner-title">Preview</span>
-      <span className="gm-preview-banner-text">
-        : this is the unpublished “{post.status}” version, visible only via this link.
-      </span>
+      <span className="gm-preview-banner-text">: unpublished {post.status} version.</span>
     </div>
   );
 }

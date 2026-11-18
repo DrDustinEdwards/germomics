@@ -49,7 +49,6 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
       </div>
 
       <h2 className="mb-2 mt-8 font-display text-lg font-semibold">Recent</h2>
-      <p className="mb-2 text-sm text-muted">Posts are written in Carrel; each opens there.</p>
       <ul className="divide-y divide-border rounded-xl border border-border bg-card">
         {recent.map((p) => (
           <li key={p.id}>

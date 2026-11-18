@@ -1,5 +1,4 @@
 import { Link } from "capsomer/react/link";
-import { Icon, iconHeadphones } from "capsomer/react/icons";
 import type { Route } from "./+types/_index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getSettings, getSnippets } from "~/lib/context.server";
@@ -126,9 +125,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               <PlayTrackButton track={featuredTrack} queue={tracks} size="lg" />
               <div className="gm-latest-text">
                 <div className="gm-latest-meta">
-                  <span className="gm-latest-kind">
-                    <Icon d={iconHeadphones} /> Latest episode
-                  </span>
                   {featured.publishedAt ? <span>{formatDate(featured.publishedAt)}</span> : null}
                   {featured.audioDuration ? (
                     <span className="gm-num">{timecode(featured.audioDuration * 1000)}</span>

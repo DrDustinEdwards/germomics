@@ -31,10 +31,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 export default function Writing({ loaderData }: Route.ComponentProps) {
   return (
     <div>
-      <header className="gm-page-header">
-        <h1 className="gm-page-title">Writing</h1>
-        <p className="gm-page-lede">Essays and notes on microbiology and history.</p>
-      </header>
+      <h1 className="gm-page-title">Writing</h1>
       {loaderData.articles.length === 0 ? (
         <p className="gm-muted">No articles yet.</p>
       ) : (

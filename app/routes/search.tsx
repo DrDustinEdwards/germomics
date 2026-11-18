@@ -67,9 +67,7 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
         ))}
       </div>
 
-      {q && total === 0 ? (
-        <p className="gm-search-empty">Nothing matched. Try different words.</p>
-      ) : null}
+      {q && total === 0 ? <p className="gm-search-empty">Nothing matched.</p> : null}
     </div>
   );
 }

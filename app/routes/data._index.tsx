@@ -29,10 +29,6 @@ export default function DataHub({ loaderData }: Route.ComponentProps) {
   return (
     <div>
       <h1 className="gm-page-title">Data</h1>
-      <p className="gm-index-lede">
-        Interactive maps and charts on viruses and bacteria. Each page renders a real, crawlable
-        summary and data table around the visualization.
-      </p>
       <div className="gm-index-grid">
         {loaderData.datasets.map((d) => (
           <Link key={d.slug} to={`/data/${d.slug}`} className="gm-index-card">

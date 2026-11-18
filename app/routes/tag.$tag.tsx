@@ -28,7 +28,6 @@ export default function TagPage({ loaderData }: Route.ComponentProps) {
   return (
     <div>
       <QueueSeeder tracks={tracks} />
-      <p className="gm-tag-eyebrow">Tag</p>
       <h1 className="gm-list-title">#{tag}</h1>
       <div className="gm-list">
         {items.map((post) => (

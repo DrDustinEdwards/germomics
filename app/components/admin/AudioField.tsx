@@ -105,7 +105,7 @@ export function AudioField({
         />
       ) : (
         <div className="space-y-3">
-          <Field label="Audio URL" help="External enclosure URL (e.g. an existing host).">
+          <Field label="Audio URL">
             {(control) => (
               <input
                 {...control}

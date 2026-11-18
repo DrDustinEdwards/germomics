@@ -45,10 +45,6 @@ export default function AdminEpisodes({ loaderData }: Route.ComponentProps) {
           </Button>
         </Form>
       </div>
-      <p className="mt-2 max-w-2xl text-sm text-muted">
-        Each episode&apos;s sound file and transcript. Its words, artwork, chapters, people and
-        publishing are written in Carrel.
-      </p>
 
       <div className="mt-5 overflow-hidden rounded-xl border border-border bg-card">
         <ul className="divide-y divide-border">

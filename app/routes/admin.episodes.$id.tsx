@@ -91,9 +91,9 @@ export default function EpisodeAudio({ loaderData }: Route.ComponentProps) {
             ← Episode audio
           </Link>
           <h1 className="mt-1 font-display text-2xl font-semibold">{loaderData.title}</h1>
-          <p className="font-mono text-[0.6875rem] text-muted">
-            GUID (locked): {loaderData.guid ?? "set on first publish"}
-          </p>
+          {loaderData.guid ? (
+            <p className="font-mono text-[0.6875rem] text-muted">GUID {loaderData.guid}</p>
+          ) : null}
         </div>
         <div className="flex items-center gap-2">
           <a

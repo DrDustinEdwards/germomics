@@ -15,11 +15,11 @@ import { ExternalCue } from "../ExternalCue";
 import { useSnippet } from "~/lib/content";
 import { PRIMARY_KEYS, SUBSCRIBE_DESTINATIONS } from "~/lib/subscribe";
 
-// Fat footer: a persistent nav + trust + SEO surface. Brand block (logo + tagline + real socials),
+// Fat footer: a persistent nav + trust + SEO surface. Brand block (logo + real socials),
 // three labeled nav columns (Listen / Explore / About), and a bottom bar. Stacks to one column on
-// mobile. Tagline + nav labels come from content snippets; socials + podcast directories come from
+// mobile. Nav labels come from content snippets; socials + podcast directories come from
 // the root loader (settings social.* + show_config.subscribe_links), so footer and schema agree.
-// Reuses Dustin's brand Wordmark. This consumes snippet:footer.tagline.
+// Reuses Dustin's brand Wordmark.
 
 // The social marks the footer draws, by the platform socialLinks (lib/seo.ts) names.
 const SOCIAL_MARKS: Record<string, { d: string; fill: boolean }> = {
@@ -58,10 +58,6 @@ export function Footer() {
   const root = useRouteLoaderData("root") as RootData | undefined;
   const socials = root?.socials ?? [];
   const subscribeLinks = root?.subscribeLinks ?? {};
-  const tagline = useSnippet(
-    "snippet:footer.tagline",
-    "a microbiology and history podcast and writing project.",
-  );
 
   const explore: [string, string][] = [
     ["/episodes", useSnippet("snippet:nav.episodes", "Episodes")],
@@ -88,11 +84,10 @@ export function Footer() {
         {/* Brand block. gm-footer-brand flows it below the three nav columns on phones only; DOM order
             is unchanged, so at sm it is still the full-width top row and at lg still the first/left column. */}
         <div className="gm-footer-brand">
-          {/* Rectangular germomics lockup as a modest mark (~80px tall) above the tagline. */}
+          {/* Rectangular germomics lockup as a modest mark (~80px tall) */}
           <Link to="/" aria-label="Germomics home" className="gm-footer-home">
             <Wordmark className="gm-footer-wordmark" />
           </Link>
-          <p className="gm-footer-tagline">{tagline}</p>
           {socials.length ? (
             <ul className="gm-footer-socials">
               {socials.map((s) => (

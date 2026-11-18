@@ -50,7 +50,6 @@ export default function AuthorBio({ loaderData }: Route.ComponentProps) {
     <div className="gm-narrow">
       <SectionTrail trail={authorTrail} />
 
-      <p className="gm-eyebrow">Author</p>
       <h1 className="gm-eyebrow-title">
         {AUTHOR.honorific} {AUTHOR.name}
       </h1>
@@ -61,7 +60,7 @@ export default function AuthorBio({ loaderData }: Route.ComponentProps) {
       </div>
 
       <section className="gm-bio-section">
-        <h2 className="gm-bio-section-title">Find Dr. Edwards online</h2>
+        <h2 className="gm-bio-section-title">Elsewhere</h2>
         <ul className="gm-bio-links">
           {LINKS.map((l) => (
             <li key={l.url}>

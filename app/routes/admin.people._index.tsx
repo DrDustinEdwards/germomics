@@ -87,9 +87,6 @@ export default function PeopleAdmin({ loaderData }: Route.ComponentProps) {
       <h1 className="flex items-center gap-2 font-display text-2xl font-semibold">
         <Icon d={iconPeople} className="size-[22px]" /> People
       </h1>
-      <p className="mt-1 text-sm text-muted">
-        Reusable guests. Link them to episodes from the editor.
-      </p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_22rem]">
         {/* List */}

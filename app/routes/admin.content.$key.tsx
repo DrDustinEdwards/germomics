@@ -67,13 +67,10 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
         <Icon d={iconArrowLeft} className="size-3" /> Settings
       </a>
       <h1 className="mt-3 font-display text-2xl font-semibold">{block.title || block.key}</h1>
-      <p className="mt-1 font-mono text-xs text-muted">
-        {block.key} ({kind}
-        {isPage ? `, ${block.status}` : ", instant"})
-      </p>
+      <p className="mt-1 font-mono text-xs text-muted">{block.key}</p>
 
       <fetcher.Form method="post" className="mt-6 space-y-5">
-        <Panel title="Content">
+        <Panel>
           <div className="space-y-4">
             <Field label="Title">
               {(control) => (
@@ -83,10 +80,6 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
             {markdown && carrelUrl ? (
               <div className="space-y-2">
                 <p className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted">
-                  <span>
-                    Written in Carrel. {"{{email}}"} and {"{{address_line}}"} are filled in on the
-                    legal and contact pages.
-                  </span>
                   <a
                     href={carrelUrl}
                     target="_blank"
@@ -102,10 +95,7 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
                 </div>
               </div>
             ) : (
-              <Field
-                label={isPage ? "Body (plain text)" : "Value"}
-                help={isPage ? "Served as plain text, as written." : undefined}
-              >
+              <Field label={isPage ? "Body (plain text)" : "Value"}>
                 {(control) => (
                   <textarea
                     {...control}
@@ -118,10 +108,7 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
               </Field>
             )}
             {isPage ? (
-              <Field
-                label="Status"
-                help="Only published pages render publicly. Drafts are visible via Preview."
-              >
+              <Field label="Status">
                 {(control) => (
                   <select
                     {...control}

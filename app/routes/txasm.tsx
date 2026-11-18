@@ -32,7 +32,6 @@ export default function Txasm({ loaderData }: Route.ComponentProps) {
   const { title, html } = loaderData;
   return (
     <div className="gm-narrow">
-      <p className="gm-eyebrow">Texas Branch ASM</p>
       <h1 className="gm-eyebrow-title">{title}</h1>
       <div data-context="prose" className="gm-page-body">
         <BodyRenderer html={html} page />

@@ -58,9 +58,6 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
       <h1 className="flex items-center gap-2 font-display text-2xl font-semibold">
         <Icon d={iconCut} className="size-[22px]" /> Soundbites
       </h1>
-      <p className="mt-1 text-sm text-muted">
-        Short clips of an episode. They power the episode clip player and the feed soundbite tags.
-      </p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_22rem]">
         <div>
@@ -136,7 +133,7 @@ export default function SoundbitesAdmin({ loaderData }: Route.ComponentProps) {
                   )}
                 </Field>
               </div>
-              <Field label="Title" help="Optional. Shown on the clip and in the feed.">
+              <Field label="Title">
                 {(control) => <input {...control} name="title" className="cap-input" />}
               </Field>
               <div className="flex items-center gap-3">
