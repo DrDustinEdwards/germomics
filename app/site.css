@@ -558,8 +558,7 @@
     row-gap: var(--space-2);
   }
   .gm-article-card-kind,
-  .gm-post-meta-item,
-  .gm-article-eyebrow {
+  .gm-post-meta-item {
     display: flex;
     align-items: center;
     gap: var(--space-2);
@@ -880,16 +879,11 @@
       grid-template-columns: 1fr 14rem;
     }
   }
-  .gm-eyebrow {
-    font-family: var(--font-mono);
-    font-size: var(--fs-small);
-    line-height: var(--line-box-4);
-    letter-spacing: var(--tracking-spread);
-    color: var(--accent-text);
-    text-transform: uppercase;
-  }
   .gm-post-title {
     margin-top: var(--space-3);
+  }
+  .gm-episode-hero .gm-post-title {
+    margin-top: 0;
   }
   .gm-post-meta {
     margin-top: var(--space-4);
@@ -1174,13 +1168,13 @@
   .gm-post-title,
   .gm-legal-title,
   .gm-page-title-lg,
-  .gm-eyebrow-title {
+  .gm-page-title {
     font-family: var(--font-display);
     font-size: var(--title-1);
     line-height: var(--leading-tight-5);
     font-weight: var(--weight-semibold);
   }
-  .gm-eyebrow-title {
+  .gm-page-title {
     margin-top: var(--space-4);
   }
   .gm-muted,

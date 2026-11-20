@@ -46,7 +46,7 @@ export default function About({ loaderData }: Route.ComponentProps) {
   const { title, aboutHtml, bioHtml } = loaderData;
   return (
     <div className="gm-narrow">
-      <h1 className="gm-eyebrow-title">{title}</h1>
+      <h1 className="gm-page-title">{title}</h1>
       <div data-context="prose" className="gm-page-body">
         <BodyRenderer html={aboutHtml} />
       </div>

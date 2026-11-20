@@ -32,7 +32,7 @@ export default function Txasm({ loaderData }: Route.ComponentProps) {
   const { title, html } = loaderData;
   return (
     <div className="gm-narrow">
-      <h1 className="gm-eyebrow-title">{title}</h1>
+      <h1 className="gm-page-title">{title}</h1>
       <div data-context="prose" className="gm-page-body">
         <BodyRenderer html={html} page />
       </div>

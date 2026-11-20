@@ -54,7 +54,7 @@ export default function Episodes({ loaderData }: Route.ComponentProps) {
           .sort((a, b) => (a.episodeNumber ?? 0) - (b.episodeNumber ?? 0));
         return (
           <section key={s} id={`season-${s}`} className="gm-season-section">
-            {/* Teal eyebrow divider (same style as /season/:num), one per season group. */}
+            {/* Teal season heading (same style as /season/:num), one per season group. */}
             <h2 className="gm-season-heading">Season {s}</h2>
             <div className="gm-list">{eps.map(card)}</div>
           </section>

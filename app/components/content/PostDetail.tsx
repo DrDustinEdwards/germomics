@@ -215,7 +215,7 @@ export function PostDetail({ data }: { data: DetailData }) {
   //     collapsed Sources/Credits + Transcript pair, subscribe, related + prev/next). See Vault
   //     episode-page-* specs. ──────────────────────────────────────────────────────────────────────
   if (isEpisode) {
-    const eyebrow = [
+    const episodeLabel = [
       post.seasonNumber ? `Season ${post.seasonNumber}` : null,
       post.episodeNumber ? `Episode ${post.episodeNumber}` : null,
     ]
@@ -234,9 +234,9 @@ export function PostDetail({ data }: { data: DetailData }) {
           {/* Hero */}
           <header className="gm-episode-hero">
             <div>
-              {eyebrow ? <p className="gm-eyebrow">{eyebrow}</p> : null}
               <h1 className="gm-post-title">{post.title}</h1>
               <p className="gm-post-meta">
+                {episodeLabel ? <span className="gm-post-meta-item">{episodeLabel}</span> : null}
                 {post.publishedAt ? (
                   <span className="gm-post-meta-item">
                     <Icon d={iconCalendar} />{" "}
