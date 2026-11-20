@@ -38,7 +38,7 @@ export default function Season({ loaderData }: Route.ComponentProps) {
     <div>
       <QueueSeeder tracks={tracks} />
       <SectionTrail trail={seasonTrail(num)} />
-      {/* Teal eyebrow is the only season marker (the page title/meta carries the heading text). */}
+      {/* The teal heading is the only season marker (the page title/meta carries the heading text). */}
       <h1 className="gm-season-title">Season {num}</h1>
       <div className="gm-list">
         {episodes.map((post) => (

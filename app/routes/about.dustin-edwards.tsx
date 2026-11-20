@@ -50,7 +50,7 @@ export default function AuthorBio({ loaderData }: Route.ComponentProps) {
     <div className="gm-narrow">
       <SectionTrail trail={authorTrail} />
 
-      <h1 className="gm-eyebrow-title">
+      <h1 className="gm-page-title">
         {AUTHOR.honorific} {AUTHOR.name}
       </h1>
       <p className="gm-bio-meta">{AUTHOR.jobTitle}</p>
