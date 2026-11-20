@@ -318,7 +318,7 @@
   line-height: var(--gm-small-leading);
   --cap-source-kind-pad: 0.125rem var(--space-2-5);
   & .cap-source-kind {
-    letter-spacing: 0.025em;
+    letter-spacing: var(--tracking-wide);
   }
   & a.cap-source-title {
     font-weight: var(--weight-regular);
@@ -389,7 +389,7 @@
   font-family: var(--gm-font-display);
   font-size: var(--title-4);
   font-weight: var(--weight-semibold);
-  letter-spacing: -0.025em;
+  letter-spacing: var(--tracking-tight);
 }
 
 /* The figure viewer is dimmer than a dialog: 80% black, as it always was. */
@@ -462,7 +462,7 @@
   .gm-article-card-meta {
     font-family: var(--gm-font-mono);
     font-size: var(--fs-label);
-    letter-spacing: 0.025em;
+    letter-spacing: var(--tracking-wide);
     color: var(--dim);
     text-transform: uppercase;
   }
@@ -1226,7 +1226,7 @@
     font-family: var(--gm-font-mono);
     font-size: var(--fs-small);
     line-height: var(--line-box-4);
-    letter-spacing: 0.025em;
+    letter-spacing: var(--tracking-wide);
     color: var(--accent-text);
     text-transform: uppercase;
   }

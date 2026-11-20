@@ -369,7 +369,7 @@
     font-size: var(--title-2);
     line-height: var(--line-box-9);
     font-weight: var(--weight-bold);
-    letter-spacing: -0.025em;
+    letter-spacing: var(--tracking-tight);
   }
   .gm-headings-section h3,
   .gm-headings-page h2 {
@@ -386,7 +386,7 @@
     scroll-margin-top: var(--space-10);
     font-size: var(--title-6);
     line-height: var(--line-box-6);
-    letter-spacing: 0.025em;
+    letter-spacing: var(--tracking-wide);
     text-transform: uppercase;
   }
   .gm-headings-section h5,

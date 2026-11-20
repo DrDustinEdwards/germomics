@@ -47,7 +47,7 @@
   h3,
   h4 {
     font-family: var(--gm-font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: var(--tracking-tight);
     color: var(--text);
   }
   a {
