@@ -1,5 +1,24 @@
-/* The admin's design system, loaded only with the admin routes (imported by routes/admin.tsx).
-   Capsomer v0.5.0: layers, tokens, both themes, the base rules, and the pieces AdminShell uses. */
+/* The admin's design system, loaded only with the admin routes (imported by routes/admin.tsx). The admin is the only
+   place Tailwind is left: its utilities, with germomics' roles and faces mapped into them. Capsomer's layers sit
+   above Tailwind's base and below its components and utilities. */
+@layer cap-tokens, theme, base, cap, components, utilities, site;
+@import "tailwindcss" source(".");
+@theme inline {
+  --font-display: var(--gm-font-display);
+  --font-serif: var(--gm-font-serif);
+  --font-mono: var(--gm-font-mono);
+  --font-sans: var(--gm-font-display);
+  --color-bg: var(--ground);
+  --color-surface: var(--sunken);
+  --color-card: var(--raised);
+  --color-border: var(--line);
+  --color-ink: var(--text);
+  --color-muted: var(--dim);
+  --color-brand: var(--primary);
+  --color-brand-strong: var(--primary-hover);
+  --color-on-brand: var(--primary-fg);
+  --color-accent: var(--accent-text);
+}
 @import "capsomer/tokens.css";
 @import "capsomer/themes.css" layer(cap.tokens);
 @import "capsomer/base.css";
