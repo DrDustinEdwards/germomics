@@ -1,10 +1,11 @@
 /* The error page's stylesheet, linked by the root ErrorBoundary alone (app/root.tsx), as charts.css is by the /data
    route: Capsomer's error page, the failed Empty it shows and its button, drawn in germomics' own look. The layer order
    is repeated first because React hoists this link above app.css: without it Capsomer's layers would be declared
-   before Tailwind's, and preflight and the site's link color would win over the page's padding, heading and button.
+   in another order, and the reset and the site's link color would win over the page's padding, heading and button.
    Nothing here is a color: Capsomer's germomics site entry gives the page the site's palette in both themes. */
 @layer theme, base, cap, components, utilities, site;
 @import "capsomer/tokens.css";
+@import "capsomer/reset.css";
 @import "capsomer/site-germomics.css";
 @import "capsomer/button.css";
 @import "capsomer/empty.css";
@@ -16,8 +17,8 @@
   --primary-fg: var(--ground);
 }
 
-/* The heading as the site's page headings are (font-display text-3xl font-semibold), in the brand purple of the old
-   404; the edge in the site's border, not Capsomer's critical red; the column's side padding the site's (px-4). */
+/* The heading as the site's page headings are (display face, 1.875rem, semibold), in the brand purple of the old
+   404; the edge in the site's border, not Capsomer's critical red; the column's side padding the site's. */
 .cap-error-page {
   padding-inline: var(--space-5);
 
@@ -27,7 +28,7 @@
 
   & h1.cap-empty-title {
     color: var(--primary);
-    font-family: var(--font-display);
+    font-family: var(--gm-font-display);
     font-size: var(--title-2);
     line-height: 1.2;
   }
