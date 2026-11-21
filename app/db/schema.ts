@@ -118,6 +118,17 @@ export const posts = sqliteTable(
   }),
 );
 
+// A history row's columns (post_versions, content_block_versions): the row as it was, the change it was taken before
+// (0031) and by whom.
+const snapshotColumns = () => ({
+  snapshot: text("snapshot", { mode: "json" }).notNull(),
+  event: text("event"),
+  author: text("author"),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
 export const postVersions = sqliteTable(
   "post_versions",
   {
@@ -125,13 +136,7 @@ export const postVersions = sqliteTable(
     postId: integer("post_id")
       .notNull()
       .references(() => posts.id, { onDelete: "cascade" }),
-    snapshot: text("snapshot", { mode: "json" }).notNull(),
-    // 0031: the change it was taken before, and by whom.
-    event: text("event"),
-    author: text("author"),
-    createdAt: text("created_at")
-      .notNull()
-      .default(sql`(datetime('now'))`),
+    ...snapshotColumns(),
   },
   (t) => ({ postIdx: index("post_versions_post_idx").on(t.postId) }),
 );
@@ -262,12 +267,7 @@ export const contentBlockVersions = sqliteTable(
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     blockKey: text("block_key").notNull(),
-    snapshot: text("snapshot", { mode: "json" }).notNull(),
-    event: text("event"),
-    author: text("author"),
-    createdAt: text("created_at")
-      .notNull()
-      .default(sql`(datetime('now'))`),
+    ...snapshotColumns(),
   },
   (t) => ({ keyIdx: index("content_block_versions_key_idx").on(t.blockKey) }),
 );
