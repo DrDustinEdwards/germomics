@@ -52,7 +52,7 @@ export const links: Route.LinksFunction = () => [
   ...PRELOADS.links,
 ];
 
-// An unmatched address matches only the root, so the error path's title is set here (WCAG 2.4.2).
+// The error path's title for an error the root itself shows (WCAG 2.4.2); the public pages' is in routes/_site.tsx.
 export function meta({ error }: Route.MetaArgs): Route.MetaDescriptors {
   return error ? [{ title: errorTitle(error, "Germomics") }] : [];
 }
