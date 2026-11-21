@@ -42,16 +42,13 @@
 // slug of a post ever live redirects (301) to the new one (post_redirects, app/lib/posts.server.ts). Trash takes a live
 // post off the site (a draft, trashed_at set); a restore is a draft; only a trashed post is deleted, and site-api's
 // cron deletes one trashed 30 days.
-import { and, eq, isNotNull, lte } from "drizzle-orm";
+import { and, eq, getTableColumns, isNotNull, lte } from "drizzle-orm";
 import { inList } from "@dustinedwards/site-runtime/d1";
 import { parseSqlTime } from "@dustinedwards/site-runtime/time";
-import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 import {
   contentVersion,
   NotFoundError,
   transcriptVersion,
-  previewDocument,
   RefusedError,
   VersionConflictError,
   type ContentAdapter,
@@ -98,7 +95,7 @@ import {
 } from "~/lib/render.server";
 import { getShowConfig } from "~/lib/show.server";
 import { SITE_ORIGIN } from "~/lib/site";
-import { BodyRenderer } from "~/components/content/BodyRenderer";
+import type { PagePreview } from "~/lib/preview-context";
 import { PAGE_HREF } from "~/components/content/PageHits";
 import { carrelMedia } from "./media.server";
 import {
@@ -107,8 +104,15 @@ import {
   renderPageSource,
   renderSource,
   SourceError,
+  type ParsedSource,
   type PersonRef,
 } from "./source";
+
+/** The site's own render of a route (workers/app.ts), with the draft on its context; nothing stored or cached. */
+export type RenderDocument = (
+  request: Request,
+  draft: { post: Post } | { page: PagePreview },
+) => Promise<Response>;
 
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/;
 // A page's id: content_blocks' `page:about` is Carrel's `page.about` (a colon is not an id character).
@@ -328,7 +332,7 @@ async function listPages(env: Env): Promise<PageRow[]> {
 export function createCarrelAdapter(
   env: Env,
   log: (entry: Record<string, unknown>) => void = console.log,
-  options: { stylesheets?: () => Promise<string[]> } = {},
+  options: { renderDocument?: RenderDocument } = {},
 ): SiteAdapter {
   const db = getDb(env);
   const showAuthor = async () => (await getShowConfig(env)).author;
@@ -565,6 +569,51 @@ export function createCarrelAdapter(
     const current = await findPost(id);
     if (!current) throw new NotFoundError();
     return current;
+  }
+
+  /** The post a source would make, never written: over the stored row when there is one, noindex either way. */
+  async function draftPost(id: string | undefined, source: string): Promise<Post> {
+    const current = id ? await findPost(id) : null;
+    const kind = current?.kind ?? "article";
+    let parsed: ParsedSource;
+    try {
+      parsed = parseSource(source, kind);
+    } catch {
+      parsed = { body: source, post: null, episode: null };
+    }
+    const { people: _people, ...episode } = parsed.episode ?? {};
+    const now = nowIso();
+    const blank = Object.fromEntries(
+      Object.keys(getTableColumns(posts)).map((column) => [column, null]),
+    );
+    const base =
+      current ??
+      ({
+        ...blank,
+        id: 0,
+        kind,
+        title: "Untitled",
+        body: "",
+        status: "draft",
+        tags: [],
+        featured: false,
+        createdAt: now,
+        updatedAt: now,
+      } as unknown as Post);
+    return {
+      ...base,
+      ...parsed.post,
+      ...episode,
+      ...(await rendered(() =>
+        postBodyFields(
+          env,
+          parsed.body,
+          lcpAboveBody({ kind, coverImage: parsed.post?.coverImage }),
+        ),
+      )),
+      slug: current?.slug ?? (id && ID_PATTERN.test(id) ? id : "preview"),
+      noindex: true,
+    };
   }
 
   const content: ContentAdapter = {
@@ -1085,33 +1134,39 @@ export function createCarrelAdapter(
     // The Prelum render every stored body was made with (render.server.ts keeps the constant, checked against Prelum's).
     renderVersion: RENDER_VERSION,
 
-    // A source whose front matter cannot be read previews as its body alone; a save still refuses it.
+    // The draft through the site's own route and layout, in-process (workers/app.ts), so it has the header, footer and
+    // byline; a source whose front matter cannot be read previews as its body alone (a save still refuses it).
     preview: {
       async render({ id, source }) {
-        let title: string | null;
-        let body: string;
-        if (pageKeyOf(id ?? "")) ({ title, body } = parsePageSource(source));
-        else {
-          try {
-            const parsed = parseSource(
-              source,
-              (id ? (await findPost(id))?.kind : null) ?? "episode",
-            );
-            ({ body } = parsed);
-            title = parsed.post?.title ?? null;
-          } catch {
-            ({ title, body } = { title: null, body: source });
-          }
+        const { renderDocument } = options;
+        if (!renderDocument) throw new Error("the document renderer is not on this request");
+        const key = pageKeyOf(id ?? "");
+        let path: string;
+        let draft: Parameters<RenderDocument>[1];
+        if (key) {
+          path = PAGE_HREF[key];
+          if (!path || TEXT_PAGES.has(key)) throw new RefusedError("That page has no preview.");
+          const { title, body } = parsePageSource(source);
+          const { html } = await rendered(() => renderMarkdown(body, libraryMedia(env), { env }));
+          draft = { page: { key, title, html } };
+        } else {
+          const post = await draftPost(id, source);
+          path = `/${post.slug}`;
+          draft = { post };
         }
-        const { html } = await rendered(() => renderMarkdown(body, libraryMedia(env), { env }));
-        const heading = (title ?? "Untitled").replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
-        return previewDocument({
-          title: title ?? "Untitled",
-          body: `<main class="mx-auto max-w-3xl px-4 py-10"><article><h1 class="font-display text-3xl font-semibold">${heading}</h1>${renderToStaticMarkup(createElement(BodyRenderer, { html }))}</article></main>`,
-          stylesheets: (await options.stylesheets?.()) ?? [],
-          origin: SITE_ORIGIN,
-          attributes: { "data-theme": "light" },
-        });
+        const response = await renderDocument(
+          new Request(new URL(path, SITE_ORIGIN), { headers: { Accept: "text/html" } }),
+          draft,
+        );
+        if (!response.ok)
+          throw new RefusedError(
+            `The preview did not render: ${path} answered ${response.status}.`,
+          );
+        // A page's own robots tag indexes it; the strictest tag wins, so this one keeps a preview out of every index.
+        return (await response.text()).replace(
+          /<head\b[^>]*>/i,
+          (head) => `${head}<meta name="robots" content="noindex, nofollow">`,
+        );
       },
     },
 

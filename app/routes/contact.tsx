@@ -4,7 +4,6 @@
 // shows admin drafts.
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/contact";
-import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getSettings } from "~/lib/context.server";
 import { loadFilledPage } from "~/lib/content.server";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
@@ -19,7 +18,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  return loadFilledPage(getEnv(context), request, "page:contact", "Contact", getSettings(context));
+  return loadFilledPage(context, request, "page:contact", "Contact", getSettings(context));
 }
 
 export default function Contact({ loaderData }: Route.ComponentProps) {

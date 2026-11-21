@@ -265,32 +265,36 @@ describe("settings actions", () => {
 });
 
 describe("content block action", () => {
-  it("saves a Markdown page's title and status but never its text, which Carrel writes", async () => {
+  it("never writes a Markdown page, which Carrel alone edits, nor makes one", async () => {
     await upsertBlock(e, {
       key: "page:about",
       title: "Old",
       value: "Carrel's *text*",
       status: "draft",
     });
-    const before = "Carrel's *text*";
-    await content.action(
-      args(form("/admin/content/page:about", { title: "About", value: "<p>v</p>" }), {
-        key: "page:about",
-      }),
-    );
+    for (const key of ["page:about", "page:new"]) {
+      const refused = await thrown(
+        content.action(
+          args(
+            form(`/admin/content/${key}`, {
+              title: "About",
+              value: "<p>v</p>",
+              status: "published",
+            }),
+            {
+              key,
+            },
+          ),
+        ),
+      );
+      expect(refused.status).toBe(405);
+    }
     expect(await loadBlock(e, "page:about", { includeDrafts: true })).toMatchObject({
-      title: "About",
+      title: "Old",
       status: "draft",
-      value: before,
+      value: "Carrel's *text*",
     });
-    await content.action(
-      args(form("/admin/content/page:about", { status: "published" }), { key: "page:about" }),
-    );
-    expect(await loadBlock(e, "page:about")).toMatchObject({
-      status: "published",
-      title: "",
-      value: before,
-    });
+    expect(await loadBlock(e, "page:new", { includeDrafts: true })).toBeNull();
   });
 });
 

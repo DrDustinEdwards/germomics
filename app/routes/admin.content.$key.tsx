@@ -1,13 +1,11 @@
-// Admin → edit one content page. Behind the admin gate (admin.tsx middleware).
-// Pages have a draft/publish status and a Preview link (renders the draft in real context via
-// ?preview). A Markdown page's text is written in Carrel, so here it is shown as the
-// site renders it, with a link to edit it there, and only its title and status are saved; the plain-text pages
-// (TEXT_PAGES) are edited here.
+// Admin → one content page. Behind the admin gate (admin.tsx middleware).
+// A Markdown page is writing, which Carrel alone edits (its title and status too): shown here as rendered, and refused
+// by the action. The plain-text pages (TEXT_PAGES, draft or published, with a Preview link via ?preview) are edited here.
 import { useFetcher } from "react-router";
 import { Icon, iconArrowLeft, iconExternal } from "capsomer/react/icons";
 import type { Route } from "./+types/admin.content.$key";
 import { getEnv } from "@dustinedwards/site-runtime/context";
-import { loadBlock, TEXT_PAGES, updatePageSettings, upsertBlock } from "~/lib/content.server";
+import { loadBlock, TEXT_PAGES, upsertBlock } from "~/lib/content.server";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 import { carrelEditUrl } from "~/lib/site";
 import { Panel } from "capsomer/react/panel";
@@ -30,13 +28,11 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 }
 
 export async function action({ params, request, context }: Route.ActionArgs) {
+  if (!TEXT_PAGES.has(params.key))
+    throw new Response("This page is edited in Carrel.", { status: 405 });
   const form = await readForm(request, ADMIN_FORM);
   const title = String(form.get("title") ?? "") || null;
   const status = form.get("status") === "published" ? "published" : "draft";
-  if (!TEXT_PAGES.has(params.key)) {
-    await updatePageSettings(getEnv(context), params.key, { title, status });
-    return { ok: true as const, message: "Saved." };
-  }
   // The plain-text pages are served as text and keep their bytes.
   const value = String(form.get("value") ?? "");
   await upsertBlock(getEnv(context), {
@@ -63,32 +59,37 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
       <h1 className="mt-3 font-display text-2xl font-semibold">{block.title || block.key}</h1>
       <p className="mt-1 font-mono text-xs text-muted">{block.key}</p>
 
-      <fetcher.Form method="post" className="mt-6 space-y-5">
-        <Panel>
-          <div className="space-y-4">
-            <Field label="Title">
-              {(control) => (
-                <input {...control} name="title" defaultValue={block.title} className="cap-input" />
-              )}
-            </Field>
-            {markdown && carrelUrl ? (
-              <div className="space-y-2">
-                <p className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted">
-                  <a
-                    href={carrelUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 font-mono text-xs text-accent hover:underline"
-                  >
-                    <Icon d={iconExternal} className="size-[13px]" /> Edit in Carrel
-                    <span className="cap-sr-only"> (opens in a new tab)</span>
-                  </a>
-                </p>
-                <div className="max-h-[32rem] overflow-y-auto rounded-xl border border-border bg-card p-4">
-                  <BodyRenderer html={block.html} />
-                </div>
-              </div>
-            ) : (
+      {markdown && carrelUrl ? (
+        <Panel className="mt-6">
+          <div className="space-y-2">
+            <a
+              href={carrelUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 font-mono text-xs text-accent hover:underline"
+            >
+              <Icon d={iconExternal} className="size-[13px]" /> Edit in Carrel
+              <span className="cap-sr-only"> (opens in a new tab)</span>
+            </a>
+            <div className="max-h-[32rem] overflow-y-auto rounded-xl border border-border bg-card p-4">
+              <BodyRenderer html={block.html} />
+            </div>
+          </div>
+        </Panel>
+      ) : (
+        <fetcher.Form method="post" className="mt-6 space-y-5">
+          <Panel>
+            <div className="space-y-4">
+              <Field label="Title">
+                {(control) => (
+                  <input
+                    {...control}
+                    name="title"
+                    defaultValue={block.title}
+                    className="cap-input"
+                  />
+                )}
+              </Field>
               <Field label="Body (plain text)">
                 {(control) => (
                   <textarea
@@ -100,45 +101,45 @@ export default function EditBlock({ loaderData }: Route.ComponentProps) {
                   />
                 )}
               </Field>
-            )}
-            <Field label="Status">
-              {(control) => (
-                <select
-                  {...control}
-                  name="status"
-                  defaultValue={block.status}
-                  className="cap-input"
-                >
-                  <option value="draft">draft</option>
-                  <option value="published">published</option>
-                </select>
-              )}
-            </Field>
-          </div>
-        </Panel>
+              <Field label="Status">
+                {(control) => (
+                  <select
+                    {...control}
+                    name="status"
+                    defaultValue={block.status}
+                    className="cap-input"
+                  >
+                    <option value="draft">draft</option>
+                    <option value="published">published</option>
+                  </select>
+                )}
+              </Field>
+            </div>
+          </Panel>
 
-        <div className="flex items-center gap-3">
-          <Button type="submit" variant="primary" pending={fetcher.state !== "idle"}>
-            Save
-          </Button>
-          {previewHref ? (
-            <a
-              href={`${previewHref}?preview=1`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 font-mono text-sm text-accent hover:underline"
-            >
-              <Icon d={iconExternal} className="size-[13px]" /> Preview
-              <span className="cap-sr-only"> (opens in a new tab)</span>
-            </a>
-          ) : null}
-          {fetcher.data?.ok ? (
-            <span role="status" className="font-mono text-xs text-accent">
-              {fetcher.data.message}
-            </span>
-          ) : null}
-        </div>
-      </fetcher.Form>
+          <div className="flex items-center gap-3">
+            <Button type="submit" variant="primary" pending={fetcher.state !== "idle"}>
+              Save
+            </Button>
+            {previewHref ? (
+              <a
+                href={`${previewHref}?preview=1`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 font-mono text-sm text-accent hover:underline"
+              >
+                <Icon d={iconExternal} className="size-[13px]" /> Preview
+                <span className="cap-sr-only"> (opens in a new tab)</span>
+              </a>
+            ) : null}
+            {fetcher.data?.ok ? (
+              <span role="status" className="font-mono text-xs text-accent">
+                {fetcher.data.message}
+              </span>
+            ) : null}
+          </div>
+        </fetcher.Form>
+      )}
     </div>
   );
 }

@@ -2,7 +2,6 @@
 // {{email}} filled from show_config (and {{address_line}}, should the text use it). DRAFT banner stays as chrome. ?preview shows admin drafts.
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/terms";
-import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getSettings } from "~/lib/context.server";
 import { loadFilledPage } from "~/lib/content.server";
 import { LegalPage } from "~/components/content/Legal";
@@ -17,13 +16,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  return loadFilledPage(
-    getEnv(context),
-    request,
-    "page:terms",
-    "Terms of use",
-    getSettings(context),
-  );
+  return loadFilledPage(context, request, "page:terms", "Terms of use", getSettings(context));
 }
 
 export default function Terms({ loaderData }: Route.ComponentProps) {

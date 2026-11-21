@@ -7,6 +7,7 @@ import { createCarrelAdapter } from "~/lib/carrel/adapter.server";
 import { parseSource } from "~/lib/carrel/source";
 import { resetDb } from "@dustinedwards/devkit/d1";
 import { applyMigrations } from "./helpers/d1";
+import { renderDocument } from "./helpers/render-document";
 
 // Carrel's site API as the Worker mounts it, with site-api's D1 store (safe retries, preview links), against the real
 // migrations: the guard, the round trips Carrel makes, and site-api's own conformance suite.
@@ -23,6 +24,7 @@ const api = createSiteApi({
       IMAGES: { info: async () => ({ width: 1, height: 1, format: "image/png", fileSize: 0 }) },
     } as unknown as Env,
     () => {},
+    { renderDocument },
   ),
   key: KEY,
   limiter: { limit: async () => ({ success: true }) },
