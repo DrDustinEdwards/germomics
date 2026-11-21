@@ -394,6 +394,22 @@ describe("reading", () => {
     expect(await ids({ limit: 1, cursor: "junk" })).toEqual(["beta"]);
   });
 
+  it("credits the show's author unless a post names its own, and filters by author", async () => {
+    await save("by-show", '---\ntitle: "S"\n---\nx');
+    await save(
+      "by-own",
+      '---\ntitle: "O"\nauthors: ["Guest Writer"]\nseries: "Cholera"\nseriesPart: 2\n---\nx',
+    );
+    const own = await content.list({ author: "Guest Writer", limit: 10 });
+    expect(own.items.map((i) => i.id)).toEqual(["by-own"]);
+    expect((await content.get("by-own"))!.source).toContain('series: "Cholera"');
+    const show = (await content.get("by-show"))!;
+    expect(show.authors).toHaveLength(1);
+    expect(
+      (await content.list({ author: show.authors![0], limit: 10 })).items.map((i) => i.id),
+    ).toContain("by-show");
+  });
+
   it("lists revisions, newest first, and returns the source of any of them", async () => {
     expect(await content.revisions("nope")).toBeNull();
     expect(await content.revisionSource("nope", "a".repeat(32))).toBeNull();
@@ -403,15 +419,20 @@ describe("reading", () => {
     const items = (await content.revisions("rev"))!;
     // The live version comes first, so its publisher shows in Carrel's history before the next edit.
     expect(items.map((i) => i.version)).toEqual([v3.version, v2.version, v1.version]);
-    expect(items[0]).toMatchObject({
-      author: "germomics",
-      message: "The post as it stands now (Three)",
-    });
-    expect(items[1]).toMatchObject({ message: "Saved before an edit (Two)" });
+    expect(items[0]).toMatchObject({ author: "Dustin Edwards", message: "Saved" });
     expect(items[1].at).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.000Z$/);
     expect(await content.revisionSource("rev", v1.version)).toBe(
       '---\ntitle: "One"\n---\n<p>1</p>',
     );
+    const tagged = await content.setTags!("rev", {
+      tags: ["a"],
+      expectedVersion: v3.version,
+      changeId: "c1",
+    });
+    expect((await content.revisions("rev"))![0]).toMatchObject({
+      message: "Tags set",
+      version: tagged.version,
+    });
     const current = (await content.get("rev"))!;
     expect(await content.revisionSource("rev", current.version)).toBe(current.source);
     expect(await content.revisionSource("rev", "0".repeat(32))).toBeNull();
