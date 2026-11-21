@@ -5,8 +5,7 @@ import { htmlToText } from "@drdustinedwards/site-helpers/text";
 import { Link } from "capsomer/react/link";
 import { Icon, iconExternal } from "capsomer/react/icons";
 import type { Route } from "./+types/about.dustin-edwards";
-import { getEnv } from "@dustinedwards/site-runtime/context";
-import { loadPage, isPreviewing } from "~/lib/content.server";
+import { routePage } from "~/lib/content.server";
 import { jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { buildPersonLd, pageHead } from "~/lib/seo";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
@@ -39,9 +38,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const env = getEnv(context);
-  const preview = await isPreviewing(env, request);
-  const bio = await loadPage(env, "page:dustin-edwards", { includeDrafts: preview });
+  const bio = await routePage(context, request, "page:dustin-edwards");
   return { bioHtml: bio.html, bioText: htmlToText(bio.html) };
 }
 

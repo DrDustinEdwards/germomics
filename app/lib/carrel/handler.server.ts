@@ -3,16 +3,16 @@
 // schedules Carrel set, from the one-minute cron (workers/app.ts).
 import { standardSiteApi } from "@dustinedwards/site-api";
 import { INDEXNOW_KEY, SITE_ORIGIN } from "~/lib/site";
-import { createCarrelAdapter } from "./adapter.server";
+import { createCarrelAdapter, type RenderDocument } from "./adapter.server";
 
-/** `stylesheets`: the site's own, for a preview drawn as the site draws a post (workers/app.ts passes them). */
-export function carrelApi(env: Env, stylesheets: () => Promise<string[]> = async () => []) {
+/** `renderDocument`: the site's own render of a route, for a preview drawn as the site draws a post (workers/app.ts). */
+export function carrelApi(env: Env, renderDocument?: RenderDocument) {
   // The replay store (safe retries by change id), preview links, failed hooks' retries and the webmentions sent
   // (drizzle/0018_site_api_store.sql). The standard hooks: a changed live page tells IndexNow and the pages it links
   // to, whether a Carrel request or a schedule changed it, and a schedule (which has no request for the gateway to
   // purge after) purges the stored pages.
   return standardSiteApi({
-    adapter: createCarrelAdapter(env, undefined, { stylesheets }),
+    adapter: createCarrelAdapter(env, undefined, { renderDocument }),
     key: env.CARREL_SITE_KEY,
     limiter: env.CARREL_RATE_LIMIT,
     db: env.DB,

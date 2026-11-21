@@ -3,7 +3,6 @@
 // contact details are never duplicated. DRAFT banner stays as chrome. ?preview shows admin drafts.
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/privacy";
-import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getSettings } from "~/lib/context.server";
 import { loadFilledPage } from "~/lib/content.server";
 import { LegalPage } from "~/components/content/Legal";
@@ -18,13 +17,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  return loadFilledPage(
-    getEnv(context),
-    request,
-    "page:privacy",
-    "Privacy policy",
-    getSettings(context),
-  );
+  return loadFilledPage(context, request, "page:privacy", "Privacy policy", getSettings(context));
 }
 
 export default function Privacy({ loaderData }: Route.ComponentProps) {

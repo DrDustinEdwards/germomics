@@ -11,6 +11,7 @@ import { defineSite, siteRenderer, siteWorker } from "@dustinedwards/site-runtim
 import { carrelApi } from "../app/lib/carrel/handler.server";
 import { loadPage } from "../app/lib/content.server";
 import { cronJobs } from "../app/lib/cron.server";
+import { pagePreviewContext, postPreviewContext } from "../app/lib/preview-context";
 import { gameCacheTag } from "../app/lib/games.server";
 import { setPageRenderer } from "../app/lib/page-dates.server";
 import { nextPublishAt } from "../app/lib/posts.server";
@@ -94,8 +95,18 @@ const site = defineSite<Env>({
   steps: [
     // Abuse mitigation before any work: the admin, AI and signup paths' rate limits.
     (request, env) => enforceRateLimit(env, request),
-    // Carrel's site API under /api/carrel/v1 and its preview links (site-api's step); an accepted write purges.
-    siteApiStep((env, kit) => carrelApi(env, () => kit.stylesheets())),
+    // Carrel's site API under /api/carrel/v1 and its preview links (site-api's step); a preview renders the draft
+    // through the page's own route in-process (kit.render), never stored; an accepted write purges.
+    siteApiStep((env, kit) =>
+      carrelApi(env, (request, draft) =>
+        kit.render(request, {
+          set: (context) =>
+            "post" in draft
+              ? context.set(postPreviewContext, draft.post)
+              : context.set(pagePreviewContext, draft.page),
+        }),
+      ),
+    ),
   ],
   cacheable: (_request, url) => !LIVE.some((prefix) => url.pathname.startsWith(prefix)),
   // No route names a Cache-Control of its own, so a 200 is stored a day under the pages tag (a game's also under its

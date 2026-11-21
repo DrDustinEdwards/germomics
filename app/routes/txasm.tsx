@@ -4,8 +4,7 @@
 import { htmlToText } from "@drdustinedwards/site-helpers/text";
 import { Icon, iconExternal } from "capsomer/react/icons";
 import type { Route } from "./+types/txasm";
-import { getEnv } from "@dustinedwards/site-runtime/context";
-import { loadPage, isPreviewing } from "~/lib/content.server";
+import { routePage } from "~/lib/content.server";
 import { pageHead } from "~/lib/seo";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
 
@@ -18,9 +17,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const env = getEnv(context);
-  const preview = await isPreviewing(env, request);
-  const page = await loadPage(env, "page:txasm", { includeDrafts: preview });
+  const page = await routePage(context, request, "page:txasm");
   return {
     title: page.title || TITLE,
     description: htmlToText(page.html),

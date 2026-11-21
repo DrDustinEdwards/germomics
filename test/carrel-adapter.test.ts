@@ -3,6 +3,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { RefusedError, transcriptVersion, VersionConflictError } from "@dustinedwards/site-api";
 import { createCarrelAdapter } from "~/lib/carrel/adapter.server";
 import { RENDER_VERSION } from "~/lib/render.server";
+import { renderDocument } from "./helpers/render-document";
 import { carrelApi } from "~/lib/carrel/handler.server";
 import { resetDb } from "@dustinedwards/devkit/d1";
 import { applyMigrations } from "./helpers/d1";
@@ -33,7 +34,7 @@ beforeAll(() => applyMigrations(e.DB));
 
 beforeEach(async () => {
   logged = [];
-  adapter = createCarrelAdapter(e, (entry) => logged.push(entry));
+  adapter = createCarrelAdapter(e, (entry) => logged.push(entry), { renderDocument });
   content = adapter.content;
   await resetDb(e.DB);
 });
@@ -598,11 +599,14 @@ describe("a page", () => {
 });
 
 describe("preview", () => {
-  it("draws the body in a noindex page with the title escaped, falling back to Untitled", async () => {
-    const html = await adapter.preview!.render({ source: '---\ntitle: "<b>x"\n---\nbody text' });
-    expect(html).not.toContain("<b>x");
+  it("draws the draft through the site's route, noindex, without writing it", async () => {
+    const html = await adapter.preview!.render({
+      source: '---\ntitle: "Draft title"\n---\nbody text',
+    });
+    expect(html).toContain("Draft title");
     expect(html).toContain("body text");
-    expect(html).toContain("noindex");
+    expect(html).toMatch(/<head>\s*<meta name="robots" content="noindex, nofollow">/);
+    expect(await row("preview")).toBeNull();
     expect(await adapter.preview!.render({ source: "b" })).toContain("Untitled");
   });
 });
