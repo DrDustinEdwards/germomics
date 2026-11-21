@@ -1,7 +1,7 @@
 // Self-host the three site fonts. Run with: node scripts/fetch-fonts.mjs
 // Pulls the weight range we use of each variable font from Google Fonts (woff2, already subset by
 // Google), keeping the latin + latin-ext subsets (enough for English copy plus accented names), and writes:
-//   public/fonts/*.woff2   (the binaries, served from the app root at /fonts/...)
+//   app/fonts/*.woff2   (the binaries, hashed by Vite, so cached immutable)
 //   app/fonts.css          (@font-face rules, font-display: optional, local src)
 // One file per family and subset covers every weight: asking for single weights returned the same
 // variable file under each weight's name, so a page fetched it once per weight it drew.
@@ -19,7 +19,7 @@ const UA =
 const KEEP = new Set(["latin", "latin-ext"]);
 
 const css = await (await fetch(CSS_URL, { headers: { "User-Agent": UA } })).text();
-mkdirSync("public/fonts", { recursive: true });
+mkdirSync("app/fonts", { recursive: true });
 
 // Google emits, per face: a "/* subset */" comment then an @font-face block.
 const parts = css.split("/* ").slice(1);
@@ -36,16 +36,17 @@ for (const part of parts) {
   const style = /font-style:\s*([^;]+);/.exec(body)[1].trim();
   const url = /src:\s*url\(([^)]+)\)\s*format\('woff2'\)/.exec(body)[1];
   const unicode = /unicode-range:\s*([^;]+);/.exec(body)[1].trim();
-  const slug = fam.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-  const file = `${slug}-${subset}.woff2`;
+  // Short names keep the hashed URLs, repeated in every stylesheet, small (the admin routes sit near their weight budget).
+  const slug = { Fraunces: "fr", "Space Grotesk": "sg", "JetBrains Mono": "jb" }[fam];
+  const file = `${slug}${subset === "latin" ? "" : "-ext"}.woff2`;
   const buf = Buffer.from(
     await (await fetch(url, { headers: { "User-Agent": UA } })).arrayBuffer(),
   );
-  writeFileSync(`public/fonts/${file}`, buf);
+  writeFileSync(`app/fonts/${file}`, buf);
   files.push({ file, bytes: buf.length });
   out +=
     `@font-face {\n  font-family: '${fam}';\n  font-style: ${style};\n  font-weight: ${weight};\n` +
-    `  font-display: optional;\n  src: url('/fonts/${file}') format('woff2');\n  unicode-range: ${unicode};\n}\n\n`;
+    `  font-display: optional;\n  src: url('./fonts/${file}');\n  unicode-range: ${unicode};\n}\n\n`;
 }
 writeFileSync("app/fonts.css", out);
 console.log(`Wrote app/fonts.css and ${files.length} woff2 files:`);
