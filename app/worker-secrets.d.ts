@@ -15,3 +15,11 @@ interface Env extends SiteSecrets {
   /** The deployed commit, written into the built config by vite.config.ts; empty for a local build. */
   DEPLOY_SHA?: string;
 }
+
+declare module "virtual:islands" {
+  export const SITE_SCRIPT: Readonly<{
+    src: string;
+    integrity?: string;
+    crossOrigin?: "anonymous";
+  }>;
+}
