@@ -7,6 +7,7 @@ import {
   useMatches,
 } from "react-router";
 import { useContext } from "react";
+import { SITE_SCRIPT } from "virtual:islands";
 import { iconLinks } from "@drdustinedwards/site-helpers/icons";
 
 import type { Route } from "./+types/root";
@@ -118,7 +119,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* A deferred page keeps its streamed loader data here until it hydrates (lib/hydration.ts). */}
         <StreamBuffer deferred={deferred} />
         {/* Every page's own script: the menus, the theme button, the share buttons and hydrate-on-intent (app/site.ts). */}
-        <script src="/site.js" defer nonce={nonce} suppressHydrationWarning />
+        <script {...SITE_SCRIPT} defer nonce={nonce} suppressHydrationWarning />
       </head>
       <body>
         <LinkPrefetch exclude={NO_PREFETCH}>{children}</LinkPrefetch>
