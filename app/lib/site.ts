@@ -1,7 +1,7 @@
 import { shareCard } from "@drdustinedwards/site-helpers/head";
 // Canonical site-identity values (client-safe). One source of truth so the privacy page, the
 // schema.org PostalAddress, and any future newsletter email footer all read the same address.
-// Mirrors the Vault's site-config.md. Postal address is provisional (per Dustin, 2026-06-21).
+// Mirrors the Vault's site-config.md.
 
 /**
  * The site and its audio subdomain. Feed enclosures always point at MEDIA_ORIGIN. Every picture is /media/<key> on

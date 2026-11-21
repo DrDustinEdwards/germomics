@@ -1,5 +1,5 @@
 // The writing feed (articles) for regular feed readers: Prelum's rssDocument. Each item keeps the guid stored at
-// first publish, so a renamed article is not announced again (Grok audit 2026-10-21, GE-13).
+// first publish, so a renamed article is not announced again.
 import { FEED_CONTENT_TYPES, rssDocument } from "@drdustinedwards/site-helpers/feeds";
 import { SITE_ORIGIN } from "~/lib/site";
 import type { Route } from "./+types/feed.site";

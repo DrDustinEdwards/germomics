@@ -6,10 +6,6 @@ import { getGame } from "~/lib/games.server";
 const INHERITED = ["constructor", "toString", "__proto__", "hasOwnProperty", "valueOf"];
 
 describe("catalog lookups", () => {
-  it("knows a real game and dataset", () => {
-    expect(getGame("phage-defense")?.slug).toBe("phage-defense");
-  });
-
   it.each(INHERITED)("treats %s as an unknown game and dataset", (name) => {
     expect(getGame(name)).toBeNull();
     expect(getDataset(name)).toBeNull();

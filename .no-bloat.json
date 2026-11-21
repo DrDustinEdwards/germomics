@@ -18,12 +18,12 @@
     "legacy": {},
     "tests": {
       "files": 28,
-      "cases": 196
+      "cases": 193
     },
     "comments": {
-      "lines": 1845,
+      "lines": 1824,
       "code": 18638,
-      "percentage": 9.01
+      "percentage": 8.91
     }
   }
 }

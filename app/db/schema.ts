@@ -26,9 +26,6 @@ import type {
 } from "~/lib/types";
 export type { BodyMeta, Chapter, Guest, Host, PersonLink, PodcastCategory, Source };
 
-// ============================================================
-// 1. Content (live)
-// ============================================================
 export const posts = sqliteTable(
   "posts",
   {
@@ -91,7 +88,7 @@ export const posts = sqliteTable(
 
     // 0009: editorial extras for the redesigned episode page.
     sources: text("sources", { mode: "json" }).$type<Source[]>(), // references/credits + image credits
-    // Retired 2026-11-18: an episode has one chapter list, `chapters`, and nothing reads or writes this column.
+    // Retired: an episode has one chapter list, `chapters`, and nothing reads or writes this column.
     // It stays until a hand-run migration drops it (hard rule 2: the schema matches the migrations).
     keyMoments: text("key_moments", { mode: "json" }).$type<unknown[]>(),
     readingTime: integer("reading_time"), // minutes, computed from body at save
@@ -169,9 +166,6 @@ export type Post = typeof posts.$inferSelect;
 export type NewPost = typeof posts.$inferInsert;
 export type ShowConfig = typeof showConfig.$inferSelect;
 
-// ============================================================
-// 3. App tables (additive — leaderboards + newsletter)
-// ============================================================
 // Public write endpoint feeds this; the action validates/clamps score and sanitizes name.
 export const scores = sqliteTable(
   "scores",
@@ -217,9 +211,6 @@ export const subscribers = sqliteTable(
 
 export type Score = typeof scores.$inferSelect;
 
-// ============================================================
-// 3b. Content-in-D1 (0005) — settings (config) + content_blocks (prose). AI-editable.
-// ============================================================
 // Non-secret config + operational values. show_config stays the feed's source of truth; settings
 // never duplicates a show_config fact.
 export const settings = sqliteTable("settings", {
@@ -275,9 +266,6 @@ export const contentBlockVersions = sqliteTable(
 export type Setting = typeof settings.$inferSelect;
 export type ContentBlock = typeof contentBlocks.$inferSelect;
 
-// ============================================================
-// 4. People (reusable guest entities) + episode links + soundbites (0002)
-// ============================================================
 export const people = sqliteTable(
   "people",
   {

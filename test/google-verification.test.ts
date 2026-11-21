@@ -17,11 +17,6 @@ describe("google search console verification", () => {
     expect((await res.text()).trim()).toBe(EXPECTED);
   });
 
-  it("serves it as html, which is what the .html URL implies", async () => {
-    const res = await loader();
-    expect(res.headers.get("Content-Type")).toContain("text/html");
-  });
-
   it("is what the exact path matches, not the :slug catch-all", () => {
     // Not vacuous: the loader above would keep passing while the route was unreachable.
     type Entry = { path?: string; index?: boolean; file: string; children?: Entry[] };

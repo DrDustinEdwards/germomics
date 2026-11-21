@@ -1,6 +1,6 @@
 // /accessibility - the accessibility statement every site in the network carries, from Prelum's
 // accessibilityStatement so the wording and the standard stay the same everywhere. germomics is not on
-// Capsomer, and its links in running text are underlined (measured on germomics.com/about, 2026-11-01).
+// Capsomer, and its links in running text are underlined.
 import {
   accessibilityStatement,
   ACCESSIBILITY_PATH,

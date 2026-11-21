@@ -20,7 +20,7 @@ import { readCappedBytes } from "@dustinedwards/site-runtime/body";
 
 const MAX_IMAGE = 25 * 1024 * 1024; // 25 MB
 // Cloudflare refuses a request body over 100 MB on the Free and Pro plans before the Worker sees it,
-// so a larger cap only promised uploads that could never arrive (Grok audit 2026-10-21, GE-9).
+// so a larger cap only promised uploads that could never arrive.
 // An hour of 128 kbps MP3 is about 58 MB.
 const MAX_AUDIO = 100 * 1024 * 1024; // 100 MB
 
