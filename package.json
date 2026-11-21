@@ -31,7 +31,7 @@
     "@dustinedwards/d1-dump": "github:DrDustinEdwards/d1-dump#v0.16.3",
     "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.46.1",
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.173.1",
-    "capsomer": "github:DrDustinEdwards/capsomer#v0.164.3",
+    "capsomer": "github:DrDustinEdwards/capsomer#v0.164.4",
     "drizzle-orm": "0.45.4",
     "enarratio": "0.16.1",
     "hast-util-from-html": "2.1.0",
@@ -60,7 +60,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.69.1",
     "@cloudflare/vitest-plugin": "1.8.2",
-    "@dustinedwards/devkit": "github:DrDustinEdwards/devkit#v0.55.7",
+    "@dustinedwards/devkit": "github:DrDustinEdwards/devkit#v0.55.9",
     "@react-router/dev": "8.5.1",
     "@tailwindcss/vite": "4.3.5",
     "@types/node": "22.20.5",
