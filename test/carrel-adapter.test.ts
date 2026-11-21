@@ -73,7 +73,7 @@ describe("saving a draft", () => {
   it("leaves fields the source does not name alone, and snapshots the row before the edit", async () => {
     const created = await save(
       "keep",
-      '---\ntitle: "T"\nexcerpt: "Keep me"\ncoverImage: "/media/c.png"\ncoverAlt: "C"\nseoTitle: "S"\nseoDescription: "D"\n---\n<p>v1</p>',
+      '---\ntitle: "T"\nexcerpt: "Keep me"\nfeatureImage: "/media/c.png"\nfeatureImageAlt: "C"\nseoTitle: "S"\nseoDescription: "D"\n---\n<p>v1</p>',
     );
     const edited = await save("keep", "<p>v2</p>", created.version);
     expect(edited.version).not.toBe(created.version);
@@ -97,11 +97,11 @@ describe("saving a draft", () => {
   it("replaces each named field with the new value", async () => {
     const created = await save(
       "swap",
-      '---\nexcerpt: "old"\ncoverAlt: "old"\nseoTitle: "old"\nseoDescription: "old"\ncoverImage: "old"\n---\n<p>x</p>',
+      '---\nexcerpt: "old"\nfeatureImageAlt: "old"\nseoTitle: "old"\nseoDescription: "old"\nfeatureImage: "old"\n---\n<p>x</p>',
     );
     await save(
       "swap",
-      '---\nexcerpt: "new"\ncoverAlt: "new"\nseoTitle: "new"\nseoDescription: "new"\ncoverImage: "new"\n---\n<p>x</p>',
+      '---\nexcerpt: "new"\nfeatureImageAlt: "new"\nseoTitle: "new"\nseoDescription: "new"\nfeatureImage: "new"\n---\n<p>x</p>',
       created.version,
     );
     expect(await row("swap")).toMatchObject({
@@ -429,14 +429,33 @@ describe("reading", () => {
       tags: ["a"],
       expectedVersion: v3.version,
       changeId: "c1",
+      actor: { name: "Julie Edwards" },
     });
+    // The person Carrel names is the change's author.
     expect((await content.revisions("rev"))![0]).toMatchObject({
       message: "Tags set",
+      author: "Julie Edwards",
       version: tagged.version,
     });
     const current = (await content.get("rev"))!;
     expect(await content.revisionSource("rev", current.version)).toBe(current.source);
     expect(await content.revisionSource("rev", "0".repeat(32))).toBeNull();
+  });
+});
+
+describe("backlinks", () => {
+  it("names the other posts that link to one by its address, and not one that merely starts the same", async () => {
+    await save("target", '---\ntitle: "Target"\n---\n<p>t</p>');
+    await save("by-md", '---\ntitle: "By Markdown"\n---\nSee [it](/target).');
+    await save("by-url", '---\ntitle: "By URL"\n---\nSee [it](https://germomics.com/target#top).');
+    await save("by-href", '---\ntitle: "By href"\n---\n<a href="/target/">it</a>');
+    await save("longer", '---\ntitle: "Longer"\n---\nSee [it](/target-two).');
+    expect(await content.backlinks!("target")).toEqual([
+      { id: "by-href", title: "By href", path: "/by-href" },
+      { id: "by-md", title: "By Markdown", path: "/by-md" },
+      { id: "by-url", title: "By URL", path: "/by-url" },
+    ]);
+    expect(await content.backlinks!("nope")).toEqual([]);
   });
 });
 

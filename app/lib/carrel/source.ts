@@ -8,7 +8,7 @@
 //   excerpt: "..."
 //   authors: ["Dustin Edwards"]                (left out: the show's author)
 //   tags: ["cholera","history"]
-//   coverImage: "/media/..."
+//   featureImage: "/media/..."                 (with featureImageAlt, or featureImageDecorative: true)
 //   searchTitle: "..."
 //   featured: true
 //   sources: [{"type":"book","title":"..."}]
@@ -20,7 +20,7 @@
 //
 // THE WHOLE SET. A source with front matter is the post: a key it leaves out is cleared, as Carrel's post and search
 // field boxes clear a blank one by removing its key. A source with no front matter at all is a body alone, and leaves
-// every field as it was. `excerpt`, `authors`, `series` and `seriesPart` are site-api's post fields and searchTitle, description, image, imageAlt, canonical
+// every field as it was. `excerpt`, `authors`, `series`, `seriesPart`, `featureImage` and `featureImageAlt` are site-api's post fields (the picture a post leads with, in the columns cover_image and cover_alt; a decorative one, `featureImageDecorative: true`, is an empty alt) and searchTitle, description, image, imageAlt, canonical
 // and noindex its search fields (@dustinedwards/site-api/frontmatter), in the columns seo_title, seo_description,
 // og_image, og_image_alt, canonical and noindex; the keys before them, seoTitle and seoDescription, are still read.
 //
@@ -83,8 +83,9 @@ const POST_KEYS = {
   series: "text",
   seriesPart: "text",
   tags: "list",
-  coverImage: "text",
-  coverAlt: "text",
+  featureImage: "text",
+  featureImageAlt: "text",
+  featureImageDecorative: "flag",
   searchTitle: "text",
   description: "text",
   image: "text",
@@ -129,8 +130,9 @@ export function renderSource(post: SourcePost): string {
     series: post.series,
     seriesPart: post.seriesPart,
     tags: post.tags,
-    coverImage: post.coverImage,
-    coverAlt: post.coverAlt,
+    featureImage: post.coverImage,
+    featureImageAlt: post.coverAlt,
+    featureImageDecorative: Boolean(post.coverImage) && post.coverAlt === "",
     searchTitle: post.seoTitle,
     description: post.seoDescription,
     image: post.ogImage,
@@ -166,6 +168,8 @@ export function parseSource(source: string, kind: "article" | "episode"): Parsed
   const authors = (v.authors ?? []).map((n) => n.trim()).filter(Boolean);
   const part = whole("seriesPart", v.seriesPart, problems);
   if (part === 0) problems.push("seriesPart must be 1 or more.");
+  if (v.featureImageDecorative && text(v.featureImageAlt))
+    problems.push("featureImageDecorative: a decorative picture takes no alt text.");
   const post: PostFields = {
     title: v.title?.trim() || "Untitled",
     excerpt: text(v.excerpt),
@@ -173,8 +177,8 @@ export function parseSource(source: string, kind: "article" | "episode"): Parsed
     series: text(v.series)?.trim() ?? null,
     seriesPart: part || null,
     tags: v.tags ?? [],
-    coverImage: text(v.coverImage),
-    coverAlt: text(v.coverAlt),
+    coverImage: text(v.featureImage),
+    coverAlt: v.featureImageDecorative ? "" : text(v.featureImageAlt),
     seoTitle: text(v.searchTitle ?? v.seoTitle),
     seoDescription: text(v.description ?? v.seoDescription),
     ogImage: text(v.image),
