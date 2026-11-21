@@ -15,7 +15,7 @@ import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getDb } from "~/db/index.server";
 import { settings as settingsTable, contentBlocks } from "~/db/schema";
 import { SETTING_DEFAULTS, PAGE_DEFAULTS } from "~/lib/content-defaults";
-import { pagePreviewContext } from "~/lib/preview-context";
+import { draftPageContext } from "~/lib/preview-context";
 import { toFtsMatch } from "~/lib/posts.server";
 import { getShowConfig } from "~/lib/show.server";
 import { storedBody } from "~/lib/render.server";
@@ -34,7 +34,7 @@ export async function routePage(
   key: string,
 ): Promise<Page> {
   const env = getEnv(context);
-  const draft = context.get(pagePreviewContext);
+  const draft = context.get(draftPageContext);
   if (draft?.key === key) {
     const shown = await loadPage(env, key, { includeDrafts: true });
     return {

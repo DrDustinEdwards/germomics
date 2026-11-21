@@ -1,7 +1,7 @@
 import { htmlToText } from "@drdustinedwards/site-helpers/text";
 import type { Route } from "./+types/$slug";
 import { getEnv } from "@dustinedwards/site-runtime/context";
-import { postPreviewContext } from "~/lib/preview-context";
+import { draftPostContext } from "~/lib/preview-context";
 import {
   getPostBySlug,
   listPosts,
@@ -69,7 +69,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 export async function loader({ params, context }: Route.LoaderArgs) {
   const env = getEnv(context);
   // Carrel's preview renders its draft here, in-process (workers/app.ts); no request from outside sets it.
-  const draft = context.get(postPreviewContext);
+  const draft = context.get(draftPostContext);
   const [post, visible, show] = await Promise.all([
     draft ?? getPostBySlug(env, params.slug),
     listPosts(env),
