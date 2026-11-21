@@ -2,13 +2,22 @@
 
 germomics.com: a podcast and writing site about microbiology and history, with interactive data pages (viruses and bacteria) and arcade browser games. Single author, single admin. The canonical spec is `docs/germomics_build_plan.html`: this file is the how, the build plan is the what and why.
 
-## Rules that come first
+## Rules every repo shares
 
-- UI copy: let the layout explain. No eyebrows, restating subtitles, "this page lets you" intros, descriptions under obvious buttons, hints a label already gives, repeated captions or empty-state essays; labels, accessible names, errors, one-way warnings and legal text stay (Dustin, 2026-11-18; Capsid capsid/conventions.md).
-- Tests: keep the minimal set (a few browser tests for flows that must never break, one integration test per real behavior, unit tests only for tricky logic, shared code tested once where it lives), and remove any test that pins design, repeats coverage or has never caught a real mistake, unless it guards a harm that cannot be undone.
-- Read `germomics/core.md` in Capsid with this file. Before writing anything another site might have, read what the sites share: https://github.com/DrDustinEdwards/devkit/blob/shared-list/SHARED.md (CI's shared-code check fails on a copy).
-- Browser support: devkit's docs/browser-support.md (Baseline Widely available freely; Newly available with a small fallback; Limited only feature-detected; no polyfills).
-- germomics is the best-designed site in the family (Dustin, 2026-10-04). It will move onto Capsomer carefully, in its own design job that starts with a study and baseline screenshots; until then, do not change its look casually, and do not treat it as unchangeable either.
+- **Tests.** Keep the minimal set (a few browser tests for flows that must never break, one integration test per real behavior, unit tests only for tricky logic, shared code tested once where it lives), and remove any test that pins design, repeats coverage or has never caught a real mistake, unless it guards a harm that cannot be undone.
+- **UI copy.** Let the layout explain. No eyebrows, restating subtitles, "this page lets you" intros, descriptions under obvious buttons, hints a label already gives, repeated captions or empty-state essays; labels, accessible names, errors, one-way warnings and legal text stay (Dustin, 2026-11-18; Capsid capsid/conventions.md).
+- **Shared code.** Before writing anything another site might have, read https://github.com/DrDustinEdwards/devkit/blob/shared-list/SHARED.md (CI's shared-code check fails on a copy). Change shared code in place and delete what a change replaces in the same PR.
+- **Browser support.** devkit's docs/browser-support.md (Baseline Widely available freely; Newly available with a small fallback; Limited only feature-detected; no polyfills).
+- **Secrets.** Never commit or print a key, token, `.dev.vars` or `.env`.
+- **Reproduce first.** A report that something is broken names a cause; reproduce the failure before fixing it, and report red before and green after.
+- **Deploys.** A merge to the default branch deploys (CI's deploy job); never deploy from a session.
+- **D1.** Migrations are additive: CI applies the ones that only add and refuses a drop, rename or row delete for a hand run; never hand-run production DDL. `wrangler d1 export` fails on FTS5 tables, so back up and restore with d1-dump (its README); never export an `*_fts` table. Checking backups, backing up now and running a scheduled job now are Capsid Admin's, for every site (`/api/operator`, site-runtime `./operator`).
+- **Site copy and AI.** Copy describes only what the current build does. An AI provider key stays on the server, never in a client.
+
+## Rules for this repo
+
+- Read `germomics/core.md` in Capsid with this file.
+- germomics will move onto Capsomer carefully, in its own design job that starts with a study and baseline screenshots.
 
 ## Stack
 
@@ -19,30 +28,20 @@ React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-pl
 - `npm run typecheck` (wrangler types, typegen, tsc -b), `npm run lint` (Oxlint, type-aware, devkit's shared config in `oxlint.config.ts`; after the typecheck) and `npm test`: the quick local checks.
 - `npm run dev`: Vite in workerd with bindings.
 - `npm run db:migrate` (local) and `db:migrate:prod` (remote).
-- Deploys: a push to `main` that passes CI applies the pending D1 migrations that only add (a drop, rename or row delete is refused for a hand run) and then deploys (the `deploy` job in `.github/workflows/ci.yml`, devkit's shared deploy, live once the repo variable `CF_DEPLOY` is `true`). A merge to `main` is a production deploy and runs its migrations. `npm run deploy` deploys by hand.
 
-## Backup: nightly d1-dump into R2
+## Backup
 
-`wrangler d1 export` fails on the two FTS5 tables, so the Worker's scheduled handler (03:17 UTC, `wrangler.jsonc` `triggers.crons`; its other cron, every minute, applies the updates Carrel scheduled on live articles and stores any render a Prelum upgrade or a migration left stale) runs its jobs through site-runtime's `runJobs`, each isolated and recorded in D1 `cron_runs`. Nightly, `runBackup` in `app/lib/backup.server.ts`: `@dustinedwards/d1-dump`'s `runCheckedBackup` writes one JSON object per table to the `BACKUPS` R2 bucket (`germomics-backups`) under `backups/json/<run id>/`, runs the standard checks with germomics' lists (`app/lib/backup-checks.ts`), and only then writes `_complete.json`. Then d1-dump's `backupFiles` copies the audio (`MEDIA`), images (`BLOG_IMAGES`) and game assets (`GAME_ASSETS`) under `files/audio/`, `files/images/` and `files/game-assets/`, each run going on where the last stopped, and the 404 counts are pruned to 90 days. Retention is d1-dump's default: the newest complete run of each of the last 14 days, 8 weeks and 6 months (about 25 runs, six months back).
-
-- `session`, `verification` and `account` (Better Auth's credential tables, dropped by `drizzle/0010_retire_better_auth.sql`) never go into a dump: live credentials, one-time tokens and OAuth tokens, and restoring sessions would revive old sign-ins. Nor does `preview_links` (site-api's preview link hashes), whose restore would revive revoked links. The list is `BACKUP_EXCLUDE` in `app/lib/backup-checks.ts`. A run excludes only the ones that exist at that moment (d1-dump fails on an excluded name that is not a table), so it passes before and after the migration.
-- A dump is left without its marker, and the run fails, if a content table (`posts`, `content_blocks`, `settings`, `show_config`) differs from its live count, a credential table is present, or everything is empty.
-- `/health` reports `backup: { last_ok, age_hours, warning?, files }`; it warns past 26 hours for the dump or either file pass, and its `cron` check warns on a job that failed or stopped.
-- Restore and the drill: the d1-dump README ("Restore" and "Restore drill"). Download a run with `npx wrangler r2 object get germomics-backups/backups/json/<run id>/<file> --remote`, then `npx d1-dump drill --dir <dir>` (Node 24). `.github/workflows/restore-drill.yml` drills the newest dump weekly, straight from the bucket (a token with R2 read only).
-
-## Operator API: back up and run jobs now
-
-Checking the backups, backing up now and running any scheduled job now are Capsid Admin's, for every site (Dustin, 2026-11-06 and 2026-11-07): Capsid calls `backup_status` and `run_job` on `POST /api/operator` (`app/routes/api.operator.ts`, site-runtime's `./operator`, the `OPERATOR_TOKEN` bearer, 30 requests a minute). `run_job` runs any job in `app/lib/cron.server.ts` now through the path its cron runs, recorded in `cron_runs`; `{ backup: true }` runs the four backup jobs. Germomics has no admin MCP server: Germomics Admin was retired on 2026-11-07, and its tool-call log bucket was deleted the same day.
+The Worker's nightly cron (03:17 UTC; `runBackup` in `app/lib/backup.server.ts`) dumps D1 with d1-dump and copies the audio, images and game assets into `germomics-backups`. `session`, `verification`, `account` and `preview_links` never go into a dump (`BACKUP_EXCLUDE`, `app/lib/backup-checks.ts`): restoring them would revive old sign-ins and revoked links. `/health` warns past 26 hours. Germomics has no admin MCP server (retired 2026-11-07).
 
 ## Hard rules
 
-A rule stays here only if it stops a real, costly mistake that nothing else catches. Earlier rulings are in the version history of Capsid `germomics/decisions.md` (retired 2026-10-29).
+A rule stays here only if it stops a real, costly mistake that nothing else catches.
 
 1. The podcast feed lives at `/feed/podcast/` and that URL never changes. Episode `guid` values never change once published. Feeds are resource routes returning a raw Response with the right Content-Type.
-2. Migrations are hand-written additive SQL in `drizzle/`, kept in sync with `app/db/schema.ts`, applied with wrangler; drizzle-kit is not used. Search uses the FTS5 tables. No hand-written SQL in route code; use the query builder.
+2. Migrations are hand-written additive SQL in `drizzle/`, kept in sync with `app/db/schema.ts`; drizzle-kit is not used. Search uses the FTS5 tables. No hand-written SQL in route code; use the query builder.
 3. The audio player is the highest-risk accessibility component: full keyboard support, seeking without dragging, correct name, role and state on every control. Every episode has a transcript.
 4. Heavy client libraries (charts, Phaser) are lazy-loaded per route and never reach the server bundle or the shared client chunk. Phaser loads only on `/games/:slug`.
 5. Every public read (lists, detail, search, feed, sitemap) goes through `publiclyVisible()`, or a scheduled post leaks before its publish_at.
-6. AI output is drafts only: the AI endpoint never writes the database and the API key never reaches the client.
+6. AI output is drafts only: the AI endpoint never writes the database.
 7. The /about bio states only confirmed facts; an unconfirmed item renders as a marked editor note, never as a claim. /privacy and /terms are drafts until a lawyer reviews them.
-8. Content is read straight from D1 with no KV cache in front, so a write shows on the next read; the Worker is placed next to D1 (`placement` in wrangler.jsonc) to keep that fast.
+8. Content is read straight from D1 with no KV cache in front, so a write shows on the next read.
