@@ -5,9 +5,21 @@
 // post's heading ladder (.gm-headings-section); a content page has no h2s of its own, so its headings keep their level
 // and take the same look one step up (.gm-headings-page). The look is app/prose.css.
 import { useMemo } from "react";
-import { demoteHeadings } from "~/lib/seo";
 import { markup } from "capsomer/behavior/trusted-html";
 import "~/prose.css";
+
+/**
+ * Demote a rendered body's headings one level (h1->h2 ... h5->h6) so the page keeps a single h1 (the post
+ * title) and its own h2 sections (Hosts, Transcript, Listen), with the body's sections under them as before.
+ * Render-time only: the stored HTML keeps Prelum's levels, which the feeds print. Prelum's heading ids are
+ * attributes, so they and the table of contents' anchors are untouched.
+ */
+export function demoteHeadings(html: string): string {
+  return html.replace(
+    /<(\/?)h([1-5])(\b[^>]*)?>/gi,
+    (_m, slash: string, n: string, attrs = "") => `<${slash}h${Number(n) + 1}${attrs}>`,
+  );
+}
 
 /** `page`: a content page, whose headings sit right under its h1 and keep their level. */
 export function BodyRenderer({ html, page = false }: { html: string; page?: boolean }) {
