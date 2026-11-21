@@ -77,4 +77,21 @@ describe("the source", () => {
       parseSource('---\nepisodeNumber: 1.5\nchapters: [{"title":"no start"}]\n---\n', "episode"),
     ).toThrow(/episodeNumber must be a whole number\. chapters must be a list of objects/);
   });
+
+  it("writes a decorative feature image as an empty alt, and refuses one that also has alt text", () => {
+    const decorative = { ...article, coverAlt: "" };
+    const source = renderSource(decorative);
+    expect(source).toContain('featureImage: "/media/a.png"\nfeatureImageDecorative: true');
+    expect(source).not.toContain("featureImageAlt");
+    expect(parseSource(source, "article").post).toMatchObject({
+      coverImage: "/media/a.png",
+      coverAlt: "",
+    });
+    expect(() =>
+      parseSource(
+        '---\nfeatureImage: "/a.png"\nfeatureImageAlt: "x"\nfeatureImageDecorative: true\n---\n',
+        "article",
+      ),
+    ).toThrow(/decorative picture takes no alt/);
+  });
 });
