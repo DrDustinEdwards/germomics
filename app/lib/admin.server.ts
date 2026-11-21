@@ -6,7 +6,7 @@ import { getDb } from "~/db/index.server";
 import { posts, postVersions, type Post } from "~/db/schema";
 import { AUTHOR } from "~/lib/about";
 
-/** Who a change is recorded under: Dustin, the one writer, until Carrel sends the person who made it. */
+/** Who a change is recorded under when Carrel names no one: Dustin, the show's author. */
 export const CHANGE_AUTHOR = AUTHOR.name;
 
 /** A new untitled draft with a placeholder slug, which Carrel renames. */
@@ -39,10 +39,13 @@ export async function deletePost(env: Env, id: number): Promise<void> {
 }
 
 /** Snapshot the row into post_versions before a change (save, publish, rename...) overwrites it, an episode's people with it. */
-export async function snapshotVersion(env: Env, post: Post, event: string): Promise<void> {
-  await getDb(env)
-    .insert(postVersions)
-    .values({ postId: post.id, snapshot: post, event, author: CHANGE_AUTHOR });
+export async function snapshotVersion(
+  env: Env,
+  post: Post,
+  event: string,
+  author: string = CHANGE_AUTHOR,
+): Promise<void> {
+  await getDb(env).insert(postVersions).values({ postId: post.id, snapshot: post, event, author });
 }
 
 export async function listAllPosts(env: Env): Promise<Post[]> {
