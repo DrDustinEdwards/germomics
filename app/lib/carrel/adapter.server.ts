@@ -1,4 +1,4 @@
-// The site's side of Carrel's contract (@dustinedwards/site-api v0.17.0): an adapter over the writing in D1 (articles,
+// The site's side of Carrel's contract (@dustinedwards/site-api v0.18.0): an adapter over the writing in D1 (articles,
 // episodes and the Markdown pages) and the images in the BLOG_IMAGES bucket (the media group is ./media.server.ts).
 // Carrel is the only editor of the site's writing (Dustin, 2026-10-29); the admin keeps everything that is not writing.
 //
@@ -12,17 +12,25 @@
 //     `page.<name>` for the block `page:<name>`. Each is a route, so Carrel saves and publishes one but cannot create,
 //     schedule, take down, rename or trash one. llms.txt and ai.txt are plain text (TEXT_PAGES) and stay in the admin.
 //
+// FIELDS. A post with no authors of its own (./source.ts) credits the show's author, in Carrel's list and author filter.
+//
 // RENDER. Every write renders the Markdown with Prelum (app/lib/render.server.ts) and stores the HTML beside it, with
 // the reading time and the render version, which meta names (renderVersion); a source Prelum refuses (a figure without
-// alt text, say) is refused with its reason and nothing is written. A snapshot goes into post_versions before every
-// edit of a post, the episode's people with it, and the guid is generated once at first publish and never rewritten.
+// alt text, say) is refused with its reason and nothing is written. The guid is generated once at first publish and
+// never rewritten.
+//
+// HISTORY. Every write first snapshots the whole row into post_versions (a page's block into content_block_versions),
+// with the change and who made it; the revision list is each state a change made, newest first, named by that change.
+//
+// PREVIEW. The draft goes through the site's real route and layout in-process, on the request context (context.server),
+// so it has the header, footer and byline; never through the Renderer, so never stored; noindex.
 //
 // TRANSCRIPTS. Carrel replaces an episode's transcript through setTranscript (site-api v0.36.0), checked against the
 //   transcript's own version; the post's version, which never includes the transcript, stays as it was.
 //
 // IDS AND VERSIONS. A post's id is its slug. A version is a hash of everything Carrel can see or change (the source,
-// the status and the schedule, the trash, and an update waiting on a live post), so any change anywhere gives a new
-// version and two saves in one second cannot collide.
+// the status and the schedule, the slug, the trash, and an update waiting on a live post), so any change anywhere,
+// a rename too, gives a new version and two saves in one second cannot collide.
 //
 // SCHEDULES. A post scheduled before it was ever live is a published row with a future publish_at: every public read
 // hides it until then (publiclyVisible), so it goes live by the clock. The one-minute cron (workers/app.ts,
@@ -49,6 +57,7 @@ import {
   type ContentAdapter,
   type ContentSummary,
   type DueSchedule,
+  type Revision,
   type ScheduledUpdate,
   type SchedulesAdapter,
   type SiteAdapter,
@@ -60,6 +69,7 @@ import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
 import { getDb } from "~/db/index.server";
 import {
   contentBlocks,
+  contentBlockVersions,
   episodePeople,
   people,
   postRedirects,
@@ -69,6 +79,7 @@ import {
   type Post,
 } from "~/db/schema";
 import {
+  CHANGE_AUTHOR,
   deletePost,
   generateGuid,
   nextUpdatedAt,
@@ -85,9 +96,10 @@ import {
   renderMarkdown,
   RENDER_VERSION,
 } from "~/lib/render.server";
+import { getShowConfig } from "~/lib/show.server";
 import { SITE_ORIGIN } from "~/lib/site";
-import { PAGE_HREF } from "~/components/content/PageHits";
 import { BodyRenderer } from "~/components/content/BodyRenderer";
+import { PAGE_HREF } from "~/components/content/PageHits";
 import { carrelMedia } from "./media.server";
 import {
   parsePageSource,
@@ -130,9 +142,15 @@ function statusOf(p: Pick<Post, "status" | "publishAt">): Status {
 /** Live, or live once and taken down since: the post's address has been public. */
 const everLive = (p: Post) => !!p.publishedAt && p.publishedAt <= nowIso();
 
+const creditOf = (p: Pick<Post, "authors">, show: string): string[] =>
+  p.authors?.length ? p.authors : [show];
+
 const sourceOf = (p: Item) =>
   renderSource({
     ...p,
+    authors: p.authors ?? null,
+    series: p.series ?? null,
+    seriesPart: p.seriesPart ?? null,
     tags: p.tags ?? [],
     sources: p.sources ?? [],
     episodeType: p.episodeType ?? "full",
@@ -144,13 +162,14 @@ const sourceOf = (p: Item) =>
 
 /**
  * The version of a post as Carrel sees it. The trash and a waiting update join the parts only when there is one, so
- * the version of a post with neither is the hash it always was of its source, status and schedule.
+ * the version of a post with neither is the hash of its source, status, schedule and slug.
  */
 const versionOf = (p: Item, update: Waiting = null): Promise<string> =>
   contentVersion([
     sourceOf(p),
     p.status,
     p.publishAt ?? null,
+    p.slug,
     ...(p.trashedAt ? ["trashed", p.trashedAt] : []),
     ...(update ? [update.publishAt, update.changeId] : []),
   ]);
@@ -158,7 +177,7 @@ const versionOf = (p: Item, update: Waiting = null): Promise<string> =>
 const waitingOf = (u: ScheduledUpdate | null): Waiting =>
   u ? { publishAt: u.publishAt, changeId: u.changeId } : null;
 
-async function summaryOf(p: Item, update: Waiting = null): Promise<ContentSummary> {
+async function summaryOf(p: Item, show: string, update: Waiting = null): Promise<ContentSummary> {
   return {
     scheduledUpdate: update,
     id: p.slug,
@@ -171,6 +190,7 @@ async function summaryOf(p: Item, update: Waiting = null): Promise<ContentSummar
     updatedAt: iso(p.updatedAt),
     version: await versionOf(p, update),
     tags: p.tags ?? [],
+    authors: creditOf(p, show),
     ...(p.excerpt ? { excerpt: p.excerpt } : {}),
     trashedAt: iso(p.trashedAt),
   };
@@ -188,6 +208,79 @@ async function rendered<T>(run: () => Promise<T>): Promise<T> {
 const EPISODE_NEEDS =
   "An episode goes live with its audio and transcript, which are added in the germomics admin (/admin/episodes).";
 const IN_TRASH = "This post is in the trash. Restore it first.";
+
+const CHANGE_NAMES: Record<string, string> = {
+  save: "Saved",
+  publish: "Published",
+  schedule: "Scheduled",
+  unpublish: "Taken off the site",
+  tags: "Tags set",
+  trash: "Moved to the trash",
+  restore: "Restored from the trash",
+  "schedule.apply": "Scheduled update put live",
+  "schedule.cancel": "Schedule canceled",
+  audio: "Audio saved in the admin",
+  transcript: "Transcript saved",
+};
+
+type Kept = {
+  snapshot: unknown;
+  event: string | null;
+  author: string | null;
+  createdAt: string;
+};
+
+/** Newest first: the state after each change is the next snapshot (or the current state), the oldest snapshot last. */
+async function historyOf<T>(
+  rows: Kept[],
+  current: { state: T; version: string; at: string | null },
+  versionOf: (state: T) => Promise<string>,
+  nameOf: (event: string | null, before: T) => string,
+): Promise<Revision[]> {
+  const epoch = new Date(0).toISOString();
+  const states = [...rows.map((r) => r.snapshot as T), current.state];
+  const entries: Revision[] = [];
+  const seen = new Set<string>();
+  const add = async (r: Omit<Revision, "version">, state: T, version?: string) => {
+    const v = version ?? (await versionOf(state));
+    if (seen.has(v)) return;
+    seen.add(v);
+    entries.push({ version: v, ...r });
+  };
+  if (!rows.length)
+    await add(
+      { at: current.at ?? epoch, author: CHANGE_AUTHOR, message: "Current" },
+      current.state,
+      current.version,
+    );
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const r = rows[i];
+    await add(
+      {
+        at: iso(r.createdAt) ?? epoch,
+        author: r.author ?? CHANGE_AUTHOR,
+        message: nameOf(r.event, states[i]),
+      },
+      states[i + 1],
+      i === rows.length - 1 ? current.version : undefined,
+    );
+  }
+  if (rows.length) {
+    const oldest = states[0] as { updatedAt?: string | null };
+    await add(
+      {
+        at: iso(oldest.updatedAt) ?? iso(rows[0].createdAt) ?? epoch,
+        author: CHANGE_AUTHOR,
+        message: "Earliest version kept",
+      },
+      states[0],
+    );
+  }
+  return entries;
+}
+
+const postChange = (event: string | null, before: Item) =>
+  event === "rename" ? `Renamed from ${before.slug}` : (CHANGE_NAMES[event ?? ""] ?? "Saved");
 
 // ---------- pages ----------
 
@@ -220,6 +313,13 @@ async function findPage(env: Env, id: string): Promise<PageRow | null> {
   return rows[0] ?? null;
 }
 
+const pageHistory = (env: Env, key: string) =>
+  getDb(env)
+    .select()
+    .from(contentBlockVersions)
+    .where(eq(contentBlockVersions.blockKey, key))
+    .orderBy(contentBlockVersions.id);
+
 async function listPages(env: Env): Promise<PageRow[]> {
   const rows = await getDb(env).select().from(contentBlocks).where(eq(contentBlocks.kind, "page"));
   return rows.filter((b) => !TEXT_PAGES.has(b.key));
@@ -231,6 +331,7 @@ export function createCarrelAdapter(
   options: { stylesheets?: () => Promise<string[]> } = {},
 ): SiteAdapter {
   const db = getDb(env);
+  const showAuthor = async () => (await getShowConfig(env)).author;
   const updates = d1ScheduledUpdates(env.DB);
   const waiting = async (slug: string): Promise<Waiting> => waitingOf(await updates.get(slug));
 
@@ -244,7 +345,11 @@ export function createCarrelAdapter(
     const out = new Map<number, PersonRef[]>();
     if (!ids.length) return out;
     const rows = await db
-      .select({ postId: episodePeople.postId, slug: people.slug, role: episodePeople.role })
+      .select({
+        postId: episodePeople.postId,
+        slug: people.slug,
+        role: episodePeople.role,
+      })
       .from(episodePeople)
       .innerJoin(people, eq(people.id, episodePeople.personId))
       .where(inList(episodePeople.postId, ids))
@@ -316,7 +421,11 @@ export function createCarrelAdapter(
       );
     return {
       fields,
-      people: refs.map((r, sort) => ({ personId: ids.get(r.slug)!, role: r.role, sort })),
+      people: refs.map((r, sort) => ({
+        personId: ids.get(r.slug)!,
+        role: r.role,
+        sort,
+      })),
     };
   }
 
@@ -343,12 +452,18 @@ export function createCarrelAdapter(
         const now = await findPost(slug);
         throw new VersionConflictError(now ? await versionOf(now, await waiting(slug)) : null);
       }
-      await snapshotVersion(env, current);
+      await snapshotVersion(env, current, event);
       id = current.id;
     } else {
       const created = await db
         .insert(posts)
-        .values({ kind: "article", title: "Untitled", slug, status: "draft", ...fields })
+        .values({
+          kind: "article",
+          title: "Untitled",
+          slug,
+          status: "draft",
+          ...fields,
+        })
         .returning({ id: posts.id });
       id = created[0].id;
     }
@@ -359,7 +474,13 @@ export function createCarrelAdapter(
     const row = (await findPost(finalSlug))!;
     const next = await versionOf(row, left);
     recordChange(event, finalSlug, next, changeId);
-    return { id: finalSlug, version: next, status: statusOf(row), changeId, scheduledUpdate: left };
+    return {
+      id: finalSlug,
+      version: next,
+      status: statusOf(row),
+      changeId,
+      scheduledUpdate: left,
+    };
   }
 
   /** The fields that put a post live, or schedule it: an episode needs its audio and transcript first. */
@@ -372,7 +493,11 @@ export function createCarrelAdapter(
       source !== undefined ? await changeFromSource(source, current.kind) : { fields: {} };
     return {
       ...change,
-      fields: { ...change.fields, status: "published", guid: current.guid ?? generateGuid() },
+      fields: {
+        ...change.fields,
+        status: "published",
+        guid: current.guid ?? generateGuid(),
+      },
     };
   }
 
@@ -392,6 +517,12 @@ export function createCarrelAdapter(
         "A germomics page is a route of its own, so Carrel edits the pages it lists and adds none.",
       );
     const fields = await build(current);
+    await db.insert(contentBlockVersions).values({
+      blockKey: current.key,
+      snapshot: current,
+      event,
+      author: CHANGE_AUTHOR,
+    });
     await db
       .update(contentBlocks)
       .set({ ...fields, updatedAt: nowIso() })
@@ -399,7 +530,12 @@ export function createCarrelAdapter(
     const next = { ...current, ...fields };
     const version = await pageVersion(next);
     recordChange(event, id, version, changeId);
-    return { id, version, status: next.status === "published" ? "published" : "draft", changeId };
+    return {
+      id,
+      version,
+      status: next.status === "published" ? "published" : "draft",
+      changeId,
+    };
   }
 
   async function pageSourceFields(source: string): Promise<Partial<PageRow>> {
@@ -434,11 +570,11 @@ export function createCarrelAdapter(
   const content: ContentAdapter = {
     // site-api's post and search fields this site renders (./source.ts): the excerpt, and the search title,
     // description, image and its alt text, kept in seo_title, seo_description, og_image and og_image_alt, and the
-    // canonical address and noindex in their own columns.
-    postFields: ["excerpt"],
+    // canonical address and noindex in their own columns; authors, series and seriesPart.
+    postFields: ["excerpt", "authors", "series", "seriesPart"],
     searchFields: SEARCH_FIELDS,
-    // A page has no tags and no publish date, so a tag or date filter leaves the pages out. No post names authors.
-    filters: ["kind", "tag", "published"],
+    // A page has no tags, authors or publish date, so a tag, author or date filter leaves the pages out.
+    filters: ["kind", "tag", "author", "published"],
     publishedAtSettable: true,
 
     async list(query) {
@@ -447,12 +583,14 @@ export function createCarrelAdapter(
         q,
         kind,
         tag,
+        author,
         publishedAfter,
         publishedBefore,
         trashed = false,
         cursor,
         limit,
       } = query;
+      const show = await showAuthor();
       const needle = q?.toLowerCase();
       const after = publishedAfter ? new Date(publishedAfter).toISOString() : null;
       const before = publishedBefore ? new Date(publishedBefore).toISOString() : null;
@@ -463,6 +601,7 @@ export function createCarrelAdapter(
           !!p.trashedAt === trashed &&
           (!kind || p.kind === kind) &&
           (!tag || (p.tags ?? []).includes(tag)) &&
+          (!author || creditOf(p, show).includes(author)) &&
           (!after || (published !== null && published >= after)) &&
           (!before || (published !== null && published <= before)) &&
           (!needle || [p.title, p.slug, p.body].some((t) => t.toLowerCase().includes(needle))) &&
@@ -470,7 +609,7 @@ export function createCarrelAdapter(
         );
       });
       const pages =
-        trashed || tag || after || before || (kind && kind !== "page")
+        trashed || tag || author || after || before || (kind && kind !== "page")
           ? []
           : (await listPages(env)).filter(
               (b) =>
@@ -508,7 +647,7 @@ export function createCarrelAdapter(
       const items = await Promise.all(
         shown.map(async (i) =>
           i.post
-            ? summaryOf(full.get(i.post.id)!, await waiting(i.post.slug))
+            ? summaryOf(full.get(i.post.id)!, show, await waiting(i.post.slug))
             : pageSummary(i.page!),
         ),
       );
@@ -533,7 +672,7 @@ export function createCarrelAdapter(
       if (!p) return null;
       const update = await waiting(id);
       return {
-        ...(await summaryOf(p, update)),
+        ...(await summaryOf(p, await showAuthor(), update)),
         format: "markdown" as const,
         source: sourceOf(p),
         version: await versionOf(p, update),
@@ -581,7 +720,12 @@ export function createCarrelAdapter(
                 : (was ?? nowIso());
               return {
                 ...change,
-                fields: { ...change.fields, publishedAt, publishAt: null, scheduleChangeId: null },
+                fields: {
+                  ...change.fields,
+                  publishedAt,
+                  publishAt: null,
+                  scheduleChangeId: null,
+                },
               };
             },
             { dropUpdate: true },
@@ -626,10 +770,25 @@ export function createCarrelAdapter(
             input.expectedVersion,
             async (current) => {
               if (!current) throw new NotFoundError();
-              return { fields: { status: "draft", publishAt: null, scheduleChangeId: null } };
+              return {
+                fields: {
+                  status: "draft",
+                  publishAt: null,
+                  scheduleChangeId: null,
+                },
+              };
             },
             { dropUpdate: true },
           ),
+
+    async setTags(id, { tags, expectedVersion, changeId }) {
+      if (await findPage(env, id)) throw new RefusedError("A germomics page has no tags.");
+      const current = await existingPost(id, "tagged");
+      if (current.trashedAt) throw new RefusedError(IN_TRASH);
+      return write("tags", id, changeId, expectedVersion, async () => ({
+        fields: { tags },
+      }));
+    },
 
     // The slug moves and the row stays, so the history, the people and the guid move with it. The old address of a
     // post ever live redirects to the new one; a slug taken by another post or a page id is refused.
@@ -655,9 +814,16 @@ export function createCarrelAdapter(
         await db
           .insert(postRedirects)
           .values({ fromSlug: id, postId: current.id })
-          .onConflictDoUpdate({ target: postRedirects.fromSlug, set: { postId: current.id } });
+          .onConflictDoUpdate({
+            target: postRedirects.fromSlug,
+            set: { postId: current.id },
+          });
       }
-      return { ...result, scheduledUpdate: (await waiting(newId)) ?? null, previousPath };
+      return {
+        ...result,
+        scheduledUpdate: (await waiting(newId)) ?? null,
+        previousPath,
+      };
     },
 
     // Trash takes a live post off the site in the same write, dropping a waiting update.
@@ -670,7 +836,12 @@ export function createCarrelAdapter(
         changeId,
         expectedVersion,
         async () => ({
-          fields: { trashedAt: nowIso(), status: "draft", publishAt: null, scheduleChangeId: null },
+          fields: {
+            trashedAt: nowIso(),
+            status: "draft",
+            publishAt: null,
+            scheduleChangeId: null,
+          },
         }),
         { dropUpdate: true },
       );
@@ -700,7 +871,7 @@ export function createCarrelAdapter(
           now?.transcript?.trim() ? await transcriptVersion(now.transcript) : null,
         );
       }
-      await snapshotVersion(env, current);
+      await snapshotVersion(env, current, "transcript");
       const version = await versionOf(current, await waiting(id));
       recordChange("transcript", id, version, changeId);
       return { version };
@@ -722,16 +893,15 @@ export function createCarrelAdapter(
 
     async revisions(id) {
       const b = await findPage(env, id);
-      // A page keeps no history of its own; its one revision is the current text.
-      if (b)
-        return [
-          {
-            version: await pageVersion(b),
-            at: iso(b.updatedAt) ?? new Date(0).toISOString(),
-            author: "germomics",
-            message: "Current",
-          },
-        ];
+      if (b) {
+        const current = { state: b, version: await pageVersion(b), at: iso(b.updatedAt) };
+        return historyOf(
+          await pageHistory(env, b.key),
+          current,
+          pageVersion,
+          (event) => CHANGE_NAMES[event ?? ""] ?? "Saved",
+        );
+      }
       const p = await findPost(id);
       if (!p) return null;
       const rows = await db
@@ -739,34 +909,24 @@ export function createCarrelAdapter(
         .from(postVersions)
         .where(eq(postVersions.postId, p.id))
         .orderBy(postVersions.id);
-      // The post as it stands is the newest revision: the snapshots are the states before each edit, so without it
-      // the live version (and who published it) would never show in the history until the next edit.
-      const currentVersion = await versionOf(p, await waiting(id));
-      const items = [
-        {
-          version: currentVersion,
-          at: iso(p.updatedAt) ?? new Date(0).toISOString(),
-          author: "germomics",
-          message: `The post as it stands now (${p.title})`,
-        },
-      ];
-      for (const r of rows.reverse()) {
-        const snap = r.snapshot as Item;
-        const version = await versionOf(snap);
-        if (version === currentVersion) continue;
-        items.push({
-          version,
-          at: iso(r.createdAt) ?? new Date(0).toISOString(),
-          author: "germomics",
-          message: `Saved before an edit (${snap.title})`,
-        });
-      }
-      return items;
+      const current = {
+        state: p,
+        version: await versionOf(p, await waiting(id)),
+        at: iso(p.updatedAt),
+      };
+      return historyOf<Item>(rows, current, (snap) => versionOf(snap), postChange);
     },
 
     async revisionSource(id, version) {
       const b = await findPage(env, id);
-      if (b) return (await pageVersion(b)) === version ? renderPageSource(b) : null;
+      if (b) {
+        if ((await pageVersion(b)) === version) return renderPageSource(b);
+        for (const r of await pageHistory(env, b.key)) {
+          const snap = r.snapshot as PageRow;
+          if ((await pageVersion(snap)) === version) return renderPageSource(snap);
+        }
+        return null;
+      }
       const p = await findPost(id);
       if (!p) return null;
       if ((await versionOf(p, await waiting(id))) === version) return sourceOf(p);
@@ -799,7 +959,13 @@ export function createCarrelAdapter(
       const update = { publishAt: utc(publishAt), changeId };
       const next = await versionOf(current, update);
       recordChange("schedule.update", id, next, changeId);
-      return { id, version: next, status: "published", changeId, scheduledUpdate: update };
+      return {
+        id,
+        version: next,
+        status: "published",
+        changeId,
+        scheduledUpdate: update,
+      };
     },
 
     async cancel(id, { expectedVersion, changeId }) {
@@ -812,20 +978,35 @@ export function createCarrelAdapter(
         await updates.remove(id).run();
         const next = await versionOf(current, null);
         recordChange("schedule.cancel", id, next, changeId);
-        return { id, version: next, status: statusOf(current), changeId, scheduledUpdate: null };
+        return {
+          id,
+          version: next,
+          status: statusOf(current),
+          changeId,
+          scheduledUpdate: null,
+        };
       }
       if (statusOf(current) !== "scheduled")
         throw new RefusedError("Nothing is scheduled for this post.");
       // Never live: back to a draft, as an unpublish would.
       return write("schedule.cancel", id, changeId, expectedVersion, async () => ({
-        fields: { status: "draft", publishAt: null, publishedAt: null, scheduleChangeId: null },
+        fields: {
+          status: "draft",
+          publishAt: null,
+          publishedAt: null,
+          scheduleChangeId: null,
+        },
       }));
     },
 
     // Waiting updates, and posts Carrel scheduled whose time has come and that the hooks have not heard yet.
     async due({ now, limit }) {
       const firsts = await db
-        .select({ slug: posts.slug, publishAt: posts.publishAt, changeId: posts.scheduleChangeId })
+        .select({
+          slug: posts.slug,
+          publishAt: posts.publishAt,
+          changeId: posts.scheduleChangeId,
+        })
         .from(posts)
         .where(
           and(
@@ -863,7 +1044,13 @@ export function createCarrelAdapter(
         await updatePost(env, current.id, { scheduleChangeId: null });
         const version = await versionOf(current, await waiting(id));
         recordChange("schedule.publish", id, version, changeId);
-        return { id, version, status: "published", changeId, scheduledUpdate: await waiting(id) };
+        return {
+          id,
+          version,
+          status: "published",
+          changeId,
+          scheduledUpdate: await waiting(id),
+        };
       }
       const update = await updates.get(id);
       if (!update || update.publishAt !== utc(publishAt) || update.changeId !== changeId)
@@ -875,13 +1062,19 @@ export function createCarrelAdapter(
         return null;
       }
       const { fields, people: links } = await changeFromSource(update.source, current.kind);
-      await snapshotVersion(env, current);
+      await snapshotVersion(env, current, "schedule.apply");
       await updatePost(env, current.id, fields);
       if (links) await setEpisodePeople(env, current.id, links);
       await updates.remove(id, match).run();
       const version = await versionOf((await findPost(id))!, null);
       recordChange("schedule.apply", id, version, changeId);
-      return { id, version, status: "published", changeId, scheduledUpdate: null };
+      return {
+        id,
+        version,
+        status: "published",
+        changeId,
+        scheduledUpdate: null,
+      };
     },
   };
 
@@ -892,9 +1085,7 @@ export function createCarrelAdapter(
     // The Prelum render every stored body was made with (render.server.ts keeps the constant, checked against Prelum's).
     renderVersion: RENDER_VERSION,
 
-    // The body as the site renders it (the same Prelum render, media library and prose styles), in the site's own
-    // stylesheet, because an unsaved source has no row for the route to load. A source that cannot be read previews
-    // as its body alone; a save still refuses it.
+    // A source whose front matter cannot be read previews as its body alone; a save still refuses it.
     preview: {
       async render({ id, source }) {
         let title: string | null;

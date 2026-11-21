@@ -6,6 +6,7 @@
 //   ---
 //   title: "Notes on the Broad Street Pump"
 //   excerpt: "..."
+//   authors: ["Dustin Edwards"]                (left out: the show's author)
 //   tags: ["cholera","history"]
 //   coverImage: "/media/..."
 //   searchTitle: "..."
@@ -19,7 +20,7 @@
 //
 // THE WHOLE SET. A source with front matter is the post: a key it leaves out is cleared, as Carrel's post and search
 // field boxes clear a blank one by removing its key. A source with no front matter at all is a body alone, and leaves
-// every field as it was. `excerpt` is site-api's post field and searchTitle, description, image, imageAlt, canonical
+// every field as it was. `excerpt`, `authors`, `series` and `seriesPart` are site-api's post fields and searchTitle, description, image, imageAlt, canonical
 // and noindex its search fields (@dustinedwards/site-api/frontmatter), in the columns seo_title, seo_description,
 // og_image, og_image_alt, canonical and noindex; the keys before them, seoTitle and seoDescription, are still read.
 //
@@ -35,6 +36,10 @@ export type PersonRef = { slug: string; role: string | null };
 type PostFields = {
   title: string;
   excerpt: string | null;
+  /** The post's own credit; null for the show's author (show_config.author). */
+  authors: string[] | null;
+  series: string | null;
+  seriesPart: number | null;
   tags: string[];
   coverImage: string | null;
   coverAlt: string | null;
@@ -74,6 +79,9 @@ export type ParsedSource = {
 const POST_KEYS = {
   title: "text",
   excerpt: "text",
+  authors: "list",
+  series: "text",
+  seriesPart: "text",
   tags: "list",
   coverImage: "text",
   coverAlt: "text",
@@ -117,6 +125,9 @@ export function renderSource(post: SourcePost): string {
   const values: Record<string, unknown> = {
     title: post.title,
     excerpt: post.excerpt,
+    authors: post.authors,
+    series: post.series,
+    seriesPart: post.seriesPart,
     tags: post.tags,
     coverImage: post.coverImage,
     coverAlt: post.coverAlt,
@@ -152,9 +163,15 @@ export function parseSource(source: string, kind: "article" | "episode"): Parsed
 
   const problems: string[] = [];
   const text = (x: string | null | undefined) => (x?.trim() ? x : null);
+  const authors = (v.authors ?? []).map((n) => n.trim()).filter(Boolean);
+  const part = whole("seriesPart", v.seriesPart, problems);
+  if (part === 0) problems.push("seriesPart must be 1 or more.");
   const post: PostFields = {
     title: v.title?.trim() || "Untitled",
     excerpt: text(v.excerpt),
+    authors: authors.length ? authors : null,
+    series: text(v.series)?.trim() ?? null,
+    seriesPart: part || null,
     tags: v.tags ?? [],
     coverImage: text(v.coverImage),
     coverAlt: text(v.coverAlt),
@@ -165,7 +182,9 @@ export function parseSource(source: string, kind: "article" | "episode"): Parsed
     canonical: text(v.canonical),
     noindex: v.noindex ?? false,
     featured: v.featured ?? false,
-    sources: objects<Source>("sources", v.sources, problems, { title: "string" }),
+    sources: objects<Source>("sources", v.sources, problems, {
+      title: "string",
+    }),
   };
 
   const named = (Object.keys(EPISODE_KEYS) as (keyof typeof EPISODE_KEYS)[]).filter(
@@ -256,7 +275,10 @@ export function renderPageSource(page: { title: string | null; value: string }):
 }
 
 /** A page's title (null when the source leaves it out) and Markdown. */
-export function parsePageSource(source: string): { title: string | null; body: string } {
+export function parsePageSource(source: string): {
+  title: string | null;
+  body: string;
+} {
   const { values, body } = PAGE_SOURCE.read(source);
   return { title: values.title ?? null, body };
 }

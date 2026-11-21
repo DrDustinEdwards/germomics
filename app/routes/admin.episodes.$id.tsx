@@ -57,7 +57,7 @@ export async function action({ params, request, context }: Route.ActionArgs) {
     return { ok: false as const, error: "Bad payload." };
   }
   const peaks = payload.audioPeaks;
-  await snapshotVersion(env, post);
+  await snapshotVersion(env, post, "audio");
   await updatePost(env, post.id, {
     audioUrl: text(payload.audioUrl),
     audioDuration: whole(payload.audioDuration),

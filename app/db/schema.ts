@@ -77,7 +77,9 @@ export const posts = sqliteTable(
     audioMimeType: text("audio_mime_type").default("audio/mpeg"),
     episodeNumber: integer("episode_number"),
     seasonNumber: integer("season_number"),
-    episodeType: text("episode_type", { enum: ["full", "trailer", "bonus"] }).default("full"),
+    episodeType: text("episode_type", {
+      enum: ["full", "trailer", "bonus"],
+    }).default("full"),
     explicit: integer("explicit", { mode: "boolean" }).default(false),
     guid: text("guid"),
     transcript: text("transcript"),
@@ -103,6 +105,11 @@ export const posts = sqliteTable(
     // 0019: Carrel's trash (when the post was trashed) and the change that scheduled a post not yet live.
     trashedAt: text("trashed_at"),
     scheduleChangeId: text("schedule_change_id"),
+
+    // 0031: site-api's post fields: the post's own credit (null: the show's author), and its series and place in it.
+    authors: text("authors", { mode: "json" }).$type<string[]>(),
+    series: text("series"),
+    seriesPart: integer("series_part"),
   },
   (t) => ({
     slugIdx: uniqueIndex("posts_slug_idx").on(t.slug),
@@ -119,6 +126,9 @@ export const postVersions = sqliteTable(
       .notNull()
       .references(() => posts.id, { onDelete: "cascade" }),
     snapshot: text("snapshot", { mode: "json" }).notNull(),
+    // 0031: the change it was taken before, and by whom.
+    event: text("event"),
+    author: text("author"),
     createdAt: text("created_at")
       .notNull()
       .default(sql`(datetime('now'))`),
@@ -246,6 +256,22 @@ export const contentBlocks = sqliteTable(
   (t) => ({ kindIdx: index("content_blocks_kind_idx").on(t.kind, t.status) }),
 );
 
+// 0031: a Markdown page's history, as post_versions is a post's: the block before each Carrel write.
+export const contentBlockVersions = sqliteTable(
+  "content_block_versions",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    blockKey: text("block_key").notNull(),
+    snapshot: text("snapshot", { mode: "json" }).notNull(),
+    event: text("event"),
+    author: text("author"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (t) => ({ keyIdx: index("content_block_versions_key_idx").on(t.blockKey) }),
+);
+
 export type Setting = typeof settings.$inferSelect;
 export type ContentBlock = typeof contentBlocks.$inferSelect;
 
@@ -317,7 +343,10 @@ export const peopleRelations = relations(people, ({ many }) => ({
 }));
 export const episodePeopleRelations = relations(episodePeople, ({ one }) => ({
   post: one(posts, { fields: [episodePeople.postId], references: [posts.id] }),
-  person: one(people, { fields: [episodePeople.personId], references: [people.id] }),
+  person: one(people, {
+    fields: [episodePeople.personId],
+    references: [people.id],
+  }),
 }));
 
 export type Person = typeof people.$inferSelect;

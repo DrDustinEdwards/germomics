@@ -159,7 +159,12 @@ export async function listFullPosts(env: Env, kind: Kind, limit = 200): Promise<
     .where(and(publiclyVisible(), eq(posts.kind, kind)))
     .orderBy(desc(posts.publishedAt))
     .limit(limit);
-  return Promise.all(rows.map(async (p) => ({ ...p, bodyHtml: (await storedBody(env, p)).html })));
+  return Promise.all(
+    rows.map(async (p) => ({
+      ...p,
+      bodyHtml: (await storedBody(env, p)).html,
+    })),
+  );
 }
 
 export const listEpisodes = (env: Env, limit?: number) =>
@@ -215,7 +220,10 @@ export async function missingPost(env: Env, slug: string, suffix = ""): Promise<
     .where(and(eq(postRedirects.fromSlug, slug), publiclyVisible()))
     .limit(1);
   return row
-    ? new Response(null, { status: 301, headers: { Location: `/${row.slug}${suffix}` } })
+    ? new Response(null, {
+        status: 301,
+        headers: { Location: `/${row.slug}${suffix}` },
+      })
     : new Response("Not found", { status: 404 });
 }
 
@@ -249,12 +257,26 @@ export function adjacentPosts(
   return { prev: all[i + 1] ?? null, next: all[i - 1] ?? null }; // older = prev, newer = next
 }
 
+/** "Part n of m": m is the series' live posts with this one, or the highest part named, whichever is more. */
+export function seriesOf(
+  visible: Post[],
+  post: Post,
+): { name: string; part: number; of: number } | null {
+  if (!post.series || !post.seriesPart) return null;
+  const others = visible.filter((p) => p.series === post.series && p.id !== post.id);
+  const of = Math.max(others.length + 1, post.seriesPart, ...others.map((p) => p.seriesPart ?? 0));
+  return { name: post.series, part: post.seriesPart, of };
+}
+
 /** Related = same-kind posts sharing the most tags, newest first. */
 export function relatedPosts(visible: Post[], post: Post, limit = 3): Post[] {
   const tags = new Set(post.tags ?? []);
   return visible
     .filter((p) => p.kind === post.kind && p.id !== post.id)
-    .map((p) => ({ p, score: (p.tags ?? []).filter((t) => tags.has(t)).length }))
+    .map((p) => ({
+      p,
+      score: (p.tags ?? []).filter((t) => tags.has(t)).length,
+    }))
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
     .map((x) => x.p);

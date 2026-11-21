@@ -56,6 +56,8 @@ export type DetailData = {
   next: { slug: string; title: string } | null;
   subscribeLinks: Record<string, string>;
   author: string;
+  authors?: string[] | null;
+  series?: { name: string; part: number; of: number } | null;
   hosts: Host[];
   cover: string | null;
   readingMinutes: number;
@@ -237,6 +239,9 @@ export function PostDetail({ data }: { data: DetailData }) {
               <h1 className="gm-post-title">{post.title}</h1>
               <p className="gm-post-meta">
                 {episodeLabel ? <span className="gm-post-meta-item">{episodeLabel}</span> : null}
+                {data.series ? (
+                  <span className="gm-post-meta-item">{seriesLine(data.series)}</span>
+                ) : null}
                 {post.publishedAt ? (
                   <span className="gm-post-meta-item">
                     <Icon d={iconCalendar} />{" "}
@@ -336,7 +341,11 @@ export function PostDetail({ data }: { data: DetailData }) {
                     cues={parseVtt(post.transcript).map((cue) => {
                       // A "Name:" prefix names the speaker where no <v Name> voice tag did.
                       const parsed = parseCueText(cue.text);
-                      return { ...cue, ...parsed, speaker: cue.speaker ?? parsed.speaker };
+                      return {
+                        ...cue,
+                        ...parsed,
+                        speaker: cue.speaker ?? parsed.speaker,
+                      };
                     })}
                     fallback={post.transcript}
                     track={track}
@@ -374,7 +383,12 @@ export function PostDetail({ data }: { data: DetailData }) {
       ) : null}
       <h1 className="gm-post-title">{post.title}</h1>
       <div className="gm-post-meta">
-        <span>{AUTHOR.byline}</span>
+        <span>
+          {data.authors?.length
+            ? `Written by ${new Intl.ListFormat("en").format(data.authors)}.`
+            : AUTHOR.byline}
+        </span>
+        {data.series ? <span>{seriesLine(data.series)}</span> : null}
         {post.publishedAt ? (
           <span className="gm-post-meta-item">
             <Icon d={iconCalendar} /> {formatDate(post.publishedAt)}
@@ -418,6 +432,10 @@ export function PostDetail({ data }: { data: DetailData }) {
       {Related}
     </article>
   );
+}
+
+function seriesLine(series: NonNullable<DetailData["series"]>): string {
+  return `Part ${series.part} of ${series.of}: ${series.name}`;
 }
 
 function PreviewBanner({ post }: { post: Post }) {

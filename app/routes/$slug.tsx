@@ -6,6 +6,7 @@ import {
   listPosts,
   relatedPosts,
   adjacentPosts,
+  seriesOf,
   missingPost,
   toPlayerTrack,
 } from "~/lib/posts.server";
@@ -111,6 +112,8 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     next: adj.next ? { slug: adj.next.slug, title: adj.next.title } : null,
     subscribeLinks: show.subscribeLinks ?? {},
     author: show.author,
+    authors: post.authors,
+    series: seriesOf(visible, post),
     hosts,
     cover,
     readingMinutes: post.readingTime ?? 1,
