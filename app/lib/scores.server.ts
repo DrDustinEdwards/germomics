@@ -1,7 +1,6 @@
 // Leaderboard reads + the GUARDED public write. scores is a public write endpoint, so the
 // submit path validates and clamps the score, sanitizes + caps the name, and rate-limits per
-// IP (site-runtime's RateLimiter Durable Object) before touching D1. Built in now, not later (per
-// the leaderboard guard ask).
+// IP (site-runtime's RateLimiter Durable Object) before touching D1.
 import { limit as rateLimit, mustStop } from "@dustinedwards/site-runtime/rate-limit";
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "~/db/index.server";

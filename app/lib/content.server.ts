@@ -51,7 +51,7 @@ export async function routePage(
 /**
  * A contact or legal page (routePage), its {{email}} filled from show_config and its {{address_line}} from the
  * contact.address_line setting (the request's settings, getSettings in context.server). The values are escaped: they
- * come from settings, not from the rendered body, and are injected as HTML (Grok audit 2026-10-21, GE-3).
+ * come from settings, not from the rendered body, and are injected as HTML.
  */
 export async function loadFilledPage(
   context: Readonly<RouterContextProvider>,
@@ -177,7 +177,6 @@ export function settingAddress(map: StrMap): Partial<import("~/lib/site").Addres
   }
 }
 
-// ----- admin writers ---------------------------------------------------------
 export async function upsertSetting(env: Env, key: string, value: string): Promise<void> {
   await getDb(env)
     .insert(settingsTable)

@@ -1,5 +1,4 @@
-// One episode's audio and transcript, the only post fields the admin writes (Carrel writes the rest; Dustin,
-// 2026-10-29). Both are files the browser works on before the site stores them: the MP3 goes to germomics-audio
+// One episode's audio and transcript, the only post fields the admin writes (Carrel writes the rest). Both are files the browser works on before the site stores them: the MP3 goes to germomics-audio
 // (admin.upload.ts, up to 100 MB, past Carrel's 25 MiB media limit) and its duration and waveform peaks are measured
 // from the decoded file; a transcript is a .vtt or .srt file, SRT converted to WebVTT. The row is snapshotted into
 // post_versions before each save, as every Carrel write does, and the guid is never touched.

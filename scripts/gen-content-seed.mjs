@@ -6,7 +6,6 @@
 // never clobbers a row that has since been edited live. All copy obeys the no-em-dash rule.
 import { writeFileSync } from "node:fs";
 
-// ----- settings (key/value, instant) -----------------------------------------
 const SYSTEM_BASE =
   "You are an editorial assistant for the Germomics podcast (microbiology and history). " +
   "You write ONLY from the transcript provided in the user message. Never invent or infer " +
@@ -185,8 +184,8 @@ const settings = [
   ],
 ];
 
-// ----- snippets: kept only so 0005 regenerates byte for byte; the app reads none of them and
-// drizzle/0030_drop_snippets.sql deletes the rows. -----------------------------------------
+// Snippets: kept only so 0005 regenerates byte for byte; the app reads none of them and
+// drizzle/0030_drop_snippets.sql deletes the rows.
 const CHOLERA =
   "John Snow's map of the Broad Street outbreak: deaths clustered around a single pump, the founding case of epidemiology and a Vibrio cholerae story.";
 const FLU =
@@ -252,7 +251,6 @@ const snippets = [
   ],
 ];
 
-// ----- pages (content_blocks kind=page, status=published) --------------------
 const BIO =
   "Dr. Dustin Edwards is Professor and Department Head of Biological Sciences in the College of Science " +
   "and Mathematics at Tarleton State University. He chairs the Institutional Biosafety Committee at the " +
@@ -369,7 +367,6 @@ const pages = [
   ["page:txasm", "Texas Branch of the American Society for Microbiology", TXASM_HTML],
 ];
 
-// ----- emit ------------------------------------------------------------------
 const q = (s) => "'" + String(s).replace(/'/g, "''") + "'";
 
 let sql = `-- 0005_content_settings.sql - content + config in D1 (AI-editable). ADDITIVE.

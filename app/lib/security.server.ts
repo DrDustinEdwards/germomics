@@ -28,7 +28,7 @@ const RULES: Array<{
   def: number;
 }> = [
   { path: "/admin", prefix: true, bucket: "admin", settingKey: "ratelimit.admin", def: 150 },
-  // A signup stores an address, so a script could fill the list (Grok audit 2026-10-21, GE-6).
+  // A signup stores an address, so a script could fill the list.
   // Only the POST is metered; reading the page is not. /subscribe.data is the same action.
   ...["/subscribe", "/subscribe.data"].map((path) => ({
     path,

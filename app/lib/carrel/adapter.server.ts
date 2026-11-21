@@ -1,6 +1,6 @@
 // The site's side of Carrel's contract (@dustinedwards/site-api v0.18.0): an adapter over the writing in D1 (articles,
 // episodes and the Markdown pages) and the images in the BLOG_IMAGES bucket (the media group is ./media.server.ts).
-// Carrel is the only editor of the site's writing (Dustin, 2026-10-29); the admin keeps everything that is not writing.
+// Carrel is the only editor of the site's writing; the admin keeps everything that is not writing.
 //
 // SCOPE.
 //   Articles and episodes: every field a writer sets (./source.ts), from a first draft to publish, schedule, unpublish,
@@ -285,8 +285,6 @@ async function historyOf<T>(
 
 const postChange = (event: string | null, before: Item) =>
   event === "rename" ? `Renamed from ${before.slug}` : (CHANGE_NAMES[event ?? ""] ?? "Saved");
-
-// ---------- pages ----------
 
 type PageRow = ContentBlock;
 const pageVersion = (b: PageRow) => contentVersion([renderPageSource(b), b.status]);

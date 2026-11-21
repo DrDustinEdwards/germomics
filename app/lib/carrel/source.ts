@@ -1,6 +1,6 @@
 // The text Carrel edits for one article or episode: a front matter block, one `key: <JSON>` line per field, then the
 // body, the Markdown the site stores and renders with Prelum (app/lib/render.server.ts). It is every field of the post
-// a writer sets, so Carrel is the only editor (Dustin, 2026-10-29); what stays in the germomics admin is the episode's
+// a writer sets, so Carrel is the only editor; what stays in the germomics admin is the episode's
 // audio and transcript, which are files measured or converted in the browser (app/routes/admin.episodes.$id.tsx).
 //
 //   ---

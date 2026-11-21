@@ -69,8 +69,7 @@ export const middleware: Route.MiddlewareFunction[] = [
   },
 ];
 
-// Cloudflare Web Analytics is injected automatically by Cloudflare (one beacon; Dustin's ruling,
-// 2026-10-03), so the app renders none of its own.
+// Cloudflare Web Analytics is injected automatically by Cloudflare (one beacon), so the app renders none of its own.
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const [settings, show, seasons] = await Promise.all([

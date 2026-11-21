@@ -6,7 +6,7 @@
 // One file per family and subset covers every weight: asking for single weights returned the same
 // variable file under each weight's name, so a page fetched it once per weight it drew.
 // font-display: optional (web.dev, "Best practices for fonts"): a visit whose face misses the ~100 ms
-// window stays in the size-matched fallback, so text never moves once drawn (D5, 2026-11-04);
+// window stays in the size-matched fallback, so text never moves once drawn;
 // app/lib/preloads.ts preloads the faces every page draws first.
 // No runtime calls to Google; this is a build-time fetch only. Re-runnable.
 import { writeFileSync, mkdirSync } from "node:fs";
