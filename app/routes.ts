@@ -30,6 +30,9 @@ export default [
     route("txasm", "routes/txasm.tsx"),
     // episode/article detail — single dynamic segment, ranked below every static route.
     route(":slug", "routes/$slug.tsx"),
+    // Any longer unknown address: the same module, whose loader throws a 404 with no slug, so the error page keeps the
+    // header and footer (a route with no match would draw it in the root's bare frame).
+    route("*", "routes/$slug.tsx", { id: "routes/not-found" }),
   ]),
   route("games/assets/*", "routes/games.assets.$.ts"),
   // resized images from BLOG_IMAGES (app/lib/images.ts)

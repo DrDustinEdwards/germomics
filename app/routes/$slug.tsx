@@ -67,6 +67,8 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export async function loader({ params, context }: Route.LoaderArgs) {
+  // The catch-all (routes.ts) has no slug.
+  if (!params.slug) throw new Response("Not found", { status: 404 });
   const env = getEnv(context);
   // Carrel's preview renders its draft here, in-process (workers/app.ts); no request from outside sets it.
   const draft = context.get(draftPostContext);
