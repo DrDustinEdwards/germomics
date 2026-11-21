@@ -18,19 +18,6 @@ import {
 import { htmlToText } from "@drdustinedwards/site-helpers/text";
 import { DEFAULT_CARD, SITE_ADDRESS, SITE_ORIGIN, type Address } from "~/lib/site";
 
-/**
- * Demote a rendered body's headings one level (h1->h2 ... h5->h6) so the page keeps a single h1 (the post
- * title) and its own h2 sections (Hosts, Transcript, Listen), with the body's sections under them as before.
- * Render-time only: the stored HTML keeps Prelum's levels, which the feeds print. Prelum's heading ids are
- * attributes, so they and the table of contents' anchors are untouched.
- */
-export function demoteHeadings(html: string): string {
-  return html.replace(
-    /<(\/?)h([1-5])(\b[^>]*)?>/gi,
-    (_m, slash: string, n: string, attrs = "") => `<${slash}h${Number(n) + 1}${attrs}>`,
-  );
-}
-
 export type TocItem = { level: 2 | 3; id: string; text: string };
 
 /** A post's own share image and its alt text: the social image, else the episode artwork, else the cover. */
