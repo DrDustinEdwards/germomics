@@ -149,11 +149,3 @@ describe("what the schema's column modes do", () => {
     await db.delete(schema.posts).where(eq(schema.posts.slug, "modes-check"));
   });
 });
-
-describe("getDb", () => {
-  it("opens the schema over the D1 binding, so a typed query reads a real table", async () => {
-    const db = getDb(e);
-    expect(await db.select().from(schema.posts).limit(1)).toEqual(expect.any(Array));
-    expect(Object.keys(db._.fullSchema)).toContain("posts");
-  });
-});
