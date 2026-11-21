@@ -1,5 +1,5 @@
-import spaceGroteskUrl from "~/fonts/space-grotesk-latin.woff2?url";
-import frauncesUrl from "~/fonts/fraunces-latin.woff2?url";
+import spaceGroteskUrl from "~/fonts/sg.woff2?url";
+import frauncesUrl from "~/fonts/fr.woff2?url";
 import { type Preload, preloads } from "@dustinedwards/site-runtime/preload";
 
 // Every page's font preloads, declared once: root.tsx's `links`, and with the root stylesheets the `Link` header

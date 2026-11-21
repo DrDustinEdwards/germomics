@@ -36,8 +36,9 @@ for (const part of parts) {
   const style = /font-style:\s*([^;]+);/.exec(body)[1].trim();
   const url = /src:\s*url\(([^)]+)\)\s*format\('woff2'\)/.exec(body)[1];
   const unicode = /unicode-range:\s*([^;]+);/.exec(body)[1].trim();
-  const slug = fam.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-  const file = `${slug}-${subset}.woff2`;
+  // Short names keep the hashed URLs, repeated in every stylesheet, small (the admin routes sit near their weight budget).
+  const slug = { Fraunces: "fr", "Space Grotesk": "sg", "JetBrains Mono": "jb" }[fam];
+  const file = `${slug}${subset === "latin" ? "" : "-ext"}.woff2`;
   const buf = Buffer.from(
     await (await fetch(url, { headers: { "User-Agent": UA } })).arrayBuffer(),
   );
@@ -45,7 +46,7 @@ for (const part of parts) {
   files.push({ file, bytes: buf.length });
   out +=
     `@font-face {\n  font-family: '${fam}';\n  font-style: ${style};\n  font-weight: ${weight};\n` +
-    `  font-display: optional;\n  src: url('./fonts/${file}') format('woff2');\n  unicode-range: ${unicode};\n}\n\n`;
+    `  font-display: optional;\n  src: url('./fonts/${file}');\n  unicode-range: ${unicode};\n}\n\n`;
 }
 writeFileSync("app/fonts.css", out);
 console.log(`Wrote app/fonts.css and ${files.length} woff2 files:`);
