@@ -30,8 +30,6 @@ export default [
     route("txasm", "routes/txasm.tsx"),
     // episode/article detail — single dynamic segment, ranked below every static route.
     route(":slug", "routes/$slug.tsx"),
-    // Every other address: a 404 drawn in this layout, so the header and footer stay.
-    route("*", "routes/not-found.tsx"),
   ]),
   route("games/assets/*", "routes/games.assets.$.ts"),
   // resized images from BLOG_IMAGES (app/lib/images.ts)
