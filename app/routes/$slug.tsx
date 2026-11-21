@@ -67,16 +67,19 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export async function loader({ params, context }: Route.LoaderArgs) {
+  // The catch-all (routes.ts): one segment is a slug, anything longer is no page.
+  const slug = params["*"];
+  if (!slug || slug.includes("/")) throw new Response("Not found", { status: 404 });
   const env = getEnv(context);
   // Carrel's preview renders its draft here, in-process (workers/app.ts); no request from outside sets it.
   const draft = context.get(draftPostContext);
   const [post, visible, show] = await Promise.all([
-    draft ?? getPostBySlug(env, params.slug),
+    draft ?? getPostBySlug(env, slug),
     listPosts(env),
     getShowConfig(env),
   ]);
   // A slug Carrel renamed away from answers a permanent redirect to the post's address now.
-  if (!post) throw await missingPost(env, params.slug);
+  if (!post) throw await missingPost(env, slug);
 
   const [guests, clips] = await Promise.all([
     getEpisodeGuests(env, post),

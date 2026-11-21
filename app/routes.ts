@@ -28,8 +28,10 @@ export default [
     route("accessibility", "routes/accessibility.tsx"),
     route("contact", "routes/contact.tsx"),
     route("txasm", "routes/txasm.tsx"),
-    // episode/article detail — single dynamic segment, ranked below every static route.
-    route(":slug", "routes/$slug.tsx"),
+    // episode/article detail: one segment is a slug. A catch-all so a longer unknown address (/a/b) also reaches the module,
+    // whose loader throws the 404 and so draws it inside this layout (a route with no match would get the root's bare
+    // error page). Ranked below every static route.
+    route("*", "routes/$slug.tsx"),
   ]),
   route("games/assets/*", "routes/games.assets.$.ts"),
   // resized images from BLOG_IMAGES (app/lib/images.ts)
