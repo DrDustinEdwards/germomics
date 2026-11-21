@@ -1,7 +1,7 @@
 import { env } from "cloudflare:test";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { postBodyFields, RENDER_VERSION, rerenderStale, storedBody } from "~/lib/render.server";
-import { demoteHeadings } from "~/lib/seo";
+import { demoteHeadings } from "~/components/content/BodyRenderer";
 import { applyMigrations } from "./helpers/d1";
 
 // POST RENDER: the Markdown a save stores, the HTML a read serves, and the re-render that keeps them in step
