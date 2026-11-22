@@ -226,7 +226,7 @@ export async function storedBody(env: Env, row: Stored): Promise<{ html: string;
           : inDiagramContext(html),
       onError: (err) => {
         failed = true;
-        logEvent("render.failed", { error: errorText(err) }, { level: "error" });
+        logEvent("render.failed", { error: err }, { level: "error" });
       },
     },
   );
@@ -237,8 +237,6 @@ export async function storedBody(env: Env, row: Stored): Promise<{ html: string;
 export function pageToc(meta: BodyMeta): Array<{ level: 2 | 3; id: string; text: string }> {
   return meta.toc.filter((t) => t.depth === 2).map((t) => ({ level: 3, id: t.id, text: t.text }));
 }
-
-const errorText = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
 type PostRow = { id: number; body: string; kind: string | null; coverImage: string | null };
 type PageRow = { key: string; value: string };
@@ -316,7 +314,7 @@ export async function rerenderUsing(env: Env, key: string): Promise<number> {
       ),
   ]);
   const { done } = await rerenderRows(env, postRows, pageRows, (what, err) =>
-    logEvent("render.media-failed", { what, key, error: errorText(err) }, { level: "error" }),
+    logEvent("render.media-failed", { what, key, error: err }, { level: "error" }),
   );
   return done;
 }
@@ -336,7 +334,7 @@ export async function rerenderStale(
       .where(and(eq(contentBlocks.kind, "page"), stale(contentBlocks.renderVersion))),
   ]);
   const { failed } = await rerenderRows(env, postRows, pageRows, (what, err) =>
-    logEvent("render.stale-failed", { what, error: errorText(err) }, { level: "error" }),
+    logEvent("render.stale-failed", { what, error: err }, { level: "error" }),
   );
   return { posts: postRows.length, pages: pageRows.length, failed };
 }
