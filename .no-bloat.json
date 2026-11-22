@@ -3,7 +3,7 @@
     "jscpd": "jscpd@5.4.0"
   },
   "baseline": {
-    "measured_at": "34df268",
+    "measured_at": "5e72aac",
     "knip": {},
     "jscpd": {
       "clones": 11,
@@ -16,14 +16,18 @@
       "lines": 0
     },
     "legacy": {},
+    "size": {
+      "app/lib/carrel/adapter.server.ts": 1249,
+      "app/site.css": 2041
+    },
     "tests": {
       "files": 28,
       "cases": 193
     },
     "comments": {
-      "lines": 1824,
-      "code": 18638,
-      "percentage": 8.91
+      "lines": 1833,
+      "code": 18639,
+      "percentage": 8.95
     }
   }
 }
