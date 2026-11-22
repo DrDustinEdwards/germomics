@@ -7,6 +7,7 @@ import { standardFiles } from "@drdustinedwards/site-helpers/files";
 import { markdownCopies } from "@drdustinedwards/site-helpers/markdown-copy";
 import { PAGES_CACHE_TAG } from "@dustinedwards/site-runtime/edge-cache";
 import { logEvent } from "@dustinedwards/site-runtime/log";
+import { renderHtml } from "@dustinedwards/site-runtime/render-html";
 import { defineSite, siteRenderer, siteWorker } from "@dustinedwards/site-runtime/worker";
 import { carrelApi } from "../app/lib/carrel/handler.server";
 import { loadPage } from "../app/lib/content.server";
@@ -147,7 +148,7 @@ const site = defineSite<Env>({
 });
 
 // The daily page-dates job reads each hub and static page as the Renderer would render it (app/lib/page-dates.server.ts).
-setPageRenderer((path, env) => site.renderHtml(new Request(`${SITE_ORIGIN}${path}`), env));
+setPageRenderer((path, env) => renderHtml(site, new Request(`${SITE_ORIGIN}${path}`), env));
 
 export class Renderer extends siteRenderer(WorkerEntrypoint<Env>, site) {}
 
