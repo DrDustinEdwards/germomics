@@ -48,6 +48,7 @@ import { parseSqlTime } from "@dustinedwards/site-runtime/time";
 import {
   contentVersion,
   NotFoundError,
+  orderAndPage,
   transcriptVersion,
   RefusedError,
   VersionConflictError,
@@ -638,8 +639,6 @@ export function createCarrelAdapter(
         publishedAfter,
         publishedBefore,
         trashed = false,
-        cursor,
-        limit,
       } = query;
       const show = await showAuthor();
       const needle = q?.toLowerCase();
@@ -684,13 +683,11 @@ export function createCarrelAdapter(
           title: b.title || b.key,
         })),
       ];
-      const sort = query.sort ?? "updated";
-      const dir = query.dir ?? (sort === "title" ? "asc" : "desc");
-      const key = (i: (typeof all)[number]) =>
-        sort === "title" ? i.title.toLowerCase() : (i[sort] ?? "");
-      all.sort((a, b) => key(a).localeCompare(key(b)) * (dir === "asc" ? 1 : -1));
-      const start = Math.max(0, Number(cursor) || 0);
-      const shown = all.slice(start, start + limit);
+      const { page: shown, ...rest } = orderAndPage(all, query, {
+        updated: (i) => i.updated ?? "",
+        published: (i) => i.published ?? "",
+        title: (i) => i.title.toLowerCase(),
+      });
       // Only the page shown is read in full: its episodes' people and its waiting updates.
       const full = new Map(
         (await withPeople(shown.flatMap((i) => (i.post ? [i.post] : [])))).map((p) => [p.id, p]),
@@ -702,12 +699,7 @@ export function createCarrelAdapter(
             : pageSummary(i.page!),
         ),
       );
-      return {
-        items,
-        nextCursor: start + limit < all.length ? String(start + limit) : null,
-        total: all.length,
-        sorted: { sort, dir },
-      };
+      return { items, ...rest };
     },
 
     async get(id) {
