@@ -1,5 +1,4 @@
-import { kvPageRecord, trackPageDates } from "@drdustinedwards/site-helpers/lastmod";
-import { htmlToMarkdown } from "@drdustinedwards/site-helpers/markdown-copy";
+import { kvPageRecord, trackRenderedPageDates } from "@drdustinedwards/site-helpers/lastmod";
 import { SITE_ORIGIN } from "~/lib/site";
 import { listSeasons } from "~/lib/posts.server";
 import { listDatasets } from "~/lib/datasets.server";
@@ -8,7 +7,7 @@ import { listGames } from "~/lib/games.server";
 // The day each hub and static page of /sitemap.xml last changed. No row dates these pages (the episode list, the data
 // pages, the policies), so the daily page-dates job reads each as Markdown, the way a Markdown copy is made, with
 // Prelum's trackPageDates, and keeps the day its text last changed in one KV key. The sitemap reads it back.
-const PAGE_DATES_KEY = "sitemap:page-dates";
+export const PAGE_DATES_KEY = "sitemap:page-dates";
 
 export const STATIC_PATHS = [
   "",
@@ -35,33 +34,14 @@ async function datedPaths(env: Env): Promise<string[]> {
   return [...STATIC_PATHS.map((p) => `/${p}`), ...seasons.map((s) => `/season/${s}`)];
 }
 
-/** Renders a path through the Worker's own page handler and returns its HTML, or null when it is not a page. workers/app.ts sets it. */
-export type PageRenderer = (path: string, env: Env) => Promise<string | null>;
-let renderPage: PageRenderer | undefined;
-export function setPageRenderer(renderer: PageRenderer): void {
-  renderPage = renderer;
-}
-
-/** The record the job keeps, from the KV key. */
-export function pageRecordStore(env: Env) {
-  return kvPageRecord(env.APP_KV, PAGE_DATES_KEY);
-}
-
 /** The daily job: date every hub and static page of the sitemap. */
 export async function runPageDates(env: Env): Promise<{ rowsProcessed: number }> {
-  if (!renderPage) throw new Error("page-dates: no page renderer is set");
-  const render = renderPage;
-  const store = pageRecordStore(env);
-  const { record } = await trackPageDates({
+  const store = kvPageRecord(env.APP_KV, PAGE_DATES_KEY);
+  const { record } = await trackRenderedPageDates({
     paths: await datedPaths(env),
-    read: async (path) => {
-      const html = await render(path, env);
-      if (html === null) return null;
-      const facts = htmlToMarkdown(html, { base: `${SITE_ORIGIN}${path}` });
-      return `${facts.title}\n${facts.description}\n${facts.markdown}`;
-    },
-    load: store.load,
-    save: store.save,
+    origin: SITE_ORIGIN,
+    env,
+    ...store,
   });
   return { rowsProcessed: Object.keys(record).length };
 }
