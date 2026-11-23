@@ -59,7 +59,7 @@ export async function loadFilledPage(
   key: string,
   fallbackTitle: string,
   settings: Promise<StrMap>,
-): Promise<{ title: string; html: string }> {
+): Promise<{ title: string; html: string; updatedAt?: string }> {
   const [page, show, s] = await Promise.all([
     routePage(context, request, key),
     getShowConfig(getEnv(context)),
@@ -67,6 +67,7 @@ export async function loadFilledPage(
   ]);
   return {
     title: page.title || fallbackTitle,
+    updatedAt: page.updatedAt,
     html: fill(
       fill(page.html, "email", show.ownerEmail),
       "address_line",
@@ -101,7 +102,7 @@ export type PageBlock = {
   status: "draft" | "published";
 };
 /** A page as a route shows it: its value (Markdown, or the text of a TEXT_PAGES page) and the HTML to show. */
-export type Page = PageBlock & { html: string };
+export type Page = PageBlock & { html: string; updatedAt?: string };
 
 /**
  * A single content block. For public reads (includeDrafts=false) only a published row is returned;
@@ -121,7 +122,13 @@ export async function loadBlock(
   const row = rows[0];
   if (!row) return null;
   if (!opts.includeDrafts && row.status !== "published") return null;
-  const block = { key: row.key, title: row.title ?? "", value: row.value, status: row.status };
+  const block = {
+    key: row.key,
+    title: row.title ?? "",
+    value: row.value,
+    status: row.status,
+    updatedAt: row.updatedAt,
+  };
   return TEXT_PAGES.has(key) || row.kind !== "page"
     ? { ...block, html: row.value }
     : {

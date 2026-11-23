@@ -13,7 +13,7 @@ import { MEDIA_ORIGIN, OP3_ORIGIN } from "~/lib/site";
 // script, and the edge cache gives every reader a fresh one (site-runtime ./worker). Allowlist: self, the
 // media/images subdomains and Cloudflare's Web Analytics beacon (which reports to this origin's /cdn-cgi/rum). The data
 // pages' map is Enarratio's, drawn on the server, so no map host is listed. The only frames are the post players
-// (`embeds`). Styles keep 'unsafe-inline' for TipTap (so the nonce stays off style-src, which would switch it off).
+// (`embeds`). Styles keep 'unsafe-inline' for the inline style attributes the pages and the admin set (a nonce on style-src would switch it off).
 // Violations go to /csp-report, which the gateway logs through site-runtime's receiver, so Workers Logs hold anything the
 // policy blocks. Trusted Types is enforced (site-runtime 0.132.0); what the registry entry still stages (default-src
 // 'none') goes beside it as Content-Security-Policy-Report-Only (buildStagedPolicy) until the reports are quiet.

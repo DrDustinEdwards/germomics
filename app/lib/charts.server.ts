@@ -12,8 +12,7 @@ import streets from "~/lib/data/soho-streets.json";
 function drawingOf(html: string): string {
   const start = html.indexOf('<div class="enarratio-frame');
   const end = html.indexOf("</svg></div>", start);
-  if (start === -1 || end === -1)
-    throw new Error("timelineChart: no drawing in Enarratio's output");
+  if (start === -1 || end === -1) throw new Error("no drawing in Enarratio's output");
   return html.slice(start, end + "</svg></div>".length);
 }
 

@@ -105,13 +105,11 @@ function fullSection(p: Post, origin: string): string {
   return [
     `## ${p.title}`,
     `URL: ${origin}/${p.slug}`,
-    date ? `Published: ${date}` : "",
+    ...(date ? [`Published: ${date}`] : []),
     "",
     body || summaryFor(p),
     "",
-  ]
-    .filter((l) => l !== null)
-    .join("\n");
+  ].join("\n");
 }
 
 /** Fuller, still-curated concatenation of the written canonical content. */

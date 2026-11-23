@@ -4,10 +4,10 @@
 //
 // Every minute: what Carrel scheduled goes live, failed hooks run again and the trash past 30 days is emptied
 // (site-api's runSchedules), then, until it has finished once, a batch of the media backfill. Each has 50 seconds, so a
-// hung one never runs into the next minute's run. Nightly: the D1 backup, the re-render of the bodies a Prelum upgrade
-// left on an older render (render.server.ts), the audio and image files beside the backup, and the 404 counts pruned
-// to 90 days. Their timeouts add up to 15 minutes, a scheduled invocation's wall-clock limit; the file passes stop
-// themselves a minute before theirs (FILES_BUDGET_MS) and go on from there the next night.
+// hung one never runs into the next minute's run. Nightly: the D1 backup, the audio and image files beside the backup, and the 404 counts pruned to 90 days. Their
+// timeouts add up to 18 minutes; the file passes stop themselves a minute before theirs (timeBudgetMs in
+// backup.server.ts) and go on from there the next night. The bodies a Prelum upgrade left on an older render
+// (render.server.ts) are re-rendered by the every-minute job.
 import { backupJob, DAILY_MINUTES, type CronJob } from "@dustinedwards/site-runtime/cron";
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { pruneNotFoundJob } from "@dustinedwards/site-runtime/not-found";

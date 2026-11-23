@@ -5,12 +5,13 @@
 // no PII beyond the email the token resolves to. noindex.
 import { Form } from "react-router";
 import { Link } from "capsomer/react/link";
-import { and, eq, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import type { Route } from "./+types/unsubscribe";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getDb } from "~/db/index.server";
 import { subscribers } from "~/db/schema";
 import { formToken } from "~/lib/body.server";
+import { unsubscribe } from "~/lib/newsletter.server";
 
 type Result = {
   status: "confirm" | "done" | "already" | "invalid";
@@ -28,14 +29,11 @@ async function lookup(env: Env, token: string | null) {
   return rows[0] ?? null;
 }
 
-async function unsubscribe(env: Env, token: string | null): Promise<Result> {
+async function unsubscribeToken(env: Env, token: string | null): Promise<Result> {
   const row = await lookup(env, token);
   if (!row || !token) return { status: "invalid" };
   if (row.unsubscribedAt) return { status: "already", email: row.email };
-  await getDb(env)
-    .update(subscribers)
-    .set({ unsubscribedAt: new Date().toISOString() })
-    .where(and(eq(subscribers.unsubscribeToken, token), isNull(subscribers.unsubscribedAt)));
+  await unsubscribe(env, token);
   return { status: "done", email: row.email };
 }
 
@@ -55,7 +53,7 @@ export async function loader({ request, context }: Route.LoaderArgs): Promise<Re
 export async function action({ request, context }: Route.ActionArgs) {
   // RFC 8058 one-click: the token can arrive in the POST body or the query string.
   const token = new URL(request.url).searchParams.get("token") || (await formToken(request));
-  return unsubscribe(getEnv(context), token);
+  return unsubscribeToken(getEnv(context), token);
 }
 
 export default function Unsubscribe({ loaderData, actionData }: Route.ComponentProps) {

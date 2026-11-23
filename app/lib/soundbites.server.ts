@@ -1,6 +1,6 @@
 // Soundbites: short, shareable clips of an episode (start + duration + title). Admin CRUD + the
 // per-episode read for the public clip player, plus a by-episode map for the feed's
-// <podcast:soundbite> tags. Drizzle only (CLAUDE.md rule #4).
+// <podcast:soundbite> tags. Drizzle only (CLAUDE.md rule 2).
 import { asc, eq } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { soundbites, type Soundbite } from "~/db/schema";

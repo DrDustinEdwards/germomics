@@ -114,7 +114,7 @@ describe("episode audio", () => {
     expect((await getPostById(e, id))!).toMatchObject({ kind: "episode", status: "draft" });
     await updatePost(e, id, { guid: "urn:germomics:sample" });
     const payload = JSON.stringify({
-      audioUrl: " https://media.example.com/ep.mp3 ",
+      audioUrl: " https://media.germomics.com/ep.mp3 ",
       audioDuration: 61.9,
       audioByteSize: 1000,
       audioMimeType: "",
@@ -125,7 +125,7 @@ describe("episode audio", () => {
       await episode.action(args(form(`/admin/episodes/${id}`, { payload }), { id: String(id) })),
     ).toMatchObject({ ok: true });
     expect((await getPostById(e, id))!).toMatchObject({
-      audioUrl: "https://media.example.com/ep.mp3",
+      audioUrl: "https://media.germomics.com/ep.mp3",
       audioDuration: 61,
       audioByteSize: 1000,
       audioMimeType: "audio/mpeg",

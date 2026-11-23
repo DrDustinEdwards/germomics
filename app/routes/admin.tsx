@@ -29,7 +29,6 @@ import { isolationVerdict, refuseCrossSite } from "@dustinedwards/site-runtime/o
 import { PRIVATE_PAGE_HEADERS, UNCACHED } from "@dustinedwards/site-runtime/edge-cache";
 import { effectiveTheme, toggleTheme, type ThemeChoice } from "capsomer/behavior/theme-switch";
 import { THEME_KEY } from "~/lib/theme";
-import { markup } from "capsomer/behavior/trusted-html";
 
 const PRIVATE = { "Cache-Control": UNCACHED, "X-Robots-Tag": "noindex, nofollow" };
 
@@ -154,10 +153,6 @@ function useCapTheme(): ThemeChoice {
   return theme;
 }
 
-// Sets the theme before first paint, from the same storage the site's own script reads, so the
-// server-rendered shell does not flash the wrong palette.
-const THEME_BOOT = `(function(s){try{var t=localStorage.getItem("germomics-theme");if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";s.parentElement.setAttribute("data-cap-theme",t);}catch(e){}})(document.currentScript)`;
-
 export default function AdminLayout({ loaderData }: Route.ComponentProps) {
   const { pathname } = useLocation();
   const theme = useCapTheme();
@@ -165,7 +160,6 @@ export default function AdminLayout({ loaderData }: Route.ComponentProps) {
 
   return (
     <div data-cap-theme={theme} suppressHydrationWarning style={{ display: "contents" }}>
-      <script dangerouslySetInnerHTML={markup(THEME_BOOT)} />
       <AdminShell
         title="Germomics"
         apps={[

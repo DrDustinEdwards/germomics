@@ -108,3 +108,8 @@ export function checkConfirmation(env: Env, token: string | null, now = new Date
 export function confirmSubscription(env: Env, token: string | null, now = new Date()) {
   return list(env).confirm(token, now);
 }
+
+/** Unsubscribe the row a token belongs to (the page's POST); "invalid" for a token that is unknown or already used. */
+export function unsubscribe(env: Env, token: string | null, now = new Date()) {
+  return list(env).unsubscribe(token, now);
+}

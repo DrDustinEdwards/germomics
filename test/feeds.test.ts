@@ -13,6 +13,7 @@ const ORIGIN = "https://germomics.com";
 async function load(
   route: Promise<{ loader: (args: never) => unknown }>,
   path: string,
+  params: Record<string, string> = {},
 ): Promise<Response> {
   const { loader } = await route;
   const context = new RouterContextProvider();
@@ -20,7 +21,7 @@ async function load(
   return (await loader({
     request: new Request(`${ORIGIN}${path}`),
     context,
-    params: {},
+    params,
   } as never)) as Response;
 }
 
@@ -52,6 +53,29 @@ describe("the podcast feed", () => {
     );
     expect(xml).not.toContain("Secret notes");
     expect(xml).not.toContain("urn:germomics:d");
+  }, 60_000);
+
+  it("escapes the enclosure type, so one odd value cannot break the one feed URL", async () => {
+    await e.DB.prepare("UPDATE posts SET audio_mime_type = ? WHERE slug = 'ep-1'")
+      .bind('audio/mpeg"&<x')
+      .run();
+    const xml = await (await load(import("~/routes/feed.podcast"), "/feed/podcast/")).text();
+    expect(xml).toContain('type="audio/mpeg&quot;&amp;&lt;x"');
+  }, 60_000);
+});
+
+describe("an address with nothing behind it", () => {
+  it("answers 404 for a tag and a guest no post names, so no page carries the made-up text", async () => {
+    const tag = await import("~/routes/tag.$tag");
+    const guest = await import("~/routes/guests.$guest");
+    const thrown = async (run: Promise<unknown>) =>
+      ((await run.catch((r: Response) => r)) as Response).status;
+    expect(await thrown(load(Promise.resolve(tag), "/tag/spam", { tag: "spam" }) as never)).toBe(
+      404,
+    );
+    expect(
+      await thrown(load(Promise.resolve(guest), "/guests/spam", { guest: "spam" }) as never),
+    ).toBe(404);
   }, 60_000);
 });
 

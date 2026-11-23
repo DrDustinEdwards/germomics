@@ -76,7 +76,6 @@ export default [
     route("settings", "routes/admin.settings._index.tsx"),
     route("content/:key", "routes/admin.content.$key.tsx"),
     route("upload", "routes/admin.upload.ts"),
-    route("media/backfill", "routes/admin.media-backfill.ts"),
   ]),
 
   // Carrel's preview links (/preview/<token>) are answered by the Worker before the app (workers/app.ts).

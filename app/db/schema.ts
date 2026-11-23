@@ -308,7 +308,7 @@ export const episodePeople = sqliteTable(
   }),
 );
 
-// Schema only this pass — the soundbite editor is deferred (Tier 2/3).
+// A clip of an episode, played by SoundbiteClips (soundbites.server.ts).
 export const soundbites = sqliteTable(
   "soundbites",
   {

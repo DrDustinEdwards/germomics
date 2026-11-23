@@ -2,6 +2,7 @@
 // (app/lib/carrel/source.ts), so a person is added here first.
 import { useState } from "react";
 import { useFetcher } from "react-router";
+import { isHttpUrl } from "@dustinedwards/site-runtime/url";
 import { Icon, iconPeople } from "capsomer/react/icons";
 import type { Route } from "./+types/admin.people._index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
@@ -35,7 +36,8 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   let links: PersonLink[] = [];
   try {
-    links = JSON.parse(String(form.get("links") || "[]"));
+    const parsed: unknown = JSON.parse(String(form.get("links") || "[]"));
+    links = Array.isArray(parsed) ? parsed : [];
   } catch {
     links = [];
   }
@@ -47,7 +49,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     bio: String(form.get("bio") || ""),
     photo: String(form.get("photo") || ""),
     photoAlt: String(form.get("photoAlt") || ""),
-    links: links.filter((l) => l.url?.trim()),
+    links: links.filter((l) => isHttpUrl(l?.url)),
   });
   return { ok: true as const, message: "Saved." };
 }

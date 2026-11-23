@@ -1,5 +1,5 @@
 // The one move of the images already in BLOG_IMAGES into the media table (drizzle/0015_media_library.sql), a batch at
-// a time from POST /admin/media/backfill. Each object without a row gets one, carrying what the object already says
+// a time by the every-minute cron (continueMediaBackfill). Each object without a row gets one, carrying what the object already says
 // (its type, size, alt, filename and focal point, from its R2 metadata), its caption from media_captions (0014), the
 // SHA-256 of its bytes, and its width and height (from its metadata, else measured by the Images binding). It never
 // changes an object and never overwrites a row, so it is safe to run again: a second run adds only what is missing.

@@ -1,7 +1,8 @@
 import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/tag.$tag";
 import { getEnv } from "@dustinedwards/site-runtime/context";
-import { postsByTag, toPlayerTrack } from "~/lib/posts.server";
+import { postsByTag } from "~/lib/posts.server";
+import { toPlayerTrack } from "~/lib/posts";
 import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
 
@@ -16,6 +17,7 @@ export function meta({ params, location }: Route.MetaArgs) {
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const items = await postsByTag(getEnv(context), params.tag);
+  if (!items.length) throw new Response("Not found", { status: 404 });
   return {
     tag: params.tag,
     items,
@@ -33,7 +35,6 @@ export default function TagPage({ loaderData }: Route.ComponentProps) {
         {items.map((post) => (
           <PostCard key={post.id} post={post} queue={tracks} />
         ))}
-        {items.length === 0 ? <p className="gm-muted">No posts tagged “{tag}”.</p> : null}
       </div>
     </div>
   );

@@ -3,12 +3,12 @@
     "jscpd": "jscpd@5.4.0"
   },
   "baseline": {
-    "measured_at": "5e72aac",
+    "measured_at": "f4f8d99",
     "knip": {},
     "jscpd": {
-      "clones": 11,
-      "lines": 83,
-      "percentage": 0.38,
+      "clones": 6,
+      "lines": 45,
+      "percentage": 0.22,
       "unread": 0
     },
     "shared copies": {
@@ -17,17 +17,17 @@
     },
     "legacy": {},
     "size": {
-      "app/lib/carrel/adapter.server.ts": 1249,
-      "app/site.css": 2041
+      "app/lib/carrel/adapter.server.ts": 1222,
+      "app/site.css": 2040
     },
     "tests": {
       "files": 28,
-      "cases": 193
+      "cases": 196
     },
     "comments": {
-      "lines": 1833,
-      "code": 18639,
-      "percentage": 8.95
+      "lines": 1717,
+      "code": 17716,
+      "percentage": 8.84
     }
   }
 }

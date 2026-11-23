@@ -98,7 +98,8 @@ export function createPhageDefense(
         }
       }
       this.bacteria = this.bacteria.filter((b) => b.active);
-      this.phages = this.phages.filter((p) => p.active && p.y > -20);
+      for (const p of this.phages) if (p.y <= -20) p.destroy();
+      this.phages = this.phages.filter((p) => p.active);
     }
   }
 

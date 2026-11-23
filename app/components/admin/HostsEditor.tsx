@@ -2,7 +2,6 @@
 // show_config and maps to <podcast:person> in the feed. Capsomer's sortable list draws the rows, their reordering
 // (drag, the grip's keys, Move up and down, Alt and an arrow from a field) and Add and Remove.
 import { SortableList, useRows } from "capsomer/react/sortable-list";
-import { Empty } from "capsomer/react/empty";
 import type { Host } from "~/db/schema";
 
 export function HostsEditor({
@@ -28,7 +27,6 @@ export function HostsEditor({
       onRemove={rows.onRemove}
       onAdd={() => onChange([...hosts, { name: "" }])}
       addLabel="Add host"
-      empty={<Empty kind="nothing-yet" title="No hosts yet." />}
       renderItem={({ value: h, index: i }) => (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
