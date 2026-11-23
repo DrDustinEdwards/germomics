@@ -52,12 +52,8 @@ jobs:
         id: build
         run: npm run build
 
-      # THE SUITE, ADDED 2026-09-08 (germomics/TASK-security-deps.md). It runs in the workers
-      # pool because app/lib/sanitize.server.ts, the XSS boundary on every post body, is built
-      # on the Workers HTMLRewriter global and cannot load under plain node. It runs AFTER the
-      # typecheck deliberately: the typecheck now covers test/ too, and a test that stops
-      # compiling would otherwise still report green, because the runner strips types rather
-      # than checking them.
+      # The suite runs after the typecheck on purpose: the typecheck covers test/ too, and a test that stops
+      # compiling would otherwise still report green, because the runner strips types rather than checking them.
       - name: Test
         run: npm test
 
@@ -84,10 +80,6 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: npm run --silent nobloat:weight
 
-  # deploy needs verify. The 18:11Z push of efc26c1 skipped deploy because
-  # verify was never created. GitHub reported an Actions incident at 18:12Z ("Incident with
-  # Actions and Checks API") and marked it mitigated at 18:43Z. The workflow file was the same as the 92c30fc deploy.
-  # A later push to main runs verify and, when it passes, deploy.
   # A merge to main deploys once verify is green: migrations first, then the Worker, so a migration is never a
   # manual step. Dormant until the repo variable CF_DEPLOY is 'true' (with the secrets CLOUDFLARE_API_TOKEN and
   # CLOUDFLARE_ACCOUNT_ID), so Cloudflare Workers Builds keeps deploying until it is turned off; turn it off before

@@ -9,7 +9,7 @@ name: checks
 # Run it by hand once to clean the footer from every past pull request.
 #
 # No push to main: the merge was checked as a pull request (devkit README, "No second run on main"). The deploys and the
-# checks they need are in ci.yml and ci-mcp.yml.
+# checks they need are in ci.yml.
 
 on:
   pull_request:
