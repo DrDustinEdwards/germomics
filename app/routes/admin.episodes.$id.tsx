@@ -10,7 +10,7 @@ import type { Route } from "./+types/admin.episodes.$id";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { getPostById } from "~/lib/posts.server";
 import { snapshotVersion, updatePost } from "~/lib/admin.server";
-import { carrelEditUrl } from "~/lib/site";
+import { carrelEditUrl, MEDIA_ORIGIN } from "~/lib/site";
 import { AudioField, type AudioState } from "~/components/admin/AudioField";
 import { TranscriptField } from "~/components/admin/TranscriptField";
 import { Panel } from "capsomer/react/panel";
@@ -55,13 +55,19 @@ export async function action({ params, request, context }: Route.ActionArgs) {
   } catch {
     return { ok: false as const, error: "Bad payload." };
   }
+  const audioUrl = text(payload.audioUrl);
+  const mime = text(payload.audioMimeType) ?? "audio/mpeg";
+  if (audioUrl && !audioUrl.startsWith(`${MEDIA_ORIGIN}/`))
+    return { ok: false as const, error: `The audio address must start with ${MEDIA_ORIGIN}/.` };
+  if (!mime.startsWith("audio/"))
+    return { ok: false as const, error: "The audio type must be audio/*." };
   const peaks = payload.audioPeaks;
   await snapshotVersion(env, post, "audio");
   await updatePost(env, post.id, {
-    audioUrl: text(payload.audioUrl),
+    audioUrl,
     audioDuration: whole(payload.audioDuration),
     audioByteSize: whole(payload.audioByteSize),
-    audioMimeType: text(payload.audioMimeType) ?? "audio/mpeg",
+    audioMimeType: mime,
     audioPeaks:
       Array.isArray(peaks) && peaks.every((n) => typeof n === "number")
         ? (peaks as number[])

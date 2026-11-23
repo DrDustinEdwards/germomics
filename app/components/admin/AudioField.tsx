@@ -1,7 +1,7 @@
 // Dual-input audio field (§C): "Upload" (MP3 → media.germomics.com, auto duration + byte size +
 // MIME + waveform peaks) OR "URL / Paste" (external enclosure). Byte size is the server-trusted
 // value returned by R2; duration + peaks are computed in the browser from the decoded file.
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Icon, iconSpinner } from "capsomer/react/icons";
 import { Field } from "capsomer/react/field";
 import { Segmented } from "capsomer/react/segmented";
@@ -29,22 +29,38 @@ export function AudioField({
 }) {
   const [tab, setTab] = useState<"upload" | "url">(value.audioUrl ? "url" : "upload");
   const [analyzing, setAnalyzing] = useState(false);
+  // The latest picked file's duration and waveform, held until its upload succeeds: a failed upload or an older, slower
+  // decode never reaches the form.
+  const analysis = useRef<{ id: number; result: Promise<Partial<AudioState>> } | null>(null);
 
-  async function analyze(file: File) {
+  function pick(file: File) {
+    const id = (analysis.current?.id ?? 0) + 1;
     setAnalyzing(true);
+    const result = analyze(file).finally(() => {
+      if (analysis.current?.id === id) setAnalyzing(false);
+    });
+    analysis.current = { id, result };
+  }
+
+  async function analyze(file: File): Promise<Partial<AudioState>> {
     const quick = await probeDuration(file);
-    if (quick) onChange({ audioDuration: quick });
     try {
-      const buf = await file.arrayBuffer();
-      const result = await decodePeaks(buf);
-      if (result) {
-        onChange({ audioPeaks: result.peaks, audioDuration: Math.floor(result.duration) || quick });
-      }
+      const decoded = await decodePeaks(await file.arrayBuffer());
+      if (decoded)
+        return { audioPeaks: decoded.peaks, audioDuration: Math.floor(decoded.duration) || quick };
     } catch {
       /* keep quick duration */
-    } finally {
-      setAnalyzing(false);
     }
+    return quick ? { audioDuration: quick } : {};
+  }
+
+  async function uploaded(r: { url?: string; size?: number; contentType?: string }) {
+    onChange({
+      ...(await analysis.current?.result),
+      audioUrl: r.url ?? "",
+      audioByteSize: r.size ?? null,
+      audioMimeType: r.contentType ?? "audio/mpeg",
+    });
   }
 
   return (
@@ -94,14 +110,8 @@ export function AudioField({
           postId={postId}
           accept="audio/*"
           label="Upload MP3"
-          onFilePicked={(f) => void analyze(f)}
-          onUploaded={(r) =>
-            onChange({
-              audioUrl: r.url ?? "",
-              audioByteSize: r.size ?? null,
-              audioMimeType: r.contentType ?? "audio/mpeg",
-            })
-          }
+          onFilePicked={pick}
+          onUploaded={(r) => void uploaded(r)}
         />
       ) : (
         <div className="space-y-3">

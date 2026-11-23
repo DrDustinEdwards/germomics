@@ -2,7 +2,8 @@ import { pageHead } from "~/lib/seo";
 import type { Route } from "./+types/guests.$guest";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { slugify } from "@drdustinedwards/site-helpers/slug";
-import { postsByGuest, toPlayerTrack } from "~/lib/posts.server";
+import { postsByGuest } from "~/lib/posts.server";
+import { toPlayerTrack } from "~/lib/posts";
 import { getPersonBySlug, postsByPerson } from "~/lib/people.server";
 import { PostCard } from "~/components/content/PostCard";
 import { QueueSeeder } from "~/components/content/QueueSeeder";
@@ -36,6 +37,8 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const episodes = [...byPerson, ...byLegacy]
     .filter((e) => (seen.has(e.id) ? false : (seen.add(e.id), true)))
     .sort((a, b) => String(b.publishedAt ?? "").localeCompare(String(a.publishedAt ?? "")));
+
+  if (!person && !episodes.length) throw new Response("Not found", { status: 404 });
 
   const legacy = episodes
     .flatMap((e) => e.guests ?? [])

@@ -48,7 +48,7 @@ describe("settings", () => {
   it("reads numbers, and falls back when the value is not one", () => {
     expect(settingNum({ n: "7" }, "n", 1)).toBe(7);
     expect(settingNum({ n: "seven" }, "n", 1)).toBe(1);
-    expect(settingNum({}, "ratelimit.ai", 1)).toBe(15);
+    expect(settingNum({}, "ratelimit.admin", 1)).toBe(150);
   });
 
   it("parses the contact address, and gives an empty one for bad JSON", () => {
@@ -74,6 +74,7 @@ describe("pages", () => {
       value: "<p>draft</p>",
       html: "<p>draft</p>",
       status: "draft",
+      updatedAt: expect.any(String),
     });
     const page = await loadPage(e, "page:about");
     expect(page.title).toBe("About Germomics");
@@ -96,6 +97,7 @@ describe("pages", () => {
       value: "v2",
       html: "v2",
       status: "published",
+      updatedAt: expect.any(String),
     });
   });
 

@@ -1,10 +1,7 @@
 {
   "baseline": {
-    "measured_at": "e739d29",
-    "calls": 3,
-    "files": {
-      "app/lib/carrel/handler.server.ts": 1,
-      "app/lib/render.server.ts": 2
-    }
+    "measured_at": "f4f8d99",
+    "calls": 0,
+    "files": {}
   }
 }

@@ -1,7 +1,4 @@
-// Workers runtime, not Node, because app/lib/sanitize.server.ts is
-// the XSS boundary on every post body and it is built on the Workers `HTMLRewriter` global,
-// which plain `node --test` has no implementation of. A miniflare-backed runner is the only
-// place it can be tested at all, so the whole suite runs there.
+// The suite runs in the Workers runtime (miniflare), with the compatibility date and flags wrangler.jsonc names.
 import { cloudflareTest } from "@cloudflare/vitest-plugin";
 import path from "node:path";
 import { defineConfig } from "vitest/config";
@@ -11,8 +8,8 @@ export default defineConfig({
     cloudflareTest({
       main: "./test/helpers/entry.ts",
       miniflare: {
-        compatibilityDate: "2026-06-21",
-        compatibilityFlags: ["nodejs_compat"],
+        compatibilityDate: "2026-10-19",
+        compatibilityFlags: ["nodejs_compat", "enable_request_signal", "global_fetch_strictly_public"],
         // Bindings are declared HERE rather than read from wrangler.jsonc, deliberately: the
         // real config names the production D1 database and R2 buckets, and a test run must
         // never be one typo away from touching them. These are empty local equivalents.

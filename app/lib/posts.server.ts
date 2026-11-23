@@ -1,5 +1,5 @@
 // Post queries — the single place route loaders read content. Drizzle query builder only
-// (CLAUDE.md rule #4); the one raw statement is the FTS5 MATCH, which Drizzle's DSL can't
+// (CLAUDE.md rule 2); the one raw statement is the FTS5 MATCH, which Drizzle's DSL can't
 // express. Tag/guest filters parse the JSON columns in JS (the catalog is small), keeping
 // everything type-safe and camelCase.
 import {
@@ -21,11 +21,7 @@ import { toMatchExpression } from "@drdustinedwards/site-helpers/search";
 import { getDb } from "~/db/index.server";
 import { postRedirects, posts, type Post } from "~/db/schema";
 import { slugify } from "@drdustinedwards/site-helpers/slug";
-import { toPlayerTrack } from "~/lib/posts";
 import { storedBody } from "~/lib/render.server";
-
-// Re-export the client-safe pure helpers so existing server callers keep working.
-export { toPlayerTrack };
 
 type Kind = "episode" | "article";
 
@@ -99,7 +95,7 @@ export function isVisibleNow(post: Post): boolean {
 
 export async function listPosts(
   env: Env,
-  opts: { kind?: Kind; limit?: number; featuredFirst?: boolean } = {},
+  opts: { kind?: Kind; limit?: number } = {},
 ): Promise<Post[]> {
   const db = getDb(env);
   const where = [publiclyVisible()];

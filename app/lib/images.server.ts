@@ -10,6 +10,7 @@
 import { FOCUS_METADATA, keyOfAddress, type StoredImage } from "@dustinedwards/site-runtime/image";
 import type { HeadImage } from "@drdustinedwards/site-helpers/head";
 import { inList } from "@dustinedwards/site-runtime/d1";
+import { logEvent } from "@dustinedwards/site-runtime/log";
 import { getDb } from "~/db/index.server";
 import { media } from "~/db/schema";
 import { DEFAULT_CARD, MEDIA_ADDRESS, SITE_ORIGIN } from "~/lib/site";
@@ -29,7 +30,10 @@ const positive = (v: string | null | undefined): number | null => {
 async function storedImage(env: Env, src: string, aspect?: number): Promise<StoredImage | null> {
   const key = keyOfAddress(src, MEDIA_ADDRESS);
   if (!key) return null;
-  const head = await env.BLOG_IMAGES.head(key).catch(() => null);
+  const head = await env.BLOG_IMAGES.head(key).catch((error) => {
+    logEvent("images.head_failed", { key, error }, { level: "error" });
+    return null;
+  });
   if (!head) return null;
   const meta = head.customMetadata ?? {};
   const width = positive(meta.width) ?? positive(NAMED_WIDTH.exec(key)?.[1]);

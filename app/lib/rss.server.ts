@@ -68,7 +68,7 @@ export function buildPodcastFeed(
   <description>${cdata(show.description)}</description>
   <itunes:author>${escapeXml(show.author)}</itunes:author>
   <itunes:summary>${cdata(show.description)}</itunes:summary>
-  <itunes:type>${show.itunesType}</itunes:type>
+  <itunes:type>${escapeXml(show.itunesType)}</itunes:type>
   <itunes:explicit>${show.explicit ? "true" : "false"}</itunes:explicit>
   <itunes:image href="${escapeXml(show.artwork)}"/>
   ${categoriesXml(show)}
@@ -124,10 +124,10 @@ function itemXml(
     <pubDate>${rfc822(e.publishedAt)}</pubDate>
     <description>${cdata(e.excerpt ?? body)}</description>
     <content:encoded>${cdata(body)}</content:encoded>
-    <enclosure url="${escapeXml(op3Enclosure(e.audioUrl!))}" length="${e.audioByteSize ?? 0}" type="${e.audioMimeType ?? "audio/mpeg"}"/>
+    <enclosure url="${escapeXml(op3Enclosure(e.audioUrl!))}" length="${e.audioByteSize ?? 0}" type="${escapeXml(e.audioMimeType ?? "audio/mpeg")}"/>
     <itunes:duration>${timecode((e.audioDuration ?? 0) * 1000, { hours: "always" })}</itunes:duration>
     <itunes:explicit>${e.explicit ? "true" : "false"}</itunes:explicit>
-    <itunes:episodeType>${e.episodeType ?? "full"}</itunes:episodeType>${
+    <itunes:episodeType>${escapeXml(e.episodeType ?? "full")}</itunes:episodeType>${
       e.episodeNumber ? `\n    <itunes:episode>${e.episodeNumber}</itunes:episode>` : ""
     }${e.seasonNumber ? `\n    <itunes:season>${e.seasonNumber}</itunes:season>` : ""}${
       e.episodeArtwork ? `\n    <itunes:image href="${escapeXml(e.episodeArtwork)}"/>` : ""

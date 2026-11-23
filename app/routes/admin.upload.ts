@@ -79,7 +79,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       sizeMetadata(prepared),
     );
     // Into the media library too (Carrel's media page). The image is stored and its address works either way; a row
-    // that could not be written is made by the next backfill (POST /admin/media/backfill).
+    // that could not be written is made by the next backfill.
     await recordUpload(env, key, prepared).catch((error) =>
       logEvent("media_record_failed", { key, error }, { level: "error" }),
     );
@@ -104,6 +104,8 @@ export async function action({ request, context }: Route.ActionArgs) {
     return Response.json({ ok: false, error: "Audio exceeds 100 MB." }, { status: 413 });
   const key = buildKey(`episodes/${postId}`, name);
   const ct = type || "audio/mpeg";
+  if (!ct.startsWith("audio/"))
+    return Response.json({ ok: false, error: "The file must be audio." }, { status: 415 });
   const { url: stored, size } = await putAudio(
     env,
     key,

@@ -1,4 +1,4 @@
-// The site's side of Carrel's contract (@dustinedwards/site-api v0.18.0): an adapter over the writing in D1 (articles,
+// The site's side of Carrel's contract (@dustinedwards/site-api v0.36.0): an adapter over the writing in D1 (articles,
 // episodes and the Markdown pages) and the images in the BLOG_IMAGES bucket (the media group is ./media.server.ts).
 // Carrel is the only editor of the site's writing; the admin keeps everything that is not writing.
 //
@@ -44,7 +44,7 @@
 // cron deletes one trashed 30 days.
 import { and, eq, getTableColumns, isNotNull, isNull, like, lte, ne } from "drizzle-orm";
 import { inList } from "@dustinedwards/site-runtime/d1";
-import { parseSqlTime } from "@dustinedwards/site-runtime/time";
+import { logEvent } from "@dustinedwards/site-runtime/log";
 import {
   contentVersion,
   NotFoundError,
@@ -73,7 +73,6 @@ import {
   postRedirects,
   posts,
   postVersions,
-  type ContentBlock,
   type Post,
 } from "~/db/schema";
 import {
@@ -95,10 +94,20 @@ import {
   RENDER_VERSION,
 } from "~/lib/render.server";
 import { getShowConfig } from "~/lib/show.server";
-import { SITE_ORIGIN } from "~/lib/site";
+import { PAGE_HREF, SITE_ORIGIN } from "~/lib/site";
 import type { PagePreview } from "~/lib/preview-context";
-import { PAGE_HREF } from "~/components/content/PageHits";
 import { carrelMedia } from "./media.server";
+import {
+  findPage,
+  iso,
+  listPages,
+  pageHistory,
+  pageKeyOf,
+  PAGE_ID,
+  pageSummary,
+  pageVersion,
+  type PageRow,
+} from "./pages.server";
 import {
   parsePageSource,
   parseSource,
@@ -116,11 +125,6 @@ export type RenderDocument = (
 ) => Promise<Response>;
 
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/;
-// A page's id: content_blocks' `page:about` is Carrel's `page.about` (a colon is not an id character).
-const PAGE_ID = /^page\.([a-z0-9-]+)$/;
-const pageKeyOf = (id: string) => (PAGE_ID.test(id) ? `page:${PAGE_ID.exec(id)![1]}` : null);
-const pageIdOf = (key: string) => key.replace(/^page:/, "page.");
-
 type Status = ContentSummary["status"];
 /** A post as Carrel sees it: the row, and an episode's people (in a snapshot too, since post_versions 0019). */
 type Item = Post & { people?: PersonRef[] };
@@ -132,12 +136,6 @@ type Waiting = Pick<ScheduledUpdate, "publishAt" | "changeId"> | null;
 type Change = {
   fields: Partial<Post>;
   people?: { personId: number; role: string | null; sort: number }[];
-};
-
-// SQLite's datetime('now') is "YYYY-MM-DD HH:MM:SS" in UTC; the contract wants ISO with an offset.
-const iso = (v: string | null | undefined): string | null => {
-  const at = parseSqlTime(v);
-  return at === null ? null : new Date(at).toISOString();
 };
 
 const nowIso = () => new Date().toISOString();
@@ -290,50 +288,9 @@ async function historyOf<T>(
 const postChange = (event: string | null, before: Item) =>
   event === "rename" ? `Renamed from ${before.slug}` : (CHANGE_NAMES[event ?? ""] ?? "Saved");
 
-type PageRow = ContentBlock;
-const pageVersion = (b: PageRow) => contentVersion([renderPageSource(b), b.status]);
-
-async function pageSummary(b: PageRow): Promise<ContentSummary> {
-  return {
-    id: pageIdOf(b.key),
-    kind: "page",
-    title: b.title || b.key,
-    status: b.status === "published" ? "published" : "draft",
-    path: b.status === "published" ? (PAGE_HREF[b.key] ?? null) : null,
-    publishAt: null,
-    publishedAt: null,
-    updatedAt: iso(b.updatedAt),
-    version: await pageVersion(b),
-    trashedAt: null,
-  };
-}
-
-async function findPage(env: Env, id: string): Promise<PageRow | null> {
-  const key = pageKeyOf(id);
-  if (!key || TEXT_PAGES.has(key)) return null;
-  const rows = await getDb(env)
-    .select()
-    .from(contentBlocks)
-    .where(and(eq(contentBlocks.key, key), eq(contentBlocks.kind, "page")))
-    .limit(1);
-  return rows[0] ?? null;
-}
-
-const pageHistory = (env: Env, key: string) =>
-  getDb(env)
-    .select()
-    .from(contentBlockVersions)
-    .where(eq(contentBlockVersions.blockKey, key))
-    .orderBy(contentBlockVersions.id);
-
-async function listPages(env: Env): Promise<PageRow[]> {
-  const rows = await getDb(env).select().from(contentBlocks).where(eq(contentBlocks.kind, "page"));
-  return rows.filter((b) => !TEXT_PAGES.has(b.key));
-}
-
 export function createCarrelAdapter(
   env: Env,
-  log: (entry: Record<string, unknown>) => void = console.log,
+  log: (entry: Record<string, unknown>) => void = (entry) => logEvent(String(entry.event), entry),
   options: { renderDocument?: RenderDocument } = {},
 ): SiteAdapter {
   const db = getDb(env);
@@ -524,16 +481,24 @@ export function createCarrelAdapter(
         "A germomics page is a route of its own, so Carrel edits the pages it lists and adds none.",
       );
     const fields = await build(current);
+    // Of two saves from one version only the first writes, as for a post (writeUnchanged).
+    const written = await db
+      .update(contentBlocks)
+      .set({ ...fields, updatedAt: nowIso() })
+      .where(
+        and(eq(contentBlocks.key, current.key), eq(contentBlocks.updatedAt, current.updatedAt)),
+      )
+      .returning({ key: contentBlocks.key });
+    if (!written.length) {
+      const latest = await findPage(env, id);
+      throw new VersionConflictError(latest && (await pageVersion(latest)));
+    }
     await db.insert(contentBlockVersions).values({
       blockKey: current.key,
       snapshot: current,
       event,
       author: actor?.name ?? CHANGE_AUTHOR,
     });
-    await db
-      .update(contentBlocks)
-      .set({ ...fields, updatedAt: nowIso() })
-      .where(eq(contentBlocks.key, current.key));
     const next = { ...current, ...fields };
     const version = await pageVersion(next);
     recordChange(event, id, version, changeId);
@@ -644,7 +609,15 @@ export function createCarrelAdapter(
       const needle = q?.toLowerCase();
       const after = publishedAfter ? new Date(publishedAfter).toISOString() : null;
       const before = publishedBefore ? new Date(publishedBefore).toISOString() : null;
-      const rows = (await db.select().from(posts)).filter((p) => {
+      // The filter needs no transcript, rendered body or waveform; the page shown is read in full below.
+      const {
+        transcript: _t,
+        bodyHtml: _h,
+        audioPeaks: _p,
+        bodyMeta: _m,
+        ...light
+      } = getTableColumns(posts);
+      const rows = (await db.select(light).from(posts)).filter((p) => {
         const published = iso(p.publishedAt);
         return (
           ID_PATTERN.test(p.slug) &&
@@ -689,9 +662,9 @@ export function createCarrelAdapter(
         title: (i) => i.title.toLowerCase(),
       });
       // Only the page shown is read in full: its episodes' people and its waiting updates.
-      const full = new Map(
-        (await withPeople(shown.flatMap((i) => (i.post ? [i.post] : [])))).map((p) => [p.id, p]),
-      );
+      const ids = shown.flatMap((i) => (i.post ? [i.post.id] : []));
+      const fullRows = ids.length ? await db.select().from(posts).where(inList(posts.id, ids)) : [];
+      const full = new Map((await withPeople(fullRows)).map((p) => [p.id, p]));
       const items = await Promise.all(
         shown.map(async (i) =>
           i.post

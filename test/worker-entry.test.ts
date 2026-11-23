@@ -103,6 +103,14 @@ describe("the Worker entry", () => {
     expect(purges).toEqual(["POST /admin/posts/1"]);
   });
 
+  // A post slug that only starts with a reserved word is a post, not the route that word names.
+  it("matches a reserved path by whole segment, so a post slug beginning with one is stored", async () => {
+    const c = ctx();
+    await fetchWith(new Request(`${ORIGIN}/search-for-patient-zero`), {}, c);
+    await fetchWith(new Request(`${ORIGIN}/search?q=x`), {}, c);
+    expect(c.stored).toEqual(["/search-for-patient-zero;host=germomics.com"]);
+  });
+
   it("answers 410 for a deleted post's address", async () => {
     const notFound = async () =>
       new Response("<p>gone</p>", { status: 404, headers: { "Content-Type": "text/html" } });

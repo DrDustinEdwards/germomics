@@ -52,6 +52,12 @@ const NO_COPY = [
   "/feed/",
 ];
 
+/** Whether a path is a listed prefix or under it: a prefix matches a whole segment, so a post slug that merely starts with the word is not caught. */
+const under = (path: string, prefixes: string[]) =>
+  prefixes.some(
+    (p) => path === p.replace(/\/$/, "") || path.startsWith(p.endsWith("/") ? p : `${p}/`),
+  );
+
 /** A game page's slug, for the tag its leaderboard's page is stored under. */
 const gameSlug = (pathname: string) => /^\/games\/([^/.]+)/.exec(pathname)?.[1];
 
@@ -109,7 +115,7 @@ const site = defineSite<Env>({
       ),
     ),
   ],
-  cacheable: (_request, url) => !LIVE.some((prefix) => url.pathname.startsWith(prefix)),
+  cacheable: (_request, url) => !under(url.pathname, LIVE),
   // No route names a Cache-Control of its own, so a 200 is stored a day under the pages tag (a game's also under its
   // own, so a score purges only that page), and fresh no later than the next scheduled post, which goes live on read
   // with no write to purge on (posts.server publiclyVisible).
@@ -139,8 +145,7 @@ const site = defineSite<Env>({
       origin: SITE_ORIGIN,
       llmsFull: false,
       siteMarkdown: false,
-      skip: (path) =>
-        NO_COPY.some((prefix) => path === prefix.replace(/\/$/, "") || path.startsWith(prefix)),
+      skip: (path) => under(path, NO_COPY),
     }),
   // An admin idle for an hour is signed out of Access (site-runtime ./access).
   adminIdle: [{ secret: (env) => env.ADMIN_IDLE_SECRET }],

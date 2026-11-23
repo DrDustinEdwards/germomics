@@ -23,6 +23,14 @@ export async function loader({ context }: Route.LoaderArgs) {
   return { people: await listPeople(getEnv(context)) };
 }
 
+const isHttpUrl = (u: unknown) => {
+  try {
+    return typeof u === "string" && /^https?:$/.test(new URL(u.trim()).protocol);
+  } catch {
+    return false;
+  }
+};
+
 export async function action({ request, context }: Route.ActionArgs) {
   const env = getEnv(context);
   const form = await readForm(request, ADMIN_FORM);
@@ -35,7 +43,8 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   let links: PersonLink[] = [];
   try {
-    links = JSON.parse(String(form.get("links") || "[]"));
+    const parsed: unknown = JSON.parse(String(form.get("links") || "[]"));
+    links = Array.isArray(parsed) ? parsed : [];
   } catch {
     links = [];
   }
@@ -47,7 +56,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     bio: String(form.get("bio") || ""),
     photo: String(form.get("photo") || ""),
     photoAlt: String(form.get("photoAlt") || ""),
-    links: links.filter((l) => l.url?.trim()),
+    links: links.filter((l) => isHttpUrl(l?.url)),
   });
   return { ok: true as const, message: "Saved." };
 }

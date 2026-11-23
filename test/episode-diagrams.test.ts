@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildDiagramModel } from "@drdustinedwards/site-helpers/render/diagram";
-import { EPISODE_DIAGRAMS, diagramMarkdown } from "~/lib/episode-diagrams";
+import { EPISODE_DIAGRAMS, diagramMarkdown } from "./fixtures/episode-diagrams";
 import {
   diagramKey,
   diagramsFromAssets,
