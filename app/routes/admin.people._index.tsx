@@ -2,6 +2,7 @@
 // (app/lib/carrel/source.ts), so a person is added here first.
 import { useState } from "react";
 import { useFetcher } from "react-router";
+import { isHttpUrl } from "@dustinedwards/site-runtime/url";
 import { Icon, iconPeople } from "capsomer/react/icons";
 import type { Route } from "./+types/admin.people._index";
 import { getEnv } from "@dustinedwards/site-runtime/context";
@@ -22,14 +23,6 @@ import "capsomer/repeater-field.css";
 export async function loader({ context }: Route.LoaderArgs) {
   return { people: await listPeople(getEnv(context)) };
 }
-
-const isHttpUrl = (u: unknown) => {
-  try {
-    return typeof u === "string" && /^https?:$/.test(new URL(u.trim()).protocol);
-  } catch {
-    return false;
-  }
-};
 
 export async function action({ request, context }: Route.ActionArgs) {
   const env = getEnv(context);
