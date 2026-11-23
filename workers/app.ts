@@ -12,7 +12,7 @@ import { defineSite, siteRenderer, siteWorker } from "@dustinedwards/site-runtim
 import { carrelApi } from "../app/lib/carrel/handler.server";
 import { loadPage } from "../app/lib/content.server";
 import { cronJobs } from "../app/lib/cron.server";
-import { draftPageContext, draftPostContext } from "../app/lib/preview-context";
+import { draftPageContext, previewPostContext } from "../app/lib/preview-context";
 import { gameCacheTag } from "../app/lib/games.server";
 import { setPageRenderer } from "../app/lib/page-dates.server";
 import { nextPublishAt } from "../app/lib/posts.server";
@@ -103,7 +103,7 @@ const site = defineSite<Env>({
         kit.render(request, {
           set: (context) =>
             "post" in draft
-              ? context.set(draftPostContext, draft.post)
+              ? context.set(previewPostContext, draft.post)
               : context.set(draftPageContext, draft.page),
         }),
       ),

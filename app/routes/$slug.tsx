@@ -1,7 +1,7 @@
 import { htmlToText } from "@drdustinedwards/site-helpers/text";
 import type { Route } from "./+types/$slug";
 import { getEnv } from "@dustinedwards/site-runtime/context";
-import { draftPostContext } from "~/lib/preview-context";
+import { previewPostContext } from "~/lib/preview-context";
 import {
   getPostBySlug,
   listPosts,
@@ -72,7 +72,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   if (!slug || slug.includes("/")) throw new Response("Not found", { status: 404 });
   const env = getEnv(context);
   // Carrel's preview renders its draft here, in-process (workers/app.ts); no request from outside sets it.
-  const draft = context.get(draftPostContext);
+  const draft = context.get(previewPostContext);
   const [post, visible, show] = await Promise.all([
     draft ?? getPostBySlug(env, slug),
     listPosts(env),
