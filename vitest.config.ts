@@ -9,7 +9,11 @@ export default defineConfig({
       main: "./test/helpers/entry.ts",
       miniflare: {
         compatibilityDate: "2026-10-19",
-        compatibilityFlags: ["nodejs_compat", "enable_request_signal", "global_fetch_strictly_public"],
+        compatibilityFlags: [
+          "nodejs_compat",
+          "enable_request_signal",
+          "global_fetch_strictly_public",
+        ],
         // Bindings are declared HERE rather than read from wrangler.jsonc, deliberately: the
         // real config names the production D1 database and R2 buckets, and a test run must
         // never be one typo away from touching them. These are empty local equivalents.
