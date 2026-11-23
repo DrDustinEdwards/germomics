@@ -6,7 +6,8 @@ import { getEnv } from "@dustinedwards/site-runtime/context";
 import { listPostImages, listPosts, listSeasons } from "~/lib/posts.server";
 import { isoDay } from "@drdustinedwards/site-helpers/xml";
 import { sitemapDocument } from "@drdustinedwards/site-helpers/sitemap";
-import { STATIC_PATHS, pageRecordStore } from "~/lib/page-dates.server";
+import { kvPageRecord } from "@drdustinedwards/site-helpers/lastmod";
+import { PAGE_DATES_KEY, STATIC_PATHS } from "~/lib/page-dates.server";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
@@ -15,7 +16,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     listSeasons(env),
     listPostImages(env),
     // The day each hub and static page last changed (the daily page-dates job); one it has not dated yet has no lastmod.
-    pageRecordStore(env).load(),
+    kvPageRecord(env.APP_KV, PAGE_DATES_KEY).load(),
   ]);
   const dated = (path: string) => ({
     loc: `${SITE_ORIGIN}${path}`,

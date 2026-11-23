@@ -14,7 +14,7 @@ import { loadPage } from "../app/lib/content.server";
 import { cronJobs } from "../app/lib/cron.server";
 import { draftPageContext, previewPostContext } from "../app/lib/preview-context";
 import { gameCacheTag } from "../app/lib/games.server";
-import { setPageRenderer } from "../app/lib/page-dates.server";
+import { setPageRenderer } from "@drdustinedwards/site-helpers/lastmod";
 import { nextPublishAt } from "../app/lib/posts.server";
 import { FONT_PRELOADS } from "../app/lib/preloads";
 import { enforceRateLimit } from "../app/lib/security.server";
