@@ -11,8 +11,8 @@ import { formatDate } from "capsomer/behavior/time";
 import { Empty } from "capsomer/react/empty";
 
 /** Pending until confirmed from the mailed link (double opt-in, app/lib/newsletter.server.ts); only active ones get mail. */
-const statusOf = (r: { confirmedAt: string | null; unsubscribedAt: string | null }) =>
-  r.unsubscribedAt ? "unsubscribed" : r.confirmedAt ? "active" : "pending";
+const statusOf = (r: { consentedAt: string | null; unsubscribedAt: string | null }) =>
+  r.unsubscribedAt ? "unsubscribed" : r.consentedAt ? "active" : "pending";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = getEnv(context);

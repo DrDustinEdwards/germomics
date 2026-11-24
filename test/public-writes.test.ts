@@ -45,7 +45,7 @@ const post = (
 const subscribers = async () =>
   (
     await e.DB.prepare(
-      "SELECT email, consented_at, unsubscribe_token, unsubscribed_at, confirmed_at FROM subscribers ORDER BY id",
+      "SELECT email, consented_at, unsubscribe_token, unsubscribed_at FROM subscribers ORDER BY id",
     ).all<Record<string, string | null>>()
   ).results;
 
@@ -98,7 +98,6 @@ describe("newsletter signup", () => {
     let [row] = await subscribers();
     expect(row).toMatchObject({
       email: "ada@example.com",
-      confirmed_at: null,
       consented_at: null,
       unsubscribed_at: null,
     });
@@ -111,11 +110,10 @@ describe("newsletter signup", () => {
     expect(await openLink(`${token}x`)).toEqual({ status: "invalid" });
     // Opening the link (a mail scanner does) changes nothing; the button's POST confirms.
     expect(await openLink(token)).toEqual({ status: "confirm", email: "ada@example.com", token });
-    expect((await subscribers())[0].confirmed_at).toBeNull();
+    expect((await subscribers())[0].consented_at).toBeNull();
     expect(await confirmLink(token)).toEqual({ status: "done", email: "ada@example.com" });
     [row] = await subscribers();
-    expect(row.confirmed_at).toMatch(/^\d{4}-\d\d-\d\dT/);
-    expect(row.consented_at).toBe(row.confirmed_at);
+    expect(row.consented_at).toMatch(/^\d{4}-\d\d-\d\dT/);
   });
 
   it("never resubscribes an unsubscribed address without a new confirmation, and a used link cannot either", async () => {

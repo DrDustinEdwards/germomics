@@ -1,15 +1,12 @@
 // The one move of the images already in BLOG_IMAGES into the media table (drizzle/0015_media_library.sql), a batch at
 // a time by the every-minute cron (continueMediaBackfill). Each object without a row gets one, carrying what the object already says
-// (its type, size, alt, filename and focal point, from its R2 metadata), its caption from media_captions (0014), the
+// (its type, size, alt, filename and focal point, from its R2 metadata), the
 // SHA-256 of its bytes, and its width and height (from its metadata, else measured by the Images binding). It never
 // changes an object and never overwrites a row, so it is safe to run again: a second run adds only what is missing.
 import { sha256Hex } from "@dustinedwards/site-runtime/encoding";
 import { FOCUS_METADATA, focusOf } from "@dustinedwards/site-runtime/image";
 import { logEvent } from "@dustinedwards/site-runtime/log";
-import { inList } from "@dustinedwards/site-runtime/d1";
 import { MediaId } from "@dustinedwards/site-api";
-import { getDb } from "~/db/index.server";
-import { mediaCaptions } from "~/db/schema";
 import { insertMediaRow, mediaRows } from "./store.server";
 
 const TYPES: Record<string, string> = {
@@ -65,23 +62,6 @@ export async function backfillMedia(
   const waiting = listed.objects.filter(
     (o) => !held.has(o.key) && MediaId.safeParse(o.key).success,
   );
-  const captions =
-    waiting.length > 0
-      ? new Map(
-          (
-            await getDb(env)
-              .select()
-              .from(mediaCaptions)
-              .where(
-                inList(
-                  mediaCaptions.mediaKey,
-                  waiting.map((o) => o.key),
-                ),
-              )
-          ).map((c) => [c.mediaKey, c.caption]),
-        )
-      : new Map<string, string>();
-
   const added: string[] = [];
   for (const listedObject of waiting) {
     const object = await env.BLOG_IMAGES.get(listedObject.key);
@@ -107,7 +87,7 @@ export async function backfillMedia(
         width: size.width,
         height: size.height,
         alt: meta.alt ?? "",
-        caption: captions.get(object.key) ?? "",
+        caption: "",
         focus: focusOf(meta[FOCUS_METADATA]),
         sha256: await sha256Hex(new Uint8Array(bytes)),
         uploadedAt: object.uploaded.toISOString(),

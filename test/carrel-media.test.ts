@@ -501,9 +501,6 @@ describe("the backfill", () => {
       httpMetadata: { contentType: "image/png" },
       customMetadata: { width: "1200", height: "800" },
     });
-    await e.DB.prepare(
-      "INSERT INTO media_captions (media_key, caption) VALUES ('posts/1/pump.png', 'The pump')",
-    ).run();
     const before = (await e.BLOG_IMAGES.head("ep-1/vibrio-400.webp"))!.etag;
 
     const first = await backfillMedia({ ...e, IMAGES: images } as unknown as Env, { limit: 1 });
@@ -524,7 +521,6 @@ describe("the backfill", () => {
       version: "r0",
     });
     expect(await media.get("posts/1/pump.png")).toMatchObject({
-      caption: "The pump",
       width: 1200,
       height: 800,
     });
