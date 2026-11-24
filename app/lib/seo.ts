@@ -82,7 +82,7 @@ export function buildJsonLd({ post, author, seriesTitle, guests = [], hosts = []
   });
 }
 
-// ── Site-level + entity JSON-LD (Organization, PodcastSeries, Person, FAQ) ───────
+// ── Site-level + entity JSON-LD (Organization, PodcastSeries, Person) ───────
 
 type ShowLike = {
   title: string;
