@@ -16,10 +16,9 @@ export type Source = {
   license?: string;
 };
 
-/** Prelum's outline of a rendered body, stored beside its HTML: the h2 and h3 headings and the :::faq pairs. */
+/** Prelum's outline of a rendered body, stored beside its HTML: the h2 and h3 headings. */
 export type BodyMeta = {
   toc: Array<{ depth: number; id: string; text: string }>;
-  faq: Array<{ question: string; answer: string }>;
 };
 
 /** A show host (show-level byline). Maps to <podcast:person> in the feed alongside per-episode guests. */

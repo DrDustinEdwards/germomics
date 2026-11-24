@@ -38,7 +38,7 @@ export const RENDER_VERSION = "27";
 // A Prelum upgrade that moves its version fails the typecheck here until this constant moves with it.
 RENDER_VERSION satisfies typeof Prelum.RENDER_VERSION;
 
-const EMPTY_META: BodyMeta = { toc: [], faq: [] };
+const EMPTY_META: BodyMeta = { toc: [] };
 
 /** One library picture's size, as the media table holds it. */
 type MediaSize = {
@@ -166,7 +166,7 @@ export async function renderMarkdown(
   const files = diagrams ?? (env ? await loadBlogDiagrams(env) : new Map());
   return {
     html: inlineBlogDiagrams(String(out.html), files),
-    meta: { toc: out.toc, faq: out.faq },
+    meta: { toc: out.toc },
     renderVersion: out.renderVersion,
     readingMinutes: out.readingMinutes,
   };
