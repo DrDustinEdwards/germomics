@@ -195,14 +195,14 @@ describe("settings actions", () => {
       args(
         form("/admin/settings", {
           _form: "settings",
-          "s:site.tagline": "New tagline",
+          "s:social.facebook": "New tagline",
           title: "Not a setting",
         }),
       ),
     );
     expect(res).toEqual({ ok: true, message: "Site settings saved." });
     const map = await loadSettings(e);
-    expect(map["site.tagline"]).toBe("New tagline");
+    expect(map["social.facebook"]).toBe("New tagline");
     expect(map).not.toHaveProperty("title");
   });
 

@@ -4,7 +4,7 @@ import { buildJsonLd, wasUpdatedAfterPublish } from "~/lib/seo";
 
 // Search and answer engines read these: the schema.org nodes mirror the page, so a wrong field or a
 // leaked <script> in a description is seen by every crawler. Heading, outline and anchor behavior
-// already pinned in post-render.test.ts is not repeated here; the reading time, ids, outline and FAQ pairs are
+// already pinned in post-render.test.ts is not repeated here; the reading time, ids, outline are
 // Prelum's and tested there.
 const ORIGIN = "https://germomics.com";
 const post = (over: Partial<Post>): Post =>

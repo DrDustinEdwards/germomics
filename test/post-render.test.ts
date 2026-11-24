@@ -77,7 +77,7 @@ describe("a save", () => {
 });
 
 describe("a read", () => {
-  const row = { bodyHtml: "<p>stored</p>", bodyMeta: { toc: [], faq: [] } };
+  const row = { bodyHtml: "<p>stored</p>", bodyMeta: { toc: [] } };
 
   it("serves the stored HTML while its version is Prelum's, and renders a stale one in memory", async () => {
     expect(

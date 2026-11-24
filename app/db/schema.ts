@@ -88,9 +88,6 @@ export const posts = sqliteTable(
 
     // 0009: editorial extras for the redesigned episode page.
     sources: text("sources", { mode: "json" }).$type<Source[]>(), // references/credits + image credits
-    // Retired: an episode has one chapter list, `chapters`, and nothing reads or writes this column.
-    // It stays until a hand-run migration drops it (hard rule 2: the schema matches the migrations).
-    keyMoments: text("key_moments", { mode: "json" }).$type<unknown[]>(),
     readingTime: integer("reading_time"), // minutes, computed from body at save
 
     // 0016: body is Markdown; beside it, Prelum's render of it and the RENDER_VERSION it was rendered with
@@ -188,16 +185,14 @@ export const subscribers = sqliteTable(
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     email: text("email").notNull(),
-    // GDPR: timestamp the subscriber ticked the explicit consent box. NULL = legacy/implied.
+    // When the person confirmed from the mailed link (0032 folded confirmed_at into this). NULL = pending, never sent the newsletter.
     consentedAt: text("consented_at"),
     // One-click unsubscribe (RFC 8058 / tokenized link). Unguessable, unique, backfilled in 0004.
     unsubscribeToken: text("unsubscribe_token"),
     // Suppression timestamp — set when the subscriber unsubscribes (kept, not deleted, so a
     // re-signup with the same email doesn't silently resurrect a prior unsubscribe).
     unsubscribedAt: text("unsubscribed_at"),
-    // (0027) Double opt-in: when the person confirmed from the mailed link (NULL = pending, never sent the newsletter),
-    // and when the one outstanding confirmation link was sent (in its signed payload; cleared once used).
-    confirmedAt: text("confirmed_at"),
+    // (0027) When the one outstanding confirmation link was sent (in its signed payload; cleared once used).
     confirmSentAt: text("confirm_sent_at"),
     createdAt: text("created_at")
       .notNull()
@@ -219,7 +214,6 @@ export const settings = sqliteTable("settings", {
   type: text("type", { enum: ["string", "number", "json", "markdown"] })
     .notNull()
     .default("string"),
-  group: text("group"),
   label: text("label"),
   description: text("description"),
   updatedAt: text("updated_at")
@@ -238,7 +232,6 @@ export const contentBlocks = sqliteTable(
       .default("snippet"),
     title: text("title"),
     value: text("value").notNull().default(""),
-    description: text("description"),
     status: text("status", { enum: ["draft", "published"] })
       .notNull()
       .default("draft"),
@@ -304,7 +297,6 @@ export const episodePeople = sqliteTable(
   },
   (t) => ({
     uniq: uniqueIndex("episode_people_uniq").on(t.postId, t.personId),
-    postIdx: index("episode_people_post_idx").on(t.postId),
   }),
 );
 
@@ -349,16 +341,6 @@ export const postRedirects = sqliteTable("post_redirects", {
     .notNull()
     .references(() => posts.id, { onDelete: "cascade" }),
   createdAt: text("created_at")
-    .notNull()
-    .default(sql`(datetime('now'))`),
-});
-
-// 0014: the caption Carrel set on an image in BLOG_IMAGES, keyed by its R2 key. Since 0015 a caption lives on its
-// `media` row; this table is read only by the backfill that made those rows (app/lib/media/backfill.server.ts).
-export const mediaCaptions = sqliteTable("media_captions", {
-  mediaKey: text("media_key").primaryKey(),
-  caption: text("caption").notNull(),
-  updatedAt: text("updated_at")
     .notNull()
     .default(sql`(datetime('now'))`),
 });

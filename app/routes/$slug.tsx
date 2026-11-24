@@ -17,7 +17,7 @@ import { getShowConfig } from "~/lib/show.server";
 import { buildJsonLd, ogImageFor, pageHead } from "~/lib/seo";
 import { SITE_ORIGIN } from "~/lib/site";
 import { postTrail } from "~/lib/trails";
-import { faqPage, jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { jsonLd } from "@drdustinedwards/site-helpers/schema";
 import type { HeadImage } from "@drdustinedwards/site-helpers/head";
 import { pageToc, storedBody } from "~/lib/render.server";
 import { postImages, shareImage } from "~/lib/images.server";
@@ -34,9 +34,6 @@ export const handle = {
 export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData?.post) return [{ title: "Not found · Germomics" }];
   const { post, author, seriesTitle, guests, hosts, ogImage } = loaderData;
-  // The body's :::faq pairs, as Prelum rendered them, are its FAQPage.
-  const pairs = post.bodyMeta?.faq ?? [];
-  const faq = pairs.length ? faqPage(pairs) : null;
   return [
     // Episodes are editorial articles with audio on this site, so og:type is article (the prior
     // music.song regressed the social card).
@@ -62,7 +59,6 @@ export function meta({ loaderData }: Route.MetaArgs) {
       breadcrumbs: postTrail(post),
     }),
     jsonLd(buildJsonLd({ post, author, seriesTitle, guests, hosts })),
-    ...(faq ? [jsonLd(faq)] : []),
   ];
 }
 
