@@ -23,7 +23,7 @@ describe("the in-code content defaults", () => {
     const seeded = Object.fromEntries(
       (await rows("SELECT key, value FROM settings")).map((r) => [r.key, r.value]),
     );
-    expect(Object.keys(seeded).length).toBeGreaterThan(5);
+    expect(Object.keys(seeded).length).toBeGreaterThan(10);
     const { SETTING_DEFAULTS } = await defaults();
     expect(Object.keys(SETTING_DEFAULTS).sort()).toEqual(Object.keys(seeded).sort());
     expect(SETTING_DEFAULTS).toEqual(seeded);

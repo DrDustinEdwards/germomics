@@ -2,6 +2,8 @@
 // row never breaks a page. Kept equal to the settings and pages the migrations seed (test/content-defaults.test.ts).
 
 export const SETTING_DEFAULTS: Record<string, string> = {
+  "site.tagline": "The purple stain, retold",
+  "site.base_url": "",
   "contact.address":
     '{"streetAddress":"Box T-0100","locality":"Stephenville","region":"TX","postalCode":"76402","country":"US"}',
   "contact.address_line": "Box T-0100, Stephenville, TX 76402",
@@ -9,7 +11,18 @@ export const SETTING_DEFAULTS: Record<string, string> = {
   "social.twitter": "Germomics",
   "social.instagram": "Germomics",
   "ai.daily_cap": "100",
+  "ratelimit.ai": "15",
+  "ratelimit.auth": "30",
   "ratelimit.admin": "150",
+  "ai.prompt.system":
+    "You are an editorial assistant for the Germomics podcast (microbiology and history). You write ONLY from the transcript provided in the user message. Never invent or infer facts, names, dates, numbers, citations, quotes, or links that are not explicitly present in the transcript. If something is not in the transcript, leave it out. Produce exactly what is asked, with no preamble, apologies, or meta-commentary.",
+  "ai.prompt.style": "",
+  "ai.prompt.shownotes":
+    "Write show notes for this episode as clean HTML, optimized to be quoted by search engines and AI answer engines (answer-first). Structure:\n1) ANSWER-FIRST opening <p>: a direct, self-contained 40 to 60 word answer to “what is this episode about and what will I learn?”. State it plainly in the first sentence, with no preamble, no “In this episode…” throat-clearing. This must stand alone as a quotable summary.\n2) An <h2>Key topics</h2> followed by a <ul> of the main segments/topics actually discussed.\n3) Only if specific works, people, or sources are explicitly named in the transcript, add <h2>Mentioned</h2> and a <ul> listing them.\n4) OPTIONAL <h2>FAQ</h2>: include ONLY if the transcript clearly answers common questions a listener would ask. If so, add 2 to 5 pairs of <h3>question?</h3> immediately followed by a <p> answer (50 words or fewer each), every answer grounded in the transcript. Omit the FAQ entirely if it would be thin or speculative.\nUse only these tags: <p>, <h2>, <h3>, <ul>, <li>, <strong>, <em>. Do not include <html>, <body>, headings above <h2>, code fences, or any commentary. Invent nothing.",
+  "ai.prompt.chapters":
+    'From this WebVTT transcript, propose chapter markers at major topic shifts, using the actual cue start times. Return ONLY a JSON array (no prose, no code fences) of 4 to 12 objects: [{"startTime": <whole seconds, number>, "title": "<short title, 60 chars or fewer>"}]. The first startTime must be 0 and times must strictly increase. Title each chapter from what is actually discussed; invent nothing.',
+  "ai.prompt.seo":
+    'From the transcript below, write SEO metadata. Return ONLY JSON (no prose, no code fences): {"seoTitle": "60 chars or fewer", "seoDescription": "155 chars or fewer", "socialBlurb": "200 chars or fewer, engaging, first-person plural voice"}. Ground every claim in the transcript; invent nothing.',
 };
 
 export const PAGE_DEFAULTS: Record<string, { title: string; value: string }> = {
