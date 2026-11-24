@@ -1,4 +1,4 @@
--- contract (hand-run): columns, an index and settings rows nothing reads or writes. Counts and readers in the 2026-11-24 database audit.
+-- contract: hand-run; columns, an index and settings rows nothing reads or writes. Counts and readers in the 2026-11-24 database audit.
 -- subscribers.confirmed_at repeated consented_at (confirm() wrote one value to both), so consented_at is now the one confirmation time.
 -- Rows 0027 backfilled from created_at keep that time: consented_at takes confirmed_at wherever it was empty.
 UPDATE subscribers SET consented_at = confirmed_at WHERE consented_at IS NULL AND confirmed_at IS NOT NULL;
