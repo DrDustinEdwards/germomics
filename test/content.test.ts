@@ -29,18 +29,18 @@ beforeEach(async () => {
 
 describe("settings", () => {
   it("shows a write on the next read", async () => {
-    await upsertSetting(e, "site.tagline", "First");
-    expect((await loadSettings(e))["site.tagline"]).toBe("First");
-    await upsertSetting(e, "site.tagline", "Second");
-    expect((await loadSettings(e))["site.tagline"]).toBe("Second");
+    await upsertSetting(e, "social.facebook", "First");
+    expect((await loadSettings(e))["social.facebook"]).toBe("First");
+    await upsertSetting(e, "social.facebook", "Second");
+    expect((await loadSettings(e))["social.facebook"]).toBe("Second");
     expect((await listSettings(e)).map((s) => [s.key, s.value])).toEqual([
-      ["site.tagline", "Second"],
+      ["social.facebook", "Second"],
     ]);
   });
 
   it("falls back to the stored value, then the in-code default, then the caller's", () => {
-    expect(setting({ "site.tagline": "Mine" }, "site.tagline")).toBe("Mine");
-    expect(setting({}, "site.tagline")).toBe("The purple stain, retold");
+    expect(setting({ "social.facebook": "Mine" }, "social.facebook")).toBe("Mine");
+    expect(setting({}, "social.facebook")).toBe("Germomics");
     expect(setting({}, "no.such.key", "given")).toBe("given");
     expect(setting({}, "no.such.key")).toBe("");
   });

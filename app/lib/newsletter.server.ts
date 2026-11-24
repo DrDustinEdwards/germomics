@@ -22,7 +22,7 @@ function store(env: Env): SubscriberStore {
     async find(email) {
       const [row] = await db
         .select({
-          confirmedAt: subscribers.confirmedAt,
+          confirmedAt: subscribers.consentedAt,
           unsubscribedAt: subscribers.unsubscribedAt,
           confirmSentAt: subscribers.confirmSentAt,
         })
@@ -41,7 +41,7 @@ function store(env: Env): SubscriberStore {
     async confirm(email, confirmSentAt, at) {
       const updated = await db
         .update(subscribers)
-        .set({ confirmedAt: at, consentedAt: at, unsubscribedAt: null, confirmSentAt: null })
+        .set({ consentedAt: at, unsubscribedAt: null, confirmSentAt: null })
         .where(and(eq(subscribers.email, email), eq(subscribers.confirmSentAt, confirmSentAt)))
         .returning({ email: subscribers.email });
       return updated.length > 0;
