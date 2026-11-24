@@ -345,16 +345,6 @@ export const postRedirects = sqliteTable("post_redirects", {
     .default(sql`(datetime('now'))`),
 });
 
-// 0014: the caption Carrel set on an image in BLOG_IMAGES, keyed by its R2 key. Since 0015 a caption lives on its
-// `media` row; this table is read only by the backfill that made those rows (app/lib/media/backfill.server.ts).
-export const mediaCaptions = sqliteTable("media_captions", {
-  mediaKey: text("media_key").primaryKey(),
-  caption: text("caption").notNull(),
-  updatedAt: text("updated_at")
-    .notNull()
-    .default(sql`(datetime('now'))`),
-});
-
 // site-api's tables (SQL in drizzle/0013, 0018, 0024, 0026 and 0029), mirrored by its ./drizzle export: the scheduled
 // updates, the store (safe retries, hook retries and runs, preview links, webmentions sent, upload duplicates, gone
 // paths) and the media library (one row per image in BLOG_IMAGES, its byte history and a change log filled by triggers
