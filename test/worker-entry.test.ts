@@ -84,7 +84,7 @@ describe("the Worker entry", () => {
   });
 
   // A stored page goes to every reader, so the admin's ?preview, which shows drafts, must never reach the Renderer
-  // (CLAUDE.md rule 5: a scheduled post would leak), and an admin save purges.
+  // (CLAUDE.md, Scheduled posts), and an admin save purges.
   it("keeps the signed-in admin and writes out of the stored pages", async () => {
     const c = ctx();
     const { stored, purges } = c;

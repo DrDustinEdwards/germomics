@@ -1,5 +1,5 @@
-// Post queries — the single place route loaders read content. Drizzle query builder only
-// (CLAUDE.md rule 2); the one raw statement is the FTS5 MATCH, which Drizzle's DSL can't
+// Post queries — the single place route loaders read content. Drizzle query builder only;
+// the one raw statement is the FTS5 MATCH, which Drizzle's DSL can't
 // express. Tag/guest filters parse the JSON columns in JS (the catalog is small), keeping
 // everything type-safe and camelCase.
 import {

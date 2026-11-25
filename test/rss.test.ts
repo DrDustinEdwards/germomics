@@ -3,7 +3,7 @@ import type { Post, ShowConfig, Soundbite } from "~/db/schema";
 import type { GuestView } from "~/lib/types";
 import { buildChaptersJson, buildPodcastFeed, op3Enclosure } from "~/lib/rss.server";
 
-// The podcast feed is the one URL every directory polls (hard rule 1): enclosure, guid, duration
+// The podcast feed is the one URL every directory polls (CLAUDE.md, Podcast feed): enclosure, guid, duration
 // and type must be exact, and hostile text in a title must not break the XML. The route-level
 // check that the feed carries show notes and transcripts is test/feeds.test.ts.
 const ORIGIN = "https://germomics.com";

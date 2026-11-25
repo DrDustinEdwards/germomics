@@ -88,7 +88,7 @@ jobs:
   # migration is one restore to undo, applies the pending migrations that only add (devkit-migrations --apply; a
   # drop, rename or row delete is refused with the command to run it by hand) and builds, deploys with
   # DEPLOY_SHA set to this commit, waits for /health to report it, checks the home page answers, and rolls the deploy
-  # back if it does not. A rollback never undoes a migration, so migrations stay additive (CLAUDE.md, hard rule 2).
+  # back if it does not. A rollback never undoes a migration, so migrations stay additive.
   deploy:
     needs: [verify]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CF_DEPLOY == 'true'

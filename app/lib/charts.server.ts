@@ -1,5 +1,5 @@
 // The /data charts, drawn on the server by Enarratio in Capsomer's chart frame (nothing reaches the shared client
-// chunk, hard rule 4). Their look is capsomer/enarratio.css with germomics' tokens mapped in (app/charts.css); the
+// chunk). Their look is capsomer/enarratio.css with germomics' tokens mapped in (app/charts.css); the
 // charts island (app/islands/charts.ts) enhances them and swaps in the narrow drawing on a phone.
 import { frameHtml, narrowRedraw } from "capsomer/behavior/chart-frame";
 import { type LineChartOptions, lineChart } from "enarratio/lite/line";

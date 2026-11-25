@@ -35,7 +35,7 @@ import { documentAttrs } from "capsomer/behavior/document";
 
 export const links: Route.LinksFunction = () => [
   ...iconLinks(),
-  // Feed autodiscovery: the writing feed and the podcast feed (whose URL never changes, CLAUDE.md rule 1).
+  // Feed autodiscovery: the writing feed and the podcast feed (whose URL never changes, CLAUDE.md, Podcast feed).
   {
     rel: "alternate",
     type: "application/rss+xml",

@@ -6,7 +6,7 @@ import * as schema from "~/db/schema";
 import { getDb } from "~/db/index.server";
 import { applyMigrations } from "./helpers/d1";
 
-// CLAUDE.md hard rule 2: migrations are hand-written SQL kept in step with app/db/schema.ts. A
+// Migrations are hand-written SQL kept in step with app/db/schema.ts. A
 // column in one and not the other is a query that fails in production only. The test derives both
 // sides, the real migrated tables and the Drizzle definitions, and fails both ways: a column the
 // schema names that the database lacks, and a column the database has that the schema does not

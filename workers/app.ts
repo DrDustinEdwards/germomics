@@ -71,7 +71,7 @@ const site = defineSite<Env>({
   serverBuild: () => import("virtual:react-router/server-build") as Promise<ServerBuild>,
   mode: import.meta.env.MODE,
   withSecurityHeaders: security.withSecurityHeaders,
-  // https, the bare host, no trailing slash; the podcast feed keeps its slash (CLAUDE.md rule 1).
+  // https, the bare host, no trailing slash; the podcast feed keeps its slash (CLAUDE.md, Podcast feed).
   canonical: { host: "germomics.com", except: ["/feed/podcast/"] },
   // robots.txt, ai.txt (named from the show and its policy page in D1), site.webmanifest and the IndexNow key file.
   files: (request, env) =>

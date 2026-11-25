@@ -60,7 +60,7 @@ Most of these are exported but used only inside their own file, so the cleanup i
 dropping `export`, not deleting code. Two things Knip cannot see, for whoever does the cleanup:
 the improve loop's hidden holdout suite imports app/lib/format.ts and app/lib/r2.server.ts
 (vitest.config.ts says so), so `secondsToStamp`, `MEDIA_BASE`, `IMAGE_BASE`, `mediaUrl` and
-`imageUrl` may be used there; and CLAUDE.md hard rule 5 names `STYLE_RULE` by its export.
+`imageUrl` may be used there.
 (Note, 2026-10-19: the improve loop and its holdout suite were removed, so that holdout caveat no longer applies.)
 
 Before the config, the default run also listed 16 scripts as unused files and `sharp` and
@@ -132,7 +132,7 @@ Shared JS on every page (entry and root): 124.7 KB gzip.
 
 Lazy chunks (no page loads them on first view): PhaserGame.client 347.1 KB, TipTapBody 103.0 KB,
 DataChart.client (Recharts) 96.1 KB, DataMap.client 2.0 KB, EpisodeWaveform 1.0 KB, all gzip.
-Phaser, Recharts and the map loader are all outside the shared chunk, as hard rule 4 requires.
+Phaser, Recharts and the map loader are all outside the shared chunk.
 
 Worker bundle (build/server JS and CSS): 2,292.2 KB raw, 514.8 KB gzip. The largest pieces are
 server-build (1,043.6 KB raw), TipTapBody (682.8 KB raw) and backup.server (394.5 KB raw, the

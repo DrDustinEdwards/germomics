@@ -254,7 +254,7 @@ const head = defineHead({
  * description too long for a search result is cut at a word (the share card keeps it whole), so a page whose
  * description is its own text (About, TXASM) sends one sentence's worth, not the page. The title is passed whole.
  * One canonical path per page: Prelum drops a trailing slash a visitor typed (except on "/"), but the podcast feed's
- * /feed/podcast/ keeps its slash: that URL never changes (CLAUDE.md rule 1).
+ * /feed/podcast/ keeps its slash: that URL never changes (CLAUDE.md, Podcast feed).
  */
 export function pageHead({ path, ...page }: PageHead) {
   return head({ ...page, path, fullTitle: true, keepTrailingSlash: path === "/feed/podcast/" });
