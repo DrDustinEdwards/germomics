@@ -4,24 +4,22 @@ germomics.com: a podcast and writing site about microbiology and history, with i
 
 ## Rules every repo shares
 
-- **Tests.** Keep the minimal set (a few browser tests for flows that must never break, one integration test per real behavior, unit tests only for tricky logic, shared code tested once where it lives), and remove any test that pins design, repeats coverage or has never caught a real mistake, unless it guards a harm that cannot be undone.
-- **UI copy.** Let the layout explain. No eyebrows, restating subtitles, "this page lets you" intros, descriptions under obvious buttons, hints a label already gives, repeated captions or empty-state essays; labels, accessible names, errors, one-way warnings and legal text stay (Dustin, 2026-11-18; Capsid capsid/conventions.md).
-- **Shared code.** Before writing anything another site might have, read https://github.com/DrDustinEdwards/devkit/blob/shared-list/SHARED.md (CI's shared-code check fails on a copy). Change shared code in place and delete what a change replaces in the same PR.
-- **Browser support.** devkit's docs/browser-support.md (Baseline Widely available freely; Newly available with a small fallback; Limited only feature-detected; no polyfills).
+- **Tests.** Keep the minimal set: a few browser tests for flows that must never break, one integration test per real behavior, unit tests only for tricky logic, shared code tested once where it lives. Remove a test that pins design, repeats coverage or never caught a mistake, unless it guards a harm that cannot be undone.
+- **UI copy.** Let the layout explain: no eyebrows, restating subtitles, "this page lets you" intros, hints a label already gives or empty-state essays. Labels, accessible names, errors, one-way warnings and legal text stay (Dustin, 2026-11-18; capsid/conventions.md).
+- **Shared code.** Before writing anything another site might have, check https://github.com/DrDustinEdwards/devkit/blob/shared-list/SHARED.md. Change shared code in place and delete what the change replaces in the same PR.
+- **Browser support.** devkit's docs/browser-support.md: Baseline Widely available freely, Newly available with a small fallback, Limited only feature-detected, no polyfills.
 - **Secrets.** Never commit or print a key, token, `.dev.vars` or `.env`.
-- **Reproduce first.** A report that something is broken names a cause; reproduce the failure before fixing it, and report red before and green after.
-- **Deploys.** A merge to the default branch deploys (CI's deploy job); never deploy from a session.
-- **D1.** Migrations are additive: CI applies the ones that only add and refuses a drop, rename or row delete for a hand run; never hand-run production DDL. `wrangler d1 export` fails on FTS5 tables, so back up and restore with d1-dump (its README); never export an `*_fts` table. Checking backups, backing up now and running a scheduled job now are Capsid Admin's, for every site (`/api/operator`, site-runtime `./operator`).
+- **Reproduce first.** Reproduce a reported failure before fixing it; report red before and green after.
+- **Deploys.** A merge to the default branch deploys; never deploy from a session.
+- **D1.** Never hand-run production DDL; CI applies additive migrations and refuses the rest. Back up and restore with d1-dump, never `wrangler d1 export` (it fails on FTS5 tables).
 - **Site copy and AI.** Copy describes only what the current build does. An AI provider key stays on the server, never in a client.
-
-## Rules for this repo
-
-- Read `germomics/core.md` in Capsid with this file.
-- germomics will move onto Capsomer carefully, in its own design job that starts with a study and baseline screenshots.
 
 ## Stack
 
-React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-plugin; D1 with Drizzle; R2 for audio and images, every picture served from germomics.com/media as on dustinedwards.info: the original, and resized AVIF and WebP copies made on request by the Images binding (`app/lib/images.ts`; a stored address is /media/<key>), and each image's alt, caption, tags, credit, trash state and byte history in D1 `media` (Carrel's media library, `app/lib/carrel/media.server.ts`); Workers AI (binding `AI`) for that library's suggested alt text and tags, under the AI daily cap; KV for the AI cap; Cloudflare Access (application germomics-login) in front of /admin, verified by `@dustinedwards/site-runtime/access`; Tailwind v4 in the admin only (the public pages are plain CSS on Capsomer: app.css, site.css, prose.css); the writing (every post field and the content pages) is written in Carrel, the only editor, through site-api (`app/lib/carrel`, with its D1 store for retries, preview links and webmentions), the admin keeping only an episode's audio and transcript (`/admin/episodes`); bodies are Markdown rendered by Prelum's pipeline into stored HTML (`app/lib/render.server.ts`); Enarratio for the /data charts and the Soho map (`enarratio/map`), drawn on the server (`app/lib/charts.server.ts`, themed from the site's own tokens); Phaser 4 for games.
+- React Router 8 on Workers; D1 with Drizzle; R2 for audio and images; KV for the AI daily cap; Workers AI suggests alt text and tags in the media library; Phaser 4 for games; Enarratio draws the /data charts and the Soho map on the server (`app/lib/charts.server.ts`).
+- Every picture is served from /media/<key> with AVIF and WebP sizes from the Images binding (`app/lib/images.ts`); its metadata is in D1 `media` (Carrel's media library).
+- Carrel is the only editor of posts and pages, through site-api (`app/lib/carrel`); `/admin/episodes` keeps only audio and transcripts, behind Cloudflare Access. Bodies are Markdown rendered by Prelum into stored HTML (`app/lib/render.server.ts`).
+- Public pages are plain CSS on Capsomer (app.css, site.css, prose.css); Tailwind v4 is in the admin only.
 
 ## Commands
 
@@ -31,7 +29,7 @@ React Router 8 (framework mode) and React 19 on Workers with @cloudflare/vite-pl
 
 ## Backup
 
-The Worker's nightly cron (03:17 UTC; `runBackup` in `app/lib/backup.server.ts`) dumps D1 with d1-dump and copies the audio, images and game assets into `germomics-backups`. `session`, `verification`, `account` and `preview_links` never go into a dump (`BACKUP_EXCLUDE`, `app/lib/backup-checks.ts`): restoring them would revive old sign-ins and revoked links. `/health` warns past 26 hours. Germomics has no admin MCP server (retired 2026-11-07).
+The nightly cron (`runBackup`, `app/lib/backup.server.ts`) dumps D1 with d1-dump and copies media into `germomics-backups`. `session`, `verification`, `account` and `preview_links` never go into a dump (`BACKUP_EXCLUDE`): restoring them would revive old sign-ins and revoked links.
 
 ## Hard rules
 
