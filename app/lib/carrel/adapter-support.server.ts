@@ -17,9 +17,6 @@ export type RenderDocument = (
   draft: { post: Post } | { page: PagePreview },
 ) => Promise<Response>;
 
-/** UTC ISO text, so every stored time compares as text and a time written with an offset matches itself. */
-export const utc = (time: string | Date): string => new Date(time).toISOString();
-
 export const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/;
 export type Status = ContentSummary["status"];
 export type Item = Post & { people?: PersonRef[] };

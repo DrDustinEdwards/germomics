@@ -14,6 +14,7 @@ import {
   type SchedulesAdapter,
   type SiteAdapter,
 } from "@dustinedwards/site-api";
+import { utc } from "@dustinedwards/site-api/schedules";
 import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
 import { posts } from "~/db/schema";
 import { snapshotVersion, updatePost } from "~/lib/admin.server";
@@ -24,7 +25,7 @@ import { PAGE_HREF, SITE_ORIGIN } from "~/lib/site";
 import { carrelMedia } from "./media.server";
 import { pageKeyOf } from "./pages.server";
 import { parsePageSource } from "./source";
-import { type RenderDocument, statusOf, utc, versionOf, rendered } from "./adapter-support.server";
+import { type RenderDocument, statusOf, versionOf, rendered } from "./adapter-support.server";
 import { createContent } from "./adapter-content.server";
 import { createWrites } from "./adapter-writes.server";
 

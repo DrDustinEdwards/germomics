@@ -7,6 +7,7 @@ import {
   type ContentAdapter,
 } from "@dustinedwards/site-api";
 import { SEARCH_FIELDS } from "@dustinedwards/site-api/frontmatter";
+import { utc } from "@dustinedwards/site-api/schedules";
 import { postRedirects, posts, postVersions } from "~/db/schema";
 import { deletePost, snapshotVersion } from "~/lib/admin.server";
 import { pageFields } from "~/lib/render.server";
@@ -26,7 +27,6 @@ import {
   ID_PATTERN,
   type Item,
   nowIso,
-  utc,
   everLive,
   sourceOf,
   versionOf,
