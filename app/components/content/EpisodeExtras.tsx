@@ -1,6 +1,4 @@
-// Supporting pieces for the redesigned episode page. All grouped here to keep the route lean; each is
-// small and client-side. Every motion (smooth scroll, auto-scroll) is reduced-motion aware. now-playing
-// highlights use the cyan accent only. The reading bar is Capsomer's CSS-only reading progress (PostDetail).
+// Small client-side pieces of the episode page. Every motion is reduced-motion aware.
 import { useEffect, useState } from "react";
 import { Dialog } from "capsomer/react/dialog";
 import { usePrefersReducedMotion } from "capsomer/react/hooks";
@@ -9,7 +7,6 @@ import "capsomer/sources-list.css";
 import type { Source } from "~/lib/types";
 import type { TocItem } from "~/lib/seo";
 
-// ── Sticky table of contents with scroll-spy ─────────────────────────────────
 export function EpisodeToc({ items }: { items: TocItem[] }) {
   const [active, setActive] = useState<string>("");
   const reduced = usePrefersReducedMotion();
@@ -74,7 +71,6 @@ export function EpisodeToc({ items }: { items: TocItem[] }) {
   );
 }
 
-// ── Sources / references ─────────────────────────────────────────────────────
 export function Sources({ sources }: { sources: Source[] }) {
   if (!sources.length) return null;
   return (
@@ -91,9 +87,6 @@ export function Sources({ sources }: { sources: Source[] }) {
   );
 }
 
-// ── Click-to-enlarge lightbox for body figures ───────────────────────────────
-// Enhances every <figure><img> in the rendered body into an accessible "view larger" trigger, then
-// opens the full-size image in Capsomer's dialog. No new dependency.
 function largestSrc(img: HTMLImageElement): string {
   const srcset = img.getAttribute("srcset");
   if (srcset) {
@@ -119,17 +112,15 @@ export function FigureLightbox({
   bodyRef: React.RefObject<HTMLElement | null>;
   deps: unknown[];
 }) {
-  // The image last opened, and whether it is open: the dialog stays mounted once opened, so it can close with its motion.
+  // The dialog stays mounted once opened, so it can close with its motion.
   const [view, setView] = useState<{ src: string; alt: string; open: boolean } | null>(null);
 
-  // Turn each figure image into a keyboard- and pointer-activatable "enlarge" trigger.
   useEffect(() => {
     const root = bodyRef.current;
     if (!root) return;
     const imgs = Array.from(root.querySelectorAll<HTMLImageElement>("figure img"));
     const openFrom = (img: HTMLImageElement) => {
-      // Focus the trigger (the link around the picture, or the picture itself) first: a click does
-      // not focus a link in Safari, and the dialog hands focus back to whatever had it.
+      // Focus the trigger first: a click does not focus a link in Safari, and the dialog hands focus back to what had it.
       (img.closest<HTMLElement>("a.image-link") ?? img).focus();
       setView({ src: largestSrc(img), alt: img.getAttribute("alt") || "", open: true });
     };
@@ -140,8 +131,7 @@ export function FigureLightbox({
         openFrom(e.currentTarget as HTMLImageElement);
       }
     };
-    // Prelum wraps a picture in a link to its original (a.image-link), which already takes focus and Enter: that
-    // link opens the lightbox instead, and keeps its href for a reader without script.
+    // Prelum's a.image-link already takes focus and Enter: it opens the lightbox and keeps its href for a reader without script.
     const onLink = (e: Event) => {
       const img = (e.currentTarget as HTMLElement).querySelector("img");
       if (!img) return;
@@ -175,8 +165,6 @@ export function FigureLightbox({
   }, deps);
 
   if (!view) return null;
-  // Capsomer's dialog as the lightbox (capsomer/lightbox.css): Esc, the back gesture and a tap on the dimmed backdrop
-  // close it, Tab stays inside, and focus returns to the figure that opened it.
   return (
     <Dialog
       open={view.open}
@@ -190,8 +178,7 @@ export function FigureLightbox({
   );
 }
 
-// Hide body figures whose image fails to load (e.g. before the binaries are deployed) so the article
-// never shows a broken image. Reversible: when the asset exists the figure renders normally.
+// Hides body figures whose image fails to load, so an article never shows a broken image.
 export function useHideBrokenFigures(ref: React.RefObject<HTMLElement | null>, deps: unknown[]) {
   useEffect(() => {
     const root = ref.current;

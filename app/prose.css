@@ -1,10 +1,9 @@
-/* The reading contexts: Capsomer's prose blocks, and the body of every post and content page (BodyRenderer, which
-   imports this file, so it loads wherever a body shows, the admin's previews included). The layer order repeats app.css's, so whichever stylesheet arrives first, the order is the same. */
+/* Reading contexts and the body of every post and content page. BodyRenderer imports this, so it loads wherever a body
+   shows, the admin's previews included. The layer order repeats app.css's. */
 @layer cap-tokens, theme, base, cap, components, utilities, site;
 @import "capsomer/prose-blocks.css";
 
-/* Reading contexts (Capsomer's prose blocks): the legal and about pages, and each diagram in an essay
-   (lib/blog-diagram.server.ts holds it in one). Faces stay the page's own; the legal pages keep their compact rhythm. */
+/* The legal and about pages, and each diagram in an essay (lib/blog-diagram.server.ts). */
 [data-context="prose"] {
   --prose: var(--gm-font-serif);
   --fs-prose: 18px;
@@ -17,7 +16,6 @@
   --link-decoration: underline;
 }
 
-/* The mechanism figures in germomics' palette: violet nodes, cyan for the second tone, labels in Space Grotesk. */
 .blog-diagram {
   --diagram-face: var(--gm-font-display);
   --diagram-stroke: 1.5px;
@@ -38,12 +36,10 @@
   --diagram-rule: var(--line);
   --diagram-ground: var(--raised);
 }
-/* A drawing sits flush in its block, as it always has: the body's figure spacing stops at the diagram; a drawing with its credit keeps its 2.5rem below, and the credit is the body's serif at
-   0.75rem. */
+/* A drawing sits flush in its block; one with a credit keeps 2.5rem below. */
 .diagram-context .blog-diagram {
   margin-block: 0;
 }
-/* The context ends its own flow at its last child, so the room under a drawing with its credit is the context's. */
 .diagram-context:has(> .blog-diagram-block) {
   margin-block-end: var(--space-7-5);
 }
@@ -57,9 +53,7 @@
   --diagram-title-align: center;
 }
 
-/* A body's look: Prelum's rendered Markdown (its README, "The markdown pipeline") in germomics' palette and faces. The
-   wrapper is .gm-prose with .gm-headings-section (a post) or .gm-headings-page (a content page). In the site layer,
-   so it wins over the reset. */
+/* Prelum's rendered Markdown: .gm-prose with .gm-headings-section (a post) or .gm-headings-page (a page). In the site layer so it wins over the reset. */
 @layer site {
   .gm-prose {
     font-size: var(--fs-page);
@@ -354,9 +348,7 @@
     padding-left: var(--space-6);
   }
 
-  /* Headings. A post's are demoted one level under the page's own h2s (.gm-headings-section), so h3 and h4 carry its
-     section and subsection steps; a content page's keep their level under its h1 (.gm-headings-page), with the same
-     look one step up. */
+  /* A post's headings are demoted one level (h3 and h4 carry its steps); a page's keep their level with the same look one step up. */
   .gm-headings-section :is(h2, h3, h4, h5),
   .gm-headings-page :is(h2, h3, h4) {
     font-family: var(--gm-font-display);

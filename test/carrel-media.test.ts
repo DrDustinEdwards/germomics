@@ -19,7 +19,7 @@ import { applyMigrations } from "./helpers/d1";
 const e = env as unknown as Env;
 const ORIGIN = "/media";
 
-/** A PNG of the given size, with tEXt chunks (the embedded metadata) and a tail that makes each one's bytes its own. */
+/** A PNG of the given size, with tEXt chunks and a tail that makes each one's bytes unique. */
 const ascii = (text: string) => [...new TextEncoder().encode(text)];
 
 function png(
@@ -67,7 +67,7 @@ const sizeOf = (b: Uint8Array) => {
   return { width: v.getUint32(16), height: v.getUint32(20) };
 };
 
-/** The Images binding as far as the site uses it: info reads the PNG's size, and an edit answers a PNG of the new size. */
+/** The Images binding as far as the site uses it. */
 let edits: Array<Record<string, unknown>> = [];
 const images = {
   async info(stream: ReadableStream) {
@@ -102,7 +102,7 @@ const images = {
   },
 };
 let aiCalls = 0;
-// Anthropic's answer, as structured outputs return it: one JSON text block (site-api 0.32 calls Claude straight at Anthropic).
+// Anthropic's structured-output answer: one JSON text block.
 const anthropic = async () => (
   aiCalls++,
   new Response(
@@ -189,13 +189,11 @@ describe("an upload", () => {
     });
     expect(item.id).toMatch(/^carrel\/\d+-Vibrio\.png$/);
     expect(item.url).toBe(`/media/${item.id}`);
-    // The size rides on the object, where every page reads it.
     expect((await e.BLOG_IMAGES.head(item.id))!.customMetadata).toMatchObject({
       width: "800",
       height: "600",
     });
     expect(String((await row(item.id))!.sha256)).toMatch(/^[0-9a-f]{64}$/);
-    // The placeholder and main color prepareUpload made, kept on the row.
     expect(item.placeholder).toMatch(/^data:image\//);
     expect(logged).toEqual([
       { event: "carrel.media.upload", id: item.id, version: "r0", changeId: "chg_u" },
@@ -218,7 +216,6 @@ describe("an upload", () => {
     expect(await media.findByHash!(String((await row(item.id))!.sha256))).toMatchObject({
       id: item.id,
     });
-    // The same original sent again is the same file.
     const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", big))]
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
@@ -239,7 +236,7 @@ describe("an upload", () => {
     expect(
       await media.shrink!(item.id, { expectedVersion: pass.item.version!, changeId: "c" }),
     ).toMatchObject({ resized: false });
-    // Copies are kept by their bytes' hash (site-api 0.24), so the reverted bytes, the original again, are one copy.
+    // Copies are kept by their bytes' hash, so the reverted bytes are one copy.
     expect((await e.BACKUPS.list({ prefix: "media/revisions/" })).objects.length).toBe(2);
   });
 });
@@ -268,7 +265,6 @@ describe("the library", () => {
     await expect(media.delete(key, { changeId: "c" })).rejects.toBeInstanceOf(MediaInUseError);
     expect(await row(key)).not.toBeNull();
 
-    // The show's default artwork is named in code, so it is never unused.
     await e.BLOG_IMAGES.put("brand/germomics-artwork-1400.jpg", png(10, 10));
     await backfillMedia(e);
     await expect(
@@ -371,7 +367,6 @@ describe("the writes", () => {
       height: "1600",
       focus: "0.8x0.1",
     });
-    // site-api 0.24: a replace names the file by the new upload.
     const replaced = await media.replace!(item.id, {
       bytes: png(640, 480, {}, 7),
       contentType: "image/png",
@@ -391,9 +386,7 @@ describe("the writes", () => {
       "upload",
     ]);
 
-    // No page holds the size of its own (replaceKeepsSize is off): a converted post that shows the picture is rendered
-    // again after a quarter turn, so its figure has the new size and its size URLs the new bytes' version (v=), and no
-    // browser keeps the year-cached old picture.
+    // replaceKeepsSize is off: a converted post showing the picture is re-rendered after a turn, so its size URLs carry the new version (v=).
     await e.DB.prepare(
       "INSERT INTO posts (kind, title, slug, body, status, render_version, body_html) VALUES ('article', 'md', 'md', ?, 'draft', '0', '')",
     )
@@ -526,7 +519,7 @@ describe("the backfill", () => {
     });
     expect((await e.BLOG_IMAGES.head("ep-1/vibrio-400.webp"))!.etag).toBe(before);
 
-    // A key from before Carrel that is not a MediaId keeps its address, gets no row, and stays out of the library.
+    // A key from before Carrel that is not a MediaId keeps its address, gets no row and stays out of the library.
     const cursor = (await media.list({ limit: 1 })).changeCursor!;
     await e.BLOG_IMAGES.put("old pics/a b.png", png(5, 5, {}, 3), {
       httpMetadata: { contentType: "image/png" },
@@ -540,7 +533,6 @@ describe("the backfill", () => {
       removed: [],
     });
 
-    // The cron walks the bucket once on its own, then stops.
     await e.BLOG_IMAGES.put("posts/2/late.png", png(5, 5, {}, 2));
     await continueMediaBackfill({ ...e, IMAGES: images } as unknown as Env);
     expect(await media.get("posts/2/late.png")).toMatchObject({ width: 5, height: 5 });

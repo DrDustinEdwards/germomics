@@ -1,7 +1,5 @@
-// The podcast feed, byte for byte: the iTunes and Podcasting 2.0 tags Prelum's blog feeds do not
-// write (the writing feed is Prelum's rssDocument, routes/feed.site.ts). Episodes only (every item
-// has an enclosure). Enclosure URLs always point at media.germomics.com (the stored audioUrl), never the
-// worker origin. guid is permanent + isPermaLink=false. Served from resource routes.
+// The podcast feed, byte for byte: the iTunes and Podcasting 2.0 tags Prelum's feeds lack (the writing feed is Prelum's
+// rssDocument). Enclosures point at media.germomics.com (the stored audioUrl), never the Worker origin. guid is permanent.
 import type { Post, ShowConfig, Soundbite } from "~/db/schema";
 import type { GuestView } from "~/lib/types";
 import { absolutizeUrls, cdata, escapeXml, rfc822 } from "@drdustinedwards/site-helpers/xml";
@@ -14,17 +12,13 @@ const PODCAST_NS =
   'xmlns:content="http://purl.org/rss/1.0/modules/content/" ' +
   'xmlns:atom="http://www.w3.org/2005/Atom"';
 
-// OP3 (op3.dev) open, privacy-respecting download analytics. Podcast apps fetch the enclosure
-// through this prefix, which counts the download then redirects to the real file. ONLY the
-// enclosure URL is wrapped — guid, length, duration, and type are rendered verbatim and never
-// change (guid is the immutable dedup key directories rely on). Idempotent: never double-wraps.
+// OP3 counts a download then redirects to the file. Only the enclosure URL is wrapped; guid, length, duration and type stay verbatim. Idempotent.
 const OP3_PREFIX = `${OP3_ORIGIN}/e/`;
 export function op3Enclosure(url: string): string {
   if (!url || url.includes("op3.dev/e/")) return url;
   return OP3_PREFIX + url.replace(/^https?:\/\//i, "");
 }
 
-/** Nested <itunes:category> elements (up to 3), falling back to the single legacy column. */
 function categoriesXml(show: ShowConfig): string {
   const cats = show.categories?.length ? show.categories : [{ category: show.appleCategory }];
   return cats
@@ -36,10 +30,7 @@ function categoriesXml(show: ShowConfig): string {
     .join("\n  ");
 }
 
-/**
- * The podcast feed — episodes only. Served at the immutable path /feed/podcast/.
- * `guestsByEpisode` carries resolved people per episode for item-level <podcast:person>.
- */
+/** `guestsByEpisode` carries resolved people per episode for item-level <podcast:person>. */
 export function buildPodcastFeed(
   show: ShowConfig,
   episodes: Post[],
@@ -84,7 +75,6 @@ ${items}
 </rss>`;
 }
 
-/** A <podcast:person> per guest. role defaults to "guest"; img only when a photo URL exists. */
 function personXml(g: GuestView, origin: string): string {
   const href = g.links?.[0]?.url ?? g.link ?? `${origin}/guests/${g.slug}`;
   const img = g.photo ? ` img="${escapeXml(g.photo)}"` : "";
@@ -108,8 +98,7 @@ function itemXml(
     e.chapters && e.chapters.length
       ? `<podcast:chapters url="${url}/chapters.json" type="application/json+chapters"/>`
       : "";
-  // Podcasting 2.0 <podcast:soundbite> (additive). No rows yet, so this stays empty and the feed
-  // bytes are unchanged; guid/enclosure/length/duration are never touched here.
+  // <podcast:soundbite> is additive: with no rows the feed bytes are unchanged.
   const clips = soundbites
     .map(
       (s) =>
@@ -136,7 +125,6 @@ function itemXml(
   </item>`;
 }
 
-/** Podcasting 2.0 chapters JSON body. */
 export function buildChaptersJson(e: Post): string {
   return JSON.stringify({
     version: "1.2.0",

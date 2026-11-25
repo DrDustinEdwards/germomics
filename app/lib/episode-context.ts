@@ -1,26 +1,19 @@
-// Data previews on an episode page, outside the essay. The essay stays in Carrel. A preview draws one
-// series the /data page already publishes (app/lib/episode-context.server.ts, Enarratio). Mechanism
-// figures are Prelum :::diagram blocks in the essay, and this file does not describe them.
+// Data previews on an episode page, outside the essay: one series the /data page already publishes (episode-context.server.ts).
 
 type Citation = { label: string; href: string };
 
 export type DataPreviewSpec = {
   id: string;
-  /** A key of app/lib/data/datasets.json. */
   dataset: "cholera-soho-1854" | "influenza-1918";
-  /** Which timeline in that dataset. The server requires its yLabel to be Deaths. */
+  /** The server requires its yLabel to be Deaths. */
   series: number;
-  /** The preview's heading. */
   heading: string;
-  /** One or two sentences under the line. This is the description a reader hears. */
+  /** The description a reader hears. */
   summary: string;
-  /** The link to the data page. */
   link: string;
-  /** A short credit. The address is still the series source. */
   sourceLabel: string;
 };
 
-/** Published episode slug to its data preview. Absent slugs get nothing. */
 export const EPISODE_CONTEXT: Record<string, { preview: DataPreviewSpec }> = {
   // Confessions of a Cholera Girl. Snow's Table I, deaths column: peak 127 on 2 September 1854.
   "confessions-of-a-cholera-girl": {
@@ -55,7 +48,7 @@ export type DataPreviewView = {
   link: string;
   source: Citation;
   href: string;
-  /** Inline Enarratio sparkline. The visible sentences are the text alternative, so the SVG is hidden from assistive tech. */
+  /** The visible sentences are the text alternative, so the SVG is hidden from assistive tech. */
   svg: string;
 };
 

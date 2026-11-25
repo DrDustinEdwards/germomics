@@ -1,13 +1,6 @@
-// GEO / agentic-web discovery files, generated dynamically from D1 so they stay fresh:
-//   /llms.txt       — a curated Markdown index (hubs + key content), the llms.txt convention.
-//   /llms-full.txt  — a fuller, still-curated concatenation of the written canonical content
-//                     (show notes + essays + About). Deliberately NOT every page and NOT the
-//                     transcripts — that would be the duplicate-content anti-pattern the audit warns
-//                     against. Both are served with X-Robots-Tag: noindex (they're machine indexes,
-//                     not pages to rank).
-//   /ai.txt         — purpose-based access policy: citation/search welcome, training reserved.
-//
-// Builders are pure (data in, string out) so they're trivial to test; routes fetch + pass data.
+// Discovery files generated from D1: /llms.txt (curated index), /llms-full.txt (show notes, essays and About, deliberately
+// not every page and not the transcripts, which would duplicate content), both served noindex, and /ai.txt (citation and
+// search welcome, training reserved). Builders are pure; routes fetch and pass the data.
 import { htmlToText } from "@drdustinedwards/site-helpers/text";
 import { llmsDocument, type LlmsLink } from "@drdustinedwards/site-helpers/llms";
 import type { Post, ShowConfig } from "~/db/schema";
@@ -15,7 +8,7 @@ import type { Post, ShowConfig } from "~/db/schema";
 import { ABOUT, AUTHOR } from "~/lib/about";
 import { formatDate } from "capsomer/behavior/time";
 
-// Curation caps — keep llms.txt well within model context limits even as the catalog grows.
+// Caps keep llms.txt within model context limits as the catalog grows.
 const INDEX_LIMIT = 40;
 const FULL_BODY_CHARS = 6000;
 
@@ -30,7 +23,6 @@ function summaryFor(p: Post): string {
   return oneLine(p.excerpt ?? p.seoDescription ?? p.bodyHtml);
 }
 
-/** A post marked noindex (site-api's search field) stays out of llms.txt and llms-full.txt. */
 const indexed = (list: Post[]) => list.filter((p) => !p.noindex);
 
 const link = (p: Post, origin: string): LlmsLink => ({
@@ -39,7 +31,6 @@ const link = (p: Post, origin: string): LlmsLink => ({
   description: summaryFor(p),
 });
 
-/** Curated Markdown index of hubs + key content, in Prelum's llms.txt skeleton. */
 export function buildLlmsTxt(
   show: ShowConfig,
   episodes: Post[],
@@ -112,7 +103,6 @@ function fullSection(p: Post, origin: string): string {
   ].join("\n");
 }
 
-/** Fuller, still-curated concatenation of the written canonical content. */
 export function buildLlmsFullTxt(
   show: ShowConfig,
   episodes: Post[],

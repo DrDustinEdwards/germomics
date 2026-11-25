@@ -1,20 +1,8 @@
-// app/db/schema.ts — germomics data model (Drizzle ORM, Cloudflare D1 / SQLite).
-//
-// Three blocks:
-//   1. Content      — posts / post_versions / show_config (already live in D1; copied
-//                     verbatim from the provided docs/schema.ts, the framework-agnostic source).
-//   2. (retired)    Better Auth's user / session / account / verification, dropped by
-//                     drizzle/0010_retire_better_auth.sql after the move to Cloudflare Access.
-//   3. App          — scores (game leaderboards) + subscribers (newsletter), additive tables.
-//
-// FTS5 (posts_fts + sync triggers) is not expressible in Drizzle's DSL and lives in the raw
-// migration drizzle/0000_content_and_fts.sql. Query with:
-//   SELECT p.* FROM posts_fts f JOIN posts p ON p.id = f.rowid WHERE posts_fts MATCH ?
-
+// germomics data model (Drizzle, D1). FTS5 (posts_fts, content_blocks_fts and their triggers) is not expressible in
+// Drizzle and lives in the raw migrations (drizzle/0000, drizzle/0005). Migration numbers below name where a column came in.
 import { sqliteTable, text, integer, index, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { sql, relations } from "drizzle-orm";
-// JSON shapes (stored as TEXT, typed at the edge). Defined client-safe in lib/types and
-// re-exported here so loaders and components share one source of truth.
+// JSON shapes stored as TEXT, defined client-safe in lib/types.
 import type {
   BodyMeta,
   Chapter,
@@ -34,7 +22,6 @@ export const posts = sqliteTable(
       .notNull()
       .default("article"),
 
-    // shared base
     title: text("title").notNull(),
     slug: text("slug").notNull(),
     body: text("body").notNull().default(""),
@@ -53,7 +40,6 @@ export const posts = sqliteTable(
     // Scheduling gate (0002): a "scheduled" post is status=published with a future publishAt;
     // public reads hide published posts whose publishAt is still in the future.
     publishAt: text("publish_at"),
-    // Per-post social image + alt text for accessible images (0002).
     coverAlt: text("cover_alt"),
     ogImage: text("og_image"),
     ogImageAlt: text("og_image_alt"),
@@ -67,7 +53,6 @@ export const posts = sqliteTable(
       .notNull()
       .default(sql`(datetime('now'))`),
 
-    // episode only (null for articles)
     audioUrl: text("audio_url"),
     audioDuration: integer("audio_duration"),
     audioByteSize: integer("audio_byte_size"),
@@ -86,12 +71,10 @@ export const posts = sqliteTable(
     episodeArtworkAlt: text("episode_artwork_alt"),
     audioPeaks: text("audio_peaks", { mode: "json" }).$type<number[]>(), // waveform: ints 0..100, len 400
 
-    // 0009: editorial extras for the redesigned episode page.
     sources: text("sources", { mode: "json" }).$type<Source[]>(), // references/credits + image credits
     readingTime: integer("reading_time"), // minutes, computed from body at save
 
-    // 0016: body is Markdown; beside it, Prelum's render of it and the RENDER_VERSION it was rendered with
-    // (app/lib/render.server.ts). A NULL renderVersion is a row not converted yet, whose body is still HTML.
+    // 0016: body is Markdown, with its render and RENDER_VERSION; NULL renderVersion means not converted, body still HTML.
     bodyHtml: text("body_html"),
     bodyMeta: text("body_meta", { mode: "json" }).$type<BodyMeta>(),
     renderVersion: text("render_version"),
@@ -112,8 +95,6 @@ export const posts = sqliteTable(
   }),
 );
 
-// A history row's columns (post_versions, content_block_versions): the row as it was, the change it was taken before
-// (0031) and by whom.
 const snapshotColumns = () => ({
   snapshot: text("snapshot", { mode: "json" }).notNull(),
   event: text("event"),
@@ -155,7 +136,7 @@ export const showConfig = sqliteTable("show_config", {
     .$type<PodcastCategory[]>()
     .default(sql`'[]'`),
   fundingLabel: text("funding_label"),
-  // 0009: show-level hosts byline (co-hosts). Maps to <podcast:person> alongside per-episode guests.
+  // 0009: show-level hosts byline; maps to <podcast:person>.
   hosts: text("hosts", { mode: "json" }).$type<Host[]>(),
 });
 
@@ -163,7 +144,6 @@ export type Post = typeof posts.$inferSelect;
 export type NewPost = typeof posts.$inferInsert;
 export type ShowConfig = typeof showConfig.$inferSelect;
 
-// Public write endpoint feeds this; the action validates/clamps score and sanitizes name.
 export const scores = sqliteTable(
   "scores",
   {
@@ -178,8 +158,7 @@ export const scores = sqliteTable(
   (t) => ({ boardIdx: index("scores_board_idx").on(t.gameSlug, t.score) }),
 );
 
-// Newsletter capture: email + timestamp, unique on email. No other PII. (0004) adds explicit
-// consent + tokenized one-click unsubscribe — still no PII beyond the email itself.
+// Newsletter capture: no PII beyond the email.
 export const subscribers = sqliteTable(
   "subscribers",
   {
@@ -187,10 +166,9 @@ export const subscribers = sqliteTable(
     email: text("email").notNull(),
     // When the person confirmed from the mailed link (0032 folded confirmed_at into this). NULL = pending, never sent the newsletter.
     consentedAt: text("consented_at"),
-    // One-click unsubscribe (RFC 8058 / tokenized link). Unguessable, unique, backfilled in 0004.
+    // RFC 8058 one-click unsubscribe token.
     unsubscribeToken: text("unsubscribe_token"),
-    // Suppression timestamp — set when the subscriber unsubscribes (kept, not deleted, so a
-    // re-signup with the same email doesn't silently resurrect a prior unsubscribe).
+    // Set on unsubscribe; the row is kept so a re-signup does not resurrect it.
     unsubscribedAt: text("unsubscribed_at"),
     // (0027) When the one outstanding confirmation link was sent (in its signed payload; cleared once used).
     confirmSentAt: text("confirm_sent_at"),

@@ -1,16 +1,11 @@
-// Carrel's site API, mounted by workers/app.ts at /api/carrel/v1, with its preview links at /preview/<token>. One key
-// (CARREL_SITE_KEY, a Worker secret) reaches only that prefix and nothing else on the site. The same object runs the
-// schedules Carrel set, from the one-minute cron (workers/app.ts).
+// Carrel's site API at /api/carrel/v1 and preview links at /preview/<token>. One key (CARREL_SITE_KEY) reaches only that prefix.
 import { standardSiteApi } from "@dustinedwards/site-api";
 import { INDEXNOW_KEY, SITE_ORIGIN } from "~/lib/site";
 import { createCarrelAdapter, type RenderDocument } from "./adapter.server";
 
 /** `renderDocument`: the site's own render of a route, for a preview drawn as the site draws a post (workers/app.ts). */
 export function carrelApi(env: Env, renderDocument?: RenderDocument) {
-  // The replay store (safe retries by change id), preview links, failed hooks' retries and the webmentions sent
-  // (drizzle/0018_site_api_store.sql). The standard hooks: a changed live page tells IndexNow and the pages it links
-  // to, whether a Carrel request or a schedule changed it, and a schedule (which has no request for the gateway to
-  // purge after) purges the stored pages.
+  // Store: drizzle/0018. Hooks: a changed live page tells IndexNow and the pages it links to; a schedule has no request for the gateway to purge after, so it purges the stored pages itself.
   return standardSiteApi({
     adapter: createCarrelAdapter(env, undefined, { renderDocument }),
     key: env.CARREL_SITE_KEY,
@@ -20,11 +15,7 @@ export function carrelApi(env: Env, renderDocument?: RenderDocument) {
   });
 }
 
-/**
- * The per-minute cron's job (workers/app.ts): every schedule that is due goes live, with the hooks a Carrel publish
- * runs, hooks that failed earlier are tried again, and the trash past 30 days is emptied. A schedule that fails fails
- * the job, and is tried next minute.
- */
+/** The per-minute cron job (workers/app.ts). A schedule that fails fails the job and is tried next minute. */
 export async function runCarrelSchedules(env: Env, now: Date): Promise<void> {
   await carrelApi(env).runSchedulesOrThrow({ now });
 }

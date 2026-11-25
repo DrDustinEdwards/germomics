@@ -48,17 +48,15 @@ export const links: Route.LinksFunction = () => [
     title: "Germomics podcast",
     href: "/feed/podcast/",
   },
-  // The LCP font, also sent as the Early Hints `Link` header (lib/preloads.ts).
   ...PRELOADS.links,
 ];
 
-// The error path's title for an error the root itself shows (WCAG 2.4.2); the public pages' is in routes/_site.tsx.
+// The title for an error the root itself shows; the public pages' is in routes/_site.tsx.
 export function meta({ error }: Route.MetaArgs): Route.MetaDescriptors {
   return error ? [{ title: errorTitle(error, "Germomics") }] : [];
 }
 
-// Site settings for any loader, read once per request on first use. Nothing is
-// awaited here, so the loaders' own D1 queries run in the same round trip (context.server).
+// Read once per request on first use and not awaited here, so loaders' own D1 queries share the round trip (context.server).
 export const middleware: Route.MiddlewareFunction[] = [
   ({ context }, next) => {
     const env = getEnv(context);
@@ -69,7 +67,7 @@ export const middleware: Route.MiddlewareFunction[] = [
   },
 ];
 
-// Cloudflare Web Analytics is injected automatically by Cloudflare (one beacon), so the app renders none of its own.
+// Cloudflare injects the one Web Analytics beacon; the app renders none.
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getEnv(context);
   const [settings, show, seasons] = await Promise.all([
@@ -77,8 +75,6 @@ export async function loader({ context }: Route.LoaderArgs) {
     getShowConfig(env),
     listSeasons(env),
   ]);
-  // Social links for the footer, built from the same settings social.* as Organization sameAs, so
-  // footer and schema stay consistent. Only handles that are set produce a link.
   const socials = socialLinks({
     facebook: setting(settings, "social.facebook"),
     twitter: setting(settings, "social.twitter"),
@@ -87,7 +83,6 @@ export async function loader({ context }: Route.LoaderArgs) {
   return {
     socials,
     subscribeLinks: show.subscribeLinks ?? {},
-    // Distinct episode season numbers (newest first) feed the global Header "Episodes" dropdown.
     seasons,
   };
 }
@@ -96,7 +91,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const nonce = useContext(UNSAFE_FrameworkContext)?.nonce;
   const hydrates = routeHydrates(useMatches());
   const deferred = pageDeferred(hydrates);
-  // The public pages take germomics' palette from Capsomer's site entry; the admin keeps Capsomer's own look.
   const site = useLocation().pathname.startsWith("/admin") ? undefined : "germomics";
   return (
     <html lang="en" {...documentAttrs({ site })}>
@@ -129,12 +123,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  // The public chrome (header, footer, player) is the public layout's (routes/_site.tsx), so the admin never loads it.
   return <Outlet />;
 }
 
-// Capsomer's error page: the failed Empty in plain words for 404, 410 and server errors, never indexed, the stack only
-// in development. Its styles load with it alone (app/error-page.css).
+// Capsomer's error page: never indexed, the stack only in development. Its styles load with it alone (app/error-page.css).
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   return (
     <>

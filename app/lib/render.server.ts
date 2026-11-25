@@ -1,18 +1,8 @@
-// The one render of the site's writing: a post body or a page, stored as Markdown, rendered to HTML by Prelum's
-// pipeline (render/nomath: `$` is a price here, so no KaTeX) with assertSafe on. Every save path stores the result
-// beside the Markdown (renderFields), a public read serves the stored HTML while its renderVersion is Prelum's
-// (storedBody), and the every-minute cron re-renders the rows an upgrade or a migration left behind (rerenderStale).
-//
-// IMAGES. A picture's size comes from the media library (D1 `media`), so the HTML carries its width and height, and
-// its srcset and AVIF and WebP sources are /media copies (site-runtime ./image, app/lib/images.ts). A figure is shown
-// at most 400px wide, the lead illustration (width=wide) at most 520px, as before. The link around a picture opens
-// its original at /media, versioned like its sizes, as dustinedwards.info's pipeline writes it. An image the library
-// does not hold is written as it is, unsized.
-//
-// NOT CONVERTED YET. A row whose renderVersion is NULL predates the move (drizzle/0016): its body is still the
-// sanitized HTML the TipTap editor saved, and it is served as it is until the conversion or a save gives it Markdown.
-//
-// Prelum is imported on first use, so the public routes that only read stored HTML never load the pipeline.
+// The one render of the site's writing: Markdown to HTML by Prelum (render/nomath: `$` is a price here, so no KaTeX)
+// with assertSafe on. Save paths store the result beside the Markdown (renderFields); a public read serves the stored
+// HTML while its renderVersion is Prelum's (storedBody); the cron re-renders stale rows (rerenderStale).
+// Picture sizes come from the media library (D1 `media`); an image the library lacks is written unsized.
+// A NULL renderVersion row predates drizzle/0016 and is served as its saved HTML. Prelum loads on first use.
 import type * as Prelum from "@drdustinedwards/site-helpers/render/nomath";
 import { diagramPack } from "~/lib/diagram-pack";
 import { keyOfAddress, keysAtAddresses } from "@dustinedwards/site-runtime/image";
@@ -35,12 +25,11 @@ import type { BodyMeta } from "~/lib/types";
 
 /** Prelum's RENDER_VERSION, kept here so a read can compare without loading the pipeline. */
 export const RENDER_VERSION = "27";
-// A Prelum upgrade that moves its version fails the typecheck here until this constant moves with it.
+// A Prelum upgrade that moves its version fails the typecheck until this constant moves with it.
 RENDER_VERSION satisfies typeof Prelum.RENDER_VERSION;
 
 const EMPTY_META: BodyMeta = { toc: [] };
 
-/** One library picture's size, as the media table holds it. */
 type MediaSize = {
   key: string;
   width: number | null;
@@ -49,10 +38,8 @@ type MediaSize = {
   /** The bytes' hash, the version a size URL carries (`v=`), so a replaced file is a new URL. */
   sha256: string | null;
 };
-/** The library rows for some keys. */
 export type MediaLookup = (keys: string[]) => Promise<MediaSize[]>;
 
-/** The media library in D1. */
 export function libraryMedia(env: Env): MediaLookup {
   return async (keys) =>
     keys.length === 0
@@ -88,18 +75,12 @@ export type Rendered = {
   readingMinutes: number;
 };
 
-/**
- * Whether a post's largest picture sits above its body, so no body image is the page's LCP: an episode's cover art
- * (eager, in the hero) and a written post's cover (priority) both come first. Prelum then writes every body image
- * lazy with no fetchpriority (its `priority: { taken: true }`); measured live, an episode's first body image is at
- * y≈1,000 at 1440x900 and y≈1,600 at 390x844, below the fold. web.dev: lazy-load below the fold, and only the LCP
- * image gets fetchpriority=high.
- */
+/** Whether the page's largest picture sits above the body (episode cover art, a post's cover), so body images stay lazy. */
 export function lcpAboveBody(post: { kind?: string | null; coverImage?: string | null }): boolean {
   return post.kind === "episode" || Boolean(post.coverImage);
 }
 
-/** Markdown to the HTML the site stores. Throws Prelum's ContentError (with the line and the fix) on a source it refuses. */
+/** Throws Prelum's ContentError on a source it refuses. */
 export async function renderMarkdown(
   body: string,
   lookup: MediaLookup,
@@ -172,7 +153,6 @@ export async function renderMarkdown(
   };
 }
 
-/** What a save writes for a post body: the Markdown, its render and the reading time. */
 export async function postBodyFields(env: Env, body: string, lcpAbove: boolean) {
   const r = await renderMarkdown(body, libraryMedia(env), { lcpAbove, env });
   return {
@@ -184,7 +164,6 @@ export async function postBodyFields(env: Env, body: string, lcpAbove: boolean) 
   } satisfies Partial<Post>;
 }
 
-/** What a save writes for a page: the Markdown and its render. */
 export async function pageFields(env: Env, value: string) {
   const r = await renderMarkdown(value, libraryMedia(env), { env });
   return { value, bodyHtml: r.html, renderVersion: r.renderVersion };
@@ -200,12 +179,9 @@ type Stored = {
 };
 
 /**
- * The HTML a public read shows, through Prelum's storedRender (`./stored-render`): a stored render at Prelum's version
- * is used as it is, except its diagrams (`current`: a Mermaid figure this site now draws inline, or a drawing inlined at
- * an earlier render, is drawn from the site's current file in memory and its caption stays), so the page is current
- * before the row is saved again. A render older than Prelum's is rendered in memory, and the every-minute cron stores
- * it. A body that no longer renders keeps its last stored HTML, so a page never fails on its own text. The HTML is
- * wrapped in the version it was rendered at, which prelum-content reads to see a page left behind.
+ * The HTML a public read shows, through Prelum's storedRender: a stored render at Prelum's version is used as is except
+ * its diagrams, which are redrawn in memory. An older render is rendered in memory (the cron stores it); a body that no
+ * longer renders keeps its last stored HTML. The HTML is wrapped in its render version, which prelum-content reads.
  */
 export async function storedBody(env: Env, row: Stored): Promise<{ html: string; meta: BodyMeta }> {
   if (row.renderVersion === null) return { html: inDiagramContext(row.body), meta: EMPTY_META };
@@ -241,11 +217,7 @@ export function pageToc(meta: BodyMeta): Array<{ level: 2 | 3; id: string; text:
 type PostRow = { id: number; body: string; kind: string | null; coverImage: string | null };
 type PageRow = { key: string; value: string };
 
-/**
- * Renders the posts and pages again and saves each, one at a time, through Prelum's rerenderEach: a row that no longer
- * renders goes to `onError` and is left as it is, and never stops the rest. The updated_at stays: nothing a writer did
- * changed.
- */
+/** Re-renders rows one at a time; one that no longer renders goes to `onError`, is left as it is and keeps its updated_at. */
 async function rerenderRows(
   env: Env,
   postRows: PostRow[],
@@ -289,10 +261,8 @@ const postColumns = {
 const pageColumns = { key: contentBlocks.key, value: contentBlocks.value };
 
 /**
- * Re-renders the converted posts and pages whose Markdown names a library file, after its bytes change (a replace,
- * turn, revert or shrink). Their stored HTML carries the file's version in its size URLs (`v=`), so the re-render is
- * what moves them to the new picture; without it a browser keeps the old one for the year the URL is cached.
- * Returns how many rows it re-rendered; a row that no longer renders is logged and left as it is.
+ * Re-renders posts and pages whose Markdown names a library file whose bytes changed. Stored HTML carries the file's
+ * version in its size URLs (`v=`); without this a browser keeps the old picture for the cached year. Returns the count.
  */
 export async function rerenderUsing(env: Env, key: string): Promise<number> {
   const db = getDb(env);
@@ -319,7 +289,6 @@ export async function rerenderUsing(env: Env, key: string): Promise<number> {
   return done;
 }
 
-/** Re-renders every converted post and page whose render is older than Prelum's, from the every-minute cron. */
 export async function rerenderStale(
   env: Env,
 ): Promise<{ posts: number; pages: number; failed: number }> {

@@ -1,12 +1,6 @@
-// Content-in-D1 read/write layer (server-only). settings + content_blocks live in D1 so all copy
-// and config are searchable and AI-editable with no deploy, and a write shows on the next read.
-// EVERY read falls back to the in-code default (app/lib/content-defaults.ts, generated from the same
-// source as the seed), so a missing or draft row never breaks a page.
-//
-// Reads go straight to D1: the edge cache (workers/app.ts) already serves repeat visits, and on
-// its misses a KV cache in front of D1 was cold too, adding a KV read and write to the round trips
-// before the first byte. Settings are started once per request by the root middleware
-// (getSettings in context.server).
+// Content-in-D1 layer: settings and content_blocks, so copy changes with no deploy. Every read falls back to the
+// in-code default (content-defaults.ts, generated from the seed), so a missing or draft row never breaks a page.
+// Reads go straight to D1, with no KV in front: the edge cache (workers/app.ts) serves repeats.
 import { accessAdmin } from "@dustinedwards/site-runtime/access";
 import { escapeHtml } from "@dustinedwards/site-runtime/html";
 import { eq, sql } from "drizzle-orm";
@@ -21,7 +15,6 @@ import { getShowConfig } from "~/lib/show.server";
 import { storedBody } from "~/lib/render.server";
 import { SITE_ADDRESS_LINE } from "~/lib/site";
 
-/** True only for an admin viewing a page with ?preview (so drafts render in real context). */
 export async function isPreviewing(env: Env, request: Request): Promise<boolean> {
   if (!new URL(request.url).searchParams.has("preview")) return false;
   return !!(await accessAdmin(request, env));
@@ -48,11 +41,7 @@ export async function routePage(
   return loadPage(env, key, { includeDrafts: await isPreviewing(env, request) });
 }
 
-/**
- * A contact or legal page (routePage), its {{email}} filled from show_config and its {{address_line}} from the
- * contact.address_line setting (the request's settings, getSettings in context.server). The values are escaped: they
- * come from settings, not from the rendered body, and are injected as HTML.
- */
+/** A contact or legal page with {{email}} and {{address_line}} filled in. The values come from settings, not the body, so they are escaped. */
 export async function loadFilledPage(
   context: Readonly<RouterContextProvider>,
   request: Request,
@@ -82,12 +71,11 @@ function fill(html: string, name: string, value: string): string {
   return html.replaceAll(`{{${name}}}`, safe).replaceAll(`%7B%7B${name}%7D%7D`, safe);
 }
 
-/** Pages served as plain text (llms.txt, ai.txt): their bodies are not Markdown, so they are never rendered. */
+/** Plain-text pages (llms.txt, ai.txt): never rendered. */
 export const TEXT_PAGES = new Set(["page:llms", "page:ai-txt"]);
 
 type StrMap = Record<string, string>;
 
-/** All settings as a key→value map. Fall back per key with setting(). */
 export async function loadSettings(env: Env): Promise<StrMap> {
   const rows = await getDb(env)
     .select({ key: settingsTable.key, value: settingsTable.value })
@@ -104,11 +92,7 @@ export type PageBlock = {
 /** A page as a route shows it: its value (Markdown, or the text of a TEXT_PAGES page) and the HTML to show. */
 export type Page = PageBlock & { html: string; updatedAt?: string };
 
-/**
- * A single content block. For public reads (includeDrafts=false) only a published row is returned;
- * a draft or missing row returns null so the caller can fall back. With includeDrafts=true (admin
- * preview) the row is returned as-is.
- */
+/** A public read (includeDrafts=false) returns only a published row; a draft or missing one is null. */
 export async function loadBlock(
   env: Env,
   key: string,
@@ -143,10 +127,6 @@ export async function loadBlock(
       };
 }
 
-/**
- * A page with the in-code fallback applied, so it always renders something. The fallback is the seed's HTML
- * (content-defaults.ts), shown as it is.
- */
 export async function loadPage(
   env: Env,
   key: string,
@@ -164,7 +144,6 @@ export async function loadPage(
   };
 }
 
-/** Read a setting with fallback to the generated default then an optional caller default. */
 export function setting(map: StrMap, key: string, fallback = ""): string {
   return map[key] ?? SETTING_DEFAULTS[key] ?? fallback;
 }
@@ -173,7 +152,6 @@ export function settingNum(map: StrMap, key: string, fallback: number): number {
   return Number.isFinite(v) ? v : fallback;
 }
 
-/** Parse the contact.address JSON setting into a partial Address (for schema.org). */
 export function settingAddress(map: StrMap): Partial<import("~/lib/site").Address> {
   try {
     return JSON.parse(setting(map, "contact.address", "{}")) as Partial<
@@ -214,7 +192,6 @@ export async function upsertBlock(env: Env, b: BlockInput): Promise<void> {
     .onConflictDoUpdate({ target: contentBlocks.key, set });
 }
 
-/** List blocks for the admin editor. */
 export async function listBlocks(env: Env): Promise<import("~/db/schema").ContentBlock[]> {
   return getDb(env).select().from(contentBlocks);
 }
@@ -222,12 +199,10 @@ export async function listSettings(env: Env): Promise<import("~/db/schema").Sett
   return getDb(env).select().from(settingsTable);
 }
 
-/** Full-text search across published pages (site search + raw SQL both reach every word). */
 export async function searchPages(env: Env, rawQuery: string): Promise<PageBlock[]> {
   const match = toFtsMatch(rawQuery);
   if (!match) return [];
   const db = getDb(env);
-  // FTS5 join by rowid (the one raw statement Drizzle's DSL can't express); published pages only.
   const rows = await db.all<{ key: string; title: string; value: string; status: string }>(
     sql`SELECT c.key AS key, c.title AS title, c.value AS value, c.status AS status
         FROM content_blocks_fts f JOIN content_blocks c ON c.rowid = f.rowid

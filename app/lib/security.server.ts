@@ -1,7 +1,4 @@
-// Worker abuse limits, server-only (never import into client code): per-IP rate limits on /admin/*
-// and the signup POST (site-runtime's limiter), and a per-day cap on the media library's AI
-// suggestions so spend can't run away. Cloudflare's WAF managed ruleset and bot rules are the primary perimeter
-// defense; this is the in-Worker layer. Security headers are security-headers.ts.
+// In-Worker abuse limits, server-only: per-IP rate limits on /admin/* and the signup POST, and a daily cap on AI suggestions. The WAF is the primary perimeter.
 
 import {
   ipKey,
@@ -14,11 +11,8 @@ import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runti
 import { kvCounter } from "@dustinedwards/site-runtime/ai-caps";
 import { loadSettings, settingNum } from "~/lib/content.server";
 
-// Per-IP fixed 60-second windows, counted exactly by the RATE_LIMITER Durable Object (the WAF
-// rate-limit ruleset stays the hard control). Admin page navigation is generous.
-// Per-minute limits are tunable live via the settings table (ratelimit.*), falling back to these
-// defaults. A counter that is down lets the request through (logged by site-runtime): /admin sits
-// behind Access, the AI suggestions have their own daily cap, and a signup is one row.
+// Per-IP 60-second windows counted by the RATE_LIMITER Durable Object; tunable via settings (ratelimit.*). A counter
+// that is down lets the request through (logged): /admin sits behind Access, AI has its own cap, a signup is one row.
 const RULES: Array<{
   path: string;
   prefix?: boolean;
@@ -28,8 +22,7 @@ const RULES: Array<{
   def: number;
 }> = [
   { path: "/admin", prefix: true, bucket: "admin", settingKey: "ratelimit.admin", def: 150 },
-  // A signup stores an address, so a script could fill the list.
-  // Only the POST is metered; reading the page is not. /subscribe.data is the same action.
+  // Only the POST is metered (a script could fill the list); /subscribe.data is the same action.
   ...["/subscribe", "/subscribe.data"].map((path) => ({
     path,
     methods: ["POST"],
@@ -39,7 +32,7 @@ const RULES: Array<{
   })),
 ];
 
-/** Returns a 429 Response if this request is rate-limited, otherwise null. A refusal writes one OWASP `excess_rate_limit_exceeded` line. */
+/** A 429 if rate-limited, else null; a refusal writes one OWASP `excess_rate_limit_exceeded` line. */
 export async function enforceRateLimit(env: Env, request: Request): Promise<Response | null> {
   const match = matchRule(request, RULES);
   if (!match) return null;
@@ -59,24 +52,18 @@ export async function enforceRateLimit(env: Env, request: Request): Promise<Resp
   return limitedResponse(verdict);
 }
 
-// ── AI per-day cost cap ──────────────────────────────────────────────────────
-
-// Max AI suggestions (app/lib/media/suggest.server.ts) per day across the single admin, so spend
-// cannot be drained by a stuck button. Tunable live via the ai.daily_cap setting.
+// Max AI suggestions per day (media/suggest.server.ts), so a stuck button cannot drain spend; ai.daily_cap setting.
 const AI_DAILY_CAP_DEFAULT = 100;
 
-/** Today's AI generations against the cap, a count per UTC day in KV (site-runtime's ./ai-caps kvCounter). */
 const aiCounter = (env: Env) =>
   kvCounter(env.APP_KV, "ai:cap:", async () =>
     settingNum(await loadSettings(env), "ai.daily_cap", AI_DAILY_CAP_DEFAULT),
   );
 
-/** True if today's AI generations are at/over the cap (check before generating). */
 export function aiCostCapExceeded(env: Env): Promise<boolean> {
   return aiCounter(env).exceeded();
 }
 
-/** Record one successful AI generation against today's cap. */
 export function recordAiUse(env: Env): Promise<void> {
   return aiCounter(env).record();
 }

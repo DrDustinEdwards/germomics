@@ -1,13 +1,7 @@
-// Admin upload endpoint — drag-drop / file-picker target for the editor's dual-input fields.
-// Resource route (action only) under the admin.* gate (admin.tsx middleware runs first), so it
-// is never publicly writable. Writes the file into R2 via the native binding and returns JSON the
-// client uses to fill the field. Images → BLOG_IMAGES, at /media/<key>, through site-api's
-// prepareUpload, with their width and height as custom metadata so pages can offer resized copies
-// from /media, and a row in the media library; audio → media.germomics.com (germomics-audio).
-//
-// The body is the file itself (UploadDropzone sends it raw, its type as Content-Type), and kind, postId and name ride in
-// the query string. Audio is streamed straight to R2 at its declared length and never held in memory: read as a form, a
-// 100 MB episode was held about three times over (the body, the parsed form, the file's ArrayBuffer), past a Worker's
+// Admin upload endpoint (action only, behind the admin.tsx gate). Images go to BLOG_IMAGES through site-api's
+// prepareUpload (width and height as custom metadata, plus a media library row); audio goes to germomics-audio.
+// The body is the raw file; kind, postId and name ride in the query string. Audio is streamed to R2 at its declared
+// length and never held in memory: parsed as a form, a 100 MB episode is held about three times, past a Worker's
 // 128 MB. An image is read whole, to its 25 MB cap, because prepareUpload checks and converts its bytes.
 import type { Route } from "./+types/admin.upload";
 import { getEnv } from "@dustinedwards/site-runtime/context";
@@ -19,9 +13,7 @@ import { recordUpload, sizeMetadata } from "~/lib/media/store.server";
 import { readCappedBytes } from "@dustinedwards/site-runtime/body";
 
 const MAX_IMAGE = 25 * 1024 * 1024; // 25 MB
-// Cloudflare refuses a request body over 100 MB on the Free and Pro plans before the Worker sees it,
-// so a larger cap only promised uploads that could never arrive.
-// An hour of 128 kbps MP3 is about 58 MB.
+// Cloudflare refuses a body over 100 MB on Free and Pro before the Worker sees it, so a larger cap promises nothing.
 const MAX_AUDIO = 100 * 1024 * 1024; // 100 MB
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -44,13 +36,12 @@ export async function action({ request, context }: Route.ActionArgs) {
   if (kind === "image") {
     if (length > MAX_IMAGE)
       return Response.json({ ok: false, error: "Image exceeds 25 MB." }, { status: 413 });
-    // Counted as it arrives, so a body longer than its Content-Length says is refused too.
+    // Counted as it arrives, so a body longer than its Content-Length is refused.
     const bytes = await readCappedBytes(request, MAX_IMAGE);
     if (!bytes) return Response.json({ ok: false, error: "Image exceeds 25 MB." }, { status: 413 });
     if (bytes.byteLength === 0)
       return Response.json({ ok: false, error: "No file received." }, { status: 400 });
-    // The bytes are checked against the type (an SVG or anything unknown is refused), a HEIC becomes a JPEG, a location
-    // is taken out and a camera-sized picture shrunk, as Carrel's uploads are.
+    // prepareUpload refuses an SVG or unknown type, converts HEIC to JPEG, strips location and shrinks camera-sized pictures.
     let prepared;
     try {
       const input = {
@@ -78,8 +69,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       prepared.contentType,
       sizeMetadata(prepared),
     );
-    // Into the media library too (Carrel's media page). The image is stored and its address works either way; a row
-    // that could not be written is made by the next backfill.
+    // A row that could not be written is made by the next backfill; the address works either way.
     await recordUpload(env, key, prepared).catch((error) =>
       logEvent("media_record_failed", { key, error }, { level: "error" }),
     );
@@ -92,8 +82,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     });
   }
 
-  // Audio: R2 takes a stream only at a known length. Without a Content-Length there is none, and over the cap is refused
-  // before a byte is read; FixedLengthStream fails the write if the body runs longer or shorter than it said.
+  // R2 takes a stream only at a known length: refuse a missing or over-cap Content-Length; FixedLengthStream fails on a mismatch.
   if (!Number.isSafeInteger(length) || length < 0) {
     return Response.json(
       { ok: false, error: "The upload needs a Content-Length." },

@@ -1,12 +1,8 @@
-// Admin layout: the SINGLE gate for the whole admin.* subtree, resource routes included. RR v8
-// middleware runs once per request before any admin loader/action, so the checks are not repeated
-// per route (per the v8_middleware instruction). Cloudflare Access signs people in before a request
-// gets here; this re-verifies its JWT and the admin roster (ADMIN_EMAIL, CO_OWNER_EMAILS) (site-runtime's accessAdmin) and
-// answers 403 to anything else, so a request that bypassed Access, or an Access setup that is wrong,
-// never reaches an admin route. A cross-site write is refused first (site-runtime's
-// refuseCrossSite), since the framework's own Origin check never sees a resource route, and every
-// admin answer is private, no-store and noindex. Each refusal writes one OWASP `authz_fail` line
-// (site-runtime's ./log), so a run of them shows in Workers Logs.
+// The single gate for the whole admin.* subtree, resource routes included: middleware runs once before any admin
+// loader or action. It re-verifies Access's JWT and the roster (ADMIN_EMAIL, CO_OWNER_EMAILS; accessAdmin) and answers
+// 403 otherwise, so a bypassed or misconfigured Access never reaches a route. A cross-site write is refused first
+// (refuseCrossSite), since the framework's Origin check never sees a resource route. Every answer is private, no-store
+// and noindex; each refusal writes one OWASP `authz_fail` line.
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { Link } from "capsomer/react/link";
@@ -32,10 +28,9 @@ import { THEME_KEY } from "~/lib/theme";
 
 const PRIVATE = { "Cache-Control": UNCACHED, "X-Robots-Tag": "noindex, nofollow" };
 
-// The admin is an app: it and every page under it hydrate on load (lib/hydration.ts).
 export const handle = { hydrate: true };
 
-// A private page, like every child: no-transform keeps the Web Analytics beacon out (site-runtime PRIVATE_PAGE_HEADERS).
+// no-transform keeps the Web Analytics beacon out of private pages (PRIVATE_PAGE_HEADERS).
 export const headers = () => PRIVATE_PAGE_HEADERS;
 
 export const middleware: Route.MiddlewareFunction[] = [
@@ -45,8 +40,7 @@ export const middleware: Route.MiddlewareFunction[] = [
       logRefusal(request, "cross-site", refused.status);
       throw refused;
     }
-    // Resource isolation (site-runtime isolationVerdict): another site may link to an admin page and nothing more, so
-    // no page elsewhere loads an admin response as an image, script, frame or fetch with the Access cookie.
+    // isolationVerdict: another site may link to an admin page and nothing more, never load it with the Access cookie.
     if (!isolationVerdict(request).ok) {
       logRefusal(request, "cross-site-resource", 403);
       throw new Response("Forbidden", { status: 403, headers: PRIVATE });
@@ -55,7 +49,7 @@ export const middleware: Route.MiddlewareFunction[] = [
       logRefusal(request, "not-admin", 403);
       throw new Response("Forbidden", { status: 403, headers: PRIVATE });
     }
-    // A copy: a redirect's headers are immutable.
+    // A copy, since a redirect's headers are immutable.
     const response = await next();
     const headers = new Headers(response.headers);
     for (const [name, value] of Object.entries(PRIVATE)) headers.set(name, value);
@@ -67,7 +61,7 @@ export const middleware: Route.MiddlewareFunction[] = [
   },
 ];
 
-// No email or token in the line: accessAdmin says only yes or no, and the log scrubs any address.
+// No email or token in the line: the log scrubs any address.
 function logRefusal(request: Request, reason: string, status: number) {
   logEvent(
     OWASP_EVENTS.authorizationFailure,
@@ -83,8 +77,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 const icon = (d: string) => <Icon d={d} className="cap-admin-icon" />;
 
-// The admin's pages, grouped as the menu shows them. The shell marks the entry the address is in
-// (`pathname`); `match` adds the prefixes that also count.
+// `match` adds the prefixes that also mark an entry current.
 const ENTRIES: AdminEntry[] = [
   {
     id: "dashboard",
@@ -131,8 +124,7 @@ const ENTRIES: AdminEntry[] = [
   },
 ];
 
-// Capsomer's tokens are keyed on data-cap-theme; the site's own switch is data-theme on <html>
-// (or the system preference when none is set). Follow it, so the admin never disagrees with it.
+// Capsomer's tokens key on data-cap-theme; follow the site's data-theme (or the system preference) so the admin agrees.
 function useCapTheme(): ThemeChoice {
   const [theme, setTheme] = useState<ThemeChoice>("light");
   useEffect(() => {
@@ -184,7 +176,6 @@ export default function AdminLayout({ loaderData }: Route.ComponentProps) {
               onClick: () => toggleTheme(THEME_KEY),
             },
           ],
-          // Access owns sign-out: it ends the Access session, then returns to its own login.
           onSignOut: () => {
             window.location.href = "/cdn-cgi/access/logout";
           },
