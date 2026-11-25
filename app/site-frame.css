@@ -1,0 +1,413 @@
+/* The rest of germomics' own parts, in the site layer (site.css): the home page, the page frame and the brand marks. */
+@layer site {
+  .gm-hero-art {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+  }
+  @media (width >= 64rem) {
+    .gm-hero-art {
+      grid-column: span 2 / span 2;
+    }
+  }
+  .gm-hero-cover {
+    width: 11rem;
+  }
+  @media (width >= 40rem) {
+    .gm-hero-cover {
+      width: 13rem;
+    }
+  }
+  .gm-home-head {
+    margin-bottom: var(--space-5);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .gm-home-title {
+    font-family: var(--gm-font-display);
+    font-size: var(--title-3);
+    line-height: var(--line-box-8);
+    font-weight: var(--weight-semibold);
+  }
+  .gm-home-more {
+    font-family: var(--gm-font-mono);
+    font-size: var(--fs-small);
+    line-height: var(--line-box-4);
+    color: var(--accent-text);
+  }
+  @media (hover: hover) {
+    .gm-home-more:hover {
+      text-decoration-line: underline;
+    }
+  }
+  .gm-latest {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    border-radius: var(--radius-xl-5);
+    border: var(--line-w) solid var(--line);
+    background-color: var(--raised);
+    padding: var(--space-5-5);
+    box-shadow:
+      0 0 0 var(--line-w) color-mix(in oklab, var(--primary) 10%, transparent),
+      0 1px 3px 0 rgb(0 0 0 / 0.1),
+      0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+  .gm-latest-title {
+    margin-top: var(--space-2);
+    font-family: var(--gm-font-display);
+    font-size: var(--title-4);
+    line-height: var(--line-box-7);
+    font-weight: var(--weight-medium);
+  }
+  .gm-latest-link {
+    color: var(--text);
+  }
+  @media (hover: hover) {
+    .gm-latest-link:hover {
+      color: var(--primary);
+    }
+  }
+  .gm-sub-section {
+    margin-top: var(--space-7);
+  }
+  .gm-sub-title {
+    font-family: var(--gm-font-display);
+    font-size: var(--fs-h3);
+    line-height: var(--line-box-7);
+    font-weight: var(--weight-semibold);
+  }
+  .gm-sub-apps {
+    margin-top: var(--space-4);
+    display: grid;
+    gap: var(--space-3);
+  }
+  @media (width >= 40rem) {
+    .gm-sub-apps {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .gm-sub-app {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    border-radius: var(--radius-l-5);
+    border: var(--line-w) solid var(--line);
+    background-color: var(--raised);
+    padding: var(--space-4);
+    font-family: var(--gm-font-display);
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+    font-weight: var(--weight-medium);
+  }
+  @media (hover: hover) {
+    .gm-sub-app:hover {
+      border-color: var(--accent-text);
+      color: var(--accent-text);
+    }
+  }
+  .gm-sub-app-name {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2-5);
+  }
+  .gm-sub-chips {
+    margin-top: var(--space-4);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+  .gm-game-input {
+    border-radius: var(--radius-m-5);
+    border: var(--line-w) solid var(--line);
+    background-color: var(--raised);
+    padding-inline: 0.75rem;
+    padding-block: 0.5rem;
+  }
+  .gm-game-input {
+    padding-block: var(--space-2-5);
+    font-size: 0.875rem;
+    line-height: var(--line-box-5);
+  }
+  .gm-game-input:focus-visible {
+    border-color: var(--accent-text);
+  }
+
+  .gm-form-note {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    line-height: var(--line-box-5);
+    color: var(--accent-text);
+  }
+  .gm-game-stage {
+    margin-top: var(--space-6);
+  }
+  .gm-game-skeleton {
+    margin-inline: auto;
+    aspect-ratio: 4/3;
+    width: 100%;
+    max-width: 800px;
+    border-radius: var(--radius-l-5);
+    background-color: var(--sunken);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .gm-game-skeleton {
+      animation: gm-pulse var(--dur-flow) cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  }
+  .gm-game-save {
+    margin-top: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border: var(--line-w) solid var(--line);
+    background-color: var(--sunken);
+    padding: var(--space-5);
+    border-radius: var(--radius-l-5);
+  }
+  @media (width >= 40rem) {
+    .gm-game-save {
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+  .gm-game-save-label {
+    font-family: var(--gm-font-display);
+    font-size: 0.875rem;
+    line-height: var(--line-box-5);
+  }
+
+  .gm-game-scores {
+    margin-top: var(--space-7);
+  }
+  :where(.gm-home > :not(:last-child)) {
+    margin-block: 0 var(--space-8);
+  }
+  @keyframes gm-pulse {
+    50% {
+      opacity: var(--opacity-half);
+    }
+  }
+  /* The page frame: main, the footer, the header's mark, a game's frame and the outbound-link cue. */
+  .gm-main {
+    margin-inline: auto;
+    min-height: 60vh;
+    max-width: 64rem;
+    padding-inline: var(--space-5);
+    padding-top: var(--space-6);
+    padding-bottom: var(--space-8);
+  }
+  .gm-footer {
+    border-top-style: solid;
+    border-top-width: var(--line-w);
+    border-color: var(--line);
+    background-color: var(--sunken);
+  }
+  .gm-footer-grid {
+    margin-inline: auto;
+    display: grid;
+    max-width: 64rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 0.75rem;
+    row-gap: var(--space-7);
+    padding-inline: var(--space-5);
+    padding-block: var(--space-8);
+  }
+  @media (width >= 40rem) {
+    .gm-footer-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--space-7);
+    }
+  }
+  @media (width >= 64rem) {
+    .gm-footer-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .gm-footer-brand {
+    grid-column: span 3 / span 3;
+  }
+  @media (width < 40rem) {
+    .gm-footer-brand {
+      order: 9999;
+    }
+  }
+  @media (width >= 40rem) {
+    .gm-footer-brand {
+      grid-column: span 2 / span 2;
+    }
+  }
+  @media (width >= 64rem) {
+    .gm-footer-brand {
+      grid-column: span 1 / span 1;
+    }
+  }
+  .gm-footer-home {
+    display: inline-flex;
+  }
+  .gm-footer-wordmark {
+    height: 5rem;
+    width: auto;
+  }
+  .gm-footer-socials {
+    margin-top: var(--space-5);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .gm-footer-social {
+    display: grid;
+    height: 2.25rem;
+    width: 2.25rem;
+    place-items: center;
+    border-radius: calc(infinity * 1px);
+    border: var(--line-w) solid var(--line);
+    color: var(--dim);
+  }
+  @media (hover: hover) {
+    .gm-footer-social:hover {
+      border-color: var(--accent-text);
+      color: var(--accent-text);
+    }
+  }
+  .gm-footer-social-icon {
+    --icon-size: var(--title-6);
+  }
+  .gm-footer-title {
+    font-family: var(--gm-font-display);
+    font-size: 0.875rem;
+    line-height: var(--line-box-5);
+    font-weight: var(--weight-semibold);
+    color: var(--text);
+  }
+  .gm-footer-list {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+    line-height: var(--line-box-5);
+  }
+  :where(.gm-footer-list > :not(:last-child)) {
+    margin-block: 0 0.5rem;
+  }
+  @media (width < 40rem) {
+    :where(.gm-footer-list > :not(:last-child)) {
+      margin-block: 0;
+    }
+  }
+  .gm-footer-link-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  /* Below sm the three lists go 3-up; each link gets a 44px tappable row there. */
+  @media (width < 40rem) {
+    .gm-footer-tap {
+      display: flex;
+      min-height: 2.75rem;
+      align-items: center;
+    }
+  }
+  .gm-footer-base {
+    border-top-style: solid;
+    border-top-width: var(--line-w);
+    border-color: var(--line);
+  }
+  .gm-footer-base-row {
+    margin-inline: auto;
+    display: flex;
+    max-width: 64rem;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 0.75rem;
+    row-gap: 0.25rem;
+    padding-inline: var(--space-5);
+    padding-block: var(--space-5);
+  }
+  .gm-footer-top {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .gm-footer-link,
+  .gm-footer-top {
+    color: var(--dim);
+  }
+  @media (hover: hover) {
+    .gm-footer-link:hover,
+    .gm-footer-top:hover {
+      color: var(--text);
+    }
+  }
+  .gm-header-mark {
+    height: 1.25rem;
+    width: auto;
+  }
+  .gm-game-frame {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 800px;
+    overflow: hidden;
+  }
+  .gm-external-cue {
+    flex-shrink: 0;
+    color: color-mix(in oklab, var(--dim) 70%, transparent);
+  }
+  /* The brand marks (components/brand) in the brand color; the wordmark's drawing takes the height its caller sets. */
+  .gm-wordmark,
+  .gm-mark {
+    color: var(--primary);
+  }
+  .gm-wordmark {
+    display: inline-flex;
+    & > svg {
+      height: 100%;
+      width: auto;
+    }
+  }
+  .gm-article-card-link {
+    display: block;
+  }
+  /* Capsomer's icons at Lucide's stroke, which the site's pictograms were drawn at, and each place's size. */
+  :root {
+    --icon-stroke: 2;
+  }
+  .gm-article-card-kind {
+    --icon-size: var(--fs-label);
+  }
+  .gm-external-cue,
+  .gm-post-card-kind,
+  .gm-post-meta-item,
+  .gm-post-meta-time,
+  .gm-prev-next-label,
+  .gm-next-label {
+    --icon-size: var(--fs-small);
+  }
+  .gm-index-kind,
+  .gm-bio-link {
+    --icon-size: 0.8125rem;
+  }
+  .gm-footer-link-icon,
+  .gm-footer-top,
+  .gm-chip,
+  .gm-sub-app-name .gm-external-cue {
+    --icon-size: 0.875rem;
+  }
+  .gm-legal-draft-title,
+  .gm-archive-field {
+    --icon-size: var(--fs-lead);
+  }
+  .gm-clip-icon,
+  .gm-txasm-button,
+  .gm-about-card-title {
+    --icon-size: var(--title-6);
+  }
+  .gm-post-card-icon,
+  .gm-clips-title,
+  .gm-about-host-title,
+  .gm-sub-app {
+    --icon-size: 1.125rem;
+  }
+}
