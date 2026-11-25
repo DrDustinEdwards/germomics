@@ -2,15 +2,11 @@ import { env } from "cloudflare:test";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { aiCostCapExceeded, enforceRateLimit, recordAiUse } from "~/lib/security.server";
 import { applyMigrations, setSettings } from "./helpers/d1";
+import { clearKv } from "./helpers/harness";
 
 // The in-Worker abuse layer in front of /admin and the media library's AI suggestions. Settings come from D1 (content.server), seeded here so the limits are
 // small and known.
 const e = env as unknown as Env;
-
-async function clearKv() {
-  const { keys } = await e.APP_KV.list();
-  await Promise.all(keys.map((k) => e.APP_KV.delete(k.name)));
-}
 
 const hit = (path: string, ip: string) =>
   enforceRateLimit(
@@ -19,7 +15,7 @@ const hit = (path: string, ip: string) =>
   );
 
 beforeAll(() => applyMigrations(e.DB));
-beforeEach(clearKv);
+beforeEach(() => clearKv(e.APP_KV));
 
 // site-runtime tests the counting once; these pin germomics's own rules: which paths are metered,
 // their buckets and the settings that size them. Each test uses its own addresses, since the

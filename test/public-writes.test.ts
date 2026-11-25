@@ -1,8 +1,7 @@
 import { env } from "cloudflare:test";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { RouterContextProvider } from "react-router";
-import { cloudflareContext } from "@dustinedwards/site-runtime/context";
 import { applyMigrations } from "./helpers/d1";
+import { clearKv, routeContext } from "./helpers/harness";
 
 // The routes anyone on the internet can write through: the newsletter signup and its confirmation link, the
 // unsubscribe link, and a game's score submission. What they store, what they refuse, and (for the emailed links)
@@ -29,8 +28,7 @@ const ctx = {
 } as unknown as ExecutionContext;
 
 function args({ request, params = {}, env: over = e }: Args) {
-  const context = new RouterContextProvider();
-  context.set(cloudflareContext, { env: over, ctx });
+  const context = routeContext(over, ctx);
   return { request, params, context } as never;
 }
 const post = (
@@ -68,8 +66,7 @@ beforeEach(async () => {
   await e.DB.exec("DELETE FROM subscribers");
   await e.DB.exec("DELETE FROM scores");
   sent.length = 0;
-  const { keys } = await e.APP_KV.list();
-  await Promise.all(keys.map((k) => e.APP_KV.delete(k.name)));
+  await clearKv(e.APP_KV);
 });
 
 describe("newsletter signup", () => {

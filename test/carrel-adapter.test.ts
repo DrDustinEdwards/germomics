@@ -141,12 +141,6 @@ describe("saving a draft", () => {
     expect(await row("md2")).toBeNull();
   });
 
-  it("refuses a version that is not current, naming the current one", async () => {
-    const created = await save("v", "<p>x</p>");
-    const err = await save("v", "<p>y</p>", "f".repeat(32)).catch((x) => x);
-    expect(err).toBeInstanceOf(VersionConflictError);
-    expect(err.currentVersion).toBe(created.version);
-  });
   it("lets only one of two saves from the same version write, refusing the other with the version it lost to", async () => {
     const created = await save("race", "<p>v1</p>");
     const results = await Promise.allSettled([

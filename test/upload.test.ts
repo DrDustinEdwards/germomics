@@ -1,8 +1,7 @@
 import { env } from "cloudflare:test";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { RouterContextProvider } from "react-router";
-import { cloudflareContext } from "@dustinedwards/site-runtime/context";
 import { applyMigrations } from "./helpers/d1";
+import { routeContext } from "./helpers/harness";
 
 // The editor's upload endpoint (app/routes/admin.upload.ts): images go to BLOG_IMAGES, audio to
 // MEDIA, under a folder named for the post, an image with its media library row; anything else is refused with the right status.
@@ -15,8 +14,7 @@ function upload(
   headers: Record<string, string> = {},
 ) {
   const query = new URLSearchParams({ ...fields, ...(file ? { name: file.name } : {}) });
-  const context = new RouterContextProvider();
-  context.set(cloudflareContext, { env: e, ctx: {} as ExecutionContext });
+  const context = routeContext(e);
   const request = new Request(`https://germomics.com/admin/upload?${query}`, {
     method: "POST",
     body: file ? file.stream() : null,

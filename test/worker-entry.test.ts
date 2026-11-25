@@ -1,6 +1,7 @@
 import { env } from "cloudflare:test";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { applyMigrations, setSettings } from "./helpers/d1";
+import { clearKv } from "./helpers/harness";
 
 // The Worker entry (workers/app.ts), as far as it is germomics' own: the rate limiter before the app, the signed-in
 // admin kept out of the stored pages, the 410 for a deleted post's address, and the nightly job list. The gateway
@@ -68,8 +69,7 @@ beforeEach(async () => {
   h.render.mockClear();
   h.backup.mockClear();
   h.audio.mockClear();
-  const { keys } = await e.APP_KV.list();
-  await Promise.all(keys.map((k) => e.APP_KV.delete(k.name)));
+  await clearKv(e.APP_KV);
 });
 
 describe("the Worker entry", () => {

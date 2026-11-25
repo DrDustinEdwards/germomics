@@ -1,8 +1,7 @@
 import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
-import { RouterContextProvider } from "react-router";
-import { cloudflareContext } from "@dustinedwards/site-runtime/context";
 import { action } from "~/routes/api.operator";
+import { routeContext } from "./helpers/harness";
 
 // The operator API (app/routes/api.operator.ts): a good call runs the files backup passes into BACKUPS (copy only)
 // and backup_status reads them back. The bearer is site-runtime's ./operator, tested where it lives. Fake token, fake data.
@@ -14,11 +13,7 @@ function call(
   tool = "run_job",
   args: Record<string, unknown> = { backup: true },
 ) {
-  const context = new RouterContextProvider();
-  context.set(cloudflareContext, {
-    env: { ...(env as unknown as Env), OPERATOR_TOKEN: TOKEN, ...over },
-    ctx: {} as ExecutionContext,
-  });
+  const context = routeContext({ ...(env as unknown as Env), OPERATOR_TOKEN: TOKEN, ...over });
   const request = new Request("https://germomics.com/api/operator", {
     method: "POST",
     headers: { "content-type": "application/json", ...headers },
