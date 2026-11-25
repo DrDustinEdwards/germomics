@@ -18,7 +18,7 @@ jobs:
     with:
       app: germomics-login
       admins-url: https://germomics.com/admin/access-drift
-      site-runtime-ref: v0.59.0
+      site-runtime-ref: v0.181.2
     secrets:
       ACCESS_READ_TOKEN: ${{ secrets.ACCESS_READ_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

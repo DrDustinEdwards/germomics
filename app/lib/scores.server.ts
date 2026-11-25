@@ -43,13 +43,12 @@ export async function submitScore(
   if (!Number.isFinite(raw) || raw < 0) return { ok: false, error: "Invalid score." };
   const score = Math.min(raw, MAX_SCORE);
 
-  // Rate-limit by IP (fixed window). A counter that is down lets the score through (logged): the
-  // name and score are already clamped, so the worst case is a few extra leaderboard rows.
+  // Rate-limit by IP (fixed window). A counter that is down refuses the score: without it the insert is unbounded.
   const rule = { limit: RL_MAX_PER_WINDOW, windowSeconds: RL_WINDOW_SECONDS };
   const verdict = await rateLimit(env.RATE_LIMITER, `score:${input.gameSlug}:${input.ip}`, [rule], {
-    onUnavailable: "allow",
+    onUnavailable: "refuse",
   });
-  if (mustStop(verdict, "allow"))
+  if (mustStop(verdict, "refuse"))
     return { ok: false, error: "Too many submissions, try again in a minute." };
 
   await getDb(env)

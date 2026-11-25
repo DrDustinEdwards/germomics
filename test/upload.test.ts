@@ -69,6 +69,12 @@ describe("admin upload", () => {
     ).toEqual({ filename: "My Pic.png", content_type: "image/png", bytes: 8 });
   });
 
+  it("refuses audio whose file name is not an audio extension, storing nothing", async () => {
+    const res = await upload({ kind: "audio", postId: "7", file: file("page.html", "audio/mpeg") });
+    expect(res.status).toBe(415);
+    expect((await e.MEDIA.list()).objects).toEqual([]);
+  });
+
   it("stores audio in the media bucket with its type, and cleans the post id", async () => {
     const res = await upload({
       kind: "audio",
