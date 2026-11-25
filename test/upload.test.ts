@@ -30,6 +30,9 @@ function upload(
 }
 const file = (name: string, type: string, size = 4) =>
   new File([new Uint8Array(size)], name, { type });
+/** An MP3 that opens with an ID3 tag, so its bytes match its type. */
+const mp3 = (name: string, type = "audio/mpeg", size = 10) =>
+  new File([new Uint8Array([0x49, 0x44, 0x33, 4, 0]), new Uint8Array(size - 5)], name, { type });
 /** A file that starts with the PNG signature, so its bytes match its type. */
 const png = (name: string, size = 8) =>
   new File(
@@ -67,9 +70,12 @@ describe("admin upload", () => {
     ).toEqual({ filename: "My Pic.png", content_type: "image/png", bytes: 8 });
   });
 
-  it("refuses audio whose file name is not an audio extension, storing nothing", async () => {
-    const res = await upload({ kind: "audio", postId: "7", file: file("page.html", "audio/mpeg") });
-    expect(res.status).toBe(415);
+  it("refuses audio whose file name or bytes are not audio, storing nothing", async () => {
+    const page = new File(["<html><script>alert(1)</script>"], "ep.mp3", { type: "audio/mpeg" });
+    for (const sent of [file("page.html", "audio/mpeg"), page, file("ep.mp3", "audio/mpeg", 10)]) {
+      const res = await upload({ kind: "audio", postId: "7", file: sent });
+      expect(res.status).toBe(415);
+    }
     expect((await e.MEDIA.list()).objects).toEqual([]);
   });
 
@@ -77,15 +83,22 @@ describe("admin upload", () => {
     const res = await upload({
       kind: "audio",
       postId: "../../etc",
-      file: file("ep.mp3", "audio/mpeg", 10),
+      file: mp3("ep.mp3"),
     });
     const body = (await res.json()) as { url: string; [field: string]: unknown };
     expect(body).toMatchObject({ ok: true, size: 10, contentType: "audio/mpeg" });
     expect(body.url).toMatch(/^https:\/\/media\.germomics\.com\/episodes\/etc\/\d+-ep\.mp3$/);
     const key = body.url.replace("https://media.germomics.com/", "");
     expect((await e.MEDIA.head(key))?.httpMetadata?.contentType).toBe("audio/mpeg");
+    // The type stored is the one the extension names and the bytes carry, never the one the browser sent.
+    const sent = await upload({ kind: "audio", postId: "7", file: mp3("ep.mp3", "text/html") });
+    const stored = ((await sent.json()) as { url: string }).url;
+    expect(
+      (await e.MEDIA.head(stored.replace("https://media.germomics.com/", "")))?.httpMetadata
+        ?.contentType,
+    ).toBe("audio/mpeg");
     const misc = (await (
-      await upload({ kind: "audio", postId: "///", file: file("a.mp3", "audio/mpeg") })
+      await upload({ kind: "audio", postId: "///", file: mp3("a.mp3") })
     ).json()) as Record<string, unknown>;
     expect(misc.url).toContain("/episodes/misc/");
   });

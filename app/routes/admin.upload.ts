@@ -6,7 +6,7 @@
 import type { Route } from "./+types/admin.upload";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { putAudio, putImage, buildKey } from "~/lib/r2.server";
-import { RefusedError, prepareUpload } from "@dustinedwards/site-api";
+import { RefusedError, checkUpload, prepareUpload } from "@dustinedwards/site-api";
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { pictureLimits, PICTURE_RESIZE } from "@dustinedwards/site-api";
 import { recordUpload, sizeMetadata } from "~/lib/media/store.server";
@@ -16,8 +16,48 @@ const MAX_IMAGE = 25 * 1024 * 1024; // 25 MB
 // Cloudflare refuses a body over 100 MB on Free and Pro before the Worker sees it, so a larger cap promises nothing.
 const MAX_AUDIO = 100 * 1024 * 1024; // 100 MB
 
-// The extensions an episode file may carry: the key keeps the file's own, and it is served from a public host.
-const AUDIO_NAME = /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac)$/i;
+// The type each extension an episode may carry is stored and served as: the key keeps the file's own, it is served
+// from a public host, and the bytes must carry that type's signature (site-api's checkUpload). The browser's type is never stored.
+const AUDIO_TYPES: Record<string, string> = {
+  mp3: "audio/mpeg",
+  m4a: "audio/mp4",
+  aac: "audio/aac",
+  wav: "audio/wav",
+  ogg: "audio/ogg",
+  oga: "audio/ogg",
+  opus: "audio/ogg",
+  flac: "audio/flac",
+};
+const AUDIO_LIMITS = { maxBytes: MAX_AUDIO, types: [...new Set(Object.values(AUDIO_TYPES))] };
+// Every audio signature is in the first 12 bytes; 64 leaves room.
+const AUDIO_HEAD = 64;
+
+/** The stream's first `size` bytes (fewer if it is shorter), and a stream of the whole body, those bytes included. */
+async function splitHead(body: ReadableStream<Uint8Array>, size: number) {
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let read = 0;
+  while (read < size) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    read += value.byteLength;
+  }
+  const head = new Uint8Array(read);
+  chunks.reduce((at, chunk) => (head.set(chunk, at), at + chunk.byteLength), 0);
+  const whole = new ReadableStream<Uint8Array>({
+    start(controller) {
+      if (read) controller.enqueue(head);
+    },
+    async pull(controller) {
+      const { done, value } = await reader.read();
+      if (done) controller.close();
+      else controller.enqueue(value);
+    },
+    cancel: (reason) => reader.cancel(reason),
+  });
+  return { head: head.subarray(0, size), whole };
+}
 
 export async function action({ request, context }: Route.ActionArgs) {
   const env = getEnv(context);
@@ -95,13 +135,18 @@ export async function action({ request, context }: Route.ActionArgs) {
   if (length > MAX_AUDIO)
     return Response.json({ ok: false, error: "Audio exceeds 100 MB." }, { status: 413 });
   const key = buildKey(`episodes/${postId}`, name);
-  const ct = type || "audio/mpeg";
-  if (!ct.startsWith("audio/") || !AUDIO_NAME.test(name))
-    return Response.json({ ok: false, error: "The file must be audio." }, { status: 415 });
+  const ct = AUDIO_TYPES[/\.([a-z0-9]+)$/i.exec(name)?.[1]?.toLowerCase() ?? ""];
+  const notAudio = Response.json({ ok: false, error: "The file must be audio." }, { status: 415 });
+  if (!ct) return notAudio;
+  const { head, whole } = await splitHead(request.body, AUDIO_HEAD);
+  if (checkUpload(ct, head, AUDIO_LIMITS)) {
+    await whole.cancel();
+    return notAudio;
+  }
   const { url: stored, size } = await putAudio(
     env,
     key,
-    request.body.pipeThrough(new FixedLengthStream(length)),
+    whole.pipeThrough(new FixedLengthStream(length)),
     ct,
   );
   return Response.json({ ok: true, url: stored, size, contentType: ct, name });
