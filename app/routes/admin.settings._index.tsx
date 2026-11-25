@@ -52,7 +52,7 @@ const settingSpec = (s: {
 }): FieldSpec => ({
   key: `s:${s.key}`,
   label: s.label || s.key,
-  help: s.description ? `${s.description} (${s.key})` : s.key,
+  help: s.description ?? undefined,
   kind: s.type === "markdown" ? "textarea" : s.type === "json" ? "json" : "text",
 });
 

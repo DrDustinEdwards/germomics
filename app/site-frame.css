@@ -381,7 +381,6 @@
   .gm-next-label {
     --icon-size: var(--fs-small);
   }
-  .gm-index-kind,
   .gm-bio-link {
     --icon-size: 0.8125rem;
   }

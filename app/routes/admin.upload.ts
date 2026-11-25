@@ -16,6 +16,9 @@ const MAX_IMAGE = 25 * 1024 * 1024; // 25 MB
 // Cloudflare refuses a body over 100 MB on Free and Pro before the Worker sees it, so a larger cap promises nothing.
 const MAX_AUDIO = 100 * 1024 * 1024; // 100 MB
 
+// The extensions an episode file may carry: the key keeps the file's own, and it is served from a public host.
+const AUDIO_NAME = /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac)$/i;
+
 export async function action({ request, context }: Route.ActionArgs) {
   const env = getEnv(context);
   const url = new URL(request.url);
@@ -93,7 +96,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     return Response.json({ ok: false, error: "Audio exceeds 100 MB." }, { status: 413 });
   const key = buildKey(`episodes/${postId}`, name);
   const ct = type || "audio/mpeg";
-  if (!ct.startsWith("audio/"))
+  if (!ct.startsWith("audio/") || !AUDIO_NAME.test(name))
     return Response.json({ ok: false, error: "The file must be audio." }, { status: 415 });
   const { url: stored, size } = await putAudio(
     env,
