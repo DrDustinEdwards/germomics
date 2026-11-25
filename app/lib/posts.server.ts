@@ -1,7 +1,5 @@
-// Post queries — the single place route loaders read content. Drizzle query builder only;
-// the one raw statement is the FTS5 MATCH, which Drizzle's DSL can't
-// express. Tag/guest filters parse the JSON columns in JS (the catalog is small), keeping
-// everything type-safe and camelCase.
+// Post queries: the one place route loaders read content. The only raw statement is the FTS5 MATCH; tag and guest
+// filters parse the JSON columns in JS (the catalog is small).
 import {
   and,
   asc,
@@ -25,12 +23,8 @@ import { storedBody } from "~/lib/render.server";
 
 type Kind = "episode" | "article";
 
-// Card projection for LISTING queries: every posts column except the heavy text we never render in a
-// list. body and full transcript are huge, and audioPeaks is the waveform array; none of them belong
-// in a listing payload. chapters and guests stay (the player queue and the guests page read them) and
-// are tiny next to body/transcript. Only the single post route (getPostBySlug/getPostById) loads the
-// full body and transcript. Rows come back with the heavy fields re-added as empty so the Post type
-// (and any consumer that reads those keys) stays intact, but nothing heavy is fetched or serialized.
+// Card projection for listings: every column except the heavy ones (body, transcript, audioPeaks, sources), re-added
+// as empty so the Post type holds. chapters and guests stay: the player queue and the guests page read them.
 const {
   body: _body,
   bodyHtml: _bodyHtml,
@@ -61,11 +55,8 @@ function asCards(
   );
 }
 
-// Publish-on-read scheduling gate (the mechanism chosen this pass — see the editor spec §F):
-// a post is publicly visible when it is published AND not scheduled into the future. A
-// "scheduled" post is status=published with a future publishAt; it stays hidden from every
-// public read (lists, detail, search, feeds) until publishAt passes — no cron required. A post in
-// Carrel's trash is a draft already; trashedAt is checked as well, so no stray row can show one.
+// Publish-on-read gate: visible means published, publishAt not in the future, and not trashed. A scheduled post is
+// status=published with a future publishAt, so it needs no cron to go live. trashedAt is checked too, so no stray row shows.
 function publiclyVisible(): SQL {
   const now = new Date().toISOString();
   return and(
@@ -75,7 +66,7 @@ function publiclyVisible(): SQL {
   )!;
 }
 
-/** When the next scheduled post goes live: it needs no write, so no purge, and a stored page stays fresh no later. */
+/** When the next scheduled post goes live: no write happens then, so a stored page must not outlive it. */
 export async function nextPublishAt(env: Env): Promise<Date | null> {
   const [row] = await getDb(env)
     .select({ at: min(posts.publishAt) })
@@ -84,7 +75,6 @@ export async function nextPublishAt(env: Env): Promise<Date | null> {
   return row?.at ? new Date(row.at) : null;
 }
 
-/** In-JS mirror of publiclyVisible() for single rows already fetched. */
 export function isVisibleNow(post: Post): boolean {
   return (
     post.status === "published" &&
@@ -109,11 +99,7 @@ export async function listPosts(
   return asCards(rows);
 }
 
-/**
- * Each visible post's pictures for the image sitemap, by slug: its cover, then every <img> its body shows, as they
- * are written (a site path or an absolute URL); data: URLs and the dark half of a themed pair are left out. Read from
- * the stored render (or a legacy row's HTML body) as it is, never re-rendered: a sitemap is no place to render.
- */
+/** Each visible post's cover and body <img>s for the image sitemap, read from the stored render, never re-rendered. data: URLs and the dark half of a themed pair are left out. */
 export async function listPostImages(env: Env): Promise<Map<string, string[]>> {
   const rows = await getDb(env)
     .select({
@@ -143,11 +129,7 @@ export async function listPostImages(env: Env): Promise<Map<string, string[]>> {
   return out;
 }
 
-/**
- * Visible posts of one kind with every column, newest first, each with its rendered body in bodyHtml. For the
- * readers that print the body or the transcript (the podcast and writing feeds, llms-full.txt), which print
- * HTML or plain text, never the Markdown; listing pages use listPosts' cards.
- */
+/** Visible posts of one kind, every column, newest first, with the rendered body in bodyHtml. For the feeds and llms-full.txt; listings use cards. */
 export async function listFullPosts(env: Env, kind: Kind, limit = 200): Promise<Post[]> {
   const rows = await getDb(env)
     .select()
@@ -166,7 +148,6 @@ export async function listFullPosts(env: Env, kind: Kind, limit = 200): Promise<
 export const listEpisodes = (env: Env, limit?: number) =>
   listPosts(env, { kind: "episode", limit });
 
-/** Distinct published episode season numbers, newest first (for the season nav + listing). */
 export async function listSeasons(env: Env): Promise<number[]> {
   const rows = await getDb(env)
     .selectDistinct({ season: posts.seasonNumber })
@@ -178,7 +159,6 @@ export async function listSeasons(env: Env): Promise<number[]> {
     .sort((a, b) => b - a);
 }
 
-/** Episodes in one season, ascending by episode number (so a listener can start at #1). */
 export async function episodesInSeason(env: Env, season: number): Promise<Post[]> {
   const rows = await getDb(env)
     .select(cardColumns)
@@ -203,11 +183,7 @@ export async function getPostBySlug(
   return post;
 }
 
-/**
- * What a loader throws for a slug with no visible post: the permanent redirect for a slug a post was renamed from
- * (Carrel's rename, post_redirects), to the same `suffix` under the slug it has now, else a 404. A post that is not
- * publicly visible gets the 404, so a redirect never names a draft's address.
- */
+/** What a loader throws for a slug with no visible post: a 301 for a renamed slug (post_redirects), else a 404. A non-visible post gets the 404, so a redirect never names a draft. */
 export async function missingPost(env: Env, slug: string, suffix = ""): Promise<Response> {
   const [row] = await getDb(env)
     .select({ slug: posts.slug })
@@ -239,10 +215,6 @@ export async function postsByGuest(env: Env, guestSlug: string): Promise<Post[]>
   return all.filter((p) => (p.guests ?? []).some((g) => slugify(g.name) === guestSlug));
 }
 
-// adjacentPosts and relatedPosts work on one listPosts(env) result, so the post page reads the list
-// once, in the same round trip as the post itself.
-
-/** Previous / next published post of the same kind, by publish date (for article/episode nav). */
 export function adjacentPosts(
   visible: Post[],
   post: Post,
@@ -264,7 +236,6 @@ export function seriesOf(
   return { name: post.series, part: post.seriesPart, of };
 }
 
-/** Related = same-kind posts sharing the most tags, newest first. */
 export function relatedPosts(visible: Post[], post: Post, limit = 3): Post[] {
   const tags = new Set(post.tags ?? []);
   return visible
@@ -278,7 +249,6 @@ export function relatedPosts(visible: Post[], post: Post, limit = 3): Post[] {
     .map((x) => x.p);
 }
 
-/** Full-text search across both content types via the FTS5 mirror. */
 export async function searchPosts(env: Env, rawQuery: string): Promise<Post[]> {
   const match = toFtsMatch(rawQuery);
   if (!match) return [];

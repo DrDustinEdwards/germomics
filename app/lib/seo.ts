@@ -1,7 +1,4 @@
-// Client-safe SEO helpers: plain text from a rendered body, the body's heading demotion, and schema.org
-// JSON-LD builders. Pure functions (no server imports) so routes can use them in meta() and
-// components alike. JSON-LD mirrors on-page content: BlogPosting for articles, PodcastEpisode
-// (+ MediaObject + partOfSeries) for episodes.
+// Client-safe SEO helpers (no server imports, so meta() and components can use them). JSON-LD mirrors on-page content.
 import type { Post } from "~/db/schema";
 import type { GuestView, Host } from "~/lib/types";
 import type { Dataset, Source } from "~/lib/datasets.server";
@@ -20,7 +17,6 @@ import { DEFAULT_CARD, SITE_ADDRESS, SITE_ORIGIN, type Address } from "~/lib/sit
 
 export type TocItem = { level: 2 | 3; id: string; text: string };
 
-/** A post's own share image and its alt text: the social image, else the episode artwork, else the cover. */
 export function ogImageFor(post: Post): { src: string; alt: string | null } | null {
   if (post.ogImage) return { src: post.ogImage, alt: post.ogImageAlt };
   if (post.episodeArtwork) return { src: post.episodeArtwork, alt: post.episodeArtworkAlt };
@@ -36,10 +32,8 @@ type JsonLdOpts = {
   hosts?: Host[];
 };
 
-/** schema.org JSON-LD object for a post — BlogPosting (article) or PodcastEpisode. */
 export function buildJsonLd({ post, author, seriesTitle, guests = [], hosts = [] }: JsonLdOpts) {
   const url = `${SITE_ORIGIN}/${post.slug}`;
-  // A stored image address may be a site path (/media/<key>); structured data needs an absolute URL.
   const own = ogImageFor(post)?.src;
   const image = own ? new URL(own, SITE_ORIGIN).href : undefined;
   const description =
@@ -60,7 +54,6 @@ export function buildJsonLd({ post, author, seriesTitle, guests = [], hosts = []
         ? { url: post.audioUrl, type: post.audioMimeType, bytes: post.audioByteSize }
         : null,
       series: { name: seriesTitle, url: `${SITE_ORIGIN}/` },
-      // Hosts are the authors/creators of the episode; per-episode guests map to actor.
       hosts: hosts.length
         ? hosts.map((h) => ({ name: h.name, url: "href" in h ? h.href : undefined }))
         : [{ name: author }],
@@ -82,8 +75,6 @@ export function buildJsonLd({ post, author, seriesTitle, guests = [], hosts = []
   });
 }
 
-// ── Site-level + entity JSON-LD (Organization, PodcastSeries, Person) ───────
-
 type ShowLike = {
   title: string;
   description: string;
@@ -97,7 +88,6 @@ type SiteLdOpts = { address?: Partial<Address>; sameAs?: readonly string[] };
 type SocialHandles = { facebook?: string; twitter?: string; instagram?: string };
 export type SocialLink = { platform: string; label: string; url: string };
 
-/** Profile links from social handles (settings social.*), for the footer. Empty handles are skipped. */
 export function socialLinks(s: SocialHandles): SocialLink[] {
   const links: SocialLink[] = [];
   if (s.facebook)
@@ -116,12 +106,10 @@ export function socialLinks(s: SocialHandles): SocialLink[] {
   return links;
 }
 
-/** The same profiles as schema.org sameAs URLs, so footer and schema stay consistent. */
 export function socialSameAs(s: SocialHandles): string[] {
   return sameAs(socialLinks(s).map((l) => l.url)) ?? [];
 }
 
-/** The show's address from the contact.address setting, each missing part from SITE_ADDRESS. */
 const addressOf = (a: Partial<Address> = {}): Address => ({
   streetAddress: a.streetAddress ?? SITE_ADDRESS.streetAddress,
   locality: a.locality ?? SITE_ADDRESS.locality,
@@ -130,7 +118,6 @@ const addressOf = (a: Partial<Address> = {}): Address => ({
   country: a.country ?? SITE_ADDRESS.country,
 });
 
-/** Organization node for the publisher (home + About). Address + sameAs are DB-driven. */
 export function buildOrganizationLd(show: ShowLike, opts: SiteLdOpts = {}) {
   return organization({
     name: show.title,
@@ -143,7 +130,6 @@ export function buildOrganizationLd(show: ShowLike, opts: SiteLdOpts = {}) {
   });
 }
 
-/** PodcastSeries node tying the show to its immutable feed (home). */
 export function buildPodcastSeriesLd(show: ShowLike, opts: SiteLdOpts = {}) {
   return podcastSeries({
     name: show.title,
@@ -157,11 +143,7 @@ export function buildPodcastSeriesLd(show: ShowLike, opts: SiteLdOpts = {}) {
   });
 }
 
-/**
- * A /data page's Dataset node (Prelum's dataset), from what the page shows: its title, its summary as the page reads it,
- * the quantities its chart and map count, the span of its dated points, and the sources it cites. Germomics compiled
- * the page from those sources, so it is the creator and they are the citations.
- */
+/** A /data page's Dataset node: germomics compiled the page from its sources, so it is the creator and they are the citations. */
 export function buildDatasetLd(page: Dataset, description: string) {
   const dates = (page.timeline?.series ?? []).flatMap((s) => s.points.map((p) => p.date)).sort();
   const sources = [page.map?.source, page.timeline?.source, page.table?.source].filter(
@@ -201,7 +183,6 @@ type PersonLd = {
   sameAs: readonly string[];
 };
 
-/** Person node for the credentialed author (author bio page). Fields per Vault site-config.md. */
 export function buildPersonLd(author: PersonLd) {
   return person({
     name: author.name,
@@ -217,7 +198,7 @@ export function buildPersonLd(author: PersonLd) {
   });
 }
 
-/** True when a post was meaningfully updated after publication (different calendar day). */
+/** True when a post was updated on a later calendar day than it was published. */
 export function wasUpdatedAfterPublish(post: Post): boolean {
   if (!post.updatedAt) return false;
   const pub = post.publishedAt ?? post.publishAt;
@@ -239,8 +220,7 @@ type PageHead = {
   noindex?: boolean;
 };
 
-// Prelum builds each page's WebPage; a page inside a section passes its trail from lib/trails.ts, the one its visible
-// trail (SectionTrail) shows, so the site names no sections here and no page carries a BreadcrumbList it does not show.
+// A page in a section passes its trail from lib/trails.ts, the one SectionTrail shows, so no BreadcrumbList names a crumb the page lacks.
 const head = defineHead({
   origin: SITE_ORIGIN,
   siteName: "Germomics",
@@ -249,11 +229,8 @@ const head = defineHead({
 });
 
 /**
- * The head of a public page from Prelum's defineHead: title, description, canonical, Open Graph and Twitter, always on
- * SITE_ORIGIN so a workers.dev copy never claims the page. The wordmark card is the card when the page has none. A
- * description too long for a search result is cut at a word (the share card keeps it whole), so a page whose
- * description is its own text (About, TXASM) sends one sentence's worth, not the page. The title is passed whole.
- * One canonical path per page: Prelum drops a trailing slash a visitor typed (except on "/"), but the podcast feed's
+ * The head of a public page from Prelum's defineHead, always on SITE_ORIGIN so a workers.dev copy never claims the
+ * page. A description too long for a search result is cut at a word (the share card keeps it whole).
  * /feed/podcast/ keeps its slash: that URL never changes (CLAUDE.md, Podcast feed).
  */
 export function pageHead({ path, ...page }: PageHead) {

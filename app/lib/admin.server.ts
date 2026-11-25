@@ -1,15 +1,11 @@
-// Post writes, kept apart from posts.server (reads) and only ever reached from Carrel's adapter
-// (app/lib/carrel/adapter.server.ts) and the gated episode audio routes. Drizzle query builder
-// throughout; guid is generated once and never rewritten (germomics invariant: immutable guid).
+// Post writes, apart from posts.server (reads); reached only from Carrel's adapter and the gated episode audio routes.
 import { desc, eq, sql } from "drizzle-orm";
 import { getDb } from "~/db/index.server";
 import { posts, postVersions, type Post } from "~/db/schema";
 import { AUTHOR } from "~/lib/about";
 
-/** Who a change is recorded under when Carrel names no one: Dustin, the show's author. */
 export const CHANGE_AUTHOR = AUTHOR.name;
 
-/** A new untitled draft with a placeholder slug, which Carrel renames. */
 export async function createDraft(env: Env, kind: "episode" | "article"): Promise<number> {
   const db = getDb(env);
   const slug = `untitled-${crypto.randomUUID().slice(0, 8)}`;
@@ -20,11 +16,7 @@ export async function createDraft(env: Env, kind: "episode" | "article"): Promis
   return rows[0].id;
 }
 
-/**
- * The updated_at a post write sets: now, or one second past the stored value when that is not
- * earlier. datetime('now') has one-second steps, so without the step two saves in the same second
- * would leave updated_at unchanged and the Carrel save guard (which compares it) would miss one.
- */
+/** Now, or one second past the stored value: datetime('now') has one-second steps, so two saves in a second would leave updated_at unchanged and the save guard would miss one. */
 export const nextUpdatedAt = sql`max(datetime('now'), datetime(updated_at, '+1 second'))`;
 
 export async function updatePost(env: Env, id: number, fields: Partial<Post>): Promise<void> {
@@ -38,7 +30,6 @@ export async function deletePost(env: Env, id: number): Promise<void> {
   await getDb(env).delete(posts).where(eq(posts.id, id));
 }
 
-/** Snapshot the row into post_versions before a change (save, publish, rename...) overwrites it, an episode's people with it. */
 export async function snapshotVersion(
   env: Env,
   post: Post,
@@ -52,7 +43,7 @@ export async function listAllPosts(env: Env): Promise<Post[]> {
   return getDb(env).select().from(posts).orderBy(desc(posts.updatedAt));
 }
 
-/** Permanent immutable feed guid, generated once at first publish. */
+/** Generated once at first publish and never rewritten: the immutable feed guid. */
 export function generateGuid(): string {
   return `urn:germomics:${crypto.randomUUID()}`;
 }

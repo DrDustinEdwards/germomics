@@ -1,41 +1,29 @@
-/* The public pages' own parts, loaded by their layout (routes/_site.tsx), so the admin never downloads them: the
-   header, the persistent player and the parts its settings use. The reading contexts are prose.css. The layer order repeats app.css's, so
-   whichever stylesheet arrives first, the order is the same. */
+/* The public pages' parts, loaded by routes/_site.tsx so the admin never downloads them. The layer order repeats
+   app.css's, so it holds whichever stylesheet arrives first. */
 @layer cap-tokens, theme, base, cap, components, utilities, site;
-/* Capsomer's scale and palette first of all (cap-tokens), so a name both define (--radius-xl, --ease-out) keeps
-   the scale's value on germomics' own classes, and germomics' palette wins over both. */
+/* Capsomer's tokens first, so a name both define (--radius-xl, --ease-out) keeps the scale's value. */
 @import "capsomer/tokens.css" layer(cap-tokens);
-/* The element reset (Tailwind's preflight, as Capsomer ships it), the lowest of Capsomer's layers. */
 @import "capsomer/reset.css";
-/* germomics' palette, faces and header height on the public pages' <html> (data-cap-site="germomics", app/root.tsx). */
+/* germomics' palette on the public pages' <html> (data-cap-site="germomics", app/root.tsx). */
 @import "capsomer/site-germomics.css";
-/* The visible trail of a page inside a section (components/content/SectionTrail.tsx), in the cap layer. */
 @import "capsomer/breadcrumb.css";
-/* A post's Save toggle and its listen-and-subscribe card (components/content/PostDetail.tsx), in the cap layer. */
 @import "capsomer/chips.css";
 @import "capsomer/save-toggle.css";
 @import "capsomer/subscribe-links.css";
-/* Post cards in listings and under a post (components/content/PostCard.tsx), in the cap layer. */
 @import "capsomer/card.css";
-/* The site header and its theme button, and the parts it shares with the player's settings. */
 @import "capsomer/utilities.css";
 @import "capsomer/site-header-frame.css";
 @import "capsomer/theme-switch.css";
 @import "capsomer/button.css";
 @import "capsomer/popover.css";
 @import "capsomer/dialog.css";
-/* The figure viewer (Capsomer's dialog as a lightbox), the copy and share buttons' bubble, and the reading bar. */
 @import "capsomer/lightbox.css";
 @import "capsomer/copy.css";
 @import "capsomer/reading-progress.css";
-/* The persistent player (dock, surface, transcript, chapters, key moments, hosts); its speed and volume settings are
-   a menu and a field. */
 @import "capsomer/field.css";
 @import "capsomer/menu.css";
 @import "capsomer/player.css";
-/* Capsomer's icons (the pictograms beside the cards' and pages' words, the footer's marks), in the cap layer. */
 @import "capsomer/icons.css";
-/* germomics' own parts in the site layer, in the order they were written. */
 @import "./site-cards.css";
 @import "./site-pages.css";
 @import "./site-lists.css";
@@ -81,14 +69,13 @@
   font-size: var(--fs-small);
   line-height: var(--line-box-4);
 }
-/* The surface's rows sit where the site's always did: the waveform's note 4px under it, the seek row 31px tall. */
 .cap-player-wave {
   row-gap: 0.25rem;
 }
 .cap-player-surface .cap-player-scrubber {
   min-block-size: 1.9375rem;
 }
-/* The seek and volume tracks are light, as the site's were; the played part fills violet. */
+/* Light seek and volume tracks; the played part fills violet. */
 .cap-player-surface .cap-range,
 .cap-player-dock .cap-range,
 .cap-player-sheet .cap-range {
@@ -104,7 +91,7 @@
   line-height: var(--line-box-5);
 }
 
-/* A listing's play button wears the cyan of the site's now-playing states, as it always has. */
+/* A listing's play button wears the cyan of the now-playing states. */
 .cap-player-btn[data-play-intent] {
   --cap-player-btn: 2.5rem;
   --cap-player-btn-lg: 3rem;
@@ -113,9 +100,8 @@
   --primary-hover: color-mix(in srgb, var(--accent-text) 85%, var(--text));
   --primary-fg: var(--ground);
 }
-/* Every play and pause glyph is drawn in outline, as the site's always were. Capsomer's triangle fills less of its
-   box than the site's did, so a play glyph's box is a fifth larger to draw the same triangle: 15px tall in the dock,
-   16.5px on an episode's player, 13.5px in a listing. */
+/* Play and pause glyphs are outlined. Capsomer's triangle fills less of its box, so a play glyph's box is a fifth
+   larger: 15px tall in the dock, 16.5px on an episode's player, 13.5px in a listing. */
 .cap-player-btn[data-part="play"] > svg path {
   fill: none;
   stroke: currentColor;
@@ -136,8 +122,6 @@
   inline-size: 22px;
   block-size: 22px;
 }
-/* The breadcrumb is quiet, like the site's other small navigation: JetBrains Mono at the meta size, the levels muted
-   until the pointer reaches them, the current page in ink. */
 .cap-breadcrumb {
   --ui: var(--gm-font-mono);
   --fs-body: 0.75rem;
@@ -155,9 +139,6 @@
   margin-block-end: var(--space-5);
 }
 
-/* Capsomer's save toggle and subscribe links in germomics' own tokens, as the breadcrumb: the
-   pills keep the site's look (the Save pill in JetBrains Mono on the card color, the listen links in
-   Space Grotesk, cyan under the pointer, the saved bookmark in cyan). */
 .cap-save,
 .cap-subscribe {
   --ring: var(--accent-text);
@@ -196,8 +177,6 @@
     block-size: 14px;
   }
 }
-/* An episode's data preview (Capsomer's DataPreview): a raised card in the site's display face, its line in the brand
-   ink. */
 .cap-data-preview {
   --surface: var(--raised);
   --display: var(--gm-font-display);
@@ -254,9 +233,6 @@
   }
 }
 
-/* Capsomer's newsletter sign-up, leaderboard and sources list in germomics' own tokens, as the subscribe card: the
-   sign-up keeps the old callout (the sunken card, Space Grotesk heading, the field in the body face on the card color,
-   the violet button), the leaderboard the old card (white rows, names in Space Grotesk), the sources their small type. */
 .cap-newsletter {
   --cap-newsletter-bg: var(--sunken);
   --pad-card: var(--space-6);
@@ -330,8 +306,7 @@
   }
 }
 
-/* The public header (not the admin shell's): the page's ground at 85%, blurred (translucent), in the site's faces with
-   its violet button; the logo and controls line up with the page's column (max-w-5xl, 1rem gutters), as they always have. */
+/* The public header: logo and controls line up with the page's column (max-w-5xl, 1rem gutters). */
 .cap-site-header:not([data-cap-theme] .cap-site-header) {
   --font-ui: var(--gm-font-display);
   --header-bg: var(--ground);
@@ -374,8 +349,7 @@
   inline-size: 14px;
   block-size: 14px;
 }
-/* The theme button is in ink, the other icons muted, as they were. Capsomer's sun and moon fill less of their box
-   than the site's did; 18px draws them at the same size. */
+/* Capsomer's sun and moon fill less of their box, so 18px draws them at the site's size. */
 .cap-site-header:not([data-cap-theme] .cap-site-header) .cap-site-header-theme {
   color: var(--text);
 }
@@ -397,17 +371,14 @@
   letter-spacing: var(--tracking-tight);
 }
 
-/* The figure viewer is dimmer than a dialog: 80% black, as it always was. */
 .cap-lightbox {
   --scrim: rgb(0 0 0 / 0.8);
 }
 
-/* The copy bubble speaks in JetBrains Mono, like the pills that open it. */
 .cap-copy {
   --ui: var(--gm-font-mono);
 }
 
-/* The reading bar: 2px, brand to cyan, as before (Capsomer's default is 3px in one color). */
 .cap-reading-progress {
   --reading-progress-size: 2px;
   --reading-progress-color: linear-gradient(to right, var(--primary), var(--accent-text));

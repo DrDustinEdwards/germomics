@@ -1,8 +1,5 @@
-// The six episode figures. The essay keeps its :::diagram block. Prelum's hash of that Mermaid
-// selects the drawing, and the author's caption stays under it. The SVG text lives in a static
-// file so the Worker script does not carry it. Reading it needs the ASSETS binding in
-// wrangler.jsonc. The files are still served to browsers without that binding, and then
-// env.ASSETS is missing, so the swap leaves the Mermaid image in place.
+// The six episode figures: Prelum's hash of the essay's :::diagram Mermaid selects a drawing, and the caption stays.
+// The SVG lives in a static file read through the ASSETS binding; without it the Mermaid image stays in place.
 
 import { fnv1a32 } from "@dustinedwards/site-runtime/encoding";
 
@@ -21,7 +18,7 @@ export type DiagramAssets = {
   fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 };
 
-/** Prelum's diagram key: FNV-1a of template version 1 and the normalized Mermaid source. */
+/** FNV-1a of template version 1 and the normalized Mermaid source (Prelum's diagram key). */
 export function diagramKey(source: string): string {
   const normalized = source.replace(/\r\n/g, "\n").replace(/\s+$/, "").replace(/^\n+/, "");
   return fnv1a32(`1\n${normalized}`);
@@ -29,15 +26,11 @@ export function diagramKey(source: string): string {
 
 const ASSET_ORIGIN = "https://assets.local";
 
-/**
- * Workers Static Assets' html_handling redirects /name.html to /name. That response is not ok,
- * so reading only the first hop drops every drawing and the Mermaid image is left in place.
- */
+/** html_handling redirects /name.html to /name (not ok), so the first hop alone would drop every drawing. */
 async function readAsset(assets: DiagramAssets, path: string): Promise<string> {
   let url = new URL(path, ASSET_ORIGIN);
   for (let hop = 0; hop < 2; hop += 1) {
-    // manual: the assets binding applies html_handling, and a followed redirect would leave
-    // the binding. A /name.html request is a 307 to /name, which this loop reads next.
+    // manual: a followed redirect would leave the assets binding; the 307 is read by the next loop turn.
     const response = await assets.fetch(url, { redirect: "manual" });
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get("location");
@@ -52,7 +45,6 @@ async function readAsset(assets: DiagramAssets, path: string): Promise<string> {
   return "";
 }
 
-/** The six drawings, keyed by the hash of the essay's Mermaid. */
 export async function diagramsFromAssets(assets: DiagramAssets | undefined): Promise<DiagramFiles> {
   if (!assets) return new Map();
   const entries = await Promise.all(
@@ -61,7 +53,6 @@ export async function diagramsFromAssets(assets: DiagramAssets | undefined): Pro
   return new Map(entries.filter((entry) => entry[1] !== ""));
 }
 
-/** The six drawings from the Worker's asset binding. */
 export async function loadBlogDiagrams(env: Env): Promise<DiagramFiles> {
   return diagramsFromAssets(env.ASSETS);
 }
@@ -75,28 +66,17 @@ const CONTEXT_OPEN = '<div data-context="prose" class="diagram-context">';
 const UNWRAPPED =
   /(?<!<div data-context="prose" class="diagram-context">)(?:<div class="blog-diagram-block">[\s\S]*?<\/figure>(?:\s*<p class="blog-diagram-credit">[\s\S]*?<\/p>)?\s*<\/div>|(?<!<div class="blog-diagram-block">\s*)<figure\b[^>]*\bclass="(?:blog-diagram|diagram-figure)"[^>]*>[\s\S]*?<\/figure>)/g;
 
-/**
- * Holds each diagram in a reading context of its own, where Capsomer's prose blocks draw it (its --diagram-* tokens,
- * a :::diagram's light and dark images), without making the whole essay one. Idempotent, so a stored render that
- * already has it, or one saved before it, reads the same.
- */
+/** Wraps each diagram in its own reading context (Capsomer's --diagram-* tokens). Idempotent. */
 export function inDiagramContext(html: string): string {
   if (!html.includes("diagram")) return html;
   return html.replace(UNWRAPPED, (figure) => `${CONTEXT_OPEN}${figure}</div>`);
 }
 
-/**
- * A figure inlined at an earlier render, in either form it has had: role="img" on the figure (which made its caption's
- * source links nested interactive controls) or on the drawing. Its key is the drawing's title id.
- */
+/** A figure inlined at an earlier render, with role="img" on the figure or on the drawing. Its key is the drawing's title id. */
 const INLINED = /<figure class="blog-diagram"[^>]*>(<svg\b[\s\S]*?<\/svg>)/g;
 const TITLE_KEY = /<title id="bd-([0-9a-f]{8})-title"/;
 
-/**
- * The site's current drawing for a key, its title and description named for the aria references. The drawing is the
- * image (role="img"), not its figure: an image's children are presentational, so a figure that was one made the
- * caption's source links nested interactive controls.
- */
+/** The current drawing for a key. role="img" sits on the drawing, not the figure: an image's children are presentational, so on the figure the caption's source links would be nested interactive controls. */
 function drawing(files: DiagramFiles, key: string): string | undefined {
   const svg = /<svg\b[\s\S]*<\/svg>/.exec(files.get(key) ?? "")?.[0];
   return svg
@@ -108,17 +88,11 @@ function drawing(files: DiagramFiles, key: string): string | undefined {
     .replace("<desc>", `<desc id="bd-${key}-desc">`);
 }
 
-/** Whether a stored render has a diagram figure that inlineBlogDiagrams draws from the site's files. */
 export function drawsDiagrams(html: string): boolean {
   return html.includes("diagram-figure") || html.includes('aria-labelledby="bd-');
 }
 
-/**
- * Replace a known Mermaid figure with its inline drawing, and a drawing inlined at an earlier render with the
- * site's current one, so a stored essay always shows the drawing as it is now (its class names match the stylesheet).
- * The caption rendered from the essay stays. A figure this site does not draw is left as it was. Either way it sits in
- * its diagram context.
- */
+/** Replaces a known Mermaid figure, or an earlier inlined drawing, with the current drawing; the caption stays. */
 export function inlineBlogDiagrams(html: string, files: DiagramFiles): string {
   if (!drawsDiagrams(html)) return inDiagramContext(html);
   return inDiagramContext(

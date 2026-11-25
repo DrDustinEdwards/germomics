@@ -1,6 +1,4 @@
-// The /data charts, drawn on the server by Enarratio in Capsomer's chart frame (nothing reaches the shared client
-// chunk). Their look is capsomer/enarratio.css with germomics' tokens mapped in (app/charts.css); the
-// charts island (app/islands/charts.ts) enhances them and swaps in the narrow drawing on a phone.
+// The /data charts, drawn on the server by Enarratio (nothing reaches the client chunk). Look: capsomer/enarratio.css with app/charts.css tokens; the charts island swaps in the narrow drawing on a phone.
 import { frameHtml, narrowRedraw } from "capsomer/behavior/chart-frame";
 import { type LineChartOptions, lineChart } from "enarratio/lite/line";
 import { type DotMapOptions, dotMap, type GeoFeatureCollection } from "enarratio/map";
@@ -8,7 +6,6 @@ import type { DataMap } from "~/lib/datasets.server";
 import type { Timeline } from "~/lib/datasets.server";
 import streets from "~/lib/data/soho-streets.json";
 
-/** The `.enarratio-frame` (the drawing alone) of a chart's markup, what enarratio/redraw swaps in. */
 function drawingOf(html: string): string {
   const start = html.indexOf('<div class="enarratio-frame');
   const end = html.indexOf("</svg></div>", start);
@@ -41,11 +38,7 @@ export function timelineChart(slug: string, t: Timeline): string {
   });
 }
 
-/**
- * Snow's streets under the map, from lindbrook's cholera package (app/lib/data/SOURCES.md, scripts/soho-streets.py). A
- * name's roman numeral (Princes Street (I) and (II), two streets of one name) parts the rows of the table, not the
- * streets on the map, so the printed name leaves it out.
- */
+/** Snow's streets (SOURCES.md, scripts/soho-streets.py). A roman numeral in a name only parts table rows, so the printed name drops it. */
 const SOHO_STREETS: GeoFeatureCollection = {
   ...(streets as GeoFeatureCollection),
   features: (streets as GeoFeatureCollection).features.map((f) => ({
@@ -54,11 +47,7 @@ const SOHO_STREETS: GeoFeatureCollection = {
   })),
 };
 
-/**
- * A /data map, drawn on the server by Enarratio's dotMap (design record 0028): a dot per address sized by its count
- * over Snow's streets, the landmarks as squares with the marked one named, a key, the data table and a keyboard walk.
- * It replaces the Google Maps map, which was decorative, drawn only in the browser and outside Enarratio (A15).
- */
+/** A /data map, drawn on the server by Enarratio's dotMap (design record 0028). */
 export function dataMap(slug: string, m: DataMap): string {
   const options = {
     id: `${slug}-map`,
@@ -82,9 +71,7 @@ export function dataMap(slug: string, m: DataMap): string {
     title: m.title,
     alt: m.alt,
   } satisfies DotMapOptions<(typeof m.points)[number]>;
-  // A map keeps its shape, so its phone drawing is far shorter than the wide one shows at 30rem (about 340 against 615
-  // px): Capsomer's keepShape draws it at its own height and scales the wide map to its proportions until the swap, so
-  // the swap does not move the page (D5).
+  // A map keeps its shape, so its phone drawing is far shorter (about 340px against 615px at 30rem): keepShape scales the wide map to those proportions until the swap, so the swap does not move the page (D5).
   const wide = dotMap(options);
   const redraw = narrowRedraw(wide, (width) => drawingOf(dotMap({ ...options, width })), {
     keepShape: true,

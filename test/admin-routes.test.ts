@@ -1,7 +1,5 @@
 import { env } from "cloudflare:test";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { RouterContextProvider } from "react-router";
-import { cloudflareContext } from "@dustinedwards/site-runtime/context";
 import { getPostById } from "~/lib/posts.server";
 import { createDraft, updatePost } from "~/lib/admin.server";
 import { getPerson, listPeople, upsertPerson } from "~/lib/people.server";
@@ -10,6 +8,7 @@ import { loadBlock, loadSettings, upsertBlock } from "~/lib/content.server";
 import { soundbitesForPost } from "~/lib/soundbites.server";
 import { resetDb } from "@dustinedwards/devkit/d1";
 import { applyMigrations } from "./helpers/d1";
+import { clearKv, routeContext } from "./helpers/harness";
 
 // The admin gate as a route (app/routes/admin.tsx) and the admin route actions: what each one stores
 // and what it answers. Posts are written in Carrel (test/carrel*.test.ts); the admin keeps an
@@ -17,8 +16,7 @@ import { applyMigrations } from "./helpers/d1";
 const e = env as unknown as Env;
 
 function args(request: Request, params: Record<string, string> = {}, over: Partial<Env> = {}) {
-  const context = new RouterContextProvider();
-  context.set(cloudflareContext, { env: { ...e, ...over } as Env, ctx: {} as ExecutionContext });
+  const context = routeContext({ ...e, ...over } as Env);
   return { request, params, context } as never;
 }
 const form = (path: string, fields: Record<string, string>) => {
@@ -58,8 +56,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await resetDb(e.DB);
-  const { keys } = await e.APP_KV.list();
-  await Promise.all(keys.map((k) => e.APP_KV.delete(k.name)));
+  await clearKv(e.APP_KV);
 });
 
 describe("the admin gate", () => {

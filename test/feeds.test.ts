@@ -1,9 +1,8 @@
 import { env } from "cloudflare:test";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { RouterContextProvider } from "react-router";
-import { cloudflareContext } from "@dustinedwards/site-runtime/context";
 import { resetDb } from "@dustinedwards/devkit/d1";
 import { applyMigrations } from "./helpers/d1";
+import { routeContext } from "./helpers/harness";
 
 // The feeds and llms-full.txt print each post's body (and, for episodes, point at the transcript),
 // so they must read full rows, not the listing cards that leave body and transcript out.
@@ -16,8 +15,7 @@ async function load(
   params: Record<string, string> = {},
 ): Promise<Response> {
   const { loader } = await route;
-  const context = new RouterContextProvider();
-  context.set(cloudflareContext, { env: e, ctx: {} as ExecutionContext });
+  const context = routeContext(e);
   return (await loader({
     request: new Request(`${ORIGIN}${path}`),
     context,

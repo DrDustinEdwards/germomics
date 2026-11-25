@@ -1,13 +1,8 @@
-// The scheduled jobs, keyed by the cron that fires them (wrangler.jsonc triggers.crons). workers/app.ts runs the list
-// for the cron it receives through site-runtime's runJobs, and /health's cronCheck reads every list (their names and
-// intervals only), so a job whose trigger never fires warns as "never ran".
-//
-// Every minute: what Carrel scheduled goes live, failed hooks run again and the trash past 30 days is emptied
-// (site-api's runSchedules), then, until it has finished once, a batch of the media backfill. Each has 50 seconds, so a
-// hung one never runs into the next minute's run. Nightly: the D1 backup, the audio and image files beside the backup, and the 404 counts pruned to 90 days. Their
-// timeouts add up to 18 minutes; the file passes stop themselves a minute before theirs (timeBudgetMs in
-// backup.server.ts) and go on from there the next night. The bodies a Prelum upgrade left on an older render
-// (render.server.ts) are re-rendered by the every-minute job.
+// The scheduled jobs, keyed by the cron that fires them (wrangler.jsonc triggers.crons). /health's cronCheck reads
+// every list, so a job whose trigger never fires warns as "never ran".
+// Every minute: scheduled posts go live, failed hooks rerun, the trash is emptied, the media backfill runs until done,
+// stale renders are re-rendered. Each has 50 seconds so a hung one never runs into the next minute. Nightly jobs'
+// timeouts add up to 18 minutes; the file passes stop a minute before theirs (timeBudgetMs in backup.server.ts).
 import { backupJob, DAILY_MINUTES, type CronJob } from "@dustinedwards/site-runtime/cron";
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { pruneNotFoundJob } from "@dustinedwards/site-runtime/not-found";
@@ -42,8 +37,7 @@ export function cronJobs(env: Env, scheduledTime: Date): Record<string, CronJob[
         timeoutMs: 50_000,
         run: () => continueMediaBackfill(env),
       },
-      // A render a Prelum upgrade or a migration left stale is stored within a minute of the deploy, not the next
-      // night, so the sitemap's pictures and the feeds read current HTML. With nothing stale it is two indexed reads.
+      // Stale renders are stored within a minute of a deploy so the sitemap and feeds read current HTML; with none, two indexed reads.
       {
         name: "rerender-stale",
         everyMinutes: 1,
@@ -68,7 +62,7 @@ export function cronJobs(env: Env, scheduledTime: Date): Record<string, CronJob[
         name: "game-assets-backup",
         timeoutMs: 4 * MINUTE,
       }),
-      // The day each hub and static page last changed, for /sitemap.xml's lastmod (app/lib/page-dates.server.ts).
+      // For /sitemap.xml's lastmod (page-dates.server.ts).
       {
         name: "page-dates",
         everyMinutes: DAILY_MINUTES,
@@ -80,11 +74,7 @@ export function cronJobs(env: Env, scheduledTime: Date): Record<string, CronJob[
   };
 }
 
-/**
- * Every job of every cron: for /health's cronCheck (names and intervals), and for the operator API's run_job, which
- * runs any of them now through the same runJobs path (site-runtime runJobTool). The backup jobs are marked backup, so
- * Capsid Admin's back up now runs them.
- */
+/** Every job of every cron, for /health's cronCheck and the operator API's run_job. The backup jobs are marked backup for Capsid Admin's back up now. */
 export function allCronJobs(env: Env): CronJob[] {
   return Object.values(cronJobs(env, new Date())).flat();
 }

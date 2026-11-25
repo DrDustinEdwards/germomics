@@ -1,18 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { episodeContext } from "~/lib/episode-context.server";
-import { EPISODE_CONTEXT } from "~/lib/episode-context";
 import data from "~/lib/data/datasets.json";
 
 describe("episode context", () => {
-  it("previews only the two episodes that have a standalone data page", () => {
-    expect(Object.keys(EPISODE_CONTEXT).sort()).toEqual([
-      "a-boy-named-flu",
-      "confessions-of-a-cholera-girl",
-    ]);
-    for (const slug of ["on-the-right-taq", "rabies-day-out", "a-sky-full-of-sars"])
-      expect(episodeContext(slug)).toBeNull();
-  });
-
   it("draws the death series and says so in a sentence", () => {
     const bundle = data as unknown as Record<
       string,

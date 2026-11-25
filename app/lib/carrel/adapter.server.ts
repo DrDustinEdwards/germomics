@@ -1,47 +1,9 @@
-// The site's side of Carrel's contract (@dustinedwards/site-api v0.36.0): an adapter over the writing in D1 (articles,
-// episodes and the Markdown pages) and the images in the BLOG_IMAGES bucket (the media group is ./media.server.ts).
-// Carrel is the only editor of the site's writing; the admin keeps everything that is not writing.
-//
-// SCOPE.
-//   Articles and episodes: every field a writer sets (./source.ts), from a first draft to publish, schedule, unpublish,
-//     rename, trash, restore and delete. An episode is created in the germomics admin with its audio, and its audio and
-//     first transcript are uploaded there (files measured or converted in the browser); Carrel puts it live once it has
-//     both, and fixes the transcript's words afterward (TRANSCRIPTS, below). A save
-//     to a live post changes the live page.
-//   Pages: the content_blocks pages written in Markdown (about, the bio, privacy, terms, contact, txasm), id
-//     `page.<name>` for the block `page:<name>`. Each is a route, so Carrel saves and publishes one but cannot create,
-//     schedule, take down, rename or trash one. llms.txt and ai.txt are plain text (TEXT_PAGES) and stay in the admin.
-//
-// FIELDS. A post with no authors of its own (./source.ts) credits the show's author, in Carrel's list and author filter.
-//
-// RENDER. Every write renders the Markdown with Prelum (app/lib/render.server.ts) and stores the HTML beside it, with
-// the reading time and the render version, which meta names (renderVersion); a source Prelum refuses (a figure without
-// alt text, say) is refused with its reason and nothing is written. The guid is generated once at first publish and
-// never rewritten.
-//
-// HISTORY. Every write first snapshots the whole row into post_versions (a page's block into content_block_versions),
-// with the change and who made it; the revision list is each state a change made, newest first, named by that change.
-//
-// PREVIEW. The draft goes through the site's real route and layout in-process, on the request context (context.server),
-// so it has the header, footer and byline; never through the Renderer, so never stored; noindex.
-//
-// TRANSCRIPTS. Carrel replaces an episode's transcript through setTranscript (site-api v0.36.0), checked against the
-//   transcript's own version; the post's version, which never includes the transcript, stays as it was.
-//
-// IDS AND VERSIONS. A post's id is its slug. A version is a hash of everything Carrel can see or change (the source,
-// the status and the schedule, the slug, the trash, and an update waiting on a live post), so any change anywhere,
-// a rename too, gives a new version and two saves in one second cannot collide.
-//
-// SCHEDULES. A post scheduled before it was ever live is a published row with a future publish_at: every public read
-// hides it until then (publiclyVisible), so it goes live by the clock. The one-minute cron (workers/app.ts,
-// api.runSchedules) still lists it as due once its time comes, by the change that scheduled it (schedule_change_id),
-// and applies it by clearing that id alone, so the publish hooks hear it go live once. An update scheduled on a LIVE
-// post waits in scheduled_updates while the live version stays served, and the cron puts it live.
-//
-// RENAME AND TRASH. A rename moves the slug and keeps the id, so the history, people and guid move with it; the old
-// slug of a post ever live redirects (301) to the new one (post_redirects, app/lib/posts.server.ts). Trash takes a live
-// post off the site (a draft, trashed_at set); a restore is a draft; only a trashed post is deleted, and site-api's
-// cron deletes one trashed 30 days.
+// The site's side of Carrel's contract (@dustinedwards/site-api): an adapter over the writing in D1 (articles, episodes
+// and the Markdown pages) and the images in BLOG_IMAGES (./media.server.ts). Carrel is the only editor of the writing.
+// Every write snapshots the row into post_versions first and renders with Prelum, refusing a source it cannot render.
+// A version hashes everything Carrel can change, so a rename or two saves in one second never collide.
+// A post scheduled before it was live is a published row with a future publish_at (publiclyVisible hides it); the cron
+// lists it as due and applies it by clearing schedule_change_id. A scheduled update on a live post waits in scheduled_updates.
 import { and, eq, isNotNull, lte } from "drizzle-orm";
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import {

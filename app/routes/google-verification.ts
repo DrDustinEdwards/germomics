@@ -1,16 +1,7 @@
-// /google7e6923f5a0eb8ba9.html — Google Search Console ownership proof for germomics.com.
-//
-// DO NOT REMOVE AND DO NOT RENAME. Google re-requests this exact URL periodically and drops the
-// property's verification if it stops returning the line below. Losing verification loses
-// Search Console access to the site's search data.
-//
-// A RESOURCE ROUTE RATHER THAN A FILE IN public/, deliberately. Workers Static Assets' default
-// html_handling ("auto-trailing-slash") redirects a request for /name.html to the extensionless
-// /name, and Search Console asks for the .html URL. Serving it from the Worker returns 200 at
-// the path Google actually requests. It also sorts above the `:slug` catch-all in app/routes.ts,
-// so it never falls through to the article lookup.
-//
-// The token is public by design: it proves control of the site, it is not a secret.
+// Google Search Console ownership proof. DO NOT REMOVE OR RENAME: Google re-requests this URL and drops the
+// verification, and the site's search data with it, if it stops returning the line below.
+// A resource route, not a file in public/: Static Assets' html_handling redirects /name.html to /name, but Search
+// Console asks for the .html URL. It sorts above the `:slug` catch-all in app/routes.ts. The token is public by design.
 
 const BODY = "google-site-verification: google7e6923f5a0eb8ba9.html\n";
 

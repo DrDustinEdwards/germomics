@@ -55,12 +55,10 @@ export function createWrites(
   const updates = d1ScheduledUpdates(env.DB);
   const waiting = async (slug: string): Promise<Waiting> => waitingOf(await updates.get(slug));
 
-  // Carrel's changeId joins its authorship record to this site's history. posts has no column for
-  // it, so it is written to the Worker log with the id and the new version, and returned to Carrel.
+  // posts has no column for Carrel's changeId, so it goes to the Worker log with the id and new version.
   const recordChange = (event: string, id: string, version: string, changeId: string) =>
     log({ event: `carrel.${event}`, id, version, changeId });
 
-  /** Each episode's people by its post id, in order, as the source names them. */
   async function peopleOf(ids: number[]): Promise<Map<number, PersonRef[]>> {
     const out = new Map<number, PersonRef[]>();
     if (!ids.length) return out;
@@ -84,11 +82,7 @@ export function createWrites(
     return rows.map((p) => (p.kind === "episode" ? { ...p, people: byPost.get(p.id) ?? [] } : p));
   };
 
-  /**
-   * Writes `fields` to `current`'s row only while it is the row whose version was checked: every post write moves
-   * updated_at (nextUpdatedAt), so of two saves from one version only the first can write (EmDash 1.4.0 fixed the same
-   * race, emdash-cms/emdash PR 4286). False when another save got there first.
-   */
+  /** Writes only while the row is the one whose version was checked: every write moves updated_at, so of two saves from one version only the first wins. False when another got there first. */
   async function writeUnchanged(current: Item, fields: Partial<Post>): Promise<boolean> {
     const written = await db
       .update(posts)
@@ -103,7 +97,6 @@ export function createWrites(
     return rows[0] ? (await withPeople(rows))[0] : null;
   }
 
-  /** The save rules applied to a Carrel source: the body rendered with its reading time, and the fields it holds. */
   async function changeFromSource(source: string, kind: Post["kind"]): Promise<Change> {
     let parsed;
     try {
@@ -149,8 +142,7 @@ export function createWrites(
     };
   }
 
-  // `dropUpdate`: a publish, an unpublish or a trash drops an update waiting on the post, so the cron
-  // never brings back what was just published over or taken down.
+  // `dropUpdate`: a publish, unpublish or trash drops a waiting update, so the cron never revives it.
   async function write(
     event: string,
     slug: string,
@@ -203,7 +195,6 @@ export function createWrites(
     };
   }
 
-  /** The fields that put a post live, or schedule it: an episode needs its audio and transcript first. */
   async function goingLive(current: Item | null, source: string | undefined): Promise<Change> {
     if (!current) throw new NotFoundError();
     if (current.trashedAt) throw new RefusedError(IN_TRASH);
@@ -221,7 +212,6 @@ export function createWrites(
     };
   }
 
-  /** A page's write: the version checked, then the change. A page is never created here. */
   async function writePage(
     event: string,
     id: string,
@@ -238,7 +228,6 @@ export function createWrites(
         "A germomics page is a route of its own, so Carrel edits the pages it lists and adds none.",
       );
     const fields = await build(current);
-    // Of two saves from one version only the first writes, as for a post (writeUnchanged).
     const written = await db
       .update(contentBlocks)
       .set({ ...fields, updatedAt: nowIso() })
@@ -287,7 +276,6 @@ export function createWrites(
       ),
     );
 
-  /** A page id is never renamed, trashed or deleted; anything else must be a post that exists. */
   async function existingPost(id: string, what: string): Promise<Item> {
     if (await findPage(env, id))
       throw new RefusedError(`Every germomics page is a live route, so it cannot be ${what}.`);
@@ -296,7 +284,7 @@ export function createWrites(
     return current;
   }
 
-  /** The post a source would make, never written: over the stored row when there is one, noindex either way. */
+  /** The post a source would make, never written; noindex either way. */
   async function draftPost(id: string | undefined, source: string): Promise<Post> {
     const current = id ? await findPost(id) : null;
     const kind = current?.kind ?? "article";

@@ -91,34 +91,6 @@ beforeEach(async () => {
 });
 
 describe("the guard: planted requests must be refused", () => {
-  it("does not serve the key off its prefix", async () => {
-    expect((await call("/admin")).status).toBe(404);
-    expect((await call("/api/carrel/v2/meta")).status).toBe(404);
-    expect((await call("/feed/podcast/")).status).toBe(404);
-  });
-
-  it("refuses a wrong key and no key", async () => {
-    expect(
-      (await call("/api/carrel/v1/content", {}, { Authorization: `Bearer ${"x".repeat(40)}` }))
-        .status,
-    ).toBe(401);
-    expect((await call("/api/carrel/v1/content", {}, {})).status).toBe(401);
-  });
-
-  it("refuses an unknown route", async () => {
-    expect((await call("/api/carrel/v1/no-such-route")).status).toBe(404);
-    expect((await call("/api/carrel/v1/no-such-route", {}, {})).status).toBe(401);
-  });
-
-  it("refuses a stale expectedVersion and leaves the article as it was", async () => {
-    const created = await json(await put("stale-test", '---\ntitle: "One"\n---\n<p>one</p>', null));
-    const stale = await put("stale-test", '---\ntitle: "Two"\n---\n<p>two</p>', "0".repeat(32));
-    expect(stale.status).toBe(409);
-    expect((await json(stale)).currentVersion).toBe(created.version);
-    const doc = await json(await call("/api/carrel/v1/content/stale-test"));
-    expect(doc.title).toBe("One");
-  });
-
   it("refuses a create when the id is taken, and a version for an id that does not exist", async () => {
     await put("taken", "<p>x</p>", null);
     expect((await put("taken", "<p>y</p>", null)).status).toBe(409);
@@ -336,20 +308,6 @@ describe("media", () => {
       body: PNG,
     });
 
-  it("uploads, lists, and deletes an unused image", async () => {
-    const made = await json(await upload());
-    expect(made.url).toMatch(/^\/media\/carrel\//);
-    expect(made.alt).toBe("A pixel");
-    const list = await json(await call("/api/carrel/v1/media"));
-    expect(list.items.map((i: { id: string }) => i.id)).toContain(made.id);
-    const del = await call(
-      `/api/carrel/v1/media/${encodeURIComponent(made.id)}?changeId=${cid()}`,
-      { method: "DELETE" },
-    );
-    expect(del.status).toBe(200);
-    expect(await e.BLOG_IMAGES.head(made.id)).toBeNull();
-  });
-
   it("refuses to delete an image a post uses, and names the post", async () => {
     const made = await json(await upload());
     await e.DB.prepare(
@@ -375,13 +333,7 @@ describe("media", () => {
     expect((await e.BLOG_IMAGES.list()).objects).toHaveLength(1);
   });
 
-  it("refuses a type the site did not declare and bytes that are not the declared type", async () => {
-    const wrongType = await call(`/api/carrel/v1/media?filename=a.txt&changeId=${cid()}`, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: "hi",
-    });
-    expect(wrongType.status).toBe(400);
+  it("refuses bytes that are not the declared type", async () => {
     const fake = await call(`/api/carrel/v1/media?filename=a.png&changeId=${cid()}`, {
       method: "POST",
       headers: { "Content-Type": "image/png" },

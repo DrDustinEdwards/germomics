@@ -1,43 +1,31 @@
-// Curated datasets for the /data pages. Bundled JSON (served via loader data) rather than a
-// D1 table — small, versioned with the code, and crawlable. getDataset() is the single read
-// point, so moving these into an R2 "germomics-data" bucket later is a one-function change.
-//
-// THE NUMBERS are app/lib/data/datasets.json, each read from the source it cites; app/lib/data/SOURCES.md says what
-// was fetched and how each was checked. This file adds only the page's words: titles, summaries, the chart's alt
-// text and notes, each stating only what those numbers show.
+// Curated /data datasets: bundled JSON, versioned with the code. The numbers are app/lib/data/datasets.json, each read
+// from its cited source (SOURCES.md says how each was checked). This file adds only the page's words, each stating
+// only what those numbers show.
 import data from "~/lib/data/datasets.json";
 
 type DataPoint = { lng: number; lat: number; label: string; value: number };
-/** Where numbers come from, shown with a link beside the chart, map or table that uses them. */
 export type Source = { label: string; url: string };
-/** One line over dated points; `label` is how each date reads in the table and hover details. */
+/** `label` is how each date reads in the table and hover details. */
 type TimelineSeries = { name: string; points: { date: string; label: string; value: number }[] };
-/** A line chart over dated points, one line per series. */
 export type Timeline = {
   title: string;
   alt: string;
   xLabel: string;
   yLabel: string;
   yUnit?: string;
-  /** A sentence under the chart: what is left out of it, and why. */
   caption?: string;
   source: Source;
   series: TimelineSeries[];
 };
 
-/** A dot map (app/lib/charts.server.ts dataMap): points sized by count over Snow's streets, with landmarks. */
 export type DataMap = {
   title: string;
-  /** The finding: what the map shows, as its text alternative. */
   alt: string;
   points: DataPoint[];
-  /** What a point's value counts, for the key, hover details and table. */
   valueLabel: string;
   landmarks: DataPoint[];
-  /** What the landmarks are. */
   landmarkLabel: string;
   marked: string | null;
-  /** How to read the map, under it. */
   legend: string;
   source: Source;
 };
@@ -47,11 +35,10 @@ export type Dataset = {
   title: string;
   kind: "virus" | "bacteria";
   summary: string;
-  /** Points valued by count, and landmarks (value 0) drawn apart from them; `marked` is the landmark to pick out. */
+  /** Landmarks have value 0; `marked` is the one to pick out. */
   map: DataMap | null;
   timeline: Timeline | null;
   table: { title: string; columns: string[]; rows: (string | number)[][]; source: Source } | null;
-  /** A note on the page, under the chart: how its counts relate to each other. */
   note: string | null;
 };
 

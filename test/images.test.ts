@@ -1,9 +1,8 @@
 import { env } from "cloudflare:test";
 import { beforeAll, describe, expect, it } from "vitest";
-import { RouterContextProvider } from "react-router";
-import { cloudflareContext } from "@dustinedwards/site-runtime/context";
 import { imageSet } from "~/lib/images.server";
 import { applyMigrations } from "./helpers/d1";
+import { routeContext } from "./helpers/harness";
 
 // Responsive images (app/lib/images.ts): a cover gets its crops from /media, and /media serves BLOG_IMAGES.
 // A body's figures are sized when it is rendered (test/post-render.test.ts). The widths, formats and refusals are site-runtime's
@@ -14,8 +13,7 @@ const KEY = "a-sky-full-of-sars/coronavirus-795.webp";
 let loader: typeof import("~/routes/media.$").loader;
 
 function media(path: string) {
-  const context = new RouterContextProvider();
-  context.set(cloudflareContext, { env: e, ctx: {} as ExecutionContext });
+  const context = routeContext(e);
   const request = new Request(`https://germomics.com/media/${path}`);
   return loader({ request, context, params: { "*": path.split("?")[0] } } as unknown as Parameters<
     typeof loader

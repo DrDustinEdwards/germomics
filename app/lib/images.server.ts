@@ -1,12 +1,7 @@
-// Server half of the responsive images (app/lib/images.ts): reads each stored original's size for the cover,
-// artwork and people photos a page shows. A body's figures are sized when it is rendered, from the media library
-// (app/lib/render.server.ts).
-//
-// THE SIZE OF AN ORIGINAL. An upload records its width and height as R2 custom metadata (measured
-// by site-api's prepareUpload). The season 1 figures were uploaded before that, as pre-made
-// `<slug>-<width>.webp` files, so for those the width is read from the name and the shape from the
-// figure's own width and height. An image with neither is left as it is: the original,
-// unsized, is better than a guess (site-runtime's rule).
+// Server half of the responsive images (app/lib/images.ts): the size of each stored original behind a page's cover,
+// artwork and people photos. An upload records width and height as R2 custom metadata (site-api's prepareUpload).
+// Season 1 figures predate that as `<slug>-<width>.webp`, so their width is read from the name. An image with neither
+// is left unsized: better than a guess (site-runtime's rule).
 import { FOCUS_METADATA, keyOfAddress, type StoredImage } from "@dustinedwards/site-runtime/image";
 import type { HeadImage } from "@drdustinedwards/site-helpers/head";
 import { inList } from "@dustinedwards/site-runtime/d1";
@@ -23,10 +18,7 @@ const positive = (v: string | null | undefined): number | null => {
   return Number.isInteger(n) && n > 0 ? n : null;
 };
 
-/**
- * One original as /media serves it, with its size, or null when it is not in BLOG_IMAGES. `aspect`
- * (height over width) stands in for a height the file does not record.
- */
+/** One original as /media serves it, or null when not in BLOG_IMAGES. `aspect` (height over width) stands in for an unrecorded height. */
 async function storedImage(env: Env, src: string, aspect?: number): Promise<StoredImage | null> {
   const key = keyOfAddress(src, MEDIA_ADDRESS);
   if (!key) return null;
@@ -38,8 +30,7 @@ async function storedImage(env: Env, src: string, aspect?: number): Promise<Stor
   const meta = head.customMetadata ?? {};
   const width = positive(meta.width) ?? positive(NAMED_WIDTH.exec(key)?.[1]);
   const height = positive(meta.height) ?? (width && aspect ? Math.round(width * aspect) : null);
-  // The object's etag (its bytes' MD5) is the version its size URLs carry (`v=`), so a replaced or turned file is a new
-  // URL and never the year-old copy a browser holds.
+  // The etag is the `v=` of its size URLs, so a replaced file is a new URL, not the year-old cached copy.
   return {
     src: mediaPath(key),
     width,
@@ -49,7 +40,6 @@ async function storedImage(env: Env, src: string, aspect?: number): Promise<Stor
   };
 }
 
-/** The placeholder and main color site-api stored for each library key (D1 `media`), shown while a picture loads. */
 async function placeholders(
   env: Env,
   keys: string[],
@@ -62,11 +52,7 @@ async function placeholders(
   return new Map(rows.map((r) => [r.key, { placeholder: r.placeholder, color: r.color }]));
 }
 
-/**
- * The attributes for each image a page shows, keyed by `use|src` (read with `imageFor`). A crop
- * (every use but the figures has a ratio) fixes the shape, so only the width bounds its sizes.
- * Images the site cannot size are left out, and the page shows them as they are.
- */
+/** The attributes for each image a page shows, keyed by `use|src` (read with `imageFor`). Images that cannot be sized are left out. */
 export async function imageSet(
   env: Env,
   wanted: Array<[ImageUseName, string | null | undefined]>,
@@ -92,14 +78,10 @@ export async function imageSet(
   return set;
 }
 
-// The narrowest picture cut to the card's 1.9:1 without losing much: 3:2.
+// 3:2 is the narrowest picture that survives the card's 1.9:1 cut.
 const WIDE = 1.5;
 
-/**
- * A page's share card: its own image as /media serves it cut to 1200x630 around its focal point, with that size. A
- * square or tall image (the show art, a portrait) would lose its subject in that strip, so it and no image share the
- * site's wordmark card; an image the site cannot size or crop (not in BLOG_IMAGES) is sent as it is.
- */
+/** A page's share card: its image cut to 1200x630 at its focal point. A square or tall image would lose its subject, so it gets the wordmark card. */
 export async function shareImage(
   env: Env,
   own: { src: string; alt: string | null } | null | undefined,
@@ -109,12 +91,10 @@ export async function shareImage(
   const stored = await storedImage(env, own.src, 1);
   if (stored?.width && stored.height && stored.width / stored.height < WIDE) return DEFAULT_CARD;
   const card = stored ? images.attributes(stored, "share") : null;
-  // A stored address may be a site path (/media/<key>); a share tag needs an absolute URL.
   if (!card?.sources.length) return { url: new URL(own.src, SITE_ORIGIN).href, alt };
   return { url: `${SITE_ORIGIN}${card.src}`, width: card.width, height: card.height, alt };
 }
 
-/** What the post page (and its preview) shows besides the body: the cover, artwork and people photos. */
 export function postImages(
   env: Env,
   post: { coverImage: string | null },

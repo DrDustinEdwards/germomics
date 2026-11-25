@@ -1,7 +1,5 @@
-// The text Carrel edits for one article or episode: a front matter block, one `key: <JSON>` line per field, then the
-// body, the Markdown the site stores and renders with Prelum (app/lib/render.server.ts). It is every field of the post
-// a writer sets, so Carrel is the only editor; what stays in the germomics admin is the episode's
-// audio and transcript, which are files measured or converted in the browser (app/routes/admin.episodes.$id.tsx).
+// The text Carrel edits for one article or episode: front matter (one `key: <JSON>` line per field), then the Markdown
+// body. The audio and transcript stay in the admin (app/routes/admin.episodes.$id.tsx).
 //
 //   ---
 //   title: "Notes on the Broad Street Pump"
@@ -18,19 +16,15 @@
 //   ---
 //   The body, in Markdown...
 //
-// THE WHOLE SET. A source with front matter is the post: a key it leaves out is cleared, as Carrel's post and search
-// field boxes clear a blank one by removing its key. A source with no front matter at all is a body alone, and leaves
-// every field as it was. `excerpt`, `authors`, `series`, `seriesPart`, `featureImage` and `featureImageAlt` are site-api's post fields (the picture a post leads with, in the columns cover_image and cover_alt; a decorative one, `featureImageDecorative: true`, is an empty alt) and searchTitle, description, image, imageAlt, canonical
-// and noindex its search fields (@dustinedwards/site-api/frontmatter), in the columns seo_title, seo_description,
-// og_image, og_image_alt, canonical and noindex; the keys before them, seoTitle and seoDescription, are still read.
-//
-// READING. site-api's jsonSource reads the lines, given this field list; the structured fields (numbers and lists of
-// objects) are read as text, which jsonSource hands back as written, and parsed and checked here.
+// A source with front matter is the whole post: a key it leaves out is cleared. One with none is a body alone and
+// leaves every field as it was. Key to column: featureImage/featureImageAlt -> cover_image/cover_alt, searchTitle,
+// description, image, imageAlt -> seo_title, seo_description, og_image, og_image_alt (@dustinedwards/site-api/frontmatter);
+// seoTitle and seoDescription are still read. site-api's jsonSource reads the lines; structured fields arrive as text
+// and are parsed and checked here.
 import { splitSource } from "@drdustinedwards/site-helpers/frontmatter";
 import { jsonSource } from "@dustinedwards/site-api/frontmatter";
 import type { Chapter, Guest, Source } from "~/lib/types";
 
-/** An episode's guest by their People entry (/admin/people), with the role on this episode. */
 export type PersonRef = { slug: string; role: string | null };
 
 type PostFields = {
@@ -65,11 +59,10 @@ type EpisodeFields = {
   people: PersonRef[];
 };
 
-/** What a post's source holds: its kind decides whether the episode's fields are written. */
 export type SourcePost = PostFields &
   Partial<EpisodeFields> & { kind: "article" | "episode"; body: string };
 
-/** A parsed source: null when it had no front matter (a body alone), else every field, cleared ones included. */
+/** null when the source had no front matter (a body alone); else every field, cleared ones included. */
 export type ParsedSource = {
   body: string;
   post: PostFields | null;
@@ -115,13 +108,11 @@ const SOURCE = jsonSource({
   seoDescription: "text",
 });
 
-/** A source Carrel's writer must fix, every problem named. */
 export class SourceError extends Error {}
 
 const blank = (v: unknown) =>
   v === null || v === undefined || v === "" || v === false || (Array.isArray(v) && v.length === 0);
 
-/** The source, writing only the fields that have a value, in a fixed order, and an episode's fields only on one. */
 export function renderSource(post: SourcePost): string {
   const values: Record<string, unknown> = {
     title: post.title,
@@ -152,7 +143,6 @@ export function renderSource(post: SourcePost): string {
   return `---\n${lines.join("\n")}\n---\n${post.body}`;
 }
 
-/** Parses front matter plus body; refuses, naming every problem, a source that does not fit. */
 export function parseSource(source: string, kind: "article" | "episode"): ParsedSource {
   let read: ReturnType<typeof SOURCE.read>;
   try {
@@ -226,7 +216,6 @@ export function parseSource(source: string, kind: "article" | "episode"): Parsed
   return { body, post, episode };
 }
 
-/** A whole number written as JSON (or as text), or null for none. */
 function whole(key: string, raw: string | null | undefined, problems: string[]): number | null {
   if (!raw?.trim()) return null;
   const n = Number(raw);
@@ -246,7 +235,6 @@ function objects<T>(
   let value: unknown;
   try {
     value = JSON.parse(raw);
-    // A list written as a JSON string (quoted) is read the same.
     if (typeof value === "string") value = JSON.parse(value);
   } catch {
     problems.push(`${key}: the value is not valid JSON.`);
@@ -273,12 +261,10 @@ function objects<T>(
 
 const PAGE_SOURCE = jsonSource({ title: "text" });
 
-/** A page's source: its title, then its Markdown. */
 export function renderPageSource(page: { title: string | null; value: string }): string {
   return PAGE_SOURCE.write({ title: page.title || undefined }, page.value);
 }
 
-/** A page's title (null when the source leaves it out) and Markdown. */
 export function parsePageSource(source: string): {
   title: string | null;
   body: string;
