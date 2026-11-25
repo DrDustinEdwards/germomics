@@ -1,5 +1,4 @@
 import type { PagePreview } from "~/lib/preview-context";
-// What the Carrel adapter reads and shapes without the database: statuses, versions, summaries, history.
 import {
   contentVersion,
   RefusedError,
@@ -12,7 +11,7 @@ import { CHANGE_AUTHOR } from "~/lib/admin.server";
 import { iso } from "./pages.server";
 import { renderSource, type PersonRef } from "./source";
 
-/** The site's own render of a route (workers/app.ts), with the draft on its context; nothing stored or cached. */
+/** The site's own render of a route (workers/app.ts) with the draft on its context; never stored. */
 export type RenderDocument = (
   request: Request,
   draft: { post: Post } | { page: PagePreview },
@@ -20,13 +19,10 @@ export type RenderDocument = (
 
 export const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/;
 export type Status = ContentSummary["status"];
-/** A post as Carrel sees it: the row, and an episode's people (in a snapshot too, since post_versions 0019). */
 export type Item = Post & { people?: PersonRef[] };
 
-/** The person Carrel names on a write (site-api v0.22.0), kept as the revision's author. */
 export type Actor = { name: string };
 export type Waiting = Pick<ScheduledUpdate, "publishAt" | "changeId"> | null;
-/** What one write changes: the row's fields, and an episode's people when the source names them. */
 export type Change = {
   fields: Partial<Post>;
   people?: { personId: number; role: string | null; sort: number }[];
@@ -39,7 +35,6 @@ export function statusOf(p: Pick<Post, "status" | "publishAt">): Status {
   return p.publishAt && p.publishAt > nowIso() ? "scheduled" : "published";
 }
 
-/** Live, or live once and taken down since: the post's address has been public. */
 export const everLive = (p: Post) => !!p.publishedAt && p.publishedAt <= nowIso();
 
 export const creditOf = (p: Pick<Post, "authors">, show: string): string[] =>
@@ -60,10 +55,7 @@ export const sourceOf = (p: Item) =>
     people: p.people ?? [],
   });
 
-/**
- * The version of a post as Carrel sees it. The trash and a waiting update join the parts only when there is one, so
- * the version of a post with neither is the hash of its source, status, schedule and slug.
- */
+/** The trash and a waiting update join the hash only when present, so a post with neither hashes source, status, schedule and slug. */
 export const versionOf = (p: Item, update: Waiting = null): Promise<string> =>
   contentVersion([
     sourceOf(p),
@@ -100,7 +92,6 @@ export async function summaryOf(
   };
 }
 
-/** A render refused by Prelum, as Carrel shows it: the reason, with the line and the fix. */
 export async function rendered<T>(run: () => Promise<T>): Promise<T> {
   try {
     return await run();
@@ -134,7 +125,6 @@ export type Kept = {
   createdAt: string;
 };
 
-/** Newest first: the state after each change is the next snapshot (or the current state), the oldest snapshot last. */
 export async function historyOf<T>(
   rows: Kept[],
   current: { state: T; version: string; at: string | null },

@@ -24,10 +24,8 @@ import { INDEXNOW_KEY, NO_PREFETCH, ROBOTS_DISALLOW, SITE_ORIGIN } from "../app/
 
 export { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-object";
 
-// Paths always rendered live, never stored: /search is query-driven and low-repeat, /unsubscribe and
-// /subscribe/confirm render a per-token email, /games/assets are immutable R2 binaries that cache on their own, and
-// /media keeps each resized image in the cache itself. (/admin and /api write or are signed in; a cookie, such as
-// Access's CF_Authorization once the admin has signed in, already means a live render.)
+// Paths always rendered live, never stored: /search is low-repeat, /unsubscribe and /subscribe/confirm render a
+// per-token email, /games/assets and /media cache themselves. A cookie (Access's CF_Authorization) already means live.
 const LIVE = [
   "/admin",
   "/api",
@@ -38,7 +36,6 @@ const LIVE = [
   "/media/",
 ];
 
-// The paths with no Markdown copy: the admin, the APIs, the search, a game's canvas page and the other non-reading paths.
 const NO_COPY = [
   "/admin",
   "/api/",
@@ -52,20 +49,14 @@ const NO_COPY = [
   "/feed/",
 ];
 
-/** Whether a path is a listed prefix or under it: a prefix matches a whole segment, so a post slug that merely starts with the word is not caught. */
+/** A prefix matches a whole segment, so a post slug that merely starts with the word is not caught. */
 const under = (path: string, prefixes: string[]) =>
   prefixes.some(
     (p) => path === p.replace(/\/$/, "") || path.startsWith(p.endsWith("/") ? p : `${p}/`),
   );
 
-/** A game page's slug, for the tag its leaderboard's page is stored under. */
 const gameSlug = (pathname: string) => /^\/games\/([^/.]+)/.exec(pathname)?.[1];
 
-/**
- * The site's Worker: site-runtime's gateway, Renderer, request log and cron (./worker), with what is this site's own:
- * the bare host and the podcast feed's slash, its machine files, the rate limits, Carrel's site API, the pages stored by
- * default (a game's under its own tag too), Carrel's tombstones and the admin idle sign-out.
- */
 const site = defineSite<Env>({
   name: "Germomics",
   serverBuild: () => import("virtual:react-router/server-build") as Promise<ServerBuild>,
@@ -73,7 +64,6 @@ const site = defineSite<Env>({
   withSecurityHeaders: security.withSecurityHeaders,
   // https, the bare host, no trailing slash; the podcast feed keeps its slash (CLAUDE.md, Podcast feed).
   canonical: { host: "germomics.com", except: ["/feed/podcast/"] },
-  // robots.txt, ai.txt (named from the show and its policy page in D1), site.webmanifest and the IndexNow key file.
   files: (request, env) =>
     standardFiles({
       origin: SITE_ORIGIN,
@@ -97,13 +87,11 @@ const site = defineSite<Env>({
         backgroundColor: "#FBFAFD",
       },
     })(request),
-  // Never the paths in NO_PREFETCH, nor a game, whose page is heavy (Phaser) and holds a leaderboard.
+  // Never NO_PREFETCH paths, nor a game: its page is heavy (Phaser) and holds a leaderboard.
   speculationExclude: [...NO_PREFETCH, "/games/"],
   steps: [
-    // Abuse mitigation before any work: the admin, AI and signup paths' rate limits.
     (request, env) => enforceRateLimit(env, request),
-    // Carrel's site API under /api/carrel/v1 and its preview links (site-api's step); a preview renders the draft
-    // through the page's own route in-process (kit.render), never stored; an accepted write purges.
+    // A preview renders the draft through the page's own route in-process (kit.render), never stored; an accepted write purges.
     siteApiStep((env, kit) =>
       carrelApi(env, (request, draft) =>
         kit.render(request, {
@@ -116,9 +104,8 @@ const site = defineSite<Env>({
     ),
   ],
   cacheable: (_request, url) => !under(url.pathname, LIVE),
-  // No route names a Cache-Control of its own, so a 200 is stored a day under the pages tag (a game's also under its
-  // own, so a score purges only that page), and fresh no later than the next scheduled post, which goes live on read
-  // with no write to purge on (posts.server publiclyVisible).
+  // A 200 is stored a day under the pages tag (a game's also under its own, so a score purges only that page), and no
+  // later than the next scheduled post, which goes live on read with no write to purge on (publiclyVisible).
   publicPages: async (url, env) => {
     const slug = gameSlug(url.pathname);
     return {
@@ -131,15 +118,12 @@ const site = defineSite<Env>({
     };
   },
   preloads: FONT_PRELOADS,
-  // Every public page renders inside routes/_site, whose stylesheet (site.css: the header, the player and the reading
-  // contexts) joins the root's in the Early Hints header and in the stylesheets a Carrel preview draws with.
+  // Every public page renders inside routes/_site, whose stylesheet (site.css) joins Early Hints and the Carrel preview's.
   stylesheetRoutes: ["routes/_site"],
-  // A path Carrel removed answers 410 (site-api's tombstones).
   onNotFound: (response, request, env) =>
     tombstoned(response, new URL(request.url).pathname, d1SiteApiStore(env.DB)),
-  // Prelum's markdownCopies: each public page has a Markdown copy at its path plus .md and answers Accept:
-  // text/markdown. /llms-full.txt stays the site's own (llmsFull: false): it prints the show notes and essays and leaves
-  // the transcripts out, which the generated one, built from whole pages, would print.
+  // Markdown copies at path + .md and on Accept: text/markdown. /llms-full.txt stays the site's own (llmsFull: false):
+  // the generated one would print the transcripts.
   wrap: (handler) =>
     markdownCopies(handler, {
       origin: SITE_ORIGIN,
@@ -147,12 +131,10 @@ const site = defineSite<Env>({
       siteMarkdown: false,
       skip: (path) => under(path, NO_COPY),
     }),
-  // An admin idle for an hour is signed out of Access (site-runtime ./access).
   adminIdle: [{ secret: (env) => env.ADMIN_IDLE_SECRET }],
   cron: cronJobs,
 });
 
-// The daily page-dates job reads each hub and static page as the Renderer would render it (app/lib/page-dates.server.ts).
 setPageRenderer((path, env) => renderHtml(site, new Request(`${SITE_ORIGIN}${path}`), env));
 
 export class Renderer extends siteRenderer(WorkerEntrypoint<Env>, site) {}

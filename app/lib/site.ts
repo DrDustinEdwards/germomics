@@ -1,36 +1,23 @@
 import { shareCard } from "@drdustinedwards/site-helpers/head";
-// Canonical site-identity values (client-safe). One source of truth so the privacy page, the
-// schema.org PostalAddress, and any future newsletter email footer all read the same address.
-// Mirrors the Vault's site-config.md.
+// Canonical site-identity values (client-safe): the privacy page, schema.org and the email footer read the same address.
 
-/**
- * The site and its audio subdomain. Feed enclosures always point at MEDIA_ORIGIN. Every picture is /media/<key> on
- * SITE_ORIGIN, the original and each size (app/lib/images.ts).
- */
+/** Feed enclosures always point at MEDIA_ORIGIN; every picture is /media/<key> on SITE_ORIGIN (app/lib/images.ts). */
 export const SITE_HOST = "germomics.com";
 export const SITE_ORIGIN = `https://${SITE_HOST}`;
-/** Where a stored image address lives, for site-runtime's keyOfAddress and keysAtAddresses: /media/<key> on this origin. */
+/** For site-runtime's keyOfAddress and keysAtAddresses. */
 export const MEDIA_ADDRESS = { origins: [SITE_ORIGIN] };
 export const MEDIA_ORIGIN = "https://media.germomics.com";
-/** The show's square cover art: its artwork in the feed until show_config sets one. */
 export const DEFAULT_ARTWORK = `${SITE_ORIGIN}/media/brand/germomics-artwork-1400.jpg`;
-/** The share card of any page without its own image: the wordmark at 1200x630 (public/brand/germomics-card.jpg). */
 export const DEFAULT_CARD = shareCard(
   `${SITE_ORIGIN}/brand/germomics-card.jpg`,
   "Germomics: a broadcasting microphone forming the M in the GERMOMICS wordmark",
 );
-/** The site's IndexNow key, public by the protocol's design: served as /<key>.txt and sent with each changed page. */
+/** Public by the IndexNow protocol's design: served as /<key>.txt. */
 export const INDEXNOW_KEY = "e181c18855ea5175390b4e1124cc23fd";
 
-/**
- * The paths never fetched ahead of a click, beyond the family's NEVER_PREFETCH (/admin, /api and the rest): /unsubscribe
- * and /subscribe/confirm, per-reader token pages reached from email whose actions unsubscribe and subscribe, the tokenized draft previews, and the feeds.
- * Both kinds of prefetch read it: React Router's on a hydrated page (root.tsx) and the speculation rules every page names
- * (workers/app.ts).
- */
+/** Never prefetched, beyond the family's NEVER_PREFETCH: token pages whose actions unsubscribe and subscribe, draft previews and the feeds. Read by root.tsx and the speculation rules in workers/app.ts. */
 export const NO_PREFETCH = ["/unsubscribe", "/subscribe/confirm", "/preview", "/feed"];
 
-/** OP3 (op3.dev), the download analytics prefix the podcast feed wraps enclosures in. */
 export const OP3_ORIGIN = "https://op3.dev";
 
 export const SITE_ADDRESS = {
@@ -41,7 +28,6 @@ export const SITE_ADDRESS = {
   country: "US",
 } as const;
 
-/** One-line human form — e.g. the CAN-SPAM physical address in the newsletter email footer. */
 export const SITE_ADDRESS_LINE = `${SITE_ADDRESS.streetAddress}, ${SITE_ADDRESS.locality}, ${SITE_ADDRESS.region} ${SITE_ADDRESS.postalCode}`;
 
 export type Address = {
@@ -52,16 +38,12 @@ export type Address = {
   country: string;
 };
 
-/** Paths no crawler needs, in /robots.txt and /ai.txt alike. */
 export const ROBOTS_DISALLOW = ["/admin", "/preview/"];
 
-/** Carrel's Desk, the family's writing editor, where this site's posts and pages are written (app/lib/carrel/adapter.server.ts). */
 const CARREL_ORIGIN = "https://desk.dustinedwards.info";
-/** The Carrel editor for one of this site's items, by its Carrel id (a post's slug, `page.<name>` for a page). */
 export const carrelEditUrl = (id: string) =>
   `${CARREL_ORIGIN}/p/germomics/e/${encodeURIComponent(id)}`;
 
-/** A content page's key to its public URL: site-search page hits and the admin Preview link. */
 export const PAGE_HREF: Record<string, string> = {
   "page:about": "/about",
   "page:dustin-edwards": "/about/dustin-edwards",

@@ -1,7 +1,4 @@
-// Shared post detail view, reused by the public route ($slug) and the tokenized preview route.
-// Episodes keep their existing experience (player, chapters, transcript, guests); articles get an
-// editorial layout (cover, byline + reading time, table of contents, share, prev/next, related).
-// Body is rendered once via BodyRenderer for both kinds.
+// The post detail view, shared by the public ($slug) and the tokenized preview routes.
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "react-router";
 import {
@@ -64,17 +61,13 @@ export type DetailData = {
   toc: TocItem[];
   soundbites?: SoundbiteView[];
   preview?: boolean;
-  /** Sizes from /media for the cover, artwork and people photos the loader could size (app/lib/images.server.ts). */
   images?: ImageSet;
-  /** A data preview for this episode, outside the essay. Null when it has none. */
   context: EpisodeContextView | null;
 };
 
-// "Save for later" is Capsomer's SaveToggle: a slug list in localStorage under germomics-saved, no server.
+// Save for later is a slug list in localStorage under germomics-saved, no server.
 const SAVED_KEY = "germomics-saved";
 
-// Compact in-page listen row: the five primary apps + RSS, links out (the footer carries the rest).
-// Capsomer's SubscribeLinks; the away cue is the site's own ExternalCue.
 function SubscribeRow({ links }: { links: Record<string, string> }) {
   const primary = PRIMARY_KEYS.filter((k) => links[k]);
   if (!primary.length) return null;
@@ -129,7 +122,6 @@ export function PostDetail({ data }: { data: DetailData }) {
   const bodyRef = useRef<HTMLDivElement>(null);
   useHideBrokenFigures(bodyRef, [post.bodyHtml]);
 
-  // Honor ?t=<seconds> deep links (share-at-timestamp landing) for episodes.
   useEffect(() => {
     const t = Number(params.get("t"));
     if (track && t > 0) {
@@ -174,7 +166,6 @@ export function PostDetail({ data }: { data: DetailData }) {
     </section>
   ) : null;
 
-  // A related episode plays from its card, as in the listings; the queue is the related episodes.
   const relatedTracks = related.filter((r) => r.kind === "episode").map(toPlayerTrack);
   const Related = related.length ? (
     <section className="gm-related">
@@ -213,9 +204,6 @@ export function PostDetail({ data }: { data: DetailData }) {
       </nav>
     ) : null;
 
-  // ── Episode layout (redesigned: hero, player surface, chapters, TOC + body, hosts, then the
-  //     collapsed Sources/Credits + Transcript pair, subscribe, related + prev/next). See Vault
-  //     episode-page-* specs. ──────────────────────────────────────────────────────────────────────
   if (isEpisode) {
     const episodeLabel = [
       post.seasonNumber ? `Season ${post.seasonNumber}` : null,
@@ -339,7 +327,6 @@ export function PostDetail({ data }: { data: DetailData }) {
                   <summary className="gm-post-summary">Transcript</summary>
                   <PlayerTranscript
                     cues={parseVtt(post.transcript).map((cue) => {
-                      // A "Name:" prefix names the speaker where no <v Name> voice tag did.
                       const parsed = parseCueText(cue.text);
                       return {
                         ...cue,
@@ -366,14 +353,12 @@ export function PostDetail({ data }: { data: DetailData }) {
     );
   }
 
-  // ── Article layout (editorial) ───────────────────────────────────────────
   return (
     <article className="gm-article">
       {data.preview ? <PreviewBanner post={post} /> : null}
       <SectionTrail trail={postTrail(post)} />
       {post.coverImage ? (
-        // Cover is the article LCP element. Load it eagerly with high priority; the fixed aspect
-        // ratio reserves space so it doesn't shift layout (CLS).
+        // The cover is the article's LCP: eager, high priority, fixed aspect ratio against layout shift.
         <Picture
           attrs={imageOrPlain(imageFor(data.images, "cover", post.coverImage), post.coverImage)}
           alt={post.coverAlt ?? ""}

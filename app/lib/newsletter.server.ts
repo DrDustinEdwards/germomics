@@ -1,7 +1,4 @@
-// Newsletter signup with double opt-in: site-runtime's ./newsletter over germomics' `subscribers` table. A signup is
-// only a request: the address stays pending until its owner opens the signed link mailed to it, and a signup for an
-// address that unsubscribed does not resubscribe it without that confirmation either. This file is the store, the
-// key and the mail in Germomics' words.
+// Double opt-in over `subscribers` (site-runtime's ./newsletter): an address stays pending until its owner opens the mailed signed link, and an unsubscribed one needs that confirmation too.
 import { and, eq, isNull } from "drizzle-orm";
 import {
   newsletter,
@@ -86,10 +83,7 @@ function list(env: Env) {
   });
 }
 
-/**
- * Ask for `email` to join the list: mail it a confirmation link. "sent" also answers an address already on the list or
- * one mailed in the last few minutes (no mail goes; the page says the same either way, so it reveals nothing).
- */
+/** "sent" also answers an address already on the list or mailed in the last few minutes (no mail goes; the page says the same, revealing nothing). */
 export async function requestSubscription(
   env: Env,
   email: string,
@@ -99,17 +93,15 @@ export async function requestSubscription(
   return list(env).request(email, now);
 }
 
-/** The address a confirmation link is for, read only (the page's GET: mail scanners open every link). */
+/** Read only: the page's GET, since mail scanners open every link. */
 export function checkConfirmation(env: Env, token: string | null, now = new Date()) {
   return list(env).check(token, now);
 }
 
-/** Confirm the subscription a link is for (the page's POST): on the list from now, any earlier unsubscribe lifted. */
 export function confirmSubscription(env: Env, token: string | null, now = new Date()) {
   return list(env).confirm(token, now);
 }
 
-/** Unsubscribe the row a token belongs to (the page's POST); "invalid" for a token that is unknown or already used. */
 export function unsubscribe(env: Env, token: string | null, now = new Date()) {
   return list(env).unsubscribe(token, now);
 }

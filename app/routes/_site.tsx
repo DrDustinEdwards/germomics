@@ -11,13 +11,13 @@ import errorPageCss from "../error-page.css?url";
 import type { Route } from "./+types/_site";
 import "../site.css";
 
-// The lock screen's picture when an episode has none of its own (Media Session).
+// Media Session's lock-screen picture when an episode has none.
 const SHOW_ARTWORK = [
   { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
   { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
 ];
 
-// The dock, with its menus and its bottom sheet, loads only once an episode is loaded: no page needs it before then.
+// The dock loads only once an episode is loaded.
 const PlayerDock = lazy(() =>
   import("capsomer/react/player").then(({ PlayerDock }) => ({ default: PlayerDock })),
 );
@@ -31,15 +31,11 @@ function Dock() {
   );
 }
 
-// The public pages' frame: the header, footer and player dock, and the stylesheet only these pages use (app/site.css:
-// Capsomer's header, player and reading contexts in the site's look). The admin brings its own shell (AdminShell), so
-// it loads none of this. A page that throws (a missing episode, an unknown address) draws its error page in this same
-// frame, so the header and footer stay.
+// The public pages' frame and their stylesheet (app/site.css); the admin has its own shell. A page that throws draws its error page in this frame.
 function Frame({ children }: { children: React.ReactNode }) {
-  // Whether this page's React runs from load (lib/hydration.ts), so the header keeps one form across navigation.
+  // The header keeps one form across navigation (lib/hydration.ts).
   const hydrates = routeHydrates(useMatches());
-  // PlayerProvider sits above the Outlet, so the single <audio> element and the queue survive every client-side
-  // navigation between public pages (uninterrupted playback).
+  // Above the Outlet so the single <audio> element and the queue survive client-side navigation.
   return (
     <PlayerProvider
       storagePrefix="germomics-"
@@ -69,13 +65,11 @@ export default function Site() {
   );
 }
 
-// The error path's title (WCAG 2.4.2).
 export function meta({ error }: Route.MetaArgs): Route.MetaDescriptors {
   return error ? [{ title: errorTitle(error, "Germomics") }] : [];
 }
 
-// Capsomer's error page between the header and footer; its stylesheet loads with it alone (app/error-page.css). The
-// frame's main wraps it, so the page is a div: one main.
+// The frame's main wraps the error page, so it is a div: one main.
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   return (
     <Frame>

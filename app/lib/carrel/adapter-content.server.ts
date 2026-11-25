@@ -59,12 +59,10 @@ export function createContent({
   writeUnchanged,
 }: Writes): ContentAdapter {
   const content: ContentAdapter = {
-    // site-api's post and search fields this site renders (./source.ts): the excerpt, and the search title,
-    // description, image and its alt text, kept in seo_title, seo_description, og_image and og_image_alt, and the
-    // canonical address and noindex in their own columns; authors, series and seriesPart.
+    // Field-to-column mapping is in ./source.ts.
     postFields: ["excerpt", "authors", "series", "seriesPart", "featureImage", "featureImageAlt"],
     searchFields: SEARCH_FIELDS,
-    // A page has no tags, authors or publish date, so a tag, author or date filter leaves the pages out.
+    // A page has no tags, authors or publish date, so those filters leave pages out.
     filters: ["kind", "tag", "author", "published"],
     publishedAtSettable: true,
 
@@ -87,12 +85,11 @@ export function createContent({
         format: "markdown" as const,
         source: sourceOf(p),
         version: await versionOf(p, update),
-        // Read only (site-api v0.33.0): what a Claude session drafts an episode's summary and chapters from.
         ...(p.kind === "episode" && p.transcript?.trim() ? { transcript: p.transcript } : {}),
       };
     },
 
-    // A new id is a new article: an episode starts in the admin, with its audio.
+    // An episode starts in the admin, with its audio, so a new id is always an article.
     saveDraft: (id, input) =>
       pageKeyOf(id)
         ? writePage(
@@ -117,9 +114,7 @@ export function createContent({
             { actor: input.actor },
           ),
 
-    // A first publish from Carrel's key is allowed (Carrel design decision 2). The guid is made once here and never
-    // rewritten. The date is the one Carrel sends (a backdate, or a new date for a live post), else the date the post
-    // first went live, else now.
+    // The guid is made once here and never rewritten. The date is Carrel's, else when the post first went live, else now.
     publish: (id, input) =>
       pageKeyOf(id)
         ? writePage(
@@ -239,8 +234,7 @@ export function createContent({
       );
     },
 
-    // The slug moves and the row stays, so the history, the people and the guid move with it. The old address of a
-    // post ever live redirects to the new one; a slug taken by another post or a page id is refused.
+    // The row stays, so history, people and guid follow the slug. The old address of a post ever live redirects; a taken slug or page id is refused.
     async rename(id, { newId, expectedVersion, changeId, actor }) {
       const current = await existingPost(id, "renamed");
       if (current.trashedAt) throw new RefusedError(IN_TRASH);
@@ -263,7 +257,7 @@ export function createContent({
       await env.DB.prepare("UPDATE scheduled_updates SET content_id = ? WHERE content_id = ?")
         .bind(newId, id)
         .run();
-      // The new slug is a post's again, so it no longer redirects; the old one does where readers may hold it.
+      // The new slug is a post's again, so it stops redirecting.
       await db.delete(postRedirects).where(eq(postRedirects.fromSlug, newId));
       const previousPath = everLive(current) ? `/${id}` : null;
       if (previousPath) {
@@ -282,7 +276,6 @@ export function createContent({
       };
     },
 
-    // Trash takes a live post off the site in the same write, dropping a waiting update.
     async trash(id, { expectedVersion, changeId, actor }) {
       const current = await existingPost(id, "trashed");
       if (current.trashedAt) throw new RefusedError("This post is already in the trash.");
@@ -303,7 +296,7 @@ export function createContent({
       );
     },
 
-    // Always a draft: a restore never republishes.
+    // A restore never republishes.
     async restore(id, { expectedVersion, changeId, actor }) {
       const current = await existingPost(id, "restored");
       if (!current.trashedAt) throw new RefusedError("This post is not in the trash.");
@@ -319,8 +312,7 @@ export function createContent({
       );
     },
 
-    // An episode's transcript (site-api v0.36.0), live at once like the admin's save: checked against the transcript's own
-    // version, written only while the row is the one checked, with the row snapshotted first. The post's version stays.
+    // Live at once; checked against the transcript's own version and written only while the row is the one checked.
     async setTranscript(id, { transcript, expectedTranscriptVersion, changeId, actor }) {
       if (await findPage(env, id)) throw new RefusedError("A page has no transcript.");
       const current = await findPost(id);
@@ -340,7 +332,7 @@ export function createContent({
       return { version };
     },
 
-    // For good, and only from the trash: the row, its snapshots, people and redirects (cascade) and any waiting update.
+    // Only from the trash; cascades to snapshots, people and redirects.
     async delete(id, { expectedVersion, changeId }) {
       const current = await existingPost(id, "deleted");
       const version = await versionOf(current, await waiting(id));
@@ -354,9 +346,7 @@ export function createContent({
       recordChange("delete", id, version, changeId);
     },
 
-    // Every other post that links to this one, by its address (/slug, or the site's origin and /slug) in a Markdown
-    // link or an href, so a trash or a delete warns first. The LIKE finds candidates; the pattern keeps /slug-two from
-    // counting as /slug.
+    // Posts linking here, so a trash or delete warns first. The LIKE finds candidates; the pattern keeps /slug-two from counting as /slug.
     async backlinks(id) {
       if (!ID_PATTERN.test(id) || !(await findPost(id))) return [];
       const dots = (text: string) => text.replace(/[.]/g, "\\.");

@@ -1,12 +1,9 @@
 import { type RouteConfig, index, layout, route } from "@react-router/dev/routes";
 
 export default [
-  // The public pages, under one layout that loads their own stylesheet (routes/_site.tsx). Resource routes and the
-  // admin stay outside it.
   layout("routes/_site.tsx", [
     index("routes/_index.tsx"),
 
-    // sections
     route("episodes", "routes/episodes._index.tsx"),
     route("season/:num", "routes/season.$num.tsx"),
     route("writing", "routes/writing._index.tsx"),
@@ -28,44 +25,33 @@ export default [
     route("accessibility", "routes/accessibility.tsx"),
     route("contact", "routes/contact.tsx"),
     route("txasm", "routes/txasm.tsx"),
-    // episode/article detail: one segment is a slug. A catch-all so a longer unknown address (/a/b) also reaches the module,
-    // whose loader throws the 404 and so draws it inside this layout (a route with no match would get the root's bare
-    // error page). Ranked below every static route.
+    // Detail by slug. Also a catch-all, so an unknown /a/b reaches the loader's 404 inside this layout instead of the
+    // root's bare error page. Ranked below every static route.
     route("*", "routes/$slug.tsx"),
   ]),
   route("games/assets/*", "routes/games.assets.$.ts"),
-  // resized images from BLOG_IMAGES (app/lib/images.ts)
   route("media/*", "routes/media.$.ts"),
 
-  // ops
   route("health", "routes/health.ts"),
-  // The operator API Capsid Admin calls (backup_status, run_job): a bearer, not Access.
+  // Capsid Admin's operator API: a bearer, not Access.
   route("api/operator", "routes/api.operator.ts"),
 
-  // feeds — resource routes. The podcast feed is matched at /feed/podcast/ (trailing slash,
-  // the immutable URL directories poll) with no redirect to/from a non-slash variant.
+  // /feed/podcast/ is the immutable URL directories poll: no redirect to or from a non-slash variant.
   route("feed/podcast", "routes/feed.podcast.ts"),
   route("feed/site.xml", "routes/feed.site.ts"),
 
-  // discovery
   route("sitemap.xml", "routes/sitemap.ts"),
-  // GEO / agentic-web discovery files (dynamic from D1, served noindex)
   route("llms.txt", "routes/llms.ts"),
   route("llms-full.txt", "routes/llms-full.ts"),
-  // Google Search Console ownership proof. The path is Google's and never changes; removing it
-  // un-verifies the property. See the route file.
+  // Google Search Console ownership proof; removing it un-verifies the property.
   route("google7e6923f5a0eb8ba9.html", "routes/google-verification.ts"),
 
-  // per-episode resource endpoints referenced by the podcast feed
   route(":slug/transcript.vtt", "routes/transcript.ts"),
   route(":slug/chapters.json", "routes/chapters.ts"),
 
-  // The hashed admin list for the Access drift check: under /admin so Access covers it, outside the layout because
-  // the caller is a service token, not a person. The route answers only that token.
+  // The Access drift check's admin list: under /admin so Access covers it, outside the layout because the caller is a service token.
   route("admin/access-drift", "routes/admin.access-drift.ts"),
 
-  // admin: Cloudflare Access signs people in; admin.tsx middleware re-verifies its JWT once for the
-  // whole subtree.
   route("admin", "routes/admin.tsx", [
     index("routes/admin._index.tsx"),
     route("episodes", "routes/admin.episodes._index.tsx"),
@@ -78,5 +64,5 @@ export default [
     route("upload", "routes/admin.upload.ts"),
   ]),
 
-  // Carrel's preview links (/preview/<token>) are answered by the Worker before the app (workers/app.ts).
+  // Carrel's /preview/<token> is answered by the Worker before the app (workers/app.ts).
 ] satisfies RouteConfig;

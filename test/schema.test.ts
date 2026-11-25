@@ -6,24 +6,19 @@ import * as schema from "~/db/schema";
 import { getDb } from "~/db/index.server";
 import { applyMigrations } from "./helpers/d1";
 
-// Migrations are hand-written SQL kept in step with app/db/schema.ts. A
-// column in one and not the other is a query that fails in production only. The test derives both
-// sides, the real migrated tables and the Drizzle definitions, and fails both ways: a column the
-// schema names that the database lacks, and a column the database has that the schema does not
-// know (rule 3.4). The FTS5 mirror tables are raw SQL on purpose and are not in the schema.
+// Migrations are hand-written SQL kept in step with app/db/schema.ts; a column in one and not the other fails only in
+// production. This derives both sides and fails both ways (rule 3.4). The FTS5 mirrors are raw SQL, not in the schema.
 const e = env as unknown as Env;
 const tables = Object.values(schema).filter((v) => is(v, SQLiteTable)) as unknown as SQLiteTable[];
 const nameOf = (t: SQLiteTable) => getTableConfig(t).name;
 
-// The schema is loaded inside each test from a fresh module registry, so the definitions a test
-// reads are the ones the file holds at that moment (and a mutation run sees a changed definition).
+// Loaded per test from a fresh module registry, so a mutation run sees a changed definition.
 async function freshTables() {
   vi.resetModules();
   const fresh = await import("~/db/schema");
   return Object.values(fresh).filter((v) => is(v, SQLiteTable)) as unknown as SQLiteTable[];
 }
 
-// The default as SQLite stores it, rebuilt from what Drizzle declares.
 function declaredDefault(col: { default?: unknown }): string | null {
   const d = col.default;
   if (d === undefined) return null;
@@ -37,7 +32,7 @@ function declaredDefault(col: { default?: unknown }): string | null {
       .map((c) => (c.value ?? []).join(""))
       .join("")
       .replace(/^\((.*)\)$/, "$1");
-  // A JSON-mode column's default (site-api's media.tags, `[]`) is stored as a quoted literal, '[]'.
+  // A JSON-mode default (media.tags, `[]`) is stored as a quoted literal, '[]'.
   return `'${JSON.stringify(d)}'`;
 }
 
