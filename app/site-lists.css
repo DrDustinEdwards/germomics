@@ -212,15 +212,19 @@
     margin-top: var(--space-6);
   }
   .gm-notice-button,
+  .gm-game-button,
+  .gm-sub-app {
+    font-family: var(--gm-font-display);
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+    font-weight: var(--weight-medium);
+  }
+  .gm-notice-button,
   .gm-game-button {
     border-radius: var(--radius-m-5);
     background-color: var(--primary);
     padding-inline: var(--space-5);
     padding-block: var(--space-3);
-    font-family: var(--gm-font-display);
-    font-size: var(--fs-body);
-    line-height: var(--line-box-5);
-    font-weight: var(--weight-medium);
     color: var(--primary-fg);
   }
   .gm-notice-button {

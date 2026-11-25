@@ -98,10 +98,6 @@
     border: var(--line-w) solid var(--line);
     background-color: var(--raised);
     padding: var(--space-4);
-    font-family: var(--gm-font-display);
-    font-size: var(--fs-body);
-    line-height: var(--line-box-5);
-    font-weight: var(--weight-medium);
   }
   @media (hover: hover) {
     .gm-sub-app:hover {
