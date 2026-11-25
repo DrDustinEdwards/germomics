@@ -158,7 +158,7 @@ dependencies and no missing packages.
 ## CI
 
 The `verify` job in .github/workflows/ci.yml runs Knip, jscpd and the page-weight report after
-its gate steps. devkit-no-bloat fails the job on any count off the baseline, and a lower count fails until the baseline is lowered in the same change. A number above
+its gate steps. devkit-no-bloat fails the job when a count rises; a lower count passes, and the baseline is lowered in the next change that touches it. A number above
 the baseline (any Knip count, the jscpd clone count, or a route more than 512 bytes gzip
 over its baseline in .route-weight.json; the Worker bundle is `.worker-size.json`'s) fails the job, and each count is a line in the job summary. Measured
 locally, the three add about 8 seconds (Knip 6.7 s including typegen, jscpd 0.4 s, page weight
