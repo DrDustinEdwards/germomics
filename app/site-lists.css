@@ -2,8 +2,7 @@
 @layer site {
   .gm-latest-meta,
   .gm-season-title,
-  .gm-season-heading,
-  .gm-index-kind {
+  .gm-season-heading {
     font-family: var(--gm-font-mono);
     font-size: var(--fs-small);
     line-height: var(--line-box-4);
@@ -44,7 +43,6 @@
       border-color: var(--primary);
     }
   }
-  .gm-index-kind,
   .gm-latest-meta {
     display: flex;
     align-items: center;

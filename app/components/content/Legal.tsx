@@ -20,8 +20,7 @@ function ReviewBanner() {
         <Icon d={iconInfo} /> Draft, pending review
       </p>
       <p className="gm-legal-draft-text">
-        This is a plain-language draft for completeness, not legal advice. It should be reviewed by
-        the site owner (and, where appropriate, a professional) before the public launch.
+        This is a plain-language draft, not legal advice. A lawyer has not reviewed it.
       </p>
     </aside>
   );

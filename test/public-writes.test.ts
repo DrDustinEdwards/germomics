@@ -270,6 +270,15 @@ describe("game score submission", () => {
     expect((await submit({ "X-Forwarded-For": "203.0.113.99" })).ok).toBe(false);
   });
 
+  it("refuses a score posted from another site, storing nothing", async () => {
+    const refused = await submit({
+      "CF-Connecting-IP": "198.51.100.9",
+      "Sec-Fetch-Site": "cross-site",
+    }).catch((r: unknown) => r as Response);
+    expect((refused as unknown as Response).status).toBe(403);
+    expect((await e.DB.prepare("SELECT 1 FROM scores").all()).results).toEqual([]);
+  });
+
   it("stores the submitted score for the game in the URL, and refuses an unknown game", async () => {
     await submit({ "CF-Connecting-IP": "198.51.100.3" });
     expect((await e.DB.prepare("SELECT game_slug, name, score FROM scores").all()).results).toEqual(

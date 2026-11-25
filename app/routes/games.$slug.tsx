@@ -6,6 +6,7 @@ import { sectionPageTrail } from "~/lib/trails";
 import { SectionTrail } from "~/components/content/SectionTrail";
 import type { Route } from "./+types/games.$slug";
 import { cloudflareContext, getEnv } from "@dustinedwards/site-runtime/context";
+import { refuseCrossSite } from "@dustinedwards/site-runtime/origin";
 import { clientIp } from "@dustinedwards/site-runtime/http";
 import { gameCacheTag, getGame } from "~/lib/games.server";
 import { getLeaderboard, submitScore } from "~/lib/scores.server";
@@ -45,6 +46,8 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
 export async function action({ params, request, context }: Route.ActionArgs) {
   const env = getEnv(context);
+  const crossSite = refuseCrossSite(request);
+  if (crossSite) throw crossSite;
   const form = await readForm(request, PUBLIC_FORM);
   const result = await submitScore(env, {
     gameSlug: params.slug,

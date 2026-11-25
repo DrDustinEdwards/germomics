@@ -27,5 +27,5 @@ export default function PhaserGame({
     return () => game.destroy(true);
   }, [slug]);
 
-  return <div ref={ref} className="gm-game-frame" />;
+  return <div ref={ref} className="gm-game-frame" role="application" aria-label="Phage Defense game" />;
 }
