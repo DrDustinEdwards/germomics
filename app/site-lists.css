@@ -1,0 +1,415 @@
+/* More of germomics' own parts, in the site layer (site.css): the index and list pages, the search field and the pills. */
+@layer site {
+  .gm-latest-meta,
+  .gm-season-title,
+  .gm-season-heading,
+  .gm-index-kind {
+    font-family: var(--gm-font-mono);
+    font-size: var(--fs-small);
+    line-height: var(--line-box-4);
+    letter-spacing: var(--tracking-wide);
+    color: var(--accent-text);
+    text-transform: uppercase;
+  }
+  .gm-season-title,
+  .gm-season-heading {
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-spread);
+  }
+  .gm-season-title {
+    margin-bottom: var(--space-6);
+  }
+  .gm-season-heading,
+  .gm-episodes-heading,
+  .gm-archive-title,
+  .gm-archive-count,
+  .gm-archive-hits {
+    margin-bottom: var(--space-5);
+  }
+  .gm-season-section,
+  .gm-episodes-section {
+    margin-bottom: var(--space-7-5);
+  }
+  .gm-season-section {
+    scroll-margin-top: var(--space-10);
+  }
+  .gm-index-card {
+    background-color: var(--raised);
+    padding: var(--space-5-5);
+  }
+  @media (hover: hover) {
+    .gm-index-card:hover {
+      border-color: var(--primary);
+    }
+  }
+  .gm-index-kind,
+  .gm-latest-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--fs-label);
+    line-height: inherit;
+  }
+  .gm-latest-meta {
+    color: var(--dim);
+  }
+
+  .gm-index-card-title {
+    font-family: var(--gm-font-display);
+    font-size: var(--fs-h3);
+    line-height: var(--line-box-7);
+    font-weight: var(--weight-medium);
+    color: var(--text);
+  }
+  /* The search box (search) and the archive's filter field: a rounded field with a bare input. */
+  .gm-search-form,
+  .gm-archive-field,
+  .gm-archive-form,
+  .gm-archive-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .gm-search-form,
+  .gm-archive-field {
+    background-color: var(--raised);
+    padding-inline: var(--space-5);
+    padding-block: var(--space-3);
+    border-radius: calc(infinity * 1px);
+    border: var(--line-w) solid var(--line);
+  }
+  .gm-archive-field {
+    padding-inline: var(--space-4);
+    padding-block: var(--space-2-5);
+  }
+  :is(.gm-search-form, .gm-archive-field):focus-within {
+    outline-style: solid;
+    outline-width: var(--focus-width);
+    outline-offset: var(--focus-offset);
+    outline-color: var(--accent-text);
+  }
+  .gm-search-input,
+  .gm-archive-input {
+    width: 100%;
+    background-color: transparent;
+    outline-style: none;
+  }
+  .gm-archive-input {
+    width: 10rem;
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+  }
+  /* The brand pill buttons: search's Go and the txasm link. */
+  .gm-search-go,
+  .gm-txasm-button,
+  .gm-archive-tab {
+    border-radius: calc(infinity * 1px);
+    padding-inline: var(--space-4);
+    padding-block: var(--space-2);
+    font-family: var(--gm-font-display);
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+  }
+  .gm-search-go,
+  .gm-txasm-button,
+  .gm-archive-tab-on {
+    background-color: var(--primary);
+    color: var(--primary-fg);
+  }
+  @media (hover: hover) {
+    .gm-search-go:hover,
+    .gm-txasm-button:hover {
+      background-color: var(--primary-hover);
+    }
+  }
+  .gm-txasm-button {
+    margin-top: var(--space-6);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding-inline: var(--space-5-5);
+    padding-block: var(--space-3-5);
+    font-weight: var(--weight-medium);
+  }
+  .gm-archive-tab {
+    padding-block: var(--space-2-5);
+  }
+  .gm-archive-tab-off {
+    border: var(--line-w) solid var(--line);
+    color: var(--dim);
+  }
+  @media (hover: hover) {
+    .gm-archive-tab-off:hover {
+      color: var(--text);
+    }
+  }
+  .gm-archive-bar {
+    margin-bottom: var(--space-6);
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+  .gm-archive-tabs {
+    display: flex;
+    gap: var(--space-2);
+  }
+  /* A guest's page, the newsletter confirm and unsubscribe notices, the about pages and a data page. */
+  .gm-guest-head {
+    margin-top: var(--space-3);
+    margin-bottom: var(--space-6);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-5);
+  }
+  .gm-guest-photo {
+    height: 4rem;
+    width: 4rem;
+    border-radius: calc(infinity * 1px);
+    border: var(--line-w) solid var(--line);
+    object-fit: cover;
+  }
+  .gm-guest-page-links,
+  .gm-bio-links,
+  .gm-notice-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    font-family: var(--gm-font-mono);
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+  }
+  .gm-guest-page-links {
+    margin-top: var(--space-3);
+    font-size: var(--fs-small);
+    line-height: var(--line-box-4);
+  }
+  .gm-notice-links {
+    margin-top: var(--space-6);
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: var(--space-5);
+  }
+  .gm-ink {
+    color: var(--text);
+  }
+  .gm-notice {
+    margin-inline: auto;
+    max-width: 28rem;
+    padding-block: var(--space-9);
+    text-align: center;
+  }
+  .gm-notice-title,
+  .gm-notice-text {
+    margin-top: var(--space-4);
+    color: var(--dim);
+  }
+  .gm-notice-form,
+  .gm-bio-body,
+  .gm-data-chart,
+  .gm-data-note {
+    margin-top: var(--space-6);
+  }
+  .gm-notice-button,
+  .gm-game-button,
+  .gm-sub-app {
+    font-family: var(--gm-font-display);
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+    font-weight: var(--weight-medium);
+  }
+  .gm-notice-button,
+  .gm-game-button {
+    border-radius: var(--radius-m-5);
+    background-color: var(--primary);
+    padding-inline: var(--space-5);
+    padding-block: var(--space-3);
+    color: var(--primary-fg);
+  }
+  .gm-notice-button {
+    color: var(--ground);
+  }
+  .gm-game-button {
+    padding-inline: var(--space-4);
+    padding-block: var(--space-2-5);
+    color: #fff;
+  }
+  @media (hover: hover) {
+    .gm-notice-button:hover,
+    .gm-game-button:hover {
+      background-color: var(--primary-hover);
+    }
+  }
+  .gm-bio-meta,
+  .gm-bio-back,
+  .gm-about-host-link {
+    font-family: var(--gm-font-mono);
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+    color: var(--accent-text);
+  }
+  .gm-bio-meta,
+  .gm-lede {
+    margin-top: var(--space-3);
+    color: var(--dim);
+  }
+  @media (hover: hover) {
+    .gm-bio-back:hover,
+    .gm-about-host-link:hover {
+      text-decoration-line: underline;
+    }
+  }
+  .gm-about-host-link {
+    margin-top: var(--space-4);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .gm-bio-section,
+  .gm-data-map,
+  .gm-data-section {
+    margin-top: var(--space-7);
+  }
+  /* The outlined pills: the share and copy pill (CopyLink), the bio's links and the about page's more link. */
+  .gm-pill,
+  .gm-chip,
+  .gm-bio-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    border-radius: calc(infinity * 1px);
+    border: var(--line-w) solid var(--line);
+    padding-inline: var(--space-4);
+    padding-block: var(--space-2-5);
+  }
+  @media (hover: hover) {
+    .gm-pill:hover,
+    .gm-chip:hover,
+    .gm-bio-link:hover {
+      border-color: var(--accent-text);
+      color: var(--accent-text);
+    }
+  }
+  .gm-pill {
+    gap: var(--space-2-5);
+    font-family: var(--gm-font-mono);
+    font-size: var(--fs-small);
+    line-height: var(--line-box-4);
+  }
+  .gm-chip {
+    gap: var(--space-2-5);
+    font-family: var(--gm-font-mono);
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+  }
+  .gm-callout {
+    margin-top: var(--space-7-5);
+    border-radius: var(--radius-xl-5);
+    border: var(--line-w) solid var(--line);
+    background-color: var(--sunken);
+    padding: var(--space-6);
+  }
+  .gm-about-host-title,
+  .gm-about-card-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-family: var(--gm-font-display);
+    font-weight: var(--weight-medium);
+  }
+  .gm-about-host-title {
+    font-size: var(--fs-h3);
+    line-height: var(--line-box-7);
+    font-weight: var(--weight-semibold);
+  }
+  .gm-about-host-text {
+    margin-top: var(--space-3);
+  }
+  .gm-data-source {
+    margin-top: var(--space-3);
+    font-family: var(--gm-font-display);
+    font-size: var(--fs-small);
+    line-height: var(--line-box-4);
+    color: var(--dim);
+  }
+  .gm-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+  }
+  .gm-data-th,
+  .gm-data-td {
+    border-bottom-style: solid;
+    border-bottom-width: var(--line-w);
+    border-color: var(--line);
+    padding-block: var(--space-3);
+    padding-right: var(--space-4);
+    vertical-align: top;
+  }
+  .gm-data-th {
+    text-align: left;
+    vertical-align: bottom;
+    font-family: var(--gm-font-display);
+    color: var(--dim);
+  }
+  .gm-data-td {
+    font-variant-numeric: tabular-nums;
+  }
+  .gm-detail-title {
+    margin-top: var(--space-3);
+  }
+  .gm-data-map,
+  .gm-data-chart {
+    background-color: var(--raised);
+    padding: var(--space-4);
+  }
+  .gm-data-note {
+    max-width: 42rem;
+    color: var(--dim);
+  }
+  /* The home page, subscribe and a game's page. */
+  .gm-hero {
+    position: relative;
+    display: grid;
+    gap: var(--space-7);
+    padding-top: var(--space-6);
+  }
+  @media (width >= 64rem) {
+    .gm-hero {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      align-items: center;
+    }
+  }
+  .gm-hero-text {
+    position: relative;
+  }
+  @media (width >= 64rem) {
+    .gm-hero-text {
+      grid-column: span 3 / span 3;
+    }
+  }
+  .gm-hero-title {
+    max-width: 48rem;
+    font-family: var(--gm-font-display);
+    font-size: var(--display-3);
+    line-height: var(--leading-none);
+    font-weight: var(--weight-semibold);
+  }
+  @media (width >= 40rem) {
+    .gm-hero-title {
+      font-size: var(--display-2);
+    }
+  }
+  .gm-brand {
+    color: var(--primary);
+  }
+  .gm-hero-lede {
+    margin-top: var(--space-5-5);
+    max-width: 42rem;
+    font-size: var(--fs-h3);
+    line-height: var(--leading-relaxed-5);
+    color: var(--dim);
+  }
+}

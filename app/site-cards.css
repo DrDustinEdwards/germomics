@@ -1,0 +1,406 @@
+/* germomics' own parts on the public pages, named in place of the utilities they replaced: the post and
+   article cards, the tag pills, the soundbite clips, the search and archive page hits, and the legal pages' notes.
+   In the site layer, so they win over Capsomer's parts. */
+@layer site {
+  /* The bordered panel: cards, clips, guests, the contents rail and the prev/next links. */
+  .gm-post-card,
+  .gm-clip,
+  .gm-page-hits,
+  .gm-guest,
+  .gm-prev,
+  .gm-next,
+  .gm-toc,
+  .gm-chapters-mobile,
+  .gm-game-frame,
+  .gm-index-card,
+  .gm-data-map,
+  .gm-data-chart {
+    border-radius: var(--radius-l-5);
+    border: var(--line-w) solid var(--line);
+  }
+  /* The cards whose border turns on hover, fading only where motion is welcome. */
+  @media (prefers-reduced-motion: no-preference) {
+    .gm-article-card,
+    .gm-index-card {
+      transition-property:
+        color, background-color, border-color, outline-color, text-decoration-color, fill, stroke,
+        opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter,
+        backdrop-filter, display, content-visibility, overlay, pointer-events;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      transition-duration: var(--dur-quick);
+    }
+  }
+  .gm-post-card {
+    column-gap: var(--space-5);
+    row-gap: 0px;
+    background-color: var(--raised);
+    padding: var(--space-5);
+    color: var(--text);
+  }
+  .gm-post-card-icon {
+    display: grid;
+    height: 2.5rem;
+    width: 2.5rem;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: calc(infinity * 1px);
+    background-color: var(--sunken);
+    color: var(--primary);
+  }
+  .gm-post-card-meta,
+  .gm-page-hits-label,
+  .gm-article-card-meta {
+    font-family: var(--gm-font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: var(--tracking-wide);
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+  .gm-post-card-meta {
+    margin-top: 0px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: var(--space-3);
+  }
+  .gm-post-card-kind {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--primary);
+  }
+  .gm-num {
+    font-variant-numeric: tabular-nums;
+  }
+  .gm-post-card-title {
+    margin-top: var(--space-2);
+    font-family: var(--gm-font-display);
+    font-size: var(--fs-h3);
+    line-height: var(--line-box-7);
+    font-weight: var(--weight-medium);
+    text-wrap: wrap;
+  }
+  .gm-post-card-link {
+    color: var(--text);
+  }
+  @media (hover: hover) {
+    .gm-post-card-link:hover {
+      color: var(--primary);
+    }
+  }
+  .gm-post-card-excerpt {
+    margin-top: var(--space-2);
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+    text-wrap: wrap;
+    color: var(--dim);
+  }
+  .gm-post-card-foot {
+    margin-top: var(--space-3);
+    padding: 0px;
+  }
+  .gm-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2-5);
+  }
+  .gm-tag {
+    display: block;
+    border-radius: calc(infinity * 1px);
+    border: var(--line-w) solid var(--line);
+    padding-inline: var(--space-3);
+    padding-block: var(--space-1);
+    font-family: var(--gm-font-mono);
+    font-size: var(--fs-label);
+    color: var(--dim);
+  }
+  @media (hover: hover) {
+    .gm-tag:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+  }
+  .gm-article-card {
+    overflow: hidden;
+    border-radius: var(--radius-xl-5);
+    border: var(--line-w) solid var(--line);
+    background-color: var(--raised);
+  }
+  @media (hover: hover) {
+    .gm-article-card:hover {
+      border-color: var(--primary);
+    }
+  }
+  .gm-article-card-image {
+    aspect-ratio: 2/1;
+    width: 100%;
+    border-bottom-style: solid;
+    border-bottom-width: var(--line-w);
+    border-color: var(--line);
+    object-fit: cover;
+  }
+  .gm-article-card-body {
+    padding: var(--space-5);
+  }
+  .gm-article-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: var(--space-4);
+    row-gap: var(--space-2);
+  }
+  .gm-article-card-kind,
+  .gm-post-meta-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .gm-article-card-title {
+    margin-top: var(--space-2-5);
+    font-family: var(--gm-font-display);
+    font-size: var(--title-4);
+    line-height: var(--line-box-7);
+    font-weight: var(--weight-semibold);
+    color: var(--text);
+  }
+  @media (hover: hover) {
+    .gm-article-card:hover .gm-article-card-title {
+      color: var(--primary);
+    }
+  }
+  .gm-article-card-excerpt {
+    margin-top: var(--space-2-5);
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+    color: var(--dim);
+  }
+  .gm-article-card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2-5);
+    padding-inline: var(--space-5);
+    padding-bottom: var(--space-5);
+  }
+  .gm-clips {
+    margin-top: var(--space-7-5);
+  }
+  .gm-clips-title,
+  .gm-game-scores-title,
+  .gm-post-section-title,
+  .gm-post-summary,
+  .gm-episodes-heading {
+    font-family: var(--gm-font-display);
+    font-size: var(--title-4);
+    line-height: var(--line-box-7);
+    font-weight: var(--weight-semibold);
+  }
+  .gm-clips-title,
+  .gm-game-scores-title {
+    --icon-size: var(--fs-h3);
+    margin-bottom: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .gm-clips-list {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .gm-clip {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: var(--space-4);
+    background-color: var(--raised);
+    padding: var(--space-4);
+    text-align: left;
+  }
+  @media (hover: hover) {
+    .gm-clip:hover {
+      border-color: var(--accent-text);
+    }
+  }
+  .gm-clip-icon {
+    display: grid;
+    height: 2.25rem;
+    width: 2.25rem;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: calc(infinity * 1px);
+    background-color: var(--accent-text);
+    color: var(--ground);
+  }
+  .gm-clip-text,
+  .gm-latest-text {
+    min-width: 0px;
+    flex: 1;
+  }
+  .gm-clip-title,
+  .gm-prev-next-title {
+    font-family: var(--gm-font-display);
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+    color: var(--text);
+  }
+  .gm-clip-title {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .gm-clip-meta {
+    font-family: var(--gm-font-mono);
+    font-size: var(--fs-label);
+    color: var(--dim);
+  }
+  .gm-page-hits {
+    background-color: var(--sunken);
+    padding: var(--space-5);
+  }
+  .gm-page-hits-label {
+    margin-bottom: var(--space-3);
+  }
+  .gm-page-hits-list {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: var(--space-5);
+    row-gap: var(--space-2);
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+  }
+  .gm-page-hits-link {
+    color: var(--accent-text);
+  }
+  @media (hover: hover) {
+    .gm-page-hits-link:hover {
+      text-decoration-line: underline;
+    }
+  }
+  .gm-legal-updated {
+    margin-top: var(--space-3);
+  }
+  .gm-legal-draft {
+    margin-block: var(--space-6);
+    border-radius: var(--radius-l-5);
+    border-width: var(--line-w);
+    border-style: dashed;
+    border-color: color-mix(in oklab, oklch(76.9% 0.188 70.08) 50%, transparent);
+    background-color: color-mix(in oklab, oklch(76.9% 0.188 70.08) 10%, transparent);
+    padding: var(--space-5);
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+    color: oklch(47.3% 0.137 46.201);
+    color: light-dark(oklch(47.3% 0.137 46.201), oklch(92.4% 0.12 95.746));
+  }
+  .gm-legal-draft-title {
+    margin-top: var(--space-4);
+    margin-bottom: 0px;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-family: var(--gm-font-display);
+    font-weight: var(--weight-semibold);
+  }
+  .gm-legal-draft-text {
+    margin-top: var(--space-2);
+    margin-bottom: 0px;
+    color: var(--dim);
+  }
+  .gm-legal,
+  .gm-narrow,
+  .gm-column {
+    margin-inline: auto;
+    max-width: 42rem;
+  }
+  .gm-context-wrap {
+    margin-bottom: var(--space-7-5);
+  }
+
+  /* The post and episode pages: the heroes, the guests, prev and next, related, the chapter and contents rails, the
+     sources and the preview banner. */
+  .gm-guests {
+    margin-top: var(--space-7-5);
+  }
+  .gm-post-section-title {
+    margin-bottom: var(--space-4);
+  }
+  .gm-guests-grid {
+    display: grid;
+    gap: var(--space-5);
+  }
+  @media (width >= 40rem) {
+    .gm-guests-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .gm-guest {
+    display: flex;
+    gap: var(--space-4);
+    background-color: var(--raised);
+    padding: var(--space-5);
+  }
+  .gm-avatar {
+    height: 3rem;
+    width: 3rem;
+    flex-shrink: 0;
+    border-radius: calc(infinity * 1px);
+    border: var(--line-w) solid var(--line);
+    object-fit: cover;
+  }
+  .gm-guest-text {
+    min-width: 0px;
+  }
+  .gm-guest-name {
+    font-family: var(--gm-font-display);
+    font-weight: var(--weight-medium);
+    color: var(--text);
+  }
+  @media (hover: hover) {
+    .gm-guest-name:hover {
+      color: var(--primary);
+    }
+  }
+  .gm-meta-text,
+  .gm-search-count,
+  .gm-archive-count,
+  .gm-legal-updated,
+  .gm-post-meta,
+  .gm-footer-base-row {
+    font-family: var(--gm-font-mono);
+    font-size: var(--fs-small);
+    line-height: var(--line-box-4);
+    color: var(--dim);
+  }
+  .gm-guest-bio {
+    margin-top: var(--space-2);
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+    color: var(--dim);
+  }
+  .gm-guest-links {
+    margin-top: var(--space-2-5);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    font-family: var(--gm-font-mono);
+    font-size: var(--fs-label);
+  }
+  .gm-link {
+    color: var(--accent-text);
+  }
+  @media (hover: hover) {
+    .gm-link:hover {
+      text-decoration-line: underline;
+    }
+  }
+  .gm-related {
+    margin-top: var(--space-8);
+  }
+  .gm-related-list,
+  .gm-list,
+  .gm-search-list,
+  .gm-index-grid {
+    display: grid;
+    gap: var(--space-4);
+  }
+}

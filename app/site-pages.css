@@ -1,0 +1,409 @@
+/* More of germomics' own parts, in the site layer (site.css): the cards' neighbors, the post pages and the cover art. */
+@layer site {
+  .gm-prev-next {
+    margin-top: var(--space-7-5);
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: var(--space-4);
+    border-top-style: solid;
+    border-top-width: var(--line-w);
+    border-color: var(--line);
+    padding-top: var(--space-6);
+  }
+  .gm-prev,
+  .gm-next {
+    display: flex;
+    max-width: 48%;
+    flex-direction: column;
+    background-color: var(--raised);
+    padding: var(--space-4);
+  }
+  @media (hover: hover) {
+    .gm-prev:hover,
+    .gm-next:hover {
+      border-color: var(--primary);
+    }
+  }
+  .gm-prev-next-label,
+  .gm-next-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--gm-font-mono);
+    font-size: var(--fs-label);
+    color: var(--dim);
+  }
+  .gm-prev-next-title {
+    margin-top: var(--space-2);
+  }
+  @media (hover: hover) {
+    .gm-prev:hover .gm-prev-next-title,
+    .gm-next:hover .gm-prev-next-title {
+      color: var(--primary);
+    }
+  }
+  .gm-next {
+    text-align: right;
+  }
+  .gm-next-label {
+    justify-content: flex-end;
+  }
+  .gm-episode {
+    margin-inline: auto;
+    max-width: 64rem;
+  }
+  .gm-episode-hero {
+    display: grid;
+    gap: var(--space-6);
+  }
+  @media (width >= 40rem) {
+    .gm-episode-hero {
+      grid-template-columns: 1fr 12rem;
+      align-items: flex-start;
+    }
+  }
+  @media (width >= 64rem) {
+    .gm-episode-hero {
+      grid-template-columns: 1fr 14rem;
+    }
+  }
+  .gm-post-title {
+    margin-top: var(--space-3);
+  }
+  .gm-episode-hero .gm-post-title {
+    margin-top: 0;
+  }
+  .gm-post-meta {
+    margin-top: var(--space-4);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: var(--space-5);
+    row-gap: var(--space-2);
+  }
+  .gm-post-meta-time {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .gm-post-updated {
+    color: var(--accent-text);
+  }
+  .gm-episode-excerpt {
+    margin-top: var(--space-5);
+    max-width: 42rem;
+    font-family: var(--gm-font-serif);
+    font-size: var(--fs-h3);
+    line-height: var(--leading-relaxed-5);
+    color: var(--dim);
+  }
+  .gm-episode-cover {
+    order: -9999;
+    width: 10rem;
+  }
+  @media (width >= 40rem) {
+    .gm-episode-cover {
+      order: 0;
+      width: auto;
+    }
+  }
+  .gm-episode-player {
+    margin-top: var(--space-7);
+    scroll-margin-top: var(--space-9-5);
+  }
+  .gm-episode-actions {
+    margin-top: var(--space-4);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .gm-episode-columns {
+    margin-top: var(--space-8);
+    display: grid;
+    gap: var(--space-7);
+  }
+  @media (width >= 64rem) {
+    .gm-episode-columns {
+      grid-template-columns: 15rem 1fr;
+    }
+  }
+  @media (width >= 64rem) {
+    .gm-episode-rail {
+      order: 1;
+    }
+  }
+  .gm-episode-main {
+    min-width: 0px;
+  }
+  @media (width >= 64rem) {
+    .gm-episode-main {
+      order: 2;
+    }
+  }
+  .gm-article {
+    margin-inline: auto;
+    max-width: 48rem;
+  }
+  .gm-avatar-mark {
+    display: grid;
+    height: 3rem;
+    width: 3rem;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: calc(infinity * 1px);
+    border: var(--line-w) solid var(--line);
+    background-color: var(--sunken);
+  }
+  .gm-avatar-mark-logo {
+    height: 1.5rem;
+    width: auto;
+  }
+  .gm-post-transcript {
+    margin-top: var(--space-8);
+    scroll-margin-top: var(--space-9-5);
+  }
+  .gm-post-summary {
+    margin-bottom: var(--space-4);
+    cursor: pointer;
+  }
+  .gm-article-image {
+    margin-bottom: var(--space-6);
+    aspect-ratio: 2/1;
+    width: 100%;
+    border-radius: var(--radius-xl-5);
+    border: var(--line-w) solid var(--line);
+    object-fit: cover;
+  }
+  .gm-article-tags {
+    margin-top: var(--space-4);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2-5);
+  }
+  .gm-toc {
+    margin-top: var(--space-6);
+    background-color: var(--sunken);
+    padding: var(--space-5);
+  }
+  .gm-bio-section-title,
+  .gm-chapters-summary {
+    font-family: var(--gm-font-display);
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+    font-weight: var(--weight-semibold);
+  }
+  .gm-bio-section-title {
+    margin-bottom: var(--space-3);
+  }
+  :where(.gm-toc-list > :not(:last-child)) {
+    margin-block: 0 var(--space-2);
+  }
+  .gm-toc-list,
+  .gm-index-card-text {
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+  }
+  .gm-toc-link {
+    color: var(--dim);
+  }
+  @media (hover: hover) {
+    .gm-toc-link:hover {
+      color: var(--accent-text);
+    }
+  }
+  .gm-article-body {
+    margin-top: var(--space-7);
+  }
+  .gm-article-share {
+    margin-top: var(--space-7);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+  .gm-preview-banner {
+    margin-bottom: var(--space-6);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    border-radius: var(--radius-l-5);
+    border-style: solid;
+    border-width: var(--line-w);
+    border-color: color-mix(in oklab, oklch(76.9% 0.188 70.08) 40%, transparent);
+    background-color: color-mix(in oklab, oklch(76.9% 0.188 70.08) 10%, transparent);
+    padding-inline: var(--space-5);
+    padding-block: var(--space-3-5);
+    font-size: var(--fs-body);
+    line-height: var(--line-box-5);
+    color: oklch(55.5% 0.163 48.998);
+    color: light-dark(oklch(55.5% 0.163 48.998), oklch(87.9% 0.169 91.605));
+  }
+  .gm-preview-banner-title {
+    font-family: var(--gm-font-display);
+    font-weight: var(--weight-semibold);
+  }
+  .gm-preview-banner-text {
+    color: var(--dim);
+  }
+  .gm-chapters-mobile {
+    margin-bottom: var(--space-6);
+    background-color: var(--sunken);
+    padding: var(--space-4);
+  }
+  @media (width >= 64rem) {
+    .gm-chapters-mobile {
+      display: none;
+    }
+  }
+  .gm-chapters-summary {
+    cursor: pointer;
+  }
+  .gm-chapters-mobile-list {
+    margin-top: var(--space-3);
+  }
+  .gm-chapters-rail {
+    position: sticky;
+    top: var(--space-10);
+    display: none;
+    max-height: calc(100vh - 8rem);
+    overflow: auto;
+  }
+  @media (width >= 64rem) {
+    .gm-chapters-rail {
+      display: block;
+    }
+  }
+  .gm-toc-sub {
+    padding-left: var(--space-5);
+  }
+  .gm-chapters-sub {
+    padding-left: var(--space-4);
+  }
+  .gm-chapter-link {
+    display: block;
+    border-radius: var(--radius-s-5);
+    padding-inline: var(--space-3);
+    padding-block: var(--space-2);
+    color: var(--dim);
+  }
+  @media (hover: hover) {
+    .gm-chapter-link:hover {
+      color: var(--text);
+    }
+  }
+  .gm-chapter-link[aria-current="true"] {
+    background-color: var(--sunken);
+    font-weight: var(--weight-medium);
+    color: var(--primary);
+  }
+
+  /* The cover art (CoverArt): the item's own picture, or the wordmark on the violet field; each caller picks a frame. */
+  .gm-cover-holder {
+    display: contents;
+  }
+  .gm-cover {
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    border-radius: var(--radius-xl-5);
+  }
+  .gm-cover-photo {
+    object-fit: cover;
+  }
+  .gm-cover-default {
+    position: relative;
+    overflow: hidden;
+  }
+  .gm-cover-logo {
+    position: absolute;
+    color: #fff;
+  }
+  .gm-cover-logo > svg {
+    display: block;
+    height: 100%;
+    width: 100%;
+  }
+  .gm-cover-bordered {
+    border: var(--line-w) solid var(--line);
+  }
+  .gm-cover-ringed {
+    box-shadow:
+      0 0 0 var(--line-w) var(--line),
+      0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+  .gm-pill svg {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+  /* The home hero's blobs and equalizer: three blobs in the brand color, the fourth blob and the bars in the accent text color. */
+  .gm-hero .cap-ambient {
+    --cap-ambient-2: var(--accent-text);
+  }
+  /* The index and list pages: writing, episodes, a season, a tag, archive, search, games, data, txasm, contact and accessibility. */
+  .gm-page-title,
+  .gm-list-title,
+  .gm-archive-title,
+  .gm-detail-title {
+    font-family: var(--gm-font-display);
+    font-size: var(--title-2);
+    line-height: var(--line-box-9);
+    font-weight: var(--weight-semibold);
+  }
+  .gm-list-title {
+    margin-bottom: var(--space-6);
+  }
+  .gm-post-title,
+  .gm-legal-title,
+  .gm-page-title-lg,
+  .gm-page-title {
+    font-family: var(--gm-font-display);
+    font-size: var(--title-1);
+    line-height: var(--leading-tight-5);
+    font-weight: var(--weight-semibold);
+  }
+  .gm-page-title {
+    margin-top: var(--space-4);
+  }
+  .gm-muted,
+  .gm-index-lede,
+  .gm-search-empty,
+  .gm-index-card-text {
+    color: var(--dim);
+  }
+  .gm-index-card-text,
+  .gm-index-card-title {
+    margin-top: var(--space-2);
+  }
+  .gm-index-lede {
+    margin-top: var(--space-3);
+    max-width: 42rem;
+  }
+  .gm-search-empty {
+    margin-top: var(--space-6);
+  }
+  .gm-search-list,
+  .gm-search-hits,
+  .gm-page-body,
+  .gm-search-form,
+  .gm-search-count {
+    margin-top: var(--space-5);
+  }
+  .gm-index-grid {
+    margin-top: var(--space-7);
+  }
+  .gm-article-grid {
+    display: grid;
+    gap: var(--space-5-5);
+  }
+  @media (width >= 40rem) {
+    .gm-article-grid,
+    .gm-index-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .gm-column {
+    max-width: 48rem;
+  }
+}
