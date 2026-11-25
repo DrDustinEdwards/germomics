@@ -6,7 +6,7 @@
 import type { Route } from "./+types/admin.upload";
 import { getEnv } from "@dustinedwards/site-runtime/context";
 import { putAudio, putImage, buildKey } from "~/lib/r2.server";
-import { RefusedError, prepareUpload } from "@dustinedwards/site-api";
+import { RefusedError, checkUpload, prepareUpload } from "@dustinedwards/site-api";
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { pictureLimits, PICTURE_RESIZE } from "@dustinedwards/site-api";
 import { recordUpload, sizeMetadata } from "~/lib/media/store.server";
@@ -15,9 +15,6 @@ import { readCappedBytes } from "@dustinedwards/site-runtime/body";
 const MAX_IMAGE = 25 * 1024 * 1024; // 25 MB
 // Cloudflare refuses a body over 100 MB on Free and Pro before the Worker sees it, so a larger cap promises nothing.
 const MAX_AUDIO = 100 * 1024 * 1024; // 100 MB
-
-// The extensions an episode file may carry: the key keeps the file's own, and it is served from a public host.
-const AUDIO_NAME = /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac)$/i;
 
 export async function action({ request, context }: Route.ActionArgs) {
   const env = getEnv(context);
@@ -95,13 +92,29 @@ export async function action({ request, context }: Route.ActionArgs) {
   if (length > MAX_AUDIO)
     return Response.json({ ok: false, error: "Audio exceeds 100 MB." }, { status: 413 });
   const key = buildKey(`episodes/${postId}`, name);
-  const ct = type || "audio/mpeg";
-  if (!ct.startsWith("audio/") || !AUDIO_NAME.test(name))
+  // Podcast apps play MP3 and M4A, and the episode is served from a public host: the type stored is the one its extension
+  // names and its bytes carry (site-api's checkUpload), never the one the browser sent.
+  const ext = /\.(mp3|m4a)$/i.exec(name)?.[1]?.toLowerCase();
+  const ct = ext === "m4a" ? "audio/mp4" : "audio/mpeg";
+  // Every audio signature is in the first 12 bytes, and a browser's first chunk is far longer: a shorter one is refused.
+  const reader = request.body.getReader();
+  const { value: head } = await reader.read();
+  if (!ext || !head || checkUpload(ct, head, { maxBytes: MAX_AUDIO, types: [ct] })) {
+    await reader.cancel();
     return Response.json({ ok: false, error: "The file must be audio." }, { status: 415 });
+  }
+  const body = new ReadableStream<Uint8Array>({
+    start: (out) => out.enqueue(head),
+    async pull(out) {
+      const { done, value } = await reader.read();
+      if (done) out.close();
+      else out.enqueue(value);
+    },
+  });
   const { url: stored, size } = await putAudio(
     env,
     key,
-    request.body.pipeThrough(new FixedLengthStream(length)),
+    body.pipeThrough(new FixedLengthStream(length)),
     ct,
   );
   return Response.json({ ok: true, url: stored, size, contentType: ct, name });

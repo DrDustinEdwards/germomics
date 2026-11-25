@@ -3,9 +3,12 @@
 // (no uploaded sprites required); when art is added it loads from /games/assets/* (GAME_ASSETS).
 import Phaser from "phaser";
 
+/** What the scene tells the page: each point, so the score has a text alternative outside the canvas, and the final score. */
+export type GameEvents = { onScore: (score: number) => void; onGameOver: (score: number) => void };
+
 export function createPhageDefense(
   parent: HTMLElement,
-  onGameOver: (score: number) => void,
+  { onScore, onGameOver }: GameEvents,
 ): Phaser.Game {
   class MainScene extends Phaser.Scene {
     private player!: Phaser.GameObjects.Rectangle;
@@ -89,6 +92,7 @@ export function createPhageDefense(
             p.destroy();
             this.score++;
             this.scoreText.setText(String(this.score));
+            onScore(this.score);
             break;
           }
         }

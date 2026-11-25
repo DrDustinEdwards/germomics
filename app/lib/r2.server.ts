@@ -29,7 +29,7 @@ export async function putAudio(
   env: Env,
   key: string,
   body: ArrayBuffer | ReadableStream,
-  contentType = "audio/mpeg",
+  contentType: string,
 ): Promise<{ url: string; size: number }> {
   const obj = await env.MEDIA.put(key, body, {
     httpMetadata: { contentType },
