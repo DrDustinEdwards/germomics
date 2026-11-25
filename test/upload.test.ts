@@ -72,7 +72,12 @@ describe("admin upload", () => {
 
   it("refuses audio whose file name or bytes are not audio, storing nothing", async () => {
     const page = new File(["<html><script>alert(1)</script>"], "ep.mp3", { type: "audio/mpeg" });
-    for (const sent of [file("page.html", "audio/mpeg"), page, file("ep.mp3", "audio/mpeg", 10)]) {
+    for (const sent of [
+      file("page.html", "audio/mpeg"),
+      file("ep.wav", "audio/wav"),
+      page,
+      file("ep.mp3", "audio/mpeg", 10),
+    ]) {
       const res = await upload({ kind: "audio", postId: "7", file: sent });
       expect(res.status).toBe(415);
     }
@@ -97,6 +102,12 @@ describe("admin upload", () => {
       (await e.MEDIA.head(stored.replace("https://media.germomics.com/", "")))?.httpMetadata
         ?.contentType,
     ).toBe("audio/mpeg");
+    const m4a = new File([new Uint8Array([0, 0, 0, 0x20]), "ftypM4A "], "ep.m4a", { type: "" });
+    const asM4a = (await (await upload({ kind: "audio", file: m4a })).json()) as { url: string };
+    expect(
+      (await e.MEDIA.head(asM4a.url.replace("https://media.germomics.com/", "")))?.httpMetadata
+        ?.contentType,
+    ).toBe("audio/mp4");
     const misc = (await (
       await upload({ kind: "audio", postId: "///", file: mp3("a.mp3") })
     ).json()) as Record<string, unknown>;
