@@ -1,4 +1,4 @@
-import { and, eq, isNull, like, ne } from "drizzle-orm";
+import { and, eq, isNull, ne, sql } from "drizzle-orm";
 import {
   NotFoundError,
   transcriptVersion,
@@ -346,7 +346,8 @@ export function createContent({
       recordChange("delete", id, version, changeId);
     },
 
-    // Posts linking here, so a trash or delete warns first. The LIKE finds candidates; the pattern keeps /slug-two from counting as /slug.
+    // Posts linking here, so a trash or delete warns first. instr finds candidates (a LIKE would fail on D1 past its
+    // 50-byte pattern limit, so a long slug could not be trashed); the pattern keeps /slug-two from counting as /slug.
     async backlinks(id) {
       if (!ID_PATTERN.test(id) || !(await findPost(id))) return [];
       const dots = (text: string) => text.replace(/[.]/g, "\\.");
@@ -356,7 +357,13 @@ export function createContent({
       const rows = await db
         .select({ slug: posts.slug, title: posts.title, body: posts.body })
         .from(posts)
-        .where(and(ne(posts.slug, id), isNull(posts.trashedAt), like(posts.body, `%/${id}%`)))
+        .where(
+          and(
+            ne(posts.slug, id),
+            isNull(posts.trashedAt),
+            sql`instr(${posts.body}, ${`/${id}`}) > 0`,
+          ),
+        )
         .orderBy(posts.slug);
       return rows
         .filter((r) => linked.test(r.body))

@@ -450,6 +450,13 @@ describe("backlinks", () => {
       { id: "by-url", title: "By URL", path: "/by-url" },
     ]);
     expect(await content.backlinks!("nope")).toEqual([]);
+    // D1 refuses a LIKE pattern over 50 bytes, so a long slug must not be matched with one.
+    const long = "why-the-great-stink-of-1858-changed-the-sewers-of-london";
+    await save(long, '---\ntitle: "Long"\n---\n<p>l</p>');
+    await save("to-long", `---\ntitle: "To long"\n---\nSee [it](/${long}).`);
+    expect(await content.backlinks!(long)).toEqual([
+      { id: "to-long", title: "To long", path: "/to-long" },
+    ]);
   });
 });
 
